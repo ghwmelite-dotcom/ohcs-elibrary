@@ -531,6 +531,39 @@ documentsRoutes.post('/:id/analyze', async (c: AppContext) => {
   }
 });
 
+// GET /documents/:id/view - View document (returns file for in-browser viewing)
+documentsRoutes.get('/:id/view', async (c: AppContext) => {
+  try {
+    const { DB, DOCUMENTS } = c.env;
+    const documentId = c.req.param('id');
+
+    const document = await DB.prepare(`
+      SELECT * FROM documents WHERE id = ?
+    `).bind(documentId).first<{ fileUrl: string; fileName: string; fileType: string }>();
+
+    if (!document) {
+      return c.json({ error: 'Document not found' }, 404);
+    }
+
+    // Get file from R2
+    const object = await DOCUMENTS.get(document.fileUrl);
+    if (!object) {
+      return c.json({ error: 'File not found' }, 404);
+    }
+
+    // Return file for in-browser viewing
+    const headers = new Headers();
+    headers.set('Content-Type', document.fileType);
+    headers.set('Content-Disposition', `inline; filename="${document.fileName}"`);
+    headers.set('Cache-Control', 'public, max-age=3600');
+
+    return new Response(object.body, { headers });
+  } catch (error) {
+    console.error('Error viewing document:', error);
+    return c.json({ error: 'Failed to view document' }, 500);
+  }
+});
+
 // GET /documents/:id/download - Download document
 documentsRoutes.get('/:id/download', async (c: AppContext) => {
   try {

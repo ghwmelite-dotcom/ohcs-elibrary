@@ -133,33 +133,107 @@ export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
     );
   };
 
+  const uploadToCloud = async (
+    file: File,
+    data: UploadFormData,
+    index: number,
+    onProgress: (progress: number) => void
+  ): Promise<boolean> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('title', data.title + (files.filter(f => f.status === 'pending').length > 1 ? ` (${index + 1})` : ''));
+      formData.append('description', data.description);
+      formData.append('category', data.categoryId);
+      formData.append('accessLevel', data.accessLevel);
+      if (data.tags) {
+        formData.append('tags', data.tags);
+      }
+
+      // Use XMLHttpRequest for progress tracking
+      return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const progress = Math.round((e.loaded / e.total) * 100);
+            onProgress(progress);
+          }
+        });
+
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        });
+
+        xhr.addEventListener('error', () => resolve(false));
+        xhr.addEventListener('timeout', () => resolve(false));
+
+        xhr.open('POST', '/api/v1/documents');
+        xhr.timeout = 60000; // 60 second timeout
+        xhr.send(formData);
+      });
+    } catch {
+      return false;
+    }
+  };
+
   const onSubmit = async (data: UploadFormData) => {
     const validFiles = files.filter((f) => f.status === 'pending');
     if (validFiles.length === 0) return;
 
-    // Upload all files with animation
+    // Upload all files
     await Promise.all(
       files.map(async (f, i) => {
         if (f.status !== 'pending') return;
 
-        // Simulate upload progress animation
-        await simulateUpload(f, i);
+        // Update status to uploading
+        setFiles((prev) =>
+          prev.map((file, idx) =>
+            idx === i ? { ...file, status: 'uploading' as const, progress: 0 } : file
+          )
+        );
 
-        // Create file URL for local storage (using object URL for now)
-        const fileUrl = URL.createObjectURL(f.file);
-
-        // Add document to local storage
-        addLocalDocument({
-          title: data.title + (validFiles.length > 1 ? ` (${i + 1})` : ''),
-          description: data.description,
-          category: data.categoryId as DocumentCategory,
-          accessLevel: data.accessLevel,
-          tags: data.tags ? data.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
-          fileName: f.file.name,
-          fileSize: f.file.size,
-          fileType: f.file.type,
-          fileUrl: fileUrl,
+        // Try cloud upload first
+        const cloudSuccess = await uploadToCloud(f.file, data, i, (progress) => {
+          setFiles((prev) =>
+            prev.map((file, idx) =>
+              idx === i ? { ...file, progress } : file
+            )
+          );
         });
+
+        if (cloudSuccess) {
+          // Cloud upload succeeded
+          setFiles((prev) =>
+            prev.map((file, idx) =>
+              idx === i ? { ...file, status: 'success' as const, progress: 100 } : file
+            )
+          );
+        } else {
+          // Cloud upload failed, fall back to local storage
+          // Simulate remaining progress for visual feedback
+          await simulateUpload(f, i);
+
+          // Create file URL for local storage (using object URL)
+          const fileUrl = URL.createObjectURL(f.file);
+
+          // Add document to local storage
+          addLocalDocument({
+            title: data.title + (validFiles.length > 1 ? ` (${i + 1})` : ''),
+            description: data.description,
+            category: data.categoryId as DocumentCategory,
+            accessLevel: data.accessLevel,
+            tags: data.tags ? data.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+            fileName: f.file.name,
+            fileSize: f.file.size,
+            fileType: f.file.type,
+            fileUrl: fileUrl,
+          });
+        }
       })
     );
 
