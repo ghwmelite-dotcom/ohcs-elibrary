@@ -595,11 +595,31 @@ documentsRoutes.get('/:id/view', async (c: AppContext) => {
       return c.json({ error: 'File not found' }, 404);
     }
 
-    // Return file for in-browser viewing
+    // Return file for in-browser viewing with proper headers for iframe embedding
     const headers = new Headers();
     headers.set('Content-Type', document.fileType);
     headers.set('Content-Disposition', `inline; filename="${document.fileName}"`);
     headers.set('Cache-Control', 'public, max-age=3600');
+
+    // Allow embedding in iframes from our frontend domains
+    // Include wildcard for Cloudflare Pages preview deployments
+    headers.set('Content-Security-Policy', "frame-ancestors 'self' https://ohcs-elibrary.pages.dev https://*.ohcs-elibrary.pages.dev https://ohcs-elibrary.gov.gh http://localhost:5173 http://localhost:3000");
+    headers.set('X-Frame-Options', 'ALLOWALL'); // Deprecated but some browsers still check it
+
+    // CORS headers for cross-origin access
+    const origin = c.req.header('Origin') || '';
+    const allowedOrigins = [
+      'https://ohcs-elibrary.pages.dev',
+      'https://ohcs-elibrary.gov.gh',
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ];
+    // Also allow Cloudflare Pages preview deployments
+    const isAllowed = allowedOrigins.includes(origin) ||
+      origin.match(/^https:\/\/[a-z0-9]+\.ohcs-elibrary\.pages\.dev$/);
+    if (isAllowed) {
+      headers.set('Access-Control-Allow-Origin', origin);
+    }
 
     return new Response(object.body, { headers });
   } catch (error) {

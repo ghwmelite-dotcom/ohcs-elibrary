@@ -35,12 +35,18 @@ const app = new Hono<{ Bindings: Env }>();
 app.use('*', logger());
 app.use('*', prettyJSON());
 app.use('*', cors({
-  origin: [
-    'https://ohcs-elibrary.gov.gh',
-    'https://ohcs-elibrary.pages.dev',
-    'http://localhost:5173',
-    'http://localhost:3000',
-  ],
+  origin: (origin) => {
+    const allowedOrigins = [
+      'https://ohcs-elibrary.gov.gh',
+      'https://ohcs-elibrary.pages.dev',
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ];
+    // Allow exact matches or Cloudflare Pages preview deployments
+    if (allowedOrigins.includes(origin)) return origin;
+    if (origin?.match(/^https:\/\/[a-z0-9]+\.ohcs-elibrary\.pages\.dev$/)) return origin;
+    return allowedOrigins[0]; // Default fallback
+  },
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
