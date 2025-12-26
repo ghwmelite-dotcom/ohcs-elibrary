@@ -61,13 +61,40 @@ export function DocumentViewerModal({
   const [loadError, setLoadError] = useState<string | null>(null);
   const totalPages = 10; // Would come from actual PDF metadata
 
-  // Get the document URL - prefer fileUrl, fallback to API endpoint
+  // Get the document URL - handle local vs API documents
   const getDocumentUrl = useCallback(() => {
     if (!document) return '';
-    // If document has a direct file URL, use it
-    if (document.fileUrl) return document.fileUrl;
-    // Otherwise use the API view endpoint
+
+    // Check if fileUrl is a blob URL (local file) or data URL
+    if (document.fileUrl?.startsWith('blob:') || document.fileUrl?.startsWith('data:')) {
+      return document.fileUrl;
+    }
+
+    // Check if this is a local document (ID starts with 'local-')
+    // Local documents can't be fetched from API
+    if (document.id.startsWith('local-')) {
+      // Local document without valid blob URL
+      // This happens when the page was reloaded and the blob URL expired
+      return '';
+    }
+
+    // For API documents, use the API view endpoint
+    // This ensures proper authentication and file streaming from R2
     return `${API_BASE}/documents/${document.id}/view`;
+  }, [document]);
+
+  // Check if document can be viewed
+  const canViewDocument = useCallback(() => {
+    if (!document) return false;
+
+    // Check if it's a local document with an expired blob URL
+    if (document.id.startsWith('local-')) {
+      const hasValidBlobUrl = document.fileUrl?.startsWith('blob:') || document.fileUrl?.startsWith('data:');
+      return hasValidBlobUrl;
+    }
+
+    // API documents can always be viewed (assuming they exist)
+    return true;
   }, [document]);
 
   // Determine file type for rendering
@@ -469,6 +496,35 @@ export function DocumentViewerModal({
                 {(() => {
                   const fileCategory = getFileCategory(document.fileType);
                   const documentUrl = getDocumentUrl();
+
+                  // Check if this is a local document that can't be viewed
+                  if (!canViewDocument()) {
+                    return (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="text-center px-8">
+                          <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-warning-500/20 flex items-center justify-center">
+                            <AlertCircle className="w-12 h-12 text-warning-400" />
+                          </div>
+                          <h3 className="text-xl font-semibold text-white mb-2">
+                            Document Session Expired
+                          </h3>
+                          <p className="text-surface-400 mb-6 max-w-md">
+                            This document was uploaded locally and its viewing session has expired.
+                            Please upload the document again to view it.
+                          </p>
+                          <p className="text-surface-500 text-sm">
+                            Tip: Upload documents when connected to the server for permanent storage.
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Check if we have a valid URL
+                  if (!documentUrl) {
+                    setLoadError('Unable to load document. The document URL is not available.');
+                    return null;
+                  }
 
                   // PDF Viewer - use iframe with Google Docs viewer as fallback
                   if (fileCategory === 'pdf') {
