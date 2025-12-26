@@ -568,6 +568,7 @@ function AuthModal({
                 {/* Close button */}
                 <button
                   onClick={onClose}
+                  aria-label="Close modal"
                   className={cn(
                     'absolute top-4 right-4 z-10 p-2 rounded-full transition-all duration-200',
                     isDark
@@ -1399,6 +1400,7 @@ export default function Landing() {
               onClick={toggleTheme}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               className={cn(
                 'p-2.5 rounded-lg transition-colors',
                 isDark ? 'bg-white/5 hover:bg-white/10 text-amber-50' : 'bg-black/5 hover:bg-black/10 text-surface-700'

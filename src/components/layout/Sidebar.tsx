@@ -216,8 +216,8 @@ export function Sidebar() {
             {!isCollapsed && (
               <button
                 onClick={logout}
+                aria-label="Sign out"
                 className="p-2 text-surface-400 hover:text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded-lg transition-colors"
-                title="Sign out"
               >
                 <LogOut className="w-4 h-4" />
               </button>

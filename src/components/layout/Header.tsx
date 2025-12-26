@@ -59,6 +59,7 @@ export function Header() {
         <div className="flex items-center gap-4">
           <button
             onClick={toggleSidebar}
+            aria-label="Open menu"
             className="lg:hidden p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
           >
             <Menu className="w-5 h-5" />
@@ -79,6 +80,7 @@ export function Header() {
           {/* Mobile search button */}
           <button
             onClick={toggleSearch}
+            aria-label="Search"
             className="md:hidden p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
           >
             <Search className="w-5 h-5" />
@@ -106,8 +108,8 @@ export function Header() {
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             className="p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
-            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {theme === 'dark' ? (
               <Sun className="w-5 h-5" />
@@ -119,7 +121,10 @@ export function Header() {
           {/* Notifications */}
           <Dropdown
             trigger={
-              <button className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors">
+              <button
+                aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
+                className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+              >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
                   <span className="absolute top-1 right-1 w-2 h-2 bg-error-500 rounded-full" />
