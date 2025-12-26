@@ -7,6 +7,8 @@ import { AuthLayout } from '@/components/layout/AuthLayout';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Spinner } from '@/components/shared/Spinner';
 import { Toaster } from '@/components/shared/Toast';
+import { PWAInstallPrompt } from '@/components/shared/PWAInstallPrompt';
+import { OfflineBanner } from '@/components/shared/OfflineBanner';
 
 // Lazy load pages for code splitting
 // Auth pages
@@ -254,6 +256,10 @@ export default function App() {
 
       {/* Global toast notifications */}
       <Toaster />
+
+      {/* PWA Components */}
+      <OfflineBanner />
+      <PWAInstallPrompt />
     </>
   );
 }

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#008B4F"/>
+      <stop offset="100%" style="stop-color:#006B3F"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+
+  <!-- Open book -->
+  <g transform="translate(256, 240)">
+    <!-- Left page -->
+    <path d="M-10 -80 L-10 100 Q-70 85 -130 95 L-130 -65 Q-70 -75 -10 -60 Z" fill="#FFFFFF"/>
+    <!-- Right page -->
+    <path d="M10 -80 L10 100 Q70 85 130 95 L130 -65 Q70 -75 10 -60 Z" fill="#F5F5F5"/>
+    <!-- Spine -->
+    <rect x="-8" y="-80" width="16" height="180" fill="#E0E0E0" rx="2"/>
+  </g>
+
+  <!-- Black Star -->
+  <g transform="translate(256, 340)">
+    <polygon points="0,-40 9,-12 40,-12 15,-4 25,24 0,9 -25,24 -15,-4 -40,-12 -9,-12" fill="#000000" stroke="#FCD116" stroke-width="3"/>
+  </g>
+
+  <!-- Gold accent line -->
+  <path d="M90 420 Q256 395 422 420" stroke="#FCD116" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+  <!-- Red accent -->
+  <circle cx="256" cy="130" r="25" fill="#CE1126"/>
+  <circle cx="256" cy="130" r="15" fill="#FFFFFF"/>
+</svg>

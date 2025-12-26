@@ -2,20 +2,203 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="OHCS Ghana E-Library - Digital platform for Ghana's civil servants" />
-    <meta name="theme-color" content="#006B3F" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
 
-    <!-- Google Fonts -->
+    <!-- Primary Meta Tags -->
+    <title>OHCS E-Library | Ghana Civil Service</title>
+    <meta name="title" content="OHCS E-Library | Ghana Civil Service" />
+    <meta name="description" content="OHCS Ghana E-Library - AI-Powered Digital Knowledge Platform for Ghana's Civil Servants. Access documents, forums, training resources, and more." />
+    <meta name="keywords" content="Ghana, OHCS, Civil Service, E-Library, Documents, Training, Government, Public Service" />
+    <meta name="author" content="Office of the Head of Civil Service, Ghana" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#006B3F" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="E-Library" />
+    <meta name="application-name" content="OHCS E-Library" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-TileColor" content="#006B3F" />
+    <meta name="msapplication-tap-highlight" content="no" />
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120x120.png" />
+    <link rel="mask-icon" href="/favicon.svg" color="#006B3F" />
+    <link rel="shortcut icon" href="/favicon.svg" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- iOS Splash Screens -->
+    <link rel="apple-touch-startup-image" href="/splash/splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-1536x2048.png" media="(min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-1668x2224.png" media="(min-device-width: 834px) and (max-device-width: 834px) and (-webkit-min-device-pixel-ratio: 2)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-2048x2732.png" media="(min-device-width: 1024px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2)" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ohcs-elibrary.pages.dev/" />
+    <meta property="og:title" content="OHCS E-Library | Ghana Civil Service" />
+    <meta property="og:description" content="AI-Powered Digital Knowledge Platform for Ghana's Civil Servants" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:site_name" content="OHCS E-Library" />
+    <meta property="og:locale" content="en_GH" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://ohcs-elibrary.pages.dev/" />
+    <meta property="twitter:title" content="OHCS E-Library | Ghana Civil Service" />
+    <meta property="twitter:description" content="AI-Powered Digital Knowledge Platform for Ghana's Civil Servants" />
+    <meta property="twitter:image" content="/og-image.png" />
+
+    <!-- Preconnect to external resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
-    <title>OHCS E-Library | Ghana Civil Service</title>
+    <!-- Prevent FOUC -->
+    <style>
+      html {
+        background-color: #006B3F;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+      }
+      #root {
+        min-height: 100vh;
+      }
+      /* Smooth loading transition */
+      .app-loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #006B3F 0%, #004d2e 100%);
+        z-index: 9999;
+        transition: opacity 0.3s ease-out;
+      }
+      .app-loading.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .app-loading svg {
+        width: 80px;
+        height: 80px;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+      }
+    </style>
   </head>
   <body class="font-body antialiased">
+    <!-- Loading Screen -->
+    <div id="app-loading" class="app-loading">
+      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="256" cy="256" r="200" fill="none" stroke="#FCD116" stroke-width="8" opacity="0.3"/>
+        <g transform="translate(256, 240)">
+          <path d="M-10 -80 L-10 100 Q-70 85 -130 95 L-130 -65 Q-70 -75 -10 -60 Z" fill="#FFFFFF"/>
+          <path d="M10 -80 L10 100 Q70 85 130 95 L130 -65 Q70 -75 10 -60 Z" fill="#F5F5F5"/>
+        </g>
+        <g transform="translate(256, 340)">
+          <polygon points="0,-40 9,-12 40,-12 15,-4 25,24 0,9 -25,24 -15,-4 -40,-12 -9,-12" fill="#000000" stroke="#FCD116" stroke-width="3"/>
+        </g>
+      </svg>
+    </div>
+
     <div id="root"></div>
+
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Register Service Worker -->
+    <script>
+      // Remove loading screen when app is ready
+      window.addEventListener('load', function() {
+        const loader = document.getElementById('app-loading');
+        if (loader) {
+          setTimeout(function() {
+            loader.classList.add('fade-out');
+            setTimeout(function() {
+              loader.remove();
+            }, 300);
+          }, 500);
+        }
+      });
+
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('[App] ServiceWorker registered:', registration.scope);
+
+              // Check for updates
+              registration.addEventListener('updatefound', function() {
+                const newWorker = registration.installing;
+                if (newWorker) {
+                  newWorker.addEventListener('statechange', function() {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      // New content available, show update prompt
+                      if (confirm('New version available! Reload to update?')) {
+                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                        window.location.reload();
+                      }
+                    }
+                  });
+                }
+              });
+            })
+            .catch(function(error) {
+              console.error('[App] ServiceWorker registration failed:', error);
+            });
+
+          // Handle controller change (new SW activated)
+          navigator.serviceWorker.addEventListener('controllerchange', function() {
+            console.log('[App] New service worker activated');
+          });
+        });
+      }
+
+      // Handle standalone mode detection
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        console.log('[App] Running in standalone mode');
+        document.documentElement.classList.add('pwa-standalone');
+      }
+
+      // iOS standalone detection
+      if (window.navigator.standalone === true) {
+        console.log('[App] Running as iOS PWA');
+        document.documentElement.classList.add('ios-pwa');
+      }
+    </script>
+
+    <!-- Noscript fallback -->
+    <noscript>
+      <style>
+        #app-loading { display: none; }
+      </style>
+      <div style="padding: 2rem; text-align: center; font-family: system-ui, sans-serif;">
+        <h1 style="color: #006B3F;">OHCS E-Library</h1>
+        <p>JavaScript is required to run this application.</p>
+        <p>Please enable JavaScript in your browser settings.</p>
+      </div>
+    </noscript>
   </body>
 </html>
