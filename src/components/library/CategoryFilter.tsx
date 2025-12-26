@@ -7,7 +7,7 @@ export function CategoryFilter() {
 
   const getCategoryCount = (categoryId: string | null) => {
     if (!categoryId) return documents.length;
-    return documents.filter((doc) => doc.categoryId === categoryId).length;
+    return documents.filter((doc) => doc.category === categoryId).length;
   };
 
   return (

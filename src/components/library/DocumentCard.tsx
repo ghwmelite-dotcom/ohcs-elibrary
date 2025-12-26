@@ -12,22 +12,35 @@ import {
   Share2,
   Lock,
 } from 'lucide-react';
-import { Document, DocumentCategory } from '@/types';
+import type { Document } from '@/types';
 import { useLibraryStore } from '@/stores/libraryStore';
-import { Badge } from '@/components/shared/Badge';
 import { Dropdown } from '@/components/shared/Dropdown';
 import { cn } from '@/utils/cn';
 import { formatRelativeTime, formatFileSize } from '@/utils/formatters';
 
+interface CategoryInfo {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface DocumentCardProps {
   document: Document;
-  category?: DocumentCategory;
+  category?: CategoryInfo;
   viewMode?: 'grid' | 'list';
 }
 
 export function DocumentCard({ document, category, viewMode = 'grid' }: DocumentCardProps) {
-  const { bookmarks, toggleBookmark } = useLibraryStore();
-  const isBookmarked = bookmarks.includes(document.id);
+  const { bookmarks, bookmarkDocument, removeBookmark } = useLibraryStore();
+  const isBookmarked = bookmarks.some((b) => b.documentId === document.id);
+
+  const handleToggleBookmark = () => {
+    if (isBookmarked) {
+      removeBookmark(document.id);
+    } else {
+      bookmarkDocument(document.id);
+    }
+  };
 
   const accessLevelColors = {
     public: 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400',
@@ -43,7 +56,7 @@ export function DocumentCard({ document, category, viewMode = 'grid' }: Document
     {
       label: isBookmarked ? 'Remove Bookmark' : 'Add Bookmark',
       icon: isBookmarked ? BookmarkCheck : Bookmark,
-      onClick: () => toggleBookmark(document.id),
+      onClick: handleToggleBookmark,
     },
   ];
 
@@ -80,15 +93,15 @@ export function DocumentCard({ document, category, viewMode = 'grid' }: Document
           <div className="hidden md:flex items-center gap-6 text-sm text-surface-500">
             <div className="flex items-center gap-1.5">
               <Eye className="w-4 h-4" />
-              {document.viewCount}
+              {document.views}
             </div>
             <div className="flex items-center gap-1.5">
               <Download className="w-4 h-4" />
-              {document.downloadCount}
+              {document.downloads}
             </div>
             <div className="flex items-center gap-1.5">
               <Star className="w-4 h-4 text-secondary-500" />
-              {document.rating.toFixed(1)}
+              {document.averageRating.toFixed(1)}
             </div>
           </div>
 
@@ -104,7 +117,7 @@ export function DocumentCard({ document, category, viewMode = 'grid' }: Document
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => toggleBookmark(document.id)}
+              onClick={handleToggleBookmark}
               className={cn(
                 'p-2 rounded-lg transition-colors',
                 isBookmarked
@@ -158,7 +171,7 @@ export function DocumentCard({ document, category, viewMode = 'grid' }: Document
 
         {/* Bookmark Button */}
         <button
-          onClick={() => toggleBookmark(document.id)}
+          onClick={handleToggleBookmark}
           className={cn(
             'absolute top-3 right-3 p-2 rounded-lg transition-all',
             isBookmarked
@@ -202,11 +215,11 @@ export function DocumentCard({ document, category, viewMode = 'grid' }: Document
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
               <Eye className="w-3.5 h-3.5" />
-              {document.viewCount}
+              {document.views}
             </span>
             <span className="flex items-center gap-1">
               <Star className="w-3.5 h-3.5 text-secondary-500" />
-              {document.rating.toFixed(1)}
+              {document.averageRating.toFixed(1)}
             </span>
           </div>
           <span className="flex items-center gap-1">

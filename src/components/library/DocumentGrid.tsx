@@ -27,7 +27,7 @@ export function DocumentGrid() {
 
   if (selectedCategory) {
     filteredDocuments = filteredDocuments.filter(
-      (doc) => doc.categoryId === selectedCategory
+      (doc) => doc.category === selectedCategory
     );
   }
 
@@ -52,10 +52,10 @@ export function DocumentGrid() {
         comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         break;
       case 'popular':
-        comparison = b.viewCount - a.viewCount;
+        comparison = b.views - a.views;
         break;
       case 'rating':
-        comparison = b.rating - a.rating;
+        comparison = b.averageRating - a.averageRating;
         break;
       case 'title':
         comparison = a.title.localeCompare(b.title);
@@ -79,7 +79,7 @@ export function DocumentGrid() {
     { label: 'Alphabetical', value: 'title' },
   ];
 
-  const getCategoryById = (id: string) => categories.find((c) => c.id === id);
+  const getCategoryById = (categoryValue: string) => categories.find((c) => c.id === categoryValue);
 
   if (isLoading) {
     return (
@@ -212,7 +212,7 @@ export function DocumentGrid() {
             <DocumentCard
               key={document.id}
               document={document}
-              category={getCategoryById(document.categoryId)}
+              category={getCategoryById(document.category)}
               viewMode={viewMode}
             />
           ))}

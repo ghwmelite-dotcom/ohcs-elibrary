@@ -143,21 +143,30 @@ const mockDocuments: Document[] = [
   },
 ];
 
-const mockCategories = [
-  { value: 'circulars', label: 'Circulars & Directives', count: 45 },
-  { value: 'policies', label: 'Policies & Guidelines', count: 78 },
-  { value: 'training', label: 'Training Materials', count: 120 },
-  { value: 'reports', label: 'Reports & Publications', count: 89 },
-  { value: 'forms', label: 'Forms & Templates', count: 56 },
-  { value: 'legal', label: 'Legal Documents', count: 34 },
-  { value: 'research', label: 'Research Papers', count: 67 },
-  { value: 'general', label: 'General Resources', count: 156 },
+// Category interface for UI components
+interface CategoryItem {
+  id: string;
+  name: string;
+  color: string;
+  count: number;
+}
+
+const mockCategories: CategoryItem[] = [
+  { id: 'circulars', name: 'Circulars & Directives', color: '#006B3F', count: 45 },
+  { id: 'policies', name: 'Policies & Guidelines', color: '#FCD116', count: 78 },
+  { id: 'training', name: 'Training Materials', color: '#3B82F6', count: 120 },
+  { id: 'reports', name: 'Reports & Publications', color: '#CE1126', count: 89 },
+  { id: 'forms', name: 'Forms & Templates', color: '#8B5CF6', count: 56 },
+  { id: 'legal', name: 'Legal Documents', color: '#10B981', count: 34 },
+  { id: 'research', name: 'Research Papers', color: '#F59E0B', count: 67 },
+  { id: 'general', name: 'General Resources', color: '#6B7280', count: 156 },
 ];
 
 interface LibraryState {
   documents: Document[];
   currentDocument: Document | null;
-  categories: typeof mockCategories;
+  categories: CategoryItem[];
+  selectedCategory: string | null;
   filter: DocumentFilter;
   bookmarks: Bookmark[];
   collections: Collection[];
@@ -171,6 +180,7 @@ interface LibraryActions {
   fetchDocuments: (filter?: DocumentFilter) => Promise<void>;
   fetchDocument: (id: string) => Promise<void>;
   fetchCategories: () => Promise<void>;
+  setSelectedCategory: (categoryId: string | null) => void;
   setFilter: (filter: Partial<DocumentFilter>) => void;
   resetFilter: () => void;
   bookmarkDocument: (documentId: string) => Promise<void>;
@@ -195,6 +205,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
   documents: [],
   currentDocument: null,
   categories: mockCategories,
+  selectedCategory: null,
   filter: defaultFilter,
   bookmarks: [],
   collections: [],
@@ -254,6 +265,10 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
     // Categories are already loaded as mock data
     await new Promise((resolve) => setTimeout(resolve, 100));
     set({ categories: mockCategories });
+  },
+
+  setSelectedCategory: (categoryId: string | null) => {
+    set({ selectedCategory: categoryId });
   },
 
   fetchDocument: async (id: string) => {
