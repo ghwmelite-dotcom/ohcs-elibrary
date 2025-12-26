@@ -1,9 +1,24 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import compression from 'vite-plugin-compression';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Pre-compress assets with gzip
+    compression({
+      algorithm: 'gzip',
+      ext: '.gz',
+      threshold: 1024, // Only compress files > 1KB
+    }),
+    // Pre-compress assets with brotli (better compression)
+    compression({
+      algorithm: 'brotliCompress',
+      ext: '.br',
+      threshold: 1024,
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -24,26 +39,43 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false, // Disable sourcemaps in production for smaller bundles
-    target: 'esnext', // Target modern browsers for smaller bundles
-    minify: 'terser', // Use terser for better minification
-    cssCodeSplit: true, // Split CSS for better caching
+    sourcemap: false,
+    target: 'esnext',
+    minify: 'terser',
+    cssCodeSplit: true,
+    cssMinify: 'lightningcss',
     terserOptions: {
       compress: {
-        drop_console: true, // Remove console.log in production
+        drop_console: true,
         drop_debugger: true,
+        passes: 2, // Multiple passes for better compression
+        pure_funcs: ['console.info', 'console.debug', 'console.warn'],
+      },
+      mangle: {
+        safari10: true,
+      },
+      format: {
+        comments: false, // Remove all comments
       },
     },
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['framer-motion', 'lucide-react'],
+          // Core React - loaded immediately
+          'react-core': ['react', 'react-dom'],
+          // Router - loaded with app shell
+          router: ['react-router-dom'],
+          // Animation library - can be deferred
+          animation: ['framer-motion'],
+          // Icons - tree-shaken but still sizeable
+          icons: ['lucide-react'],
+          // Form handling
           forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          // State management
           state: ['zustand', '@tanstack/react-query'],
+          // PDF viewer - only loaded when needed
           pdf: ['react-pdf'],
         },
-        // Optimize chunk file names
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',

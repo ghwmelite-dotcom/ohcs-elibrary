@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Suspense, lazy, useEffect } from 'react';
+import { LazyMotion } from 'framer-motion';
+import { loadMotionFeatures } from '@/utils/motionFeatures';
 import { useAuthStore } from '@/stores/authStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -146,7 +148,7 @@ export default function App() {
   }, [theme]);
 
   return (
-    <>
+    <LazyMotion features={loadMotionFeatures} strict>
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public routes */}
@@ -260,6 +262,6 @@ export default function App() {
       {/* PWA Components */}
       <OfflineBanner />
       <PWAInstallPrompt />
-    </>
+    </LazyMotion>
   );
 }

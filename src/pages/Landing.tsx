@@ -1445,9 +1445,8 @@ export default function Landing() {
 
       {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center pt-20">
-        <motion.div
+        <div
           className="relative z-10 max-w-6xl mx-auto px-6 lg:px-8 text-center"
-          style={{ opacity: heroOpacity, y: parallaxY }}
         >
           {/* AI Badge */}
           <motion.div
@@ -1473,11 +1472,8 @@ export default function Landing() {
             </span>
           </motion.div>
 
-          {/* Main heading */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
+          {/* Main heading - renders immediately for LCP detection */}
+          <h1
             className="font-heading text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight tracking-tight"
           >
             <span className={isDark ? 'text-amber-50' : 'text-surface-900'}>The </span>
@@ -1494,7 +1490,7 @@ export default function Landing() {
             <span className={isDark ? 'text-amber-50' : 'text-surface-900'}> Library</span>
             <br />
             <span className={isDark ? 'text-amber-50' : 'text-surface-900'}>for Ghana's Civil Service</span>
-          </motion.h1>
+          </h1>
 
           {/* Open book visualization */}
           <motion.div
@@ -1506,18 +1502,15 @@ export default function Landing() {
             <OpenBookHero isDark={isDark} />
           </motion.div>
 
-          {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+          {/* Subtitle - renders immediately for LCP */}
+          <p
             className={cn('text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed', theme.textMuted)}
           >
             <span className="text-primary-500 font-medium">Search intelligently</span>,{' '}
             <span className={cn('font-medium', isDark ? 'text-secondary-400' : 'text-secondary-600')}>get AI summaries</span>, and{' '}
             <span className="text-accent-500 font-medium">find answers instantly</span>{' '}
             — all in one secure platform.
-          </motion.p>
+          </p>
 
           {/* CTA Buttons */}
           <motion.div
@@ -1560,16 +1553,13 @@ export default function Landing() {
           </motion.div>
 
           {/* Trust indicator */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
+          <p
             className={cn('mt-8 text-sm flex items-center justify-center gap-2', theme.textGhost)}
           >
             <Shield className="w-4 h-4" />
             Exclusively for .gov.gh email holders
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
 
         {/* Scroll indicator */}
         <motion.div
