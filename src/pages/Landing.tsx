@@ -494,7 +494,7 @@ function FeatureCard({ feature, index, isDark }: { feature: typeof features[0]; 
 }
 
 // ============================================================================
-// AUTH MODAL
+// AUTH MODAL - Enhanced with sleek effects
 // ============================================================================
 function AuthModal({
   isOpen,
@@ -525,134 +525,342 @@ function AuthModal({
     <AnimatePresence>
       {isOpen && (
         <Fragment>
-          {/* Backdrop */}
+          {/* Backdrop with animated gradient */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md"
-          />
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl"
+          >
+            {/* Ambient glow effects */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div
+                className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-[120px]"
+                style={{ background: isDark ? 'rgba(0, 107, 63, 0.15)' : 'rgba(0, 107, 63, 0.1)' }}
+              />
+              <div
+                className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-[120px]"
+                style={{ background: isDark ? 'rgba(252, 209, 22, 0.1)' : 'rgba(252, 209, 22, 0.08)' }}
+              />
+            </motion.div>
+          </motion.div>
 
-          {/* Modal Container - Centers the modal and handles scrolling */}
+          {/* Modal Container */}
           <div className="fixed inset-0 z-50 overflow-y-auto">
             <div className="min-h-full flex items-center justify-center p-4 sm:p-6">
               <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                initial={{ opacity: 0, scale: 0.9, y: 40 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+                exit={{ opacity: 0, scale: 0.9, y: 40 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                 className={cn(
-                  'relative w-full rounded-2xl shadow-2xl',
+                  'relative w-full rounded-2xl',
                   mode === 'register' ? 'max-w-lg' : 'max-w-md',
                   isDark ? 'dark' : ''
                 )}
                 onClick={(e) => e.stopPropagation()}
-                style={{
-                  background: isDark
-                    ? 'linear-gradient(145deg, #1f1a15 0%, #171310 100%)'
-                    : 'linear-gradient(145deg, #ffffff 0%, #faf8f5 100%)',
-                  border: `1px solid ${isDark ? 'rgba(252, 209, 22, 0.12)' : 'rgba(0, 107, 63, 0.15)'}`,
-                  boxShadow: isDark
-                    ? '0 0 100px rgba(252, 209, 22, 0.08), 0 30px 60px rgba(0, 0, 0, 0.6)'
-                    : '0 0 100px rgba(0, 107, 63, 0.08), 0 30px 60px rgba(0, 0, 0, 0.12)',
-                }}
               >
-                {/* Ghana flag stripe at top */}
-                <div className="absolute top-0 left-0 right-0 h-1.5 rounded-t-2xl overflow-hidden flex">
-                  <div className="flex-1 bg-accent-500" />
-                  <div className="flex-1 bg-secondary-500" />
-                  <div className="flex-1 bg-primary-500" />
-                </div>
-
-                {/* Close button */}
-                <button
-                  onClick={onClose}
-                  aria-label="Close modal"
-                  className={cn(
-                    'absolute top-4 right-4 z-10 p-2 rounded-full transition-all duration-200',
-                    isDark
-                      ? 'text-amber-50/50 hover:text-amber-50 hover:bg-white/10'
-                      : 'text-surface-400 hover:text-surface-700 hover:bg-black/5'
-                  )}
+                {/* Animated border glow */}
+                <motion.div
+                  className="absolute -inset-[1px] rounded-2xl overflow-hidden"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.1 }}
                 >
-                  <X className="w-5 h-5" />
-                </button>
+                  <motion.div
+                    className="absolute inset-0"
+                    style={{
+                      background: isDark
+                        ? 'linear-gradient(135deg, #FCD116, #006B3F, #CE1126, #FCD116)'
+                        : 'linear-gradient(135deg, #006B3F, #FCD116, #006B3F, #CE1126)',
+                      backgroundSize: '400% 400%',
+                    }}
+                    animate={{
+                      backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                    }}
+                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                  />
+                </motion.div>
 
-                {/* Modal Header */}
-                <div className="pt-8 pb-4 px-6 sm:px-8 text-center">
-                  {/* Logo */}
-                  <div className="flex justify-center mb-4">
-                    <div
-                      className="w-14 h-14 rounded-xl flex items-center justify-center"
-                      style={{
-                        background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)',
-                        boxShadow: '0 4px 20px rgba(0, 107, 63, 0.3)',
-                      }}
-                    >
-                      <Library className="w-7 h-7 text-secondary-400" />
-                    </div>
-                  </div>
-
-                  <h2 className={cn(
-                    'text-2xl font-heading font-bold',
-                    isDark ? 'text-amber-50' : 'text-surface-900'
-                  )}>
-                    {mode === 'login' ? 'Welcome Back' : 'Create Account'}
-                  </h2>
-                  <p className={cn(
-                    'mt-1.5 text-sm',
-                    isDark ? 'text-amber-50/60' : 'text-surface-500'
-                  )}>
-                    {mode === 'login'
-                      ? 'Sign in to your OHCS E-Library account'
-                      : 'Join the AI-powered knowledge platform'}
-                  </p>
-                </div>
-
-                {/* Form Content */}
-                <div className="px-6 sm:px-8 pb-6">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={mode}
-                      initial={{ opacity: 0, x: mode === 'login' ? -20 : 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: mode === 'login' ? 20 : -20 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      {mode === 'login' ? (
-                        <LoginFormContent isDark={isDark} onClose={onClose} />
-                      ) : (
-                        <RegisterFormContent isDark={isDark} onClose={onClose} />
-                      )}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-
-                {/* Footer - Switch mode */}
+                {/* Modal content container */}
                 <div
-                  className={cn(
-                    'px-6 sm:px-8 py-4 text-center rounded-b-2xl',
-                    isDark ? 'bg-white/[0.02]' : 'bg-black/[0.02]'
-                  )}
+                  className="relative rounded-2xl overflow-hidden"
                   style={{
-                    borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+                    background: isDark
+                      ? 'linear-gradient(145deg, #1f1a15 0%, #171310 100%)'
+                      : 'linear-gradient(145deg, #ffffff 0%, #faf8f5 100%)',
+                    boxShadow: isDark
+                      ? '0 0 80px rgba(252, 209, 22, 0.1), 0 25px 50px rgba(0, 0, 0, 0.5)'
+                      : '0 0 80px rgba(0, 107, 63, 0.1), 0 25px 50px rgba(0, 0, 0, 0.15)',
                   }}
                 >
-                  <p className={cn('text-sm', isDark ? 'text-amber-50/50' : 'text-surface-500')}>
-                    {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
-                    <button
-                      onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-                      className={cn(
-                        'font-semibold transition-colors',
-                        isDark
-                          ? 'text-secondary-400 hover:text-secondary-300'
-                          : 'text-primary-600 hover:text-primary-700'
-                      )}
+                  {/* Floating particles inside modal */}
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {[...Array(6)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute w-1 h-1 rounded-full"
+                        style={{
+                          background: isDark ? 'rgba(252, 209, 22, 0.4)' : 'rgba(0, 107, 63, 0.3)',
+                          left: `${15 + i * 15}%`,
+                          top: `${20 + (i % 3) * 30}%`,
+                        }}
+                        animate={{
+                          y: [0, -20, 0],
+                          opacity: [0.2, 0.6, 0.2],
+                          scale: [0.8, 1.2, 0.8],
+                        }}
+                        transition={{
+                          duration: 3 + i * 0.5,
+                          repeat: Infinity,
+                          delay: i * 0.3,
+                          ease: 'easeInOut',
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Ghana flag stripe with shimmer */}
+                  <div className="absolute top-0 left-0 right-0 h-1.5 overflow-hidden flex">
+                    <motion.div
+                      className="flex-1 bg-accent-500 relative overflow-hidden"
+                      whileHover={{ scaleY: 1.5 }}
                     >
-                      {mode === 'login' ? 'Create one' : 'Sign in'}
-                    </button>
-                  </p>
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                        animate={{ x: ['-100%', '200%'] }}
+                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                      />
+                    </motion.div>
+                    <motion.div
+                      className="flex-1 bg-secondary-500 relative overflow-hidden"
+                      whileHover={{ scaleY: 1.5 }}
+                    >
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                        animate={{ x: ['-100%', '200%'] }}
+                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3, delay: 0.3 }}
+                      />
+                    </motion.div>
+                    <motion.div
+                      className="flex-1 bg-primary-500 relative overflow-hidden"
+                      whileHover={{ scaleY: 1.5 }}
+                    >
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                        animate={{ x: ['-100%', '200%'] }}
+                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3, delay: 0.6 }}
+                      />
+                    </motion.div>
+                  </div>
+
+                  {/* Close button - Enhanced */}
+                  <motion.button
+                    onClick={onClose}
+                    aria-label="Close modal"
+                    className={cn(
+                      'absolute top-4 right-4 z-10 p-2.5 rounded-xl overflow-hidden group/close',
+                      isDark ? 'text-amber-50/50' : 'text-surface-400'
+                    )}
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                  >
+                    <motion.div
+                      className="absolute inset-0 rounded-xl opacity-0 group-hover/close:opacity-100 transition-opacity"
+                      style={{
+                        background: isDark
+                          ? 'rgba(255, 255, 255, 0.1)'
+                          : 'rgba(0, 0, 0, 0.05)',
+                      }}
+                    />
+                    <motion.div
+                      className="absolute inset-0 rounded-xl opacity-0 group-hover/close:opacity-100"
+                      style={{
+                        boxShadow: isDark
+                          ? '0 0 15px rgba(252, 209, 22, 0.3)'
+                          : '0 0 15px rgba(0, 107, 63, 0.2)',
+                      }}
+                    />
+                    <X className="w-5 h-5 relative" />
+                  </motion.button>
+
+                  {/* Modal Header - Enhanced */}
+                  <div className="pt-10 pb-4 px-6 sm:px-8 text-center relative">
+                    {/* Animated logo */}
+                    <motion.div
+                      className="flex justify-center mb-5"
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: 'spring', damping: 15, stiffness: 200, delay: 0.1 }}
+                    >
+                      <div className="relative group/logo">
+                        {/* Outer glow ring */}
+                        <motion.div
+                          className="absolute -inset-2 rounded-2xl opacity-60"
+                          style={{
+                            background: 'linear-gradient(135deg, #006B3F, #FCD116, #006B3F)',
+                            filter: 'blur(10px)',
+                          }}
+                          animate={{
+                            rotate: [0, 360],
+                            scale: [1, 1.1, 1],
+                          }}
+                          transition={{
+                            rotate: { duration: 10, repeat: Infinity, ease: 'linear' },
+                            scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+                          }}
+                        />
+                        {/* Logo container */}
+                        <motion.div
+                          className="relative w-16 h-16 rounded-xl flex items-center justify-center overflow-hidden"
+                          style={{
+                            background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)',
+                            boxShadow: '0 8px 30px rgba(0, 107, 63, 0.4)',
+                          }}
+                          whileHover={{ scale: 1.05 }}
+                          transition={{ type: 'spring', stiffness: 400 }}
+                        >
+                          {/* Shimmer effect */}
+                          <motion.div
+                            className="absolute inset-0"
+                            style={{
+                              background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%)',
+                            }}
+                            animate={{ x: ['-100%', '200%'] }}
+                            transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
+                          />
+                          <motion.div
+                            animate={{ rotateY: [0, 10, -10, 0] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                          >
+                            <Library className="w-8 h-8 text-secondary-400 drop-shadow-lg" />
+                          </motion.div>
+                        </motion.div>
+                      </div>
+                    </motion.div>
+
+                    {/* Title with gradient animation */}
+                    <motion.h2
+                      className={cn(
+                        'text-2xl font-heading font-bold',
+                        isDark ? 'text-amber-50' : 'text-surface-900'
+                      )}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={mode}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+                        </motion.span>
+                      </AnimatePresence>
+                    </motion.h2>
+                    <motion.p
+                      className={cn(
+                        'mt-2 text-sm',
+                        isDark ? 'text-amber-50/60' : 'text-surface-500'
+                      )}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={mode}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          {mode === 'login'
+                            ? 'Sign in to your OHCS E-Library account'
+                            : 'Join the AI-powered knowledge platform'}
+                        </motion.span>
+                      </AnimatePresence>
+                    </motion.p>
+                  </div>
+
+                  {/* Form Content */}
+                  <div className="px-6 sm:px-8 pb-6">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={mode}
+                        initial={{ opacity: 0, x: mode === 'login' ? -30 : 30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: mode === 'login' ? 30 : -30 }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                      >
+                        {mode === 'login' ? (
+                          <LoginFormContent isDark={isDark} onClose={onClose} />
+                        ) : (
+                          <RegisterFormContent isDark={isDark} onClose={onClose} />
+                        )}
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Footer - Enhanced switch mode */}
+                  <motion.div
+                    className={cn(
+                      'px-6 sm:px-8 py-5 text-center relative overflow-hidden',
+                      isDark ? 'bg-white/[0.02]' : 'bg-black/[0.02]'
+                    )}
+                    style={{
+                      borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+                    }}
+                  >
+                    <p className={cn('text-sm', isDark ? 'text-amber-50/50' : 'text-surface-500')}>
+                      {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
+                      <motion.button
+                        onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+                        className={cn(
+                          'font-semibold relative group/switch',
+                          isDark
+                            ? 'text-secondary-400'
+                            : 'text-primary-600'
+                        )}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span className="relative z-10">
+                          {mode === 'login' ? 'Create one' : 'Sign in'}
+                        </span>
+                        {/* Animated underline */}
+                        <motion.div
+                          className="absolute -bottom-0.5 left-0 right-0 h-[2px] rounded-full origin-left"
+                          style={{
+                            background: isDark
+                              ? 'linear-gradient(90deg, #FCD116, #f0c000)'
+                              : 'linear-gradient(90deg, #006B3F, #008a50)',
+                          }}
+                          initial={{ scaleX: 0 }}
+                          whileHover={{ scaleX: 1 }}
+                          transition={{ duration: 0.3 }}
+                        />
+                        {/* Glow effect */}
+                        <motion.div
+                          className="absolute inset-0 -inset-x-2 rounded opacity-0 group-hover/switch:opacity-100 blur-lg transition-opacity"
+                          style={{
+                            background: isDark
+                              ? 'rgba(252, 209, 22, 0.2)'
+                              : 'rgba(0, 107, 63, 0.15)',
+                          }}
+                        />
+                      </motion.button>
+                    </p>
+                  </motion.div>
                 </div>
               </motion.div>
             </div>
@@ -733,15 +941,32 @@ function LoginFormContent({ isDark, onClose }: { isDark: boolean; onClose: () =>
 
   return (
     <div className="space-y-5">
-      {/* Login Mode Tabs */}
+      {/* Login Mode Tabs - Enhanced with sliding indicator */}
       <div
-        className="flex p-1 rounded-lg"
+        className="relative flex p-1 rounded-xl"
         style={{
           background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
         }}
       >
+        {/* Sliding background indicator */}
+        <motion.div
+          className="absolute top-1 bottom-1 rounded-lg"
+          style={{
+            width: 'calc(50% - 4px)',
+            background: isDark
+              ? 'linear-gradient(135deg, rgba(252, 209, 22, 0.15), rgba(252, 209, 22, 0.08))'
+              : 'linear-gradient(135deg, rgba(0, 107, 63, 0.1), rgba(0, 107, 63, 0.05))',
+            boxShadow: isDark
+              ? '0 2px 10px rgba(252, 209, 22, 0.1), inset 0 1px 0 rgba(255,255,255,0.05)'
+              : '0 2px 10px rgba(0, 107, 63, 0.08), 0 1px 2px rgba(0,0,0,0.05)',
+          }}
+          animate={{
+            x: loginMode === 'email' ? 4 : 'calc(100% + 4px)',
+          }}
+          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+        />
         {(['email', 'staffId'] as const).map((m) => (
-          <button
+          <motion.button
             key={m}
             type="button"
             onClick={() => {
@@ -749,175 +974,484 @@ function LoginFormContent({ isDark, onClose }: { isDark: boolean; onClose: () =>
               setServerError(null);
             }}
             className={cn(
-              'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md text-sm font-medium transition-all',
+              'relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-colors z-10',
               loginMode === m
                 ? isDark
-                  ? 'bg-white/10 text-secondary-400 shadow-sm'
-                  : 'bg-white text-primary-600 shadow-sm'
+                  ? 'text-secondary-400'
+                  : 'text-primary-600'
                 : isDark
-                  ? 'text-amber-50/50 hover:text-amber-50/80'
-                  : 'text-surface-500 hover:text-surface-700'
+                  ? 'text-amber-50/50 hover:text-amber-50/70'
+                  : 'text-surface-500 hover:text-surface-600'
             )}
+            whileHover={{ scale: loginMode === m ? 1 : 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            {m === 'email' ? <Mail className="w-4 h-4" /> : <BadgeCheck className="w-4 h-4" />}
+            <motion.div
+              animate={{
+                scale: loginMode === m ? [1, 1.2, 1] : 1,
+                rotate: loginMode === m ? [0, 5, -5, 0] : 0,
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              {m === 'email' ? <Mail className="w-4 h-4" /> : <BadgeCheck className="w-4 h-4" />}
+            </motion.div>
             {m === 'email' ? 'Email' : 'Staff ID'}
-          </button>
+          </motion.button>
         ))}
       </div>
 
-      {/* Error Display */}
-      {serverError && (
-        <div
-          className="p-3 rounded-lg flex items-start gap-2.5"
-          style={{
-            background: isDark ? 'rgba(206, 17, 38, 0.15)' : 'rgba(206, 17, 38, 0.08)',
-            border: '1px solid rgba(206, 17, 38, 0.3)',
-          }}
-        >
-          <AlertCircle className="w-4 h-4 text-error-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-error-500">{serverError}</p>
-        </div>
-      )}
+      {/* Error Display - Enhanced with animation */}
+      <AnimatePresence>
+        {serverError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            className="relative p-3 rounded-lg flex items-start gap-2.5 overflow-hidden"
+            style={{
+              background: isDark ? 'rgba(206, 17, 38, 0.15)' : 'rgba(206, 17, 38, 0.08)',
+              border: '1px solid rgba(206, 17, 38, 0.3)',
+            }}
+          >
+            {/* Animated pulse effect */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              animate={{ opacity: [0.3, 0.1, 0.3] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              style={{ background: 'radial-gradient(circle at 0% 50%, rgba(206, 17, 38, 0.2), transparent 50%)' }}
+            />
+            <motion.div
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <AlertCircle className="w-4 h-4 text-error-500 flex-shrink-0 mt-0.5" />
+            </motion.div>
+            <p className="text-sm text-error-500 relative z-10">{serverError}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Email Form */}
       {loginMode === 'email' && (
         <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-4">
+          {/* Email Input - Enhanced with glow effect */}
           <div>
             <label className={labelStyles}>Email Address</label>
-            <div className="relative">
-              <Mail className={iconStyles} />
-              <input
-                type="email"
-                placeholder="yourname@agency.gov.gh"
-                className={inputStyles}
-                {...emailForm.register('email')}
+            <motion.div
+              className="relative group"
+              whileFocus={{ scale: 1 }}
+            >
+              {/* Input glow effect */}
+              <motion.div
+                className="absolute -inset-0.5 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{
+                  background: isDark
+                    ? 'linear-gradient(135deg, rgba(252, 209, 22, 0.3), rgba(252, 209, 22, 0.1))'
+                    : 'linear-gradient(135deg, rgba(0, 107, 63, 0.2), rgba(0, 107, 63, 0.1))',
+                  filter: 'blur(4px)',
+                }}
               />
-            </div>
+              <div className="relative">
+                <motion.div
+                  className={iconStyles}
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                >
+                  <Mail className="w-5 h-5" />
+                </motion.div>
+                <input
+                  type="email"
+                  placeholder="yourname@agency.gov.gh"
+                  className={cn(inputStyles, 'relative z-10')}
+                  {...emailForm.register('email')}
+                />
+              </div>
+            </motion.div>
             {emailForm.formState.errors.email && (
-              <p className="mt-1 text-xs text-error-500">{emailForm.formState.errors.email.message}</p>
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-1 text-xs text-error-500"
+              >
+                {emailForm.formState.errors.email.message}
+              </motion.p>
             )}
           </div>
 
+          {/* Password Input - Enhanced with glow effect */}
           <div>
             <label className={labelStyles}>Password</label>
-            <div className="relative">
-              <Lock className={iconStyles} />
-              <input
-                type="password"
-                placeholder="Enter your password"
-                className={inputStyles}
-                {...emailForm.register('password')}
+            <motion.div className="relative group">
+              {/* Input glow effect */}
+              <motion.div
+                className="absolute -inset-0.5 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{
+                  background: isDark
+                    ? 'linear-gradient(135deg, rgba(252, 209, 22, 0.3), rgba(252, 209, 22, 0.1))'
+                    : 'linear-gradient(135deg, rgba(0, 107, 63, 0.2), rgba(0, 107, 63, 0.1))',
+                  filter: 'blur(4px)',
+                }}
               />
-            </div>
+              <div className="relative">
+                <motion.div
+                  className={iconStyles}
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                >
+                  <Lock className="w-5 h-5" />
+                </motion.div>
+                <input
+                  type="password"
+                  placeholder="Enter your password"
+                  className={cn(inputStyles, 'relative z-10')}
+                  {...emailForm.register('password')}
+                />
+              </div>
+            </motion.div>
             {emailForm.formState.errors.password && (
-              <p className="mt-1 text-xs text-error-500">{emailForm.formState.errors.password.message}</p>
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-1 text-xs text-error-500"
+              >
+                {emailForm.formState.errors.password.message}
+              </motion.p>
             )}
           </div>
 
+          {/* Remember me and Forgot password */}
           <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="w-4 h-4 rounded border-surface-300 text-primary-600"
-                {...emailForm.register('rememberMe')}
-              />
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <motion.div
+                className="relative"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <input
+                  type="checkbox"
+                  className={cn(
+                    'w-4 h-4 rounded border-2 appearance-none cursor-pointer transition-all',
+                    isDark
+                      ? 'border-amber-50/30 bg-white/5 checked:bg-secondary-500 checked:border-secondary-500'
+                      : 'border-surface-300 bg-white checked:bg-primary-600 checked:border-primary-600'
+                  )}
+                  {...emailForm.register('rememberMe')}
+                />
+                <Check className={cn(
+                  'absolute inset-0 w-4 h-4 text-white pointer-events-none opacity-0 scale-50 transition-all',
+                  'peer-checked:opacity-100 peer-checked:scale-100'
+                )} />
+              </motion.div>
               <span className={cn('text-sm', isDark ? 'text-amber-50/60' : 'text-surface-600')}>
                 Remember me
               </span>
             </label>
-            <button
+            {/* Forgot password - Enhanced */}
+            <motion.button
               type="button"
               className={cn(
-                'text-sm font-medium',
-                isDark ? 'text-secondary-400 hover:text-secondary-300' : 'text-primary-600 hover:text-primary-700'
+                'relative text-sm font-medium group',
+                isDark ? 'text-secondary-400' : 'text-primary-600'
               )}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              Forgot password?
-            </button>
+              <span className="relative z-10">Forgot password?</span>
+              {/* Underline animation */}
+              <motion.div
+                className="absolute -bottom-0.5 left-0 right-0 h-0.5 origin-left"
+                style={{
+                  background: isDark
+                    ? 'linear-gradient(90deg, #FCD116, rgba(252, 209, 22, 0.3))'
+                    : 'linear-gradient(90deg, #006B3F, rgba(0, 107, 63, 0.3))',
+                }}
+                initial={{ scaleX: 0 }}
+                whileHover={{ scaleX: 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              />
+            </motion.button>
           </div>
 
-          <button
+          {/* Submit Button - Enhanced with shine and glow */}
+          <motion.button
             type="submit"
             disabled={emailForm.formState.isSubmitting}
-            className="w-full h-11 rounded-lg font-semibold text-white transition-all disabled:opacity-50"
+            className="relative w-full h-12 rounded-xl font-semibold text-white overflow-hidden disabled:opacity-50 group"
+            whileHover={{ scale: 1.01, y: -1 }}
+            whileTap={{ scale: 0.99 }}
             style={{
               background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)',
-              boxShadow: '0 4px 15px rgba(0, 107, 63, 0.3)',
             }}
           >
-            {emailForm.formState.isSubmitting ? 'Signing in...' : 'Sign In'}
-          </button>
+            {/* Animated border glow */}
+            <motion.div
+              className="absolute -inset-0.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              style={{
+                background: 'linear-gradient(135deg, #006B3F, #FCD116, #006B3F)',
+                backgroundSize: '200% 200%',
+              }}
+              animate={{
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+              }}
+              transition={{ duration: 3, repeat: Infinity }}
+            />
+            {/* Inner button */}
+            <div
+              className="absolute inset-0.5 rounded-xl"
+              style={{ background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)' }}
+            />
+            {/* Shine sweep effect */}
+            <motion.div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100"
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
+              }}
+              animate={{ x: ['-100%', '200%'] }}
+              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 0.5 }}
+            />
+            {/* Glow effect */}
+            <motion.div
+              className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100"
+              style={{
+                boxShadow: '0 0 30px rgba(0, 107, 63, 0.5), 0 0 60px rgba(0, 107, 63, 0.3)',
+              }}
+              transition={{ duration: 0.3 }}
+            />
+            {/* Button text with icon */}
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              {emailForm.formState.isSubmitting ? (
+                <>
+                  <motion.div
+                    className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign In
+                  <motion.div
+                    animate={{ x: [0, 4, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    <ArrowRight className="w-5 h-5" />
+                  </motion.div>
+                </>
+              )}
+            </span>
+          </motion.button>
         </form>
       )}
 
-      {/* Staff ID Form */}
+      {/* Staff ID Form - Enhanced */}
       {loginMode === 'staffId' && (
         <form onSubmit={staffIdForm.handleSubmit(onStaffIdSubmit)} className="space-y-4">
+          {/* Staff ID Input - Enhanced with glow effect */}
           <div>
             <label className={labelStyles}>Staff ID</label>
-            <div className="relative">
-              <BadgeCheck className={iconStyles} />
-              <input
-                type="text"
-                placeholder="e.g. 123456"
-                className={inputStyles}
-                {...staffIdForm.register('staffId')}
+            <motion.div className="relative group">
+              {/* Input glow effect */}
+              <motion.div
+                className="absolute -inset-0.5 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{
+                  background: isDark
+                    ? 'linear-gradient(135deg, rgba(252, 209, 22, 0.3), rgba(252, 209, 22, 0.1))'
+                    : 'linear-gradient(135deg, rgba(0, 107, 63, 0.2), rgba(0, 107, 63, 0.1))',
+                  filter: 'blur(4px)',
+                }}
               />
-            </div>
+              <div className="relative">
+                <motion.div
+                  className={iconStyles}
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                >
+                  <BadgeCheck className="w-5 h-5" />
+                </motion.div>
+                <input
+                  type="text"
+                  placeholder="e.g. 123456"
+                  className={cn(inputStyles, 'relative z-10')}
+                  {...staffIdForm.register('staffId')}
+                />
+              </div>
+            </motion.div>
             {staffIdForm.formState.errors.staffId && (
-              <p className="mt-1 text-xs text-error-500">{staffIdForm.formState.errors.staffId.message}</p>
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-1 text-xs text-error-500"
+              >
+                {staffIdForm.formState.errors.staffId.message}
+              </motion.p>
             )}
           </div>
 
+          {/* Password Input - Enhanced with glow effect */}
           <div>
             <label className={labelStyles}>Password</label>
-            <div className="relative">
-              <Lock className={iconStyles} />
-              <input
-                type="password"
-                placeholder="Enter your password"
-                className={inputStyles}
-                {...staffIdForm.register('password')}
+            <motion.div className="relative group">
+              {/* Input glow effect */}
+              <motion.div
+                className="absolute -inset-0.5 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{
+                  background: isDark
+                    ? 'linear-gradient(135deg, rgba(252, 209, 22, 0.3), rgba(252, 209, 22, 0.1))'
+                    : 'linear-gradient(135deg, rgba(0, 107, 63, 0.2), rgba(0, 107, 63, 0.1))',
+                  filter: 'blur(4px)',
+                }}
               />
-            </div>
+              <div className="relative">
+                <motion.div
+                  className={iconStyles}
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                >
+                  <Lock className="w-5 h-5" />
+                </motion.div>
+                <input
+                  type="password"
+                  placeholder="Enter your password"
+                  className={cn(inputStyles, 'relative z-10')}
+                  {...staffIdForm.register('password')}
+                />
+              </div>
+            </motion.div>
             {staffIdForm.formState.errors.password && (
-              <p className="mt-1 text-xs text-error-500">{staffIdForm.formState.errors.password.message}</p>
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-1 text-xs text-error-500"
+              >
+                {staffIdForm.formState.errors.password.message}
+              </motion.p>
             )}
           </div>
 
+          {/* Remember me and Forgot password - Enhanced */}
           <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="w-4 h-4 rounded border-surface-300 text-primary-600"
-                {...staffIdForm.register('rememberMe')}
-              />
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <motion.div
+                className="relative"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <input
+                  type="checkbox"
+                  className={cn(
+                    'w-4 h-4 rounded border-2 appearance-none cursor-pointer transition-all',
+                    isDark
+                      ? 'border-amber-50/30 bg-white/5 checked:bg-secondary-500 checked:border-secondary-500'
+                      : 'border-surface-300 bg-white checked:bg-primary-600 checked:border-primary-600'
+                  )}
+                  {...staffIdForm.register('rememberMe')}
+                />
+                <Check className={cn(
+                  'absolute inset-0 w-4 h-4 text-white pointer-events-none opacity-0 scale-50 transition-all',
+                  'peer-checked:opacity-100 peer-checked:scale-100'
+                )} />
+              </motion.div>
               <span className={cn('text-sm', isDark ? 'text-amber-50/60' : 'text-surface-600')}>
                 Remember me
               </span>
             </label>
-            <button
+            {/* Forgot password - Enhanced */}
+            <motion.button
               type="button"
               className={cn(
-                'text-sm font-medium',
-                isDark ? 'text-secondary-400 hover:text-secondary-300' : 'text-primary-600 hover:text-primary-700'
+                'relative text-sm font-medium group',
+                isDark ? 'text-secondary-400' : 'text-primary-600'
               )}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              Forgot password?
-            </button>
+              <span className="relative z-10">Forgot password?</span>
+              {/* Underline animation */}
+              <motion.div
+                className="absolute -bottom-0.5 left-0 right-0 h-0.5 origin-left"
+                style={{
+                  background: isDark
+                    ? 'linear-gradient(90deg, #FCD116, rgba(252, 209, 22, 0.3))'
+                    : 'linear-gradient(90deg, #006B3F, rgba(0, 107, 63, 0.3))',
+                }}
+                initial={{ scaleX: 0 }}
+                whileHover={{ scaleX: 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              />
+            </motion.button>
           </div>
 
-          <button
+          {/* Submit Button - Enhanced with shine and glow */}
+          <motion.button
             type="submit"
             disabled={staffIdForm.formState.isSubmitting}
-            className="w-full h-11 rounded-lg font-semibold text-white transition-all disabled:opacity-50"
+            className="relative w-full h-12 rounded-xl font-semibold text-white overflow-hidden disabled:opacity-50 group"
+            whileHover={{ scale: 1.01, y: -1 }}
+            whileTap={{ scale: 0.99 }}
             style={{
               background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)',
-              boxShadow: '0 4px 15px rgba(0, 107, 63, 0.3)',
             }}
           >
-            {staffIdForm.formState.isSubmitting ? 'Signing in...' : 'Sign In'}
-          </button>
+            {/* Animated border glow */}
+            <motion.div
+              className="absolute -inset-0.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              style={{
+                background: 'linear-gradient(135deg, #006B3F, #FCD116, #006B3F)',
+                backgroundSize: '200% 200%',
+              }}
+              animate={{
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+              }}
+              transition={{ duration: 3, repeat: Infinity }}
+            />
+            {/* Inner button */}
+            <div
+              className="absolute inset-0.5 rounded-xl"
+              style={{ background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)' }}
+            />
+            {/* Shine sweep effect */}
+            <motion.div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100"
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
+              }}
+              animate={{ x: ['-100%', '200%'] }}
+              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 0.5 }}
+            />
+            {/* Glow effect */}
+            <motion.div
+              className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100"
+              style={{
+                boxShadow: '0 0 30px rgba(0, 107, 63, 0.5), 0 0 60px rgba(0, 107, 63, 0.3)',
+              }}
+              transition={{ duration: 0.3 }}
+            />
+            {/* Button text with icon */}
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              {staffIdForm.formState.isSubmitting ? (
+                <>
+                  <motion.div
+                    className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign In
+                  <motion.div
+                    animate={{ x: [0, 4, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    <ArrowRight className="w-5 h-5" />
+                  </motion.div>
+                </>
+              )}
+            </span>
+          </motion.button>
         </form>
       )}
     </div>
@@ -1006,216 +1540,423 @@ function RegisterFormContent({ isDark, onClose }: { isDark: boolean; onClose: ()
     { met: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordValue), text: 'Special' },
   ];
 
+  // Enhanced input wrapper with glow effect
+  const EnhancedInput = ({ icon: Icon, children, className = '' }: { icon?: typeof Mail; children: React.ReactNode; className?: string }) => (
+    <motion.div className={cn('relative group', className)}>
+      {/* Input glow effect */}
+      <motion.div
+        className="absolute -inset-0.5 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{
+          background: isDark
+            ? 'linear-gradient(135deg, rgba(252, 209, 22, 0.3), rgba(252, 209, 22, 0.1))'
+            : 'linear-gradient(135deg, rgba(0, 107, 63, 0.2), rgba(0, 107, 63, 0.1))',
+          filter: 'blur(4px)',
+        }}
+      />
+      <div className="relative">
+        {Icon && (
+          <motion.div
+            className={iconStyles}
+            whileHover={{ scale: 1.1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+          >
+            <Icon className="w-5 h-5" />
+          </motion.div>
+        )}
+        {children}
+      </div>
+    </motion.div>
+  );
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {/* Error Display */}
-      {serverError && (
-        <div
-          className="p-3 rounded-lg flex items-start gap-2.5"
-          style={{
-            background: isDark ? 'rgba(206, 17, 38, 0.15)' : 'rgba(206, 17, 38, 0.08)',
-            border: '1px solid rgba(206, 17, 38, 0.3)',
-          }}
-        >
-          <AlertCircle className="w-4 h-4 text-error-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-error-500">{serverError}</p>
-        </div>
-      )}
+      {/* Error Display - Enhanced with animation */}
+      <AnimatePresence>
+        {serverError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            className="relative p-3 rounded-lg flex items-start gap-2.5 overflow-hidden"
+            style={{
+              background: isDark ? 'rgba(206, 17, 38, 0.15)' : 'rgba(206, 17, 38, 0.08)',
+              border: '1px solid rgba(206, 17, 38, 0.3)',
+            }}
+          >
+            {/* Animated pulse effect */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              animate={{ opacity: [0.3, 0.1, 0.3] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              style={{ background: 'radial-gradient(circle at 0% 50%, rgba(206, 17, 38, 0.2), transparent 50%)' }}
+            />
+            <motion.div
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <AlertCircle className="w-4 h-4 text-error-500 flex-shrink-0 mt-0.5" />
+            </motion.div>
+            <p className="text-sm text-error-500 relative z-10">{serverError}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Name Row */}
+      {/* Name Row - Enhanced */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={labelStyles}>First Name</label>
-          <div className="relative">
-            <User className={iconStyles} />
-            <input placeholder="John" className={inputWithIconStyles} {...register('firstName')} />
-          </div>
-          {errors.firstName && <p className="mt-1 text-xs text-error-500">{errors.firstName.message}</p>}
+          <EnhancedInput icon={User}>
+            <input placeholder="John" className={cn(inputWithIconStyles, 'relative z-10')} {...register('firstName')} />
+          </EnhancedInput>
+          {errors.firstName && (
+            <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-1 text-xs text-error-500">
+              {errors.firstName.message}
+            </motion.p>
+          )}
         </div>
         <div>
           <label className={labelStyles}>Last Name</label>
-          <input placeholder="Doe" className={inputStyles} {...register('lastName')} />
-          {errors.lastName && <p className="mt-1 text-xs text-error-500">{errors.lastName.message}</p>}
+          <EnhancedInput>
+            <input placeholder="Doe" className={cn(inputStyles, 'relative z-10')} {...register('lastName')} />
+          </EnhancedInput>
+          {errors.lastName && (
+            <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-1 text-xs text-error-500">
+              {errors.lastName.message}
+            </motion.p>
+          )}
         </div>
       </div>
 
-      {/* Email */}
+      {/* Email - Enhanced */}
       <div>
         <label className={labelStyles}>Email Address</label>
-        <div className="relative">
-          <Mail className={iconStyles} />
-          <input type="email" placeholder="yourname@agency.gov.gh" className={inputWithIconStyles} {...register('email')} />
-        </div>
+        <EnhancedInput icon={Mail}>
+          <input type="email" placeholder="yourname@agency.gov.gh" className={cn(inputWithIconStyles, 'relative z-10')} {...register('email')} />
+        </EnhancedInput>
         <p className={cn('mt-1 text-xs', isDark ? 'text-amber-50/40' : 'text-surface-400')}>Must be a .gov.gh email</p>
-        {errors.email && <p className="mt-1 text-xs text-error-500">{errors.email.message}</p>}
+        {errors.email && (
+          <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-1 text-xs text-error-500">
+            {errors.email.message}
+          </motion.p>
+        )}
       </div>
 
-      {/* Staff ID */}
+      {/* Staff ID - Enhanced */}
       <div>
         <label className={labelStyles}>Staff ID</label>
-        <div className="relative">
-          <BadgeCheck className={iconStyles} />
-          <input placeholder="e.g. 123456" className={inputWithIconStyles} {...register('staffId')} />
-        </div>
-        {errors.staffId && <p className="mt-1 text-xs text-error-500">{errors.staffId.message}</p>}
+        <EnhancedInput icon={BadgeCheck}>
+          <input placeholder="e.g. 123456" className={cn(inputWithIconStyles, 'relative z-10')} {...register('staffId')} />
+        </EnhancedInput>
+        {errors.staffId && (
+          <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-1 text-xs text-error-500">
+            {errors.staffId.message}
+          </motion.p>
+        )}
       </div>
 
-      {/* MDA Select */}
+      {/* MDA Select - Enhanced */}
       <div className="relative">
         <label className={labelStyles}>Ministry / Department / Agency</label>
-        <button
-          type="button"
-          onClick={() => setMdaOpen(!mdaOpen)}
-          className={cn(
-            inputStyles,
-            'flex items-center justify-between text-left',
-            !selectedMda && (isDark ? 'text-amber-50/30' : 'text-surface-400')
-          )}
-        >
-          <span className="truncate">
-            {selectedMda ? mdaOptions.find(o => o.value === selectedMda)?.label : 'Select your MDA'}
-          </span>
-          <ChevronDown className={cn('w-4 h-4 flex-shrink-0 transition-transform', mdaOpen && 'rotate-180')} />
-        </button>
-        {mdaOpen && (
-          <div
-            className="absolute z-20 w-full mt-1 rounded-lg shadow-xl max-h-48 overflow-auto"
+        <motion.div className="relative group">
+          {/* Select glow effect */}
+          <motion.div
+            className="absolute -inset-0.5 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"
             style={{
-              background: isDark ? '#1f1a15' : '#ffffff',
-              border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+              background: isDark
+                ? 'linear-gradient(135deg, rgba(252, 209, 22, 0.3), rgba(252, 209, 22, 0.1))'
+                : 'linear-gradient(135deg, rgba(0, 107, 63, 0.2), rgba(0, 107, 63, 0.1))',
+              filter: 'blur(4px)',
             }}
+          />
+          <motion.button
+            type="button"
+            onClick={() => setMdaOpen(!mdaOpen)}
+            className={cn(
+              inputStyles,
+              'relative z-10 flex items-center justify-between text-left',
+              !selectedMda && (isDark ? 'text-amber-50/30' : 'text-surface-400')
+            )}
+            whileHover={{ scale: 1.005 }}
+            whileTap={{ scale: 0.995 }}
           >
-            {mdaOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => {
-                  setValue('mdaId', option.value);
-                  setMdaOpen(false);
-                }}
-                className={cn(
-                  'w-full px-4 py-2.5 text-sm text-left transition-colors',
-                  selectedMda === option.value
-                    ? isDark
-                      ? 'bg-secondary-500/20 text-secondary-300'
-                      : 'bg-primary-50 text-primary-700'
-                    : isDark
-                      ? 'text-amber-50/80 hover:bg-white/5'
-                      : 'text-surface-700 hover:bg-surface-50'
-                )}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+            <span className="truncate">
+              {selectedMda ? mdaOptions.find(o => o.value === selectedMda)?.label : 'Select your MDA'}
+            </span>
+            <motion.div
+              animate={{ rotate: mdaOpen ? 180 : 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            >
+              <ChevronDown className="w-4 h-4 flex-shrink-0" />
+            </motion.div>
+          </motion.button>
+        </motion.div>
+        <AnimatePresence>
+          {mdaOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="absolute z-20 w-full mt-1 rounded-lg shadow-xl max-h-48 overflow-auto"
+              style={{
+                background: isDark ? '#1f1a15' : '#ffffff',
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+              }}
+            >
+              {mdaOptions.map((option, index) => (
+                <motion.button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setValue('mdaId', option.value);
+                    setMdaOpen(false);
+                  }}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                  className={cn(
+                    'w-full px-4 py-2.5 text-sm text-left transition-colors',
+                    selectedMda === option.value
+                      ? isDark
+                        ? 'bg-secondary-500/20 text-secondary-300'
+                        : 'bg-primary-50 text-primary-700'
+                      : isDark
+                        ? 'text-amber-50/80 hover:bg-white/5'
+                        : 'text-surface-700 hover:bg-surface-50'
+                  )}
+                >
+                  {option.label}
+                </motion.button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {errors.mdaId && (
+          <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-1 text-xs text-error-500">
+            {errors.mdaId.message}
+          </motion.p>
         )}
-        {errors.mdaId && <p className="mt-1 text-xs text-error-500">{errors.mdaId.message}</p>}
       </div>
 
-      {/* Department & Title Row */}
+      {/* Department & Title Row - Enhanced */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={labelStyles}>Directorate/Unit</label>
-          <div className="relative">
-            <Building2 className={iconStyles} />
-            <input placeholder="e.g. IT Directorate" className={inputWithIconStyles} {...register('department')} />
-          </div>
+          <EnhancedInput icon={Building2}>
+            <input placeholder="e.g. IT Directorate" className={cn(inputWithIconStyles, 'relative z-10')} {...register('department')} />
+          </EnhancedInput>
         </div>
         <div>
           <label className={labelStyles}>Job Title</label>
-          <div className="relative">
-            <Briefcase className={iconStyles} />
-            <input placeholder="e.g. Senior Officer" className={inputWithIconStyles} {...register('title')} />
-          </div>
+          <EnhancedInput icon={Briefcase}>
+            <input placeholder="e.g. Senior Officer" className={cn(inputWithIconStyles, 'relative z-10')} {...register('title')} />
+          </EnhancedInput>
         </div>
       </div>
 
-      {/* Password */}
+      {/* Password - Enhanced */}
       <div>
         <label className={labelStyles}>Password</label>
-        <div className="relative">
-          <Lock className={iconStyles} />
+        <EnhancedInput icon={Lock}>
           <input
             type="password"
             placeholder="Create a strong password"
-            className={inputWithIconStyles}
+            className={cn(inputWithIconStyles, 'relative z-10')}
             {...register('password', { onChange: (e) => setPasswordValue(e.target.value) })}
           />
-        </div>
-        {errors.password && <p className="mt-1 text-xs text-error-500">{errors.password.message}</p>}
+        </EnhancedInput>
+        {errors.password && (
+          <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-1 text-xs text-error-500">
+            {errors.password.message}
+          </motion.p>
+        )}
 
-        {/* Password strength */}
-        {passwordValue && (
-          <div className="mt-2">
-            <div className="flex items-center gap-2 mb-2">
-              <div className={cn('flex-1 h-1.5 rounded-full overflow-hidden', isDark ? 'bg-white/10' : 'bg-surface-200')}>
-                <div
+        {/* Password strength - Enhanced with animations */}
+        <AnimatePresence>
+          {passwordValue && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-2"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className={cn('flex-1 h-1.5 rounded-full overflow-hidden', isDark ? 'bg-white/10' : 'bg-surface-200')}>
+                  <motion.div
+                    className={cn(
+                      'h-full',
+                      passwordStrength.color === 'error' && 'bg-error-500',
+                      passwordStrength.color === 'warning' && 'bg-warning-500',
+                      passwordStrength.color === 'info' && 'bg-info-500',
+                      passwordStrength.color === 'success' && 'bg-success-500'
+                    )}
+                    initial={{ width: 0 }}
+                    animate={{
+                      width: passwordStrength.color === 'error' ? '25%' :
+                             passwordStrength.color === 'warning' ? '50%' :
+                             passwordStrength.color === 'info' ? '75%' : '100%'
+                    }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                  />
+                </div>
+                <motion.span
+                  key={passwordStrength.label}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
                   className={cn(
-                    'h-full transition-all duration-300',
-                    passwordStrength.color === 'error' && 'bg-error-500 w-1/4',
-                    passwordStrength.color === 'warning' && 'bg-warning-500 w-2/4',
-                    passwordStrength.color === 'info' && 'bg-info-500 w-3/4',
-                    passwordStrength.color === 'success' && 'bg-success-500 w-full'
-                  )}
-                />
-              </div>
-              <span className={cn(
-                'text-xs font-medium',
-                passwordStrength.color === 'error' && 'text-error-500',
-                passwordStrength.color === 'warning' && 'text-warning-500',
-                passwordStrength.color === 'info' && 'text-info-500',
-                passwordStrength.color === 'success' && 'text-success-500'
-              )}>
-                {passwordStrength.label}
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-x-3 gap-y-1">
-              {passwordRequirements.map((req, i) => (
-                <span
-                  key={i}
-                  className={cn(
-                    'flex items-center gap-1 text-xs',
-                    req.met ? 'text-success-500' : isDark ? 'text-amber-50/30' : 'text-surface-400'
+                    'text-xs font-medium',
+                    passwordStrength.color === 'error' && 'text-error-500',
+                    passwordStrength.color === 'warning' && 'text-warning-500',
+                    passwordStrength.color === 'info' && 'text-info-500',
+                    passwordStrength.color === 'success' && 'text-success-500'
                   )}
                 >
-                  <Check className={cn('w-3 h-3', !req.met && 'opacity-40')} />
-                  {req.text}
-                </span>
-              ))}
-            </div>
-          </div>
+                  {passwordStrength.label}
+                </motion.span>
+              </div>
+              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                {passwordRequirements.map((req, i) => (
+                  <motion.span
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className={cn(
+                      'flex items-center gap-1 text-xs transition-colors',
+                      req.met ? 'text-success-500' : isDark ? 'text-amber-50/30' : 'text-surface-400'
+                    )}
+                  >
+                    <motion.div
+                      animate={{ scale: req.met ? [1, 1.3, 1] : 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Check className={cn('w-3 h-3', !req.met && 'opacity-40')} />
+                    </motion.div>
+                    {req.text}
+                  </motion.span>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Confirm Password - Enhanced */}
+      <div>
+        <label className={labelStyles}>Confirm Password</label>
+        <EnhancedInput icon={Lock}>
+          <input type="password" placeholder="Confirm your password" className={cn(inputWithIconStyles, 'relative z-10')} {...register('confirmPassword')} />
+        </EnhancedInput>
+        {errors.confirmPassword && (
+          <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-1 text-xs text-error-500">
+            {errors.confirmPassword.message}
+          </motion.p>
         )}
       </div>
 
-      {/* Confirm Password */}
-      <div>
-        <label className={labelStyles}>Confirm Password</label>
-        <div className="relative">
-          <Lock className={iconStyles} />
-          <input type="password" placeholder="Confirm your password" className={inputWithIconStyles} {...register('confirmPassword')} />
-        </div>
-        {errors.confirmPassword && <p className="mt-1 text-xs text-error-500">{errors.confirmPassword.message}</p>}
-      </div>
-
-      {/* Submit */}
-      <button
+      {/* Submit Button - Enhanced with shine and glow */}
+      <motion.button
         type="submit"
         disabled={isSubmitting}
-        className="w-full h-11 rounded-lg font-semibold text-white transition-all disabled:opacity-50"
+        className="relative w-full h-12 rounded-xl font-semibold text-white overflow-hidden disabled:opacity-50 group"
+        whileHover={{ scale: 1.01, y: -1 }}
+        whileTap={{ scale: 0.99 }}
         style={{
           background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)',
-          boxShadow: '0 4px 15px rgba(0, 107, 63, 0.3)',
         }}
       >
-        {isSubmitting ? 'Creating Account...' : 'Create Account'}
-      </button>
+        {/* Animated border glow */}
+        <motion.div
+          className="absolute -inset-0.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{
+            background: 'linear-gradient(135deg, #006B3F, #FCD116, #006B3F)',
+            backgroundSize: '200% 200%',
+          }}
+          animate={{
+            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+          }}
+          transition={{ duration: 3, repeat: Infinity }}
+        />
+        {/* Inner button */}
+        <div
+          className="absolute inset-0.5 rounded-xl"
+          style={{ background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)' }}
+        />
+        {/* Shine sweep effect */}
+        <motion.div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100"
+          style={{
+            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
+          }}
+          animate={{ x: ['-100%', '200%'] }}
+          transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 0.5 }}
+        />
+        {/* Glow effect */}
+        <motion.div
+          className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100"
+          style={{
+            boxShadow: '0 0 30px rgba(0, 107, 63, 0.5), 0 0 60px rgba(0, 107, 63, 0.3)',
+          }}
+          transition={{ duration: 0.3 }}
+        />
+        {/* Button text with icon */}
+        <span className="relative z-10 flex items-center justify-center gap-2">
+          {isSubmitting ? (
+            <>
+              <motion.div
+                className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              />
+              Creating Account...
+            </>
+          ) : (
+            <>
+              Create Account
+              <motion.div
+                animate={{ x: [0, 4, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                <ArrowRight className="w-5 h-5" />
+              </motion.div>
+            </>
+          )}
+        </span>
+      </motion.button>
 
-      {/* Terms */}
+      {/* Terms - Enhanced with animated links */}
       <p className={cn('text-xs text-center', isDark ? 'text-amber-50/40' : 'text-surface-400')}>
         By creating an account, you agree to the OHCS{' '}
-        <a href="#" className={isDark ? 'text-secondary-400' : 'text-primary-600'}>Terms</a>
+        <motion.a
+          href="#"
+          className={cn('relative inline-block', isDark ? 'text-secondary-400' : 'text-primary-600')}
+          whileHover={{ scale: 1.05 }}
+        >
+          Terms
+          <motion.span
+            className="absolute -bottom-0.5 left-0 right-0 h-px"
+            style={{ background: isDark ? '#FCD116' : '#006B3F' }}
+            initial={{ scaleX: 0 }}
+            whileHover={{ scaleX: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+          />
+        </motion.a>
         {' '}and{' '}
-        <a href="#" className={isDark ? 'text-secondary-400' : 'text-primary-600'}>Privacy Policy</a>
+        <motion.a
+          href="#"
+          className={cn('relative inline-block', isDark ? 'text-secondary-400' : 'text-primary-600')}
+          whileHover={{ scale: 1.05 }}
+        >
+          Privacy Policy
+          <motion.span
+            className="absolute -bottom-0.5 left-0 right-0 h-px"
+            style={{ background: isDark ? '#FCD116' : '#006B3F' }}
+            initial={{ scaleX: 0 }}
+            whileHover={{ scaleX: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+          />
+        </motion.a>
       </p>
     </form>
   );
