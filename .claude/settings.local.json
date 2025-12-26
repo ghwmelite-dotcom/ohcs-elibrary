@@ -10,7 +10,10 @@
       "Bash(git init:*)",
       "Bash(git branch:*)",
       "Bash(git remote add:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: OHCS E-Library - AI-Powered Knowledge Platform\n\nA complete e-library platform for Ghana''s Office of the Head of Civil Service featuring:\n\nCore Features:\n- AI-powered document search and summarization\n- Digital document library with PDF viewing\n- Community forums for knowledge sharing\n- Real-time chat and messaging\n- Groups and collaboration spaces\n- Gamification with XP, badges, and leaderboards\n- News aggregation from Ghana sources\n- Comprehensive admin panel\n\nTechnical Stack:\n- React 18 + TypeScript + Vite 5\n- Tailwind CSS with Ghana-themed design system \\(Green, Gold, Red, Black Star\\)\n- Zustand for state management\n- React Hook Form + Zod for validation\n- Framer Motion for animations\n- Cloudflare Workers backend structure\n\nDesign Highlights:\n- Immersive landing page with floating books and AI network animations\n- Light/dark mode toggle with full theme support\n- Beautiful glassmorphic auth modals\n- Ghana flag color accents throughout\n- Responsive design for all screen sizes\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nFix TypeScript config for Cloudflare Pages build\n\n- Remove noEmit from tsconfig.node.json \\(conflicts with composite\\)\n- Add emitDeclarationOnly, declaration, declarationMap instead\n- Add dist-node output directory for node config\n- Update .gitignore to exclude dist-node\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
