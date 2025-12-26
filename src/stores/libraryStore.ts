@@ -256,10 +256,24 @@ export const useLibraryStore = create<LibraryStore>()(
 
           const data = await response.json();
 
+          // Merge API documents with local documents
+          const localDocs = getLocalDocuments();
+          const apiDocs = data.documents || [];
+
+          // Filter local docs by category if needed (currentFilter already defined above)
+          let filteredLocalDocs = localDocs;
+          if (currentFilter.category) {
+            filteredLocalDocs = localDocs.filter((doc) => doc.category === currentFilter.category);
+          }
+
+          // Combine: API docs first, then local docs
+          const allDocs = [...apiDocs, ...filteredLocalDocs];
+          const totalCount = (data.totalCount || 0) + filteredLocalDocs.length;
+
           set({
-            documents: data.documents || [],
-            totalCount: data.totalCount || 0,
-            totalPages: data.totalPages || 1,
+            documents: allDocs,
+            totalCount: totalCount,
+            totalPages: Math.ceil(totalCount / (currentFilter.limit || 12)),
             currentPage: data.currentPage || 1,
             isLoading: false,
           });
