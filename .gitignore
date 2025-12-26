@@ -37,3 +37,6 @@ coverage/
 .cache/
 .eslintcache
 *.tsbuildinfo
+
+# Lighthouse reports
+lighthouse-report.*
