@@ -149,10 +149,15 @@ export default function Library() {
         onChange={handleTabChange}
       />
 
+      {/* Category Filter - Mobile/Tablet */}
+      <div className="lg:hidden">
+        <CategoryFilter />
+      </div>
+
       {/* Main Content */}
       <div className="grid lg:grid-cols-4 gap-6">
-        {/* Sidebar */}
-        <div className="lg:col-span-1 space-y-6">
+        {/* Sidebar - Desktop Only */}
+        <div className="hidden lg:block lg:col-span-1 space-y-6">
           <CategoryFilter />
 
           {/* AI Assistant Promo */}

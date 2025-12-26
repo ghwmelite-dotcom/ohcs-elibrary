@@ -176,6 +176,20 @@ export const useLibraryStore = create<LibraryStore>()(
 
           const response = await fetch(`${API_BASE}/documents?${params}`);
 
+          // Check if response is JSON
+          const contentType = response.headers.get('content-type');
+          if (!contentType?.includes('application/json')) {
+            // API not available yet, use empty state
+            set({
+              documents: [],
+              totalCount: 0,
+              totalPages: 1,
+              isLoading: false,
+              error: null, // Don't show error, just empty state
+            });
+            return;
+          }
+
           if (!response.ok) {
             throw new Error('Failed to fetch documents');
           }
@@ -196,7 +210,7 @@ export const useLibraryStore = create<LibraryStore>()(
             totalCount: 0,
             totalPages: 1,
             isLoading: false,
-            error: error instanceof Error ? error.message : 'Failed to load documents',
+            error: null, // Don't show error for API not being available
           });
         }
       },
@@ -323,8 +337,14 @@ export const useLibraryStore = create<LibraryStore>()(
         try {
           const response = await fetch(`${API_BASE}/documents/categories`);
 
+          // Check if response is JSON
+          const contentType = response.headers.get('content-type');
+          if (!contentType?.includes('application/json')) {
+            set({ categories: DOCUMENT_CATEGORIES });
+            return;
+          }
+
           if (!response.ok) {
-            // Use static categories with zero counts if API fails
             set({ categories: DOCUMENT_CATEGORIES });
             return;
           }
@@ -366,8 +386,16 @@ export const useLibraryStore = create<LibraryStore>()(
         try {
           const response = await fetch(`${API_BASE}/bookmarks`);
 
+          // Check if response is JSON
+          const contentType = response.headers.get('content-type');
+          if (!contentType?.includes('application/json')) {
+            set({ bookmarks: [] });
+            return;
+          }
+
           if (!response.ok) {
-            throw new Error('Failed to fetch bookmarks');
+            set({ bookmarks: [] });
+            return;
           }
 
           const bookmarks = await response.json();
@@ -573,8 +601,14 @@ export const useLibraryStore = create<LibraryStore>()(
         try {
           const response = await fetch(`${API_BASE}/documents/stats`);
 
+          // Check if response is JSON
+          const contentType = response.headers.get('content-type');
+          if (!contentType?.includes('application/json')) {
+            return; // Keep default stats
+          }
+
           if (!response.ok) {
-            throw new Error('Failed to fetch stats');
+            return; // Keep default stats
           }
 
           const stats = await response.json();
