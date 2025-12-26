@@ -73,14 +73,21 @@ app.get('/api/v1', (c) => {
   });
 });
 
-// Public routes
+// Public routes (no authentication required)
 app.route('/api/v1/auth', authRoutes);
-
-// Public document routes (read-only)
 app.route('/api/v1/documents', documentsRoutes);
 
 // Protected routes (require authentication)
-app.use('/api/v1/*', authMiddleware);
+// Apply auth middleware only to specific protected route paths
+app.use('/api/v1/users/*', authMiddleware);
+app.use('/api/v1/bookmarks/*', authMiddleware);
+app.use('/api/v1/forum/*', authMiddleware);
+app.use('/api/v1/chat/*', authMiddleware);
+app.use('/api/v1/groups/*', authMiddleware);
+app.use('/api/v1/news/*', authMiddleware);
+app.use('/api/v1/notifications/*', authMiddleware);
+app.use('/api/v1/gamification/*', authMiddleware);
+app.use('/api/v1/admin/*', authMiddleware);
 
 app.route('/api/v1/users', usersRoutes);
 app.route('/api/v1/bookmarks', bookmarksRoutes);
