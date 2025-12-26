@@ -7,8 +7,31 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const SCREENSHOTS = [
+  // Desktop
   { width: 1920, height: 1080, name: 'desktop', label: 'Desktop View' },
+  { width: 2560, height: 1440, name: 'desktop-2k', label: 'Desktop 2K View' },
+
+  // Standard mobile (for manifest)
   { width: 390, height: 844, name: 'mobile', label: 'Mobile View' },
+
+  // iPhone series
+  { width: 430, height: 932, name: 'iphone-15-pro-max', label: 'iPhone 15 Pro Max' },
+  { width: 393, height: 852, name: 'iphone-15-pro', label: 'iPhone 15 Pro' },
+  { width: 440, height: 956, name: 'iphone-16-pro-max', label: 'iPhone 16 Pro Max' },
+  { width: 402, height: 874, name: 'iphone-16-pro', label: 'iPhone 16 Pro' },
+
+  // Samsung Galaxy
+  { width: 412, height: 915, name: 'galaxy-s24-ultra', label: 'Galaxy S24 Ultra' },
+  { width: 360, height: 780, name: 'galaxy-s24', label: 'Galaxy S24' },
+  { width: 412, height: 915, name: 'galaxy-s25-ultra', label: 'Galaxy S25 Ultra' },
+
+  // Samsung Z Fold/Flip
+  { width: 673, height: 838, name: 'galaxy-z-fold', label: 'Galaxy Z Fold (Unfolded)' },
+  { width: 360, height: 748, name: 'galaxy-z-flip', label: 'Galaxy Z Flip' },
+
+  // Tablets
+  { width: 1024, height: 1366, name: 'ipad-pro', label: 'iPad Pro' },
+  { width: 800, height: 1280, name: 'android-tablet', label: 'Android Tablet' },
 ];
 
 async function generateScreenshots() {

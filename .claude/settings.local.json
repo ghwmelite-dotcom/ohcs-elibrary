@@ -16,7 +16,11 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nFix TypeScript config for Cloudflare Pages build\n\n- Remove noEmit from tsconfig.node.json \\(conflicts with composite\\)\n- Add emitDeclarationOnly, declaration, declarationMap instead\n- Add dist-node output directory for node config\n- Update .gitignore to exclude dist-node\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git fetch:*)",
       "Bash(git commit:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "WebFetch(domain:brillaprep.org)",
+      "Bash(npm install:*)",
+      "Bash(node scripts/generate-icons.js:*)",
+      "Bash(node scripts/generate-screenshots.js:*)"
     ]
   }
 }

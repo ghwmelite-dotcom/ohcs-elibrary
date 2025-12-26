@@ -11,13 +11,44 @@ const ICON_SIZES = [
 ];
 
 const SPLASH_SIZES = [
-  { width: 640, height: 1136, name: 'splash-640x1136' },
-  { width: 750, height: 1334, name: 'splash-750x1334' },
-  { width: 1242, height: 2208, name: 'splash-1242x2208' },
-  { width: 1125, height: 2436, name: 'splash-1125x2436' },
-  { width: 1536, height: 2048, name: 'splash-1536x2048' },
-  { width: 1668, height: 2224, name: 'splash-1668x2224' },
-  { width: 2048, height: 2732, name: 'splash-2048x2732' },
+  // Legacy iPhones
+  { width: 640, height: 1136, name: 'splash-640x1136' },    // iPhone 5/SE 1st gen
+  { width: 750, height: 1334, name: 'splash-750x1334' },    // iPhone 6/7/8/SE 2nd/3rd
+  { width: 1242, height: 2208, name: 'splash-1242x2208' },  // iPhone 6+/7+/8+
+  { width: 1125, height: 2436, name: 'splash-1125x2436' },  // iPhone X/XS/11 Pro
+  { width: 1242, height: 2688, name: 'splash-1242x2688' },  // iPhone XS Max/11 Pro Max
+  { width: 828, height: 1792, name: 'splash-828x1792' },    // iPhone XR/11
+
+  // iPhone 12/13/14 series
+  { width: 1170, height: 2532, name: 'splash-1170x2532' },  // iPhone 12/13/14
+  { width: 1284, height: 2778, name: 'splash-1284x2778' },  // iPhone 12/13/14 Pro Max
+  { width: 1179, height: 2556, name: 'splash-1179x2556' },  // iPhone 14 Pro
+  { width: 1290, height: 2796, name: 'splash-1290x2796' },  // iPhone 14 Pro Max
+
+  // iPhone 15/16/17 series (latest)
+  { width: 1179, height: 2556, name: 'splash-1179x2556-15pro' },  // iPhone 15 Pro
+  { width: 1290, height: 2796, name: 'splash-1290x2796-15promax' }, // iPhone 15 Pro Max
+  { width: 1206, height: 2622, name: 'splash-1206x2622' },  // iPhone 16 Pro
+  { width: 1320, height: 2868, name: 'splash-1320x2868' },  // iPhone 16 Pro Max / 17 Pro Max
+
+  // Samsung Galaxy S series
+  { width: 1080, height: 2340, name: 'splash-1080x2340' },  // Galaxy S21/S22/S23
+  { width: 1080, height: 2400, name: 'splash-1080x2400' },  // Galaxy S21+/S22+/S23+
+  { width: 1440, height: 3088, name: 'splash-1440x3088' },  // Galaxy S22 Ultra
+  { width: 1440, height: 3120, name: 'splash-1440x3120' },  // Galaxy S23 Ultra/S24 Ultra/S25 Ultra
+  { width: 1080, height: 2340, name: 'splash-samsung-s24' }, // Galaxy S24
+  { width: 1440, height: 3120, name: 'splash-samsung-s25-ultra' }, // Galaxy S25 Ultra
+
+  // Samsung Galaxy Z Fold/Flip
+  { width: 1812, height: 2176, name: 'splash-zfold-inner' },  // Z Fold inner display
+  { width: 904, height: 2316, name: 'splash-zfold-outer' },   // Z Fold outer display
+  { width: 1080, height: 2640, name: 'splash-zflip' },        // Z Flip
+
+  // iPads
+  { width: 1536, height: 2048, name: 'splash-1536x2048' },  // iPad mini/Air
+  { width: 1668, height: 2224, name: 'splash-1668x2224' },  // iPad Pro 10.5
+  { width: 1668, height: 2388, name: 'splash-1668x2388' },  // iPad Pro 11
+  { width: 2048, height: 2732, name: 'splash-2048x2732' },  // iPad Pro 12.9
 ];
 
 async function generateIcons() {
