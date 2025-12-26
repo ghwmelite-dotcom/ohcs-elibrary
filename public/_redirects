@@ -1,0 +1,5 @@
+# Proxy API requests to Workers
+/api/*  https://ohcs-elibrary-api.ghwmelite.workers.dev/api/:splat  200
+
+# SPA fallback - all other routes go to index.html
+/*  /index.html  200
