@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Settings, Trash2 } from 'lucide-react';
-import { MainLayout } from '@/components/layout/MainLayout';
 import { NotificationList, NotificationSettings, Notification } from '@/components/notifications';
 import { cn } from '@/utils/cn';
 
@@ -129,8 +128,7 @@ export default function Notifications() {
   };
 
   return (
-    <MainLayout>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -205,7 +203,6 @@ export default function Notifications() {
             <NotificationSettings onSave={handleSaveSettings} />
           </motion.div>
         )}
-      </div>
-    </MainLayout>
+    </div>
   );
 }

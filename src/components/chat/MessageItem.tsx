@@ -127,8 +127,8 @@ export function MessageItem({
       {/* Avatar */}
       {showAvatar && !isOwnMessage && (
         <Avatar
-          src={message.sender.avatar}
-          name={message.sender.name}
+          src={message.sender?.avatar}
+          name={message.sender?.displayName || 'User'}
           size="sm"
           className="flex-shrink-0"
         />
@@ -140,7 +140,7 @@ export function MessageItem({
         {/* Sender Name */}
         {!isOwnMessage && showAvatar && (
           <p className="text-xs font-medium text-surface-600 dark:text-surface-400 mb-1 ml-1">
-            {message.sender.name}
+            {message.sender?.displayName || 'User'}
           </p>
         )}
 
@@ -155,7 +155,7 @@ export function MessageItem({
             )}
           >
             <p className="text-surface-500 truncate">
-              Replying to {message.replyTo.sender}
+              Replying to {message.replyTo.sender?.displayName || 'User'}
             </p>
             <p className="text-surface-600 dark:text-surface-400 truncate">
               {message.replyTo.content}

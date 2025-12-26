@@ -141,7 +141,7 @@ export function MessageInput({
             <div className="w-1 h-full bg-primary-500 rounded-full" />
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-primary-600 dark:text-primary-400">
-                Replying to {replyTo.sender.name}
+                Replying to {replyTo.sender?.displayName || 'User'}
               </p>
               <p className="text-sm text-surface-600 dark:text-surface-400 truncate">
                 {replyTo.content}

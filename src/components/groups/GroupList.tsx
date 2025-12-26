@@ -73,7 +73,7 @@ export function GroupList({
       filteredGroups = filteredGroups.filter((g) => g.type === 'official');
       break;
     case 'joined':
-      filteredGroups = filteredGroups.filter((g) => g.isMember);
+      filteredGroups = filteredGroups.filter((g) => g.isJoined);
       break;
   }
 

@@ -50,7 +50,7 @@ export function MessageList({
   const shouldShowAvatar = (message: ChatMessage, index: number, dayMessages: ChatMessage[]) => {
     if (index === 0) return true;
     const prevMessage = dayMessages[index - 1];
-    return prevMessage.sender.id !== message.sender.id;
+    return prevMessage.sender?.id !== message.sender?.id;
   };
 
   // Auto scroll to bottom on new messages
@@ -97,7 +97,7 @@ export function MessageList({
     } else if (date.toDateString() === yesterday.toDateString()) {
       return 'Yesterday';
     }
-    return formatDate(dateString, { weekday: 'long', month: 'long', day: 'numeric' });
+    return formatDate(dateString, 'EEEE, MMMM d');
   };
 
   return (
@@ -144,11 +144,11 @@ export function MessageList({
                 <MessageItem
                   key={message.id}
                   message={message}
-                  isOwnMessage={message.sender.id === currentUserId}
+                  isOwnMessage={message.sender?.id === currentUserId}
                   showAvatar={shouldShowAvatar(message, index, dayMessages)}
                   showTimestamp={
                     index === dayMessages.length - 1 ||
-                    dayMessages[index + 1]?.sender.id !== message.sender.id
+                    dayMessages[index + 1]?.sender?.id !== message.sender?.id
                   }
                   onReply={() => onReply?.(message)}
                   onEdit={(content) => onEdit?.(message.id, content)}

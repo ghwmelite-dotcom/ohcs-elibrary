@@ -47,7 +47,7 @@
   }
 
   body {
-    @apply bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-50 font-body;
+    @apply bg-surface-100 dark:bg-surface-900 text-surface-900 dark:text-surface-50 font-body;
     min-height: 100vh;
   }
 
@@ -80,7 +80,7 @@
 
   /* Focus styles */
   *:focus-visible {
-    @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-white dark:ring-offset-surface-900;
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-surface-100 dark:ring-offset-surface-900;
   }
 
   /* Link styles */
@@ -119,12 +119,12 @@
 
   /* Glass morphism card */
   .glass-card {
-    @apply bg-white/80 dark:bg-surface-800/80 backdrop-blur-md border border-surface-200 dark:border-surface-700 rounded-xl shadow-elevation-2;
+    @apply bg-surface-50/90 dark:bg-surface-800/80 backdrop-blur-md border border-surface-200 dark:border-surface-700 rounded-xl shadow-elevation-2;
   }
 
   /* Ghana themed card with subtle border */
   .ghana-card {
-    @apply bg-white dark:bg-surface-800 rounded-xl shadow-elevation-2 overflow-hidden;
+    @apply bg-surface-50 dark:bg-surface-800 rounded-xl shadow-elevation-2 overflow-hidden;
     border: 1px solid rgba(0, 107, 63, 0.1);
   }
 
@@ -176,7 +176,7 @@
 
   /* Form input base */
   .input-base {
-    @apply w-full px-4 py-3 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg text-surface-900 dark:text-surface-50 placeholder:text-surface-400 dark:placeholder:text-surface-500 transition-all duration-200;
+    @apply w-full px-4 py-3 bg-surface-50 dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg text-surface-900 dark:text-surface-50 placeholder:text-surface-400 dark:placeholder:text-surface-500 transition-all duration-200;
   }
 
   .input-base:focus {
@@ -288,7 +288,7 @@
 
   /* Dropdown */
   .dropdown-menu {
-    @apply absolute z-50 mt-1 w-56 bg-white dark:bg-surface-800 rounded-lg shadow-elevation-4 border border-surface-200 dark:border-surface-700 py-1 animate-fade-in;
+    @apply absolute z-50 mt-1 w-56 bg-surface-50 dark:bg-surface-800 rounded-lg shadow-elevation-4 border border-surface-200 dark:border-surface-700 py-1 animate-fade-in;
   }
 
   .dropdown-item {
@@ -301,7 +301,7 @@
   }
 
   .modal-content {
-    @apply bg-white dark:bg-surface-800 rounded-2xl shadow-elevation-5 w-full max-w-lg max-h-[90vh] overflow-hidden animate-scale-in;
+    @apply bg-surface-50 dark:bg-surface-800 rounded-2xl shadow-elevation-5 w-full max-w-lg max-h-[90vh] overflow-hidden animate-scale-in;
   }
 
   /* Toast notification */

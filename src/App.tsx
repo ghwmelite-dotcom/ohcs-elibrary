@@ -149,7 +149,7 @@ export default function App() {
   }, [theme]);
 
   return (
-    <LazyMotion features={loadMotionFeatures} strict>
+    <LazyMotion features={loadMotionFeatures}>
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public routes */}

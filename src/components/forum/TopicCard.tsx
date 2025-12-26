@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import {
   MessageSquare,
   Eye,
-  ThumbsUp,
   Clock,
   Pin,
   Lock,
@@ -22,7 +21,7 @@ interface TopicCardProps {
 }
 
 export function TopicCard({ topic, category, index = 0 }: TopicCardProps) {
-  const isHot = topic.viewCount > 100 || topic.replyCount > 20;
+  const isHot = topic.views > 100 || topic.postCount > 20;
 
   return (
     <motion.div
@@ -37,8 +36,8 @@ export function TopicCard({ topic, category, index = 0 }: TopicCardProps) {
       <div className="flex items-start gap-4">
         {/* Author Avatar */}
         <Avatar
-          src={topic.author.avatar}
-          name={topic.author.name}
+          src={topic.author?.avatar}
+          name={topic.author?.displayName || 'Anonymous'}
           size="md"
           className="flex-shrink-0"
         />
@@ -59,7 +58,7 @@ export function TopicCard({ topic, category, index = 0 }: TopicCardProps) {
                 Locked
               </span>
             )}
-            {topic.hasBestAnswer && (
+            {topic.isAnswered && (
               <span className="flex items-center gap-1 text-xs px-2 py-0.5 bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-300 rounded-full">
                 <CheckCircle className="w-3 h-3" />
                 Solved
@@ -83,7 +82,7 @@ export function TopicCard({ topic, category, index = 0 }: TopicCardProps) {
 
           {/* Preview */}
           <p className="mt-1 text-sm text-surface-600 dark:text-surface-400 line-clamp-2">
-            {topic.preview}
+            {topic.content}
           </p>
 
           {/* Meta */}
@@ -91,10 +90,10 @@ export function TopicCard({ topic, category, index = 0 }: TopicCardProps) {
             <span>
               by{' '}
               <Link
-                to={`/profile/${topic.author.id}`}
+                to={`/profile/${topic.authorId}`}
                 className="font-medium text-surface-700 dark:text-surface-300 hover:text-primary-600"
               >
-                {topic.author.name}
+                {topic.author?.displayName || 'Anonymous'}
               </Link>
             </span>
 
@@ -137,7 +136,7 @@ export function TopicCard({ topic, category, index = 0 }: TopicCardProps) {
             <div className="flex items-center justify-center gap-1 text-surface-500">
               <MessageSquare className="w-4 h-4" />
               <span className="font-medium text-surface-700 dark:text-surface-300">
-                {topic.replyCount}
+                {topic.postCount}
               </span>
             </div>
             <p className="text-xs text-surface-400 mt-0.5">replies</p>
@@ -146,39 +145,32 @@ export function TopicCard({ topic, category, index = 0 }: TopicCardProps) {
             <div className="flex items-center justify-center gap-1 text-surface-500">
               <Eye className="w-4 h-4" />
               <span className="font-medium text-surface-700 dark:text-surface-300">
-                {topic.viewCount}
+                {topic.views}
               </span>
             </div>
             <p className="text-xs text-surface-400 mt-0.5">views</p>
-          </div>
-          <div className="text-center min-w-[50px]">
-            <div className="flex items-center justify-center gap-1 text-surface-500">
-              <ThumbsUp className="w-4 h-4" />
-              <span className="font-medium text-surface-700 dark:text-surface-300">
-                {topic.likeCount}
-              </span>
-            </div>
-            <p className="text-xs text-surface-400 mt-0.5">likes</p>
           </div>
         </div>
 
         {/* Last Reply */}
         <div className="hidden lg:block text-right min-w-[140px]">
-          {topic.lastReply ? (
+          {topic.lastPostAt ? (
             <>
-              <div className="flex items-center justify-end gap-2">
-                <Avatar
-                  src={topic.lastReply.author.avatar}
-                  name={topic.lastReply.author.name}
-                  size="xs"
-                />
-                <span className="text-sm font-medium text-surface-700 dark:text-surface-300 truncate max-w-[100px]">
-                  {topic.lastReply.author.name}
-                </span>
-              </div>
+              {topic.lastPostBy && (
+                <div className="flex items-center justify-end gap-2">
+                  <Avatar
+                    src={topic.lastPostBy.avatar}
+                    name={topic.lastPostBy.displayName || 'User'}
+                    size="xs"
+                  />
+                  <span className="text-sm font-medium text-surface-700 dark:text-surface-300 truncate max-w-[100px]">
+                    {topic.lastPostBy.displayName || 'User'}
+                  </span>
+                </div>
+              )}
               <p className="text-xs text-surface-400 mt-1 flex items-center justify-end gap-1">
                 <Clock className="w-3 h-3" />
-                {formatRelativeTime(topic.lastReply.createdAt)}
+                {formatRelativeTime(topic.lastPostAt)}
               </p>
             </>
           ) : (

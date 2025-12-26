@@ -199,6 +199,7 @@ interface ChatState {
 interface ChatActions {
   fetchRooms: () => Promise<void>;
   fetchRoom: (id: string) => Promise<void>;
+  setCurrentRoom: (room: ChatRoom | null) => void;
   fetchMessages: (roomId: string) => Promise<void>;
   sendMessage: (roomId: string, content: string, type?: 'text' | 'image' | 'file') => Promise<void>;
   editMessage: (messageId: string, content: string) => Promise<void>;
@@ -246,6 +247,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     await new Promise((resolve) => setTimeout(resolve, 200));
     const room = mockRooms.find((r) => r.id === id);
     set({ currentRoom: room || null, isLoading: false });
+  },
+
+  setCurrentRoom: (room: ChatRoom | null) => {
+    set({ currentRoom: room });
   },
 
   fetchMessages: async (roomId: string) => {

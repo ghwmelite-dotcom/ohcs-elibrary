@@ -25,7 +25,8 @@ interface TabsProps {
   className?: string;
 }
 
-export function Tabs({
+// Old context-based Tabs - now use TabsProvider instead
+function TabsContextProvider({
   children,
   defaultValue,
   value,
@@ -145,6 +146,36 @@ export function TabsContent({ children, value, className }: TabsContentProps) {
     >
       {children}
     </motion.div>
+  );
+}
+
+// Simple tabs variant (used by Forum, Groups, etc.)
+interface SimpleTabsProps {
+  tabs: Array<{ id: string; label: string; icon?: ReactNode }>;
+  activeTab: string;
+  onChange: (value: string) => void;
+  className?: string;
+}
+
+export function Tabs({ tabs, activeTab, onChange, className }: SimpleTabsProps) {
+  return (
+    <div className={cn('flex gap-1 p-1 bg-surface-100 dark:bg-surface-800 rounded-lg', className)}>
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          onClick={() => onChange(tab.id)}
+          className={cn(
+            'relative flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all rounded-md',
+            activeTab === tab.id
+              ? 'bg-white dark:bg-surface-700 text-primary-600 dark:text-primary-400 shadow-sm'
+              : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100'
+          )}
+        >
+          {tab.icon && <span className="flex-shrink-0">{tab.icon}</span>}
+          {tab.label}
+        </button>
+      ))}
+    </div>
   );
 }
 

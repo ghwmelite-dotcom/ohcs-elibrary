@@ -10,7 +10,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { Group } from '@/types';
-import { Avatar, AvatarGroup } from '@/components/shared/Avatar';
+import { Avatar } from '@/components/shared/Avatar';
 import { Button } from '@/components/shared/Button';
 import { Badge } from '@/components/shared/Badge';
 import { cn } from '@/utils/cn';
@@ -59,7 +59,7 @@ export function GroupCard({ group, index = 0, onJoin, onLeave }: GroupCardProps)
       <div
         className="h-24 relative"
         style={{
-          backgroundColor: group.coverColor || '#006B3F',
+          backgroundColor: '#006B3F',
           backgroundImage: group.coverImage ? `url(${group.coverImage})` : undefined,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -120,18 +120,9 @@ export function GroupCard({ group, index = 0, onJoin, onLeave }: GroupCardProps)
           </span>
         </div>
 
-        {/* Members Preview */}
-        <div className="mt-4 flex items-center justify-between">
-          <AvatarGroup
-            avatars={group.members?.slice(0, 5).map((m) => ({
-              src: m.avatar,
-              name: m.name,
-            })) || []}
-            max={5}
-            size="sm"
-          />
-
-          {group.isMember ? (
+        {/* Action Button */}
+        <div className="mt-4 flex items-center justify-end">
+          {group.isJoined ? (
             <Button
               variant="outline"
               size="sm"
@@ -184,7 +175,7 @@ export function GroupCardCompact({ group, onJoin }: GroupCardCompactProps) {
         </p>
       </div>
 
-      {!group.isMember && (
+      {!group.isJoined && (
         <Button variant="ghost" size="sm" onClick={() => onJoin?.(group.id)}>
           Join
         </Button>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Crown, Medal, TrendingUp, Users, Building2, Calendar, Filter, ChevronDown } from 'lucide-react';
-import { MainLayout } from '@/components/layout/MainLayout';
+import { Trophy, Crown, Medal, TrendingUp, Users, Building2 } from 'lucide-react';
 import { LeaderboardTable, LevelProgress, BadgeGrid, StreakDisplay, AchievementList, XPHistory } from '@/components/gamification';
 import { useAuthStore } from '@/stores/authStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
@@ -39,7 +38,7 @@ export default function Leaderboard() {
     { userId: '3', name: 'Kofi Mensah', avatar: '', xp: 13200, level: 7, rank: 3, change: 1, mda: 'Ministry of Health' },
     { userId: '4', name: 'Abena Pokua', avatar: '', xp: 12100, level: 7, rank: 4, change: 0, mda: 'Ministry of Education' },
     { userId: '5', name: 'Yaw Boateng', avatar: '', xp: 11500, level: 6, rank: 5, change: 3, mda: 'OHCS' },
-    { userId: user?.id || '6', name: user?.name || 'You', avatar: user?.avatar || '', xp: 10200, level: 6, rank: 6, change: -2, mda: user?.mda || 'OHCS' },
+    { userId: user?.id || '6', name: user?.displayName || 'You', avatar: user?.avatar || '', xp: 10200, level: 6, rank: 6, change: -2, mda: user?.mda?.name || 'OHCS' },
     { userId: '7', name: 'Efua Ankrah', avatar: '', xp: 9800, level: 6, rank: 7, change: 1, mda: 'Ministry of Foreign Affairs' },
     { userId: '8', name: 'Kwesi Appiah', avatar: '', xp: 9200, level: 5, rank: 8, change: -1, mda: 'Ministry of Justice' },
     { userId: '9', name: 'Akosua Darko', avatar: '', xp: 8700, level: 5, rank: 9, change: 0, mda: 'Ministry of Trade' },
@@ -86,8 +85,7 @@ export default function Leaderboard() {
   ];
 
   return (
-    <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="space-y-6">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
@@ -320,7 +318,6 @@ export default function Leaderboard() {
             ))}
           </div>
         </motion.div>
-      </div>
-    </MainLayout>
+    </div>
   );
 }

@@ -73,19 +73,11 @@ function CategoryCard({ category, index }: CategoryCardProps) {
 
           {/* Latest Activity */}
           <div className="hidden md:block text-right min-w-[200px]">
-            {category.lastActivity ? (
-              <>
-                <p className="text-sm font-medium text-surface-900 dark:text-surface-50 truncate">
-                  {category.lastActivity.topicTitle}
-                </p>
-                <p className="text-xs text-surface-500 mt-1">
-                  by {category.lastActivity.userName}
-                </p>
-                <p className="text-xs text-surface-400 flex items-center justify-end gap-1 mt-1">
-                  <Clock className="w-3 h-3" />
-                  {formatRelativeTime(category.lastActivity.timestamp)}
-                </p>
-              </>
+            {category.lastActivityAt ? (
+              <p className="text-xs text-surface-400 flex items-center justify-end gap-1 mt-1">
+                <Clock className="w-3 h-3" />
+                {formatRelativeTime(category.lastActivityAt)}
+              </p>
             ) : (
               <p className="text-sm text-surface-400">No posts yet</p>
             )}

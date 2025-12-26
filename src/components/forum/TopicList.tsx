@@ -47,7 +47,7 @@ export function TopicList({
     filteredTopics = filteredTopics.filter(
       (topic) =>
         topic.title.toLowerCase().includes(query) ||
-        topic.preview.toLowerCase().includes(query) ||
+        topic.content.toLowerCase().includes(query) ||
         topic.tags?.some((tag) => tag.toLowerCase().includes(query))
     );
   }
@@ -55,10 +55,10 @@ export function TopicList({
   // Status filter
   switch (filterBy) {
     case 'unanswered':
-      filteredTopics = filteredTopics.filter((t) => t.replyCount === 0);
+      filteredTopics = filteredTopics.filter((t) => t.postCount === 0);
       break;
     case 'solved':
-      filteredTopics = filteredTopics.filter((t) => t.hasBestAnswer);
+      filteredTopics = filteredTopics.filter((t) => t.isAnswered);
       break;
     case 'pinned':
       filteredTopics = filteredTopics.filter((t) => t.isPinned);
@@ -74,11 +74,11 @@ export function TopicList({
       case 'latest':
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       case 'popular':
-        return b.likeCount - a.likeCount;
+        return b.views - a.views;
       case 'most_replies':
-        return b.replyCount - a.replyCount;
+        return b.postCount - a.postCount;
       case 'most_views':
-        return b.viewCount - a.viewCount;
+        return b.views - a.views;
       default:
         return 0;
     }
@@ -187,7 +187,7 @@ export function TopicList({
       {/* Topics */}
       {paginatedTopics.length === 0 ? (
         <EmptyState
-          type="topics"
+          icon={<MessageSquare className="w-full h-full" />}
           title="No topics found"
           description={
             searchQuery
@@ -195,7 +195,7 @@ export function TopicList({
               : 'Be the first to start a discussion!'
           }
           action={
-            showNewTopicButton
+            showNewTopicButton && onNewTopic
               ? {
                   label: 'Create Topic',
                   onClick: onNewTopic,

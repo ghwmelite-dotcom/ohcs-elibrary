@@ -99,13 +99,9 @@ export default function Chat() {
             {/* Chat Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-surface-200 dark:border-surface-700">
               <div className="flex items-center gap-3">
-                {currentRoom.avatar ? (
-                  <Avatar src={currentRoom.avatar} name={currentRoom.name} size="md" />
-                ) : (
-                  <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
-                    <Hash className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                  </div>
-                )}
+                <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
+                  <Hash className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                </div>
                 <div>
                   <h2 className="font-semibold text-surface-900 dark:text-surface-50">
                     {currentRoom.name}
@@ -142,7 +138,7 @@ export default function Chat() {
               <MessageList
                 messages={messages}
                 currentUserId="current-user"
-                typingUsers={currentRoom.typingUsers?.map((name) => ({ id: name, name }))}
+                typingUsers={[]}
                 isLoading={isLoading}
                 onReply={(message) => setReplyTo(message)}
                 onEdit={(messageId, content) => console.log('Edit:', messageId, content)}
@@ -188,13 +184,9 @@ export default function Chat() {
         {currentRoom && (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              {currentRoom.avatar ? (
-                <Avatar src={currentRoom.avatar} name={currentRoom.name} size="xl" />
-              ) : (
-                <div className="w-20 h-20 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center">
-                  <Hash className="w-10 h-10 text-primary-600 dark:text-primary-400" />
-                </div>
-              )}
+              <div className="w-20 h-20 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center">
+                <Hash className="w-10 h-10 text-primary-600 dark:text-primary-400" />
+              </div>
               <div>
                 <h3 className="text-xl font-semibold text-surface-900 dark:text-surface-50">
                   {currentRoom.name}

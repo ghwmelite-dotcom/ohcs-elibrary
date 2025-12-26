@@ -86,18 +86,18 @@ const config: Config = {
           900: '#290308',
           DEFAULT: '#CE1126',
         },
-        // Surface colors
+        // Surface colors - warm, soft tones for light mode
         surface: {
-          50: '#fefefe',
-          100: '#fafaf8',
-          200: '#f5f5f0',
-          300: '#e8e8e0',
-          400: '#d1d1c4',
-          500: '#a8a898',
-          600: '#7f7f70',
-          700: '#565648',
-          800: '#2d2d24',
-          900: '#141410',
+          50: '#faf9f7',   // Warm off-white for cards
+          100: '#f5f4f1',  // Softer background
+          200: '#eeedea',  // Subtle dividers
+          300: '#e0dfdb',  // Borders
+          400: '#c8c7c1',  // Muted elements
+          500: '#9a9990',  // Secondary text
+          600: '#6b6a62',  // Icons
+          700: '#464540',  // Dark text
+          800: '#2a2926',  // Dark mode cards
+          900: '#1a1918',  // Dark mode background
         },
         // Success (forest green variants)
         success: {

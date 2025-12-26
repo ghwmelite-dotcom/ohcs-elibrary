@@ -6,23 +6,18 @@ import {
   Plus,
   Hash,
   Lock,
-  Users,
-  Star,
   MoreVertical,
-  Bell,
   BellOff,
   LogOut,
   Settings,
 } from 'lucide-react';
 import { ChatRoom } from '@/types';
-import { Avatar, AvatarGroup } from '@/components/shared/Avatar';
+import { Avatar } from '@/components/shared/Avatar';
 import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
 import { Dropdown } from '@/components/shared/Dropdown';
-import { Badge } from '@/components/shared/Badge';
 import { cn } from '@/utils/cn';
 import { formatRelativeTime } from '@/utils/formatters';
-import { InlineTypingIndicator } from './TypingIndicator';
 
 interface RoomListProps {
   rooms: ChatRoom[];
@@ -45,16 +40,15 @@ export function RoomList({ rooms, currentRoomId, onCreateRoom }: RoomListProps) 
   }
 
   if (filter === 'unread') {
-    filteredRooms = filteredRooms.filter((room) => room.unreadCount > 0);
-  } else if (filter === 'starred') {
-    filteredRooms = filteredRooms.filter((room) => room.isStarred);
+    filteredRooms = filteredRooms.filter((room) => (room.unreadCount || 0) > 0);
   }
+  // Note: 'starred' filter is placeholder - ChatRoom doesn't have isStarred property yet
 
-  // Sort: starred first, then by last activity
+  // Sort by last activity
   filteredRooms.sort((a, b) => {
-    if (a.isStarred && !b.isStarred) return -1;
-    if (!a.isStarred && b.isStarred) return 1;
-    return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime();
+    const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+    const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+    return bTime - aTime;
   });
 
   return (
@@ -131,8 +125,8 @@ interface RoomItemProps {
 function RoomItem({ room, isActive }: RoomItemProps) {
   const menuItems = [
     {
-      label: room.isMuted ? 'Unmute' : 'Mute',
-      icon: room.isMuted ? Bell : BellOff,
+      label: 'Mute',
+      icon: BellOff,
       onClick: () => {},
     },
     { label: 'Settings', icon: Settings, onClick: () => {} },
@@ -140,7 +134,7 @@ function RoomItem({ room, isActive }: RoomItemProps) {
   ];
 
   const getRoomIcon = () => {
-    if (room.isPrivate) {
+    if (room.type === 'private') {
       return <Lock className="w-4 h-4 text-surface-500" />;
     }
     return <Hash className="w-4 h-4 text-surface-500" />;
@@ -158,21 +152,17 @@ function RoomItem({ room, isActive }: RoomItemProps) {
             : 'hover:bg-surface-50 dark:hover:bg-surface-700/50'
         )}
       >
-        {/* Room Avatar/Icon */}
-        {room.avatar ? (
-          <Avatar src={room.avatar} name={room.name} size="md" />
-        ) : (
-          <div
-            className={cn(
-              'w-10 h-10 rounded-lg flex items-center justify-center',
-              isActive
-                ? 'bg-primary-100 dark:bg-primary-800'
-                : 'bg-surface-100 dark:bg-surface-700'
-            )}
-          >
-            {getRoomIcon()}
-          </div>
-        )}
+        {/* Room Icon */}
+        <div
+          className={cn(
+            'w-10 h-10 rounded-lg flex items-center justify-center',
+            isActive
+              ? 'bg-primary-100 dark:bg-primary-800'
+              : 'bg-surface-100 dark:bg-surface-700'
+          )}
+        >
+          {getRoomIcon()}
+        </div>
 
         {/* Room Info */}
         <div className="flex-1 min-w-0">
@@ -187,22 +177,11 @@ function RoomItem({ room, isActive }: RoomItemProps) {
             >
               {room.name}
             </span>
-            {room.isStarred && (
-              <Star className="w-3.5 h-3.5 text-secondary-500 fill-secondary-500" />
-            )}
-            {room.isMuted && (
-              <BellOff className="w-3.5 h-3.5 text-surface-400" />
-            )}
           </div>
           <div className="flex items-center text-sm text-surface-500 truncate">
-            {room.typingUsers && room.typingUsers.length > 0 ? (
-              <span className="flex items-center text-primary-600 dark:text-primary-400">
-                {room.typingUsers[0]} is typing
-                <InlineTypingIndicator />
-              </span>
-            ) : room.lastMessage ? (
+            {room.lastMessage ? (
               <span className="truncate">
-                <span className="font-medium">{room.lastMessage.sender}: </span>
+                <span className="font-medium">{room.lastMessage.sender?.displayName || 'User'}: </span>
                 {room.lastMessage.content}
               </span>
             ) : (

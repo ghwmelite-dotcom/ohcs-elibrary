@@ -151,9 +151,10 @@ export function ForumStats({ stats, topContributors = [], onlineUsers = [] }: Fo
             </span>
           </div>
           <AvatarGroup
-            avatars={onlineUsers.map((user) => ({
-              src: user.avatar,
+            users={onlineUsers.map((user) => ({
+              id: user.id,
               name: user.name,
+              avatar: user.avatar,
             }))}
             max={8}
             size="sm"

@@ -3,14 +3,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
+interface DropdownMenuItem {
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  onClick?: () => void;
+  className?: string;
+  danger?: boolean;
+  disabled?: boolean;
+}
+
 interface DropdownProps {
-  trigger: ReactNode;
+  trigger?: ReactNode;
   children: ReactNode;
+  items?: DropdownMenuItem[];
   align?: 'left' | 'right' | 'center';
   className?: string;
 }
 
-export function Dropdown({ trigger, children, align = 'left', className }: DropdownProps) {
+export function Dropdown({ trigger, children, items, align = 'left', className }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -31,11 +41,40 @@ export function Dropdown({ trigger, children, align = 'left', className }: Dropd
     center: 'left-1/2 -translate-x-1/2',
   };
 
+  // If items prop is provided, render them; otherwise render children as menu content
+  // If trigger prop is provided, use it; otherwise use children as trigger
+  const triggerElement = trigger || children;
+  const menuContent = items ? (
+    items.map((item, index) => (
+      <button
+        key={index}
+        onClick={() => {
+          item.onClick?.();
+          setIsOpen(false);
+        }}
+        disabled={item.disabled}
+        className={cn(
+          'flex items-center gap-2 w-full px-4 py-2 text-sm text-left transition-colors',
+          item.danger
+            ? 'text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20'
+            : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700',
+          item.disabled && 'opacity-50 cursor-not-allowed',
+          item.className
+        )}
+      >
+        {item.icon && <item.icon className="w-4 h-4 flex-shrink-0" />}
+        <span className="flex-1">{item.label}</span>
+      </button>
+    ))
+  ) : (
+    trigger ? children : null
+  );
+
   return (
     <div ref={dropdownRef} className={cn('relative', className)}>
-      <div onClick={() => setIsOpen(!isOpen)}>{trigger}</div>
+      <div onClick={() => setIsOpen(!isOpen)}>{triggerElement}</div>
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && menuContent && (
           <motion.div
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -46,7 +85,7 @@ export function Dropdown({ trigger, children, align = 'left', className }: Dropd
               alignmentStyles[align]
             )}
           >
-            {children}
+            {menuContent}
           </motion.div>
         )}
       </AnimatePresence>

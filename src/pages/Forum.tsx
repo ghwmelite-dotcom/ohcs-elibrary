@@ -65,7 +65,7 @@ export default function Forum() {
 
   const getTrendingTopics = () => {
     return [...topics]
-      .sort((a, b) => b.viewCount + b.likeCount - (a.viewCount + a.likeCount))
+      .sort((a, b) => b.views + b.postCount - (a.views + a.postCount))
       .slice(0, 20);
   };
 

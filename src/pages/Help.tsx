@@ -15,7 +15,6 @@ import {
   Phone,
   ExternalLink
 } from 'lucide-react';
-import { MainLayout } from '@/components/layout/MainLayout';
 import { cn } from '@/utils/cn';
 
 interface FAQItem {
@@ -101,8 +100,7 @@ export default function Help() {
   });
 
   return (
-    <MainLayout>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -254,7 +252,6 @@ export default function Help() {
             </ul>
           </div>
         </div>
-      </div>
-    </MainLayout>
+    </div>
   );
 }

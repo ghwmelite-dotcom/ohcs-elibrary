@@ -27,7 +27,10 @@
       "Bash(timeout /t 45 /nobreak)",
       "Bash(npx wrangler:*)",
       "WebFetch(domain:ohcs-elibrary.pages.dev)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(timeout /t 5 /nobreak)",
+      "Bash(npm ls:*)",
+      "WebFetch(domain:localhost)"
     ]
   }
 }

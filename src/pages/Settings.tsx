@@ -20,7 +20,6 @@ import {
   Download,
   Save
 } from 'lucide-react';
-import { MainLayout } from '@/components/layout/MainLayout';
 import { ProfileEdit } from '@/components/profile';
 import { NotificationSettings } from '@/components/notifications';
 import { useAuthStore } from '@/stores/authStore';
@@ -63,14 +62,14 @@ export default function Settings() {
         return (
           <ProfileEdit
             initialData={{
-              name: user?.name || 'User',
+              name: user?.displayName || 'User',
               email: user?.email || 'user@ohcs.gov.gh',
               avatar: user?.avatar,
-              title: 'Senior Administrative Officer',
-              mda: 'Office of the Head of Civil Service',
-              gradeLevel: 'Principal',
+              title: user?.title || 'Senior Administrative Officer',
+              mda: user?.mda?.name || 'Office of the Head of Civil Service',
+              gradeLevel: user?.gradeLevel || 'Principal',
               location: 'Accra, Ghana',
-              bio: '',
+              bio: user?.bio || '',
             }}
             onSave={async (data) => {
               console.log('Saving profile:', data);
@@ -388,8 +387,7 @@ export default function Settings() {
   };
 
   return (
-    <MainLayout>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <div className="w-12 h-12 bg-gradient-to-br from-surface-400 to-surface-600 rounded-xl flex items-center justify-center">
@@ -448,7 +446,6 @@ export default function Settings() {
             </motion.div>
           </main>
         </div>
-      </div>
-    </MainLayout>
+    </div>
   );
 }

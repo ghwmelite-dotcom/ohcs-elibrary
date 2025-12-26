@@ -31,9 +31,9 @@ export default function Groups() {
   const getFilteredGroups = () => {
     switch (activeTab) {
       case 'my-groups':
-        return groups.filter((g) => g.isMember);
+        return groups.filter((g) => g.isJoined);
       case 'suggested':
-        return groups.filter((g) => !g.isMember).slice(0, 6);
+        return groups.filter((g) => !g.isJoined).slice(0, 6);
       default:
         return groups;
     }
@@ -42,7 +42,7 @@ export default function Groups() {
   // Mock stats
   const stats = {
     totalGroups: groups.length,
-    myGroups: groups.filter((g) => g.isMember).length,
+    myGroups: groups.filter((g) => g.isJoined).length,
     trending: 5,
     newThisWeek: 12,
   };
