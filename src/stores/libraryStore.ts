@@ -146,7 +146,9 @@ const defaultStats: LibraryStats = {
 };
 
 // API base URL - uses versioned API endpoint
-const API_BASE = '/api/v1';
+const API_BASE = import.meta.env.PROD
+  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  : '/api/v1';
 
 // Local storage key for documents (used when API is not available)
 const LOCAL_DOCUMENTS_KEY = 'ohcs-library-documents';

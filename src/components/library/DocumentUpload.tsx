@@ -15,9 +15,15 @@ import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
 import { Modal } from '@/components/shared/Modal';
 import { useLibraryStore } from '@/stores/libraryStore';
+import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/utils/cn';
 import { formatFileSize } from '@/utils/formatters';
 import type { DocumentCategory } from '@/types';
+
+// API base URL
+const API_BASE = import.meta.env.PROD
+  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  : '/api/v1';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPTED_FILE_TYPES = [
@@ -140,6 +146,12 @@ export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
     onProgress: (progress: number) => void
   ): Promise<boolean> => {
     try {
+      // Get auth token
+      const token = useAuthStore.getState().token;
+      if (!token) {
+        console.warn('No auth token - upload will require authentication');
+      }
+
       const formData = new FormData();
       formData.append('file', file);
       formData.append('title', data.title + (files.filter(f => f.status === 'pending').length > 1 ? ` (${index + 1})` : ''));
@@ -165,6 +177,7 @@ export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
           if (xhr.status >= 200 && xhr.status < 300) {
             resolve(true);
           } else {
+            console.error('Upload failed with status:', xhr.status, xhr.responseText);
             resolve(false);
           }
         });
@@ -172,11 +185,18 @@ export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
         xhr.addEventListener('error', () => resolve(false));
         xhr.addEventListener('timeout', () => resolve(false));
 
-        xhr.open('POST', '/api/v1/documents');
+        xhr.open('POST', `${API_BASE}/documents`);
         xhr.timeout = 60000; // 60 second timeout
+
+        // Add auth header if token exists
+        if (token) {
+          xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        }
+
         xhr.send(formData);
       });
-    } catch {
+    } catch (error) {
+      console.error('Upload error:', error);
       return false;
     }
   };
