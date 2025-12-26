@@ -1,26 +1,67 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, BookOpen, Bookmark, Clock, TrendingUp } from 'lucide-react';
+import { Upload, BookOpen, Bookmark, Clock, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react';
 import { useLibraryStore } from '@/stores/libraryStore';
 import { CategoryFilter, DocumentGrid, DocumentUpload } from '@/components/library';
 import { Button } from '@/components/shared/Button';
 import { Tabs } from '@/components/shared/Tabs';
+import { formatRelativeTime } from '@/utils/formatters';
+
+type LibraryTab = 'all' | 'bookmarked' | 'recent' | 'trending';
 
 export default function Library() {
-  const { fetchDocuments, fetchCategories, isLoading } = useLibraryStore();
+  const {
+    fetchDocuments,
+    fetchCategories,
+    fetchStats,
+    fetchBookmarks,
+    stats,
+    recentlyViewed,
+    bookmarks,
+    isLoading,
+    error,
+  } = useLibraryStore();
+
   const [showUpload, setShowUpload] = useState(false);
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState<LibraryTab>('all');
 
   useEffect(() => {
+    // Fetch initial data
     fetchDocuments();
     fetchCategories();
-  }, [fetchDocuments, fetchCategories]);
+    fetchStats();
+    fetchBookmarks();
+  }, [fetchDocuments, fetchCategories, fetchStats, fetchBookmarks]);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId as LibraryTab);
+    // Update filter based on tab
+    switch (tabId) {
+      case 'bookmarked':
+        // Filter will be applied in DocumentGrid based on bookmarks
+        break;
+      case 'recent':
+        // Show recently viewed documents
+        break;
+      case 'trending':
+        fetchDocuments({ sortBy: 'views', sortOrder: 'desc' });
+        break;
+      default:
+        fetchDocuments();
+    }
+  };
+
+  const handleRetry = () => {
+    fetchDocuments();
+    fetchCategories();
+    fetchStats();
+  };
 
   const tabs = [
-    { id: 'all', label: 'All Documents', icon: BookOpen },
-    { id: 'bookmarked', label: 'Bookmarked', icon: Bookmark },
-    { id: 'recent', label: 'Recently Viewed', icon: Clock },
-    { id: 'trending', label: 'Trending', icon: TrendingUp },
+    { id: 'all', label: 'All Documents', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'bookmarked', label: 'Bookmarked', icon: <Bookmark className="w-4 h-4" /> },
+    { id: 'recent', label: 'Recently Viewed', icon: <Clock className="w-4 h-4" /> },
+    { id: 'trending', label: 'Trending', icon: <TrendingUp className="w-4 h-4" /> },
   ];
 
   return (
@@ -43,6 +84,24 @@ export default function Library() {
         </Button>
       </div>
 
+      {/* Error State */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-xl p-4 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-error-500" />
+            <p className="text-error-700 dark:text-error-300">{error}</p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={handleRetry}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </motion.div>
+      )}
+
       {/* Quick Stats */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -51,43 +110,43 @@ export default function Library() {
       >
         <StatCard
           label="Total Documents"
-          value="2,450"
-          change="+124 this month"
+          value={stats.totalDocuments}
+          subtitle={stats.monthlyUploads > 0 ? `+${stats.monthlyUploads} this month` : 'No uploads this month'}
           icon={BookOpen}
           color="primary"
+          isLoading={isLoading}
         />
         <StatCard
           label="Your Bookmarks"
-          value="48"
-          change="12 new this week"
+          value={bookmarks.length}
+          subtitle={bookmarks.length > 0 ? `${bookmarks.length} saved` : 'No bookmarks yet'}
           icon={Bookmark}
           color="secondary"
+          isLoading={isLoading}
         />
         <StatCard
           label="Recently Viewed"
-          value="23"
-          change="Last viewed 2h ago"
+          value={recentlyViewed.length}
+          subtitle={stats.lastViewedAt ? `Last viewed ${formatRelativeTime(stats.lastViewedAt)}` : 'No recent activity'}
           icon={Clock}
           color="accent"
+          isLoading={isLoading}
         />
         <StatCard
           label="Trending Now"
-          value="15"
-          change="Most popular today"
+          value={stats.trendingCount}
+          subtitle="Most popular today"
           icon={TrendingUp}
           color="success"
+          isLoading={isLoading}
         />
       </motion.div>
 
       {/* Tabs */}
       <Tabs
-        tabs={tabs.map((tab) => ({
-          id: tab.id,
-          label: tab.label,
-          icon: <tab.icon className="w-4 h-4" />,
-        }))}
+        tabs={tabs}
         activeTab={activeTab}
-        onChange={setActiveTab}
+        onChange={handleTabChange}
       />
 
       {/* Main Content */}
@@ -95,47 +154,6 @@ export default function Library() {
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6">
           <CategoryFilter />
-
-          {/* Quick Links */}
-          <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-4">
-            <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-              Quick Links
-            </h3>
-            <ul className="space-y-2">
-              <li>
-                <a
-                  href="#"
-                  className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
-                >
-                  Civil Service Regulations
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
-                >
-                  Code of Conduct
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
-                >
-                  Training Manual 2024
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
-                >
-                  HR Policies
-                </a>
-              </li>
-            </ul>
-          </div>
 
           {/* AI Assistant Promo */}
           <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl p-4 text-white">
@@ -155,7 +173,11 @@ export default function Library() {
 
         {/* Document Grid */}
         <div className="lg:col-span-3">
-          <DocumentGrid />
+          <DocumentGrid
+            activeTab={activeTab}
+            bookmarkedIds={bookmarks.map((b) => b.documentId)}
+            recentlyViewedDocs={recentlyViewed}
+          />
         </div>
       </div>
 
@@ -167,30 +189,34 @@ export default function Library() {
 
 interface StatCardProps {
   label: string;
-  value: string;
-  change: string;
+  value: number;
+  subtitle: string;
   icon: React.ComponentType<{ className?: string }>;
   color: 'primary' | 'secondary' | 'accent' | 'success';
+  isLoading?: boolean;
 }
 
-function StatCard({ label, value, change, icon: Icon, color }: StatCardProps) {
+function StatCard({ label, value, subtitle, icon: Icon, color, isLoading }: StatCardProps) {
   const colors = {
     primary: 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400',
-    secondary:
-      'bg-secondary-50 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400',
+    secondary: 'bg-secondary-50 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400',
     accent: 'bg-accent-50 dark:bg-accent-900/30 text-accent-600 dark:text-accent-400',
     success: 'bg-success-50 dark:bg-success-900/30 text-success-600 dark:text-success-400',
   };
 
   return (
-    <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-4">
+    <div className="bg-surface-50 dark:bg-surface-800 rounded-xl shadow-elevation-1 p-4">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-surface-500 dark:text-surface-400">{label}</p>
-          <p className="text-2xl font-bold text-surface-900 dark:text-surface-50 mt-1">
-            {value}
-          </p>
-          <p className="text-xs text-surface-400 mt-1">{change}</p>
+          {isLoading ? (
+            <div className="h-8 w-16 bg-surface-200 dark:bg-surface-700 rounded animate-pulse mt-1" />
+          ) : (
+            <p className="text-2xl font-bold text-surface-900 dark:text-surface-50 mt-1">
+              {value.toLocaleString()}
+            </p>
+          )}
+          <p className="text-xs text-surface-400 mt-1">{subtitle}</p>
         </div>
         <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colors[color]}`}>
           <Icon className="w-5 h-5" />

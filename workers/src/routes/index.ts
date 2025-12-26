@@ -2,6 +2,8 @@
 // Each route handles a specific domain of the API
 
 export { authRoutes } from './auth';
+export { documentsRoutes } from './documents';
+export { bookmarksRoutes } from './bookmarks';
 
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
@@ -9,23 +11,11 @@ import { Hono } from 'hono';
 // Users routes
 export const usersRoutes = new Hono();
 usersRoutes.get('/', (c) => c.json({ message: 'Users endpoint' }));
+usersRoutes.get('/me', (c) => c.json({ message: 'Current user profile' }));
 usersRoutes.get('/:id', (c) => c.json({ message: 'Get user' }));
 usersRoutes.put('/:id', (c) => c.json({ message: 'Update user' }));
 usersRoutes.get('/:id/activity', (c) => c.json({ message: 'User activity' }));
 usersRoutes.get('/:id/badges', (c) => c.json({ message: 'User badges' }));
-
-// Documents routes
-export const documentsRoutes = new Hono();
-documentsRoutes.get('/', (c) => c.json({ message: 'List documents' }));
-documentsRoutes.post('/', (c) => c.json({ message: 'Upload document' }));
-documentsRoutes.get('/:id', (c) => c.json({ message: 'Get document' }));
-documentsRoutes.put('/:id', (c) => c.json({ message: 'Update document' }));
-documentsRoutes.delete('/:id', (c) => c.json({ message: 'Delete document' }));
-documentsRoutes.get('/:id/download', (c) => c.json({ message: 'Download document' }));
-documentsRoutes.post('/:id/rate', (c) => c.json({ message: 'Rate document' }));
-documentsRoutes.get('/:id/comments', (c) => c.json({ message: 'Get comments' }));
-documentsRoutes.post('/:id/comments', (c) => c.json({ message: 'Add comment' }));
-documentsRoutes.post('/:id/analyze', (c) => c.json({ message: 'AI analysis' }));
 
 // Forum routes
 export const forumRoutes = new Hono();

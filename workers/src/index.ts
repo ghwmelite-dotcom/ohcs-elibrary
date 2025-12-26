@@ -6,16 +6,19 @@ import { authMiddleware } from './middleware/auth';
 import { rateLimiter } from './middleware/rateLimit';
 
 // Route imports
-import { authRoutes } from './routes/auth';
-import { usersRoutes } from './routes/users';
-import { documentsRoutes } from './routes/documents';
-import { forumRoutes } from './routes/forum';
-import { chatRoutes } from './routes/chat';
-import { groupsRoutes } from './routes/groups';
-import { newsRoutes } from './routes/news';
-import { notificationsRoutes } from './routes/notifications';
-import { gamificationRoutes } from './routes/gamification';
-import { adminRoutes } from './routes/admin';
+import {
+  authRoutes,
+  usersRoutes,
+  documentsRoutes,
+  bookmarksRoutes,
+  forumRoutes,
+  chatRoutes,
+  groupsRoutes,
+  newsRoutes,
+  notificationsRoutes,
+  gamificationRoutes,
+  adminRoutes,
+} from './routes';
 
 export interface Env {
   DB: D1Database;
@@ -67,6 +70,7 @@ app.use('/api/v1/*', authMiddleware);
 
 app.route('/api/v1/users', usersRoutes);
 app.route('/api/v1/documents', documentsRoutes);
+app.route('/api/v1/bookmarks', bookmarksRoutes);
 app.route('/api/v1/forum', forumRoutes);
 app.route('/api/v1/chat', chatRoutes);
 app.route('/api/v1/groups', groupsRoutes);
