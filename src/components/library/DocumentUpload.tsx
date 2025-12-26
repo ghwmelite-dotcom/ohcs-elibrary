@@ -17,6 +17,7 @@ import { Modal } from '@/components/shared/Modal';
 import { useLibraryStore } from '@/stores/libraryStore';
 import { cn } from '@/utils/cn';
 import { formatFileSize } from '@/utils/formatters';
+import type { DocumentCategory } from '@/types';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPTED_FILE_TYPES = [
@@ -52,7 +53,7 @@ interface DocumentUploadProps {
 }
 
 export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
-  const { categories } = useLibraryStore();
+  const { categories, addLocalDocument } = useLibraryStore();
   const [files, setFiles] = useState<FileUpload[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -136,9 +137,30 @@ export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
     const validFiles = files.filter((f) => f.status === 'pending');
     if (validFiles.length === 0) return;
 
-    // Upload all files
+    // Upload all files with animation
     await Promise.all(
-      files.map((f, i) => (f.status === 'pending' ? simulateUpload(f, i) : Promise.resolve()))
+      files.map(async (f, i) => {
+        if (f.status !== 'pending') return;
+
+        // Simulate upload progress animation
+        await simulateUpload(f, i);
+
+        // Create file URL for local storage (using object URL for now)
+        const fileUrl = URL.createObjectURL(f.file);
+
+        // Add document to local storage
+        addLocalDocument({
+          title: data.title + (validFiles.length > 1 ? ` (${i + 1})` : ''),
+          description: data.description,
+          category: data.categoryId as DocumentCategory,
+          accessLevel: data.accessLevel,
+          tags: data.tags ? data.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+          fileName: f.file.name,
+          fileSize: f.file.size,
+          fileType: f.file.type,
+          fileUrl: fileUrl,
+        });
+      })
     );
 
     // Close modal and reset

@@ -103,6 +103,21 @@ interface LibraryActions {
   // Search
   searchDocuments: (query: string) => Promise<Document[]>;
 
+  // Local document management (when API not available)
+  addLocalDocument: (data: {
+    title: string;
+    description: string;
+    category: DocumentCategory;
+    accessLevel: Document['accessLevel'];
+    tags?: string[];
+    fileName: string;
+    fileSize: number;
+    fileType: string;
+    fileUrl?: string;
+  }) => Document;
+  deleteLocalDocument: (id: string) => void;
+  getLocalDocuments: () => Document[];
+
   // Stats
   fetchStats: () => Promise<void>;
 
@@ -132,6 +147,28 @@ const defaultStats: LibraryStats = {
 
 // API base URL - uses versioned API endpoint
 const API_BASE = '/api/v1';
+
+// Local storage key for documents (used when API is not available)
+const LOCAL_DOCUMENTS_KEY = 'ohcs-library-documents';
+
+// Helper to get local documents
+const getLocalDocuments = (): Document[] => {
+  try {
+    const stored = localStorage.getItem(LOCAL_DOCUMENTS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+// Helper to save local documents
+const saveLocalDocuments = (documents: Document[]) => {
+  try {
+    localStorage.setItem(LOCAL_DOCUMENTS_KEY, JSON.stringify(documents));
+  } catch {
+    console.error('Failed to save documents to local storage');
+  }
+};
 
 export const useLibraryStore = create<LibraryStore>()(
   persist(
@@ -179,13 +216,34 @@ export const useLibraryStore = create<LibraryStore>()(
           // Check if response is JSON
           const contentType = response.headers.get('content-type');
           if (!contentType?.includes('application/json')) {
-            // API not available yet, use empty state
+            // API not available yet, use local documents
+            const localDocs = getLocalDocuments();
+            const currentFilter = { ...get().filter, ...filter };
+
+            // Filter local documents by category if specified
+            let filteredDocs = localDocs;
+            if (currentFilter.category) {
+              filteredDocs = localDocs.filter((doc) => doc.category === currentFilter.category);
+            }
+
+            // Sort documents
+            if (currentFilter.sortBy) {
+              filteredDocs.sort((a, b) => {
+                const aVal = a[currentFilter.sortBy as keyof Document] as string | number;
+                const bVal = b[currentFilter.sortBy as keyof Document] as string | number;
+                if (currentFilter.sortOrder === 'desc') {
+                  return aVal > bVal ? -1 : 1;
+                }
+                return aVal < bVal ? -1 : 1;
+              });
+            }
+
             set({
-              documents: [],
-              totalCount: 0,
-              totalPages: 1,
+              documents: filteredDocs,
+              totalCount: filteredDocs.length,
+              totalPages: Math.ceil(filteredDocs.length / (currentFilter.limit || 12)),
               isLoading: false,
-              error: null, // Don't show error, just empty state
+              error: null,
             });
             return;
           }
@@ -204,13 +262,21 @@ export const useLibraryStore = create<LibraryStore>()(
             isLoading: false,
           });
         } catch (error) {
-          // If API fails, set empty state (no demo data fallback)
+          // If API fails, use local documents
+          const localDocs = getLocalDocuments();
+          const currentFilter = { ...get().filter, ...filter };
+
+          let filteredDocs = localDocs;
+          if (currentFilter.category) {
+            filteredDocs = localDocs.filter((doc) => doc.category === currentFilter.category);
+          }
+
           set({
-            documents: [],
-            totalCount: 0,
-            totalPages: 1,
+            documents: filteredDocs,
+            totalCount: filteredDocs.length,
+            totalPages: Math.ceil(filteredDocs.length / (currentFilter.limit || 12)),
             isLoading: false,
-            error: null, // Don't show error for API not being available
+            error: null,
           });
         }
       },
@@ -334,33 +400,53 @@ export const useLibraryStore = create<LibraryStore>()(
 
       // Category operations
       fetchCategories: async () => {
+        // Get local document counts first
+        const localDocs = getLocalDocuments();
+        const localCounts: Record<string, number> = {};
+        localDocs.forEach((doc) => {
+          localCounts[doc.category] = (localCounts[doc.category] || 0) + 1;
+        });
+
         try {
           const response = await fetch(`${API_BASE}/documents/categories`);
 
           // Check if response is JSON
           const contentType = response.headers.get('content-type');
           if (!contentType?.includes('application/json')) {
-            set({ categories: DOCUMENT_CATEGORIES });
+            // Use local counts only
+            const categoriesWithCounts = DOCUMENT_CATEGORIES.map((cat) => ({
+              ...cat,
+              count: localCounts[cat.id] || 0,
+            }));
+            set({ categories: categoriesWithCounts });
             return;
           }
 
           if (!response.ok) {
-            set({ categories: DOCUMENT_CATEGORIES });
+            const categoriesWithCounts = DOCUMENT_CATEGORIES.map((cat) => ({
+              ...cat,
+              count: localCounts[cat.id] || 0,
+            }));
+            set({ categories: categoriesWithCounts });
             return;
           }
 
           const data = await response.json();
 
-          // Merge API counts with static category definitions
+          // Merge API counts + local counts with static category definitions
           const categoriesWithCounts = DOCUMENT_CATEGORIES.map((cat) => ({
             ...cat,
-            count: data.find((d: { id: string; count: number }) => d.id === cat.id)?.count || 0,
+            count: (data.find((d: { id: string; count: number }) => d.id === cat.id)?.count || 0) + (localCounts[cat.id] || 0),
           }));
 
           set({ categories: categoriesWithCounts });
         } catch {
-          // Fallback to static categories with zero counts
-          set({ categories: DOCUMENT_CATEGORIES });
+          // Fallback to local counts
+          const categoriesWithCounts = DOCUMENT_CATEGORIES.map((cat) => ({
+            ...cat,
+            count: localCounts[cat.id] || 0,
+          }));
+          set({ categories: categoriesWithCounts });
         }
       },
 
@@ -592,29 +678,152 @@ export const useLibraryStore = create<LibraryStore>()(
 
           return await response.json();
         } catch {
-          return [];
+          // Search local documents as fallback
+          const localDocs = getLocalDocuments();
+          const lowerQuery = query.toLowerCase();
+          return localDocs.filter(
+            (doc) =>
+              doc.title.toLowerCase().includes(lowerQuery) ||
+              doc.description.toLowerCase().includes(lowerQuery) ||
+              doc.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery))
+          );
         }
       },
 
+      // Local document management
+      addLocalDocument: (data) => {
+        const newDoc: Document = {
+          id: `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          accessLevel: data.accessLevel,
+          tags: data.tags || [],
+          fileName: data.fileName,
+          fileSize: data.fileSize,
+          fileType: data.fileType,
+          fileUrl: data.fileUrl || '',
+          thumbnailUrl: '',
+          version: 1,
+          downloads: 0,
+          views: 0,
+          averageRating: 0,
+          totalRatings: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          uploadedBy: {
+            id: 'local-user',
+            name: 'Current User',
+            avatar: '',
+          },
+          mda: {
+            id: 'local-mda',
+            name: 'OHCS',
+            acronym: 'OHCS',
+          },
+        };
+
+        // Get existing local docs and add new one
+        const localDocs = getLocalDocuments();
+        localDocs.unshift(newDoc);
+        saveLocalDocuments(localDocs);
+
+        // Update state with new document
+        set((state) => ({
+          documents: [newDoc, ...state.documents],
+          stats: {
+            ...state.stats,
+            totalDocuments: state.stats.totalDocuments + 1,
+            monthlyUploads: state.stats.monthlyUploads + 1,
+          },
+        }));
+
+        // Update category counts
+        get().fetchCategories();
+
+        return newDoc;
+      },
+
+      deleteLocalDocument: (id: string) => {
+        const localDocs = getLocalDocuments().filter((doc) => doc.id !== id);
+        saveLocalDocuments(localDocs);
+
+        set((state) => ({
+          documents: state.documents.filter((doc) => doc.id !== id),
+          stats: {
+            ...state.stats,
+            totalDocuments: Math.max(0, state.stats.totalDocuments - 1),
+          },
+        }));
+      },
+
+      getLocalDocuments: () => getLocalDocuments(),
+
       // Stats
       fetchStats: async () => {
+        // Get local document counts
+        const localDocs = getLocalDocuments();
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthlyLocalUploads = localDocs.filter(
+          (doc) => new Date(doc.createdAt) >= monthStart
+        ).length;
+
         try {
           const response = await fetch(`${API_BASE}/documents/stats`);
 
           // Check if response is JSON
           const contentType = response.headers.get('content-type');
           if (!contentType?.includes('application/json')) {
-            return; // Keep default stats
+            // Use local stats only
+            set({
+              stats: {
+                totalDocuments: localDocs.length,
+                userBookmarks: get().bookmarks.length,
+                recentlyViewed: get().recentlyViewed.length,
+                trendingCount: 0,
+                monthlyUploads: monthlyLocalUploads,
+                lastViewedAt: get().stats.lastViewedAt,
+              },
+            });
+            return;
           }
 
           if (!response.ok) {
-            return; // Keep default stats
+            set({
+              stats: {
+                totalDocuments: localDocs.length,
+                userBookmarks: get().bookmarks.length,
+                recentlyViewed: get().recentlyViewed.length,
+                trendingCount: 0,
+                monthlyUploads: monthlyLocalUploads,
+                lastViewedAt: get().stats.lastViewedAt,
+              },
+            });
+            return;
           }
 
-          const stats = await response.json();
-          set({ stats });
+          const apiStats = await response.json();
+          // Merge API stats with local counts
+          set({
+            stats: {
+              ...apiStats,
+              totalDocuments: apiStats.totalDocuments + localDocs.length,
+              monthlyUploads: apiStats.monthlyUploads + monthlyLocalUploads,
+            },
+          });
         } catch {
-          // Keep default stats if API fails
+          // Use local stats if API fails
+          set({
+            stats: {
+              totalDocuments: localDocs.length,
+              userBookmarks: get().bookmarks.length,
+              recentlyViewed: get().recentlyViewed.length,
+              trendingCount: 0,
+              monthlyUploads: monthlyLocalUploads,
+              lastViewedAt: get().stats.lastViewedAt,
+            },
+          });
         }
       },
 
