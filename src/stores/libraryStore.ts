@@ -170,6 +170,7 @@ interface LibraryState {
 interface LibraryActions {
   fetchDocuments: (filter?: DocumentFilter) => Promise<void>;
   fetchDocument: (id: string) => Promise<void>;
+  fetchCategories: () => Promise<void>;
   setFilter: (filter: Partial<DocumentFilter>) => void;
   resetFilter: () => void;
   bookmarkDocument: (documentId: string) => Promise<void>;
@@ -247,6 +248,12 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
     }
 
     set({ documents: filteredDocs, isLoading: false });
+  },
+
+  fetchCategories: async () => {
+    // Categories are already loaded as mock data
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    set({ categories: mockCategories });
   },
 
   fetchDocument: async (id: string) => {

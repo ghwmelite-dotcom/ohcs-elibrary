@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Newspaper, Search, RefreshCw, Rss, TrendingUp } from 'lucide-react';
-import { MainLayout } from '@/components/layout/MainLayout';
 import { NewsFeed, CategoryFilter, SourceFilter, BreakingNews } from '@/components/news';
 import { useNewsStore } from '@/stores/newsStore';
 
@@ -200,7 +199,7 @@ export default function News() {
   const regularArticles = filteredArticles.filter((a) => a !== featuredArticle);
 
   return (
-    <MainLayout>
+    <div className="space-y-6">
       {/* Breaking News Banner */}
       {showBreakingNews && mockBreakingNews.length > 0 && (
         <BreakingNews
@@ -209,7 +208,7 @@ export default function News() {
         />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div>
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
@@ -309,6 +308,6 @@ export default function News() {
           </main>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }
