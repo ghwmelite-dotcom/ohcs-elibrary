@@ -6,12 +6,9 @@ import {
   ZoomOut,
   RotateCw,
   Download,
-  ChevronLeft,
-  ChevronRight,
   Maximize2,
   Minimize2,
   FileText,
-  BookOpen,
   Bookmark,
   BookmarkCheck,
   Share2,
@@ -20,12 +17,23 @@ import {
   Clock,
   Lock,
   ExternalLink,
+  Loader2,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
+  Image as ImageIcon,
+  FileWarning,
 } from 'lucide-react';
 import type { Document } from '@/types';
-import { Button } from '@/components/shared/Button';
 import { Badge } from '@/components/shared/Badge';
 import { cn } from '@/utils/cn';
 import { formatRelativeTime, formatFileSize } from '@/utils/formatters';
+
+// API base URL for fetching documents
+const API_BASE = import.meta.env.PROD
+  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  : '/api/v1';
 
 interface DocumentViewerModalProps {
   document: Document | null;
@@ -49,7 +57,30 @@ export function DocumentViewerModal({
   const [rotation, setRotation] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewMode, setViewMode] = useState<'single' | 'continuous'>('single');
-  const totalPages = 10; // Mock - would come from actual PDF
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const totalPages = 10; // Would come from actual PDF metadata
+
+  // Get the document URL - prefer fileUrl, fallback to API endpoint
+  const getDocumentUrl = useCallback(() => {
+    if (!document) return '';
+    // If document has a direct file URL, use it
+    if (document.fileUrl) return document.fileUrl;
+    // Otherwise use the API view endpoint
+    return `${API_BASE}/documents/${document.id}/view`;
+  }, [document]);
+
+  // Determine file type for rendering
+  const getFileCategory = useCallback((fileType: string) => {
+    const type = fileType?.toLowerCase() || '';
+    if (type === 'pdf' || type.includes('pdf')) return 'pdf';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(type)) return 'image';
+    if (['doc', 'docx'].includes(type)) return 'document';
+    if (['xls', 'xlsx'].includes(type)) return 'spreadsheet';
+    if (['ppt', 'pptx'].includes(type)) return 'presentation';
+    if (['txt', 'md', 'rtf'].includes(type)) return 'text';
+    return 'other';
+  }, []);
 
   // Reset state when document changes
   useEffect(() => {
@@ -57,8 +88,21 @@ export function DocumentViewerModal({
       setCurrentPage(1);
       setScale(1);
       setRotation(0);
+      setIsLoading(true);
+      setLoadError(null);
     }
   }, [document?.id]);
+
+  // Handle iframe load events
+  const handleIframeLoad = useCallback(() => {
+    setIsLoading(false);
+    setLoadError(null);
+  }, []);
+
+  const handleIframeError = useCallback(() => {
+    setIsLoading(false);
+    setLoadError('Failed to load document. Please try again.');
+  }, []);
 
   // Handle escape key
   useEffect(() => {
@@ -373,73 +417,142 @@ export function DocumentViewerModal({
             </div>
 
             {/* Document View */}
-            <div className="flex-1 overflow-auto p-6 flex justify-center items-start bg-surface-950/50">
+            <div className="flex-1 overflow-hidden bg-surface-950/50 relative">
+              {/* Loading State */}
+              {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-surface-900/80 z-10">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="relative">
+                      <div className="w-16 h-16 border-4 border-primary-500/30 rounded-full" />
+                      <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-primary-500 rounded-full animate-spin" />
+                    </div>
+                    <p className="text-surface-300 font-medium">Loading document...</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Error State */}
+              {loadError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-surface-900/80 z-10">
+                  <div className="flex flex-col items-center gap-4 text-center px-8">
+                    <div className="w-16 h-16 rounded-full bg-error-500/20 flex items-center justify-center">
+                      <AlertCircle className="w-8 h-8 text-error-400" />
+                    </div>
+                    <div>
+                      <p className="text-error-400 font-semibold mb-1">Failed to Load Document</p>
+                      <p className="text-surface-400 text-sm max-w-md">{loadError}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setIsLoading(true);
+                        setLoadError(null);
+                      }}
+                      className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Document Content */}
               <motion.div
-                key={currentPage}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
                 style={{
                   transform: `scale(${scale}) rotate(${rotation}deg)`,
                   transformOrigin: 'top center',
                 }}
-                className="bg-white shadow-2xl rounded-lg"
+                className="w-full h-full"
               >
-                {/* PDF Page Content - Mock for now */}
-                <div className="w-[612px] h-[792px] p-12 relative">
-                  {/* Page Header */}
-                  <div className="mb-8 pb-4 border-b-2 border-primary-500">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h1 className="text-xl font-bold text-primary-600">
-                          Office of the Head of Civil Service
-                        </h1>
-                        <p className="text-sm text-surface-500">Republic of Ghana</p>
+                {(() => {
+                  const fileCategory = getFileCategory(document.fileType);
+                  const documentUrl = getDocumentUrl();
+
+                  // PDF Viewer - use iframe with Google Docs viewer as fallback
+                  if (fileCategory === 'pdf') {
+                    return (
+                      <iframe
+                        src={documentUrl}
+                        className="w-full h-full border-0"
+                        title={document.title}
+                        onLoad={handleIframeLoad}
+                        onError={handleIframeError}
+                        sandbox="allow-same-origin allow-scripts allow-forms"
+                      />
+                    );
+                  }
+
+                  // Image Viewer
+                  if (fileCategory === 'image') {
+                    return (
+                      <div className="w-full h-full flex items-center justify-center p-8 overflow-auto">
+                        <img
+                          src={documentUrl}
+                          alt={document.title}
+                          className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                          onLoad={handleIframeLoad}
+                          onError={handleIframeError}
+                        />
                       </div>
-                      <div className="w-16 h-16 bg-gradient-to-br from-accent-500 via-secondary-500 to-primary-500 rounded-full flex items-center justify-center">
-                        <span className="text-2xl text-black">&#9733;</span>
+                    );
+                  }
+
+                  // Office Documents - use Google Docs Viewer or Office Online
+                  if (['document', 'spreadsheet', 'presentation'].includes(fileCategory)) {
+                    const googleDocsUrl = `https://docs.google.com/gview?url=${encodeURIComponent(documentUrl)}&embedded=true`;
+                    return (
+                      <iframe
+                        src={googleDocsUrl}
+                        className="w-full h-full border-0"
+                        title={document.title}
+                        onLoad={handleIframeLoad}
+                        onError={handleIframeError}
+                      />
+                    );
+                  }
+
+                  // Text files - display in pre tag
+                  if (fileCategory === 'text') {
+                    return (
+                      <iframe
+                        src={documentUrl}
+                        className="w-full h-full border-0 bg-white"
+                        title={document.title}
+                        onLoad={handleIframeLoad}
+                        onError={handleIframeError}
+                      />
+                    );
+                  }
+
+                  // Unsupported file type
+                  return (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-center px-8">
+                        <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-surface-800 flex items-center justify-center">
+                          <FileWarning className="w-12 h-12 text-surface-400" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-white mb-2">
+                          Preview Not Available
+                        </h3>
+                        <p className="text-surface-400 mb-6 max-w-md">
+                          This file type ({document.fileType.toUpperCase()}) cannot be previewed
+                          in the browser. Please download the file to view it.
+                        </p>
+                        {canDownload && (
+                          <button
+                            onClick={handleDownload}
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl transition-colors"
+                          >
+                            <Download className="w-5 h-5" />
+                            Download Document
+                          </button>
+                        )}
                       </div>
                     </div>
-                  </div>
-
-                  {/* Document Title */}
-                  <h2 className="text-2xl font-bold text-surface-900 mb-6 text-center">
-                    {document.title}
-                  </h2>
-
-                  {/* Content */}
-                  <div className="space-y-4 text-surface-700 leading-relaxed">
-                    <p>{document.description}</p>
-                    <p>
-                      This document contains important policy guidelines and procedures for
-                      Ghana's civil service. All civil servants are required to familiarize
-                      themselves with the contents of this document.
-                    </p>
-                    <p>
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
-                      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-                      veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-                      commodo consequat.
-                    </p>
-                    <p>
-                      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
-                      dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-                      proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                    </p>
-                  </div>
-
-                  {/* Page Number */}
-                  <div className="absolute bottom-8 left-0 right-0 text-center text-sm text-surface-400">
-                    Page {currentPage} of {totalPages}
-                  </div>
-
-                  {/* Ghana Flag Stripe */}
-                  <div className="absolute bottom-0 left-0 right-0 h-2 flex rounded-b-lg overflow-hidden">
-                    <div className="flex-1 bg-accent-500" />
-                    <div className="flex-1 bg-secondary-500" />
-                    <div className="flex-1 bg-primary-500" />
-                  </div>
-                </div>
+                  );
+                })()}
               </motion.div>
             </div>
 
