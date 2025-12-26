@@ -182,6 +182,7 @@ export interface Document {
   averageRating: number;
   totalRatings: number;
   isBookmarked?: boolean;
+  isDownloadable?: boolean; // Admin can control whether document can be downloaded
   userRating?: number;
   readingProgress?: number;
   publishedAt?: Timestamp;

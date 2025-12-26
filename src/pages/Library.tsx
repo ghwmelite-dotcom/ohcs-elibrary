@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, BookOpen, Bookmark, Clock, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react';
 import { useLibraryStore } from '@/stores/libraryStore';
-import { CategoryFilter, DocumentGrid, DocumentUpload } from '@/components/library';
+import { CategoryFilter, DocumentGrid, DocumentUpload, DocumentViewerModal } from '@/components/library';
 import { Button } from '@/components/shared/Button';
 import { Tabs } from '@/components/shared/Tabs';
 import { formatRelativeTime } from '@/utils/formatters';
+import type { Document } from '@/types';
 
 type LibraryTab = 'all' | 'bookmarked' | 'recent' | 'trending';
 
@@ -24,6 +25,37 @@ export default function Library() {
 
   const [showUpload, setShowUpload] = useState(false);
   const [activeTab, setActiveTab] = useState<LibraryTab>('all');
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [showViewer, setShowViewer] = useState(false);
+
+  const handleViewDocument = (document: Document) => {
+    setSelectedDocument(document);
+    setShowViewer(true);
+  };
+
+  const handleCloseViewer = () => {
+    setShowViewer(false);
+    // Delay clearing the document for exit animation
+    setTimeout(() => setSelectedDocument(null), 300);
+  };
+
+  const handleBookmarkDocument = (documentId: string) => {
+    const isCurrentlyBookmarked = bookmarks.some((b) => b.documentId === documentId);
+    if (isCurrentlyBookmarked) {
+      // removeBookmark would be called here
+    } else {
+      // bookmarkDocument would be called here
+    }
+  };
+
+  const handleDownloadDocument = (document: Document) => {
+    if (document.fileUrl) {
+      const link = window.document.createElement('a');
+      link.href = document.fileUrl;
+      link.download = document.fileName || document.title;
+      link.click();
+    }
+  };
 
   useEffect(() => {
     // Fetch initial data
@@ -182,12 +214,23 @@ export default function Library() {
             activeTab={activeTab}
             bookmarkedIds={bookmarks.map((b) => b.documentId)}
             recentlyViewedDocs={recentlyViewed}
+            onViewDocument={handleViewDocument}
           />
         </div>
       </div>
 
       {/* Upload Modal */}
       <DocumentUpload isOpen={showUpload} onClose={() => setShowUpload(false)} />
+
+      {/* Document Viewer Modal */}
+      <DocumentViewerModal
+        document={selectedDocument}
+        isOpen={showViewer}
+        onClose={handleCloseViewer}
+        onBookmark={handleBookmarkDocument}
+        onDownload={handleDownloadDocument}
+        isBookmarked={selectedDocument ? bookmarks.some((b) => b.documentId === selectedDocument.id) : false}
+      />
     </div>
   );
 }

@@ -1,11 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { User, Permission, AuthState, LoginCredentials, RegisterData, AuthResponse } from '@/types';
+import type { User, Permission, AuthState, LoginCredentials, RegisterData } from '@/types';
+
+// API base URL - use Workers directly in production, proxy in development
+const API_BASE = import.meta.env.PROD
+  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  : '/api/v1';
 
 interface AuthActions {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshTokens: () => Promise<void>;
   initializeAuth: () => void;
   setUser: (user: User) => void;
@@ -16,151 +21,7 @@ interface AuthActions {
 
 type AuthStore = AuthState & AuthActions;
 
-// Mock users database for development
-interface MockUserData {
-  user: User;
-  password: string;
-}
-
-const mockUsersDatabase: MockUserData[] = [
-  {
-    password: 'angels2G9@84?',
-    user: {
-      id: 'super-admin-001',
-      email: 'admin@ohcs.gov.gh',
-      staffId: 'OHCS-SA-001',
-      firstName: 'System',
-      lastName: 'Administrator',
-      displayName: 'System Administrator',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-      role: 'super_admin',
-      status: 'active',
-      mdaId: 'ohcs-001',
-      mda: {
-        id: 'ohcs-001',
-        name: 'Office of the Head of Civil Service',
-        abbreviation: 'OHCS',
-        type: 'agency',
-        createdAt: new Date().toISOString(),
-      },
-      department: 'Digital Transformation',
-      title: 'Super Administrator',
-      gradeLevel: 'Director I',
-      bio: 'System administrator with full platform access.',
-      skills: ['System Administration', 'Security', 'Platform Management'],
-      interests: ['Digital Government', 'E-Governance', 'Public Sector Innovation'],
-      emailVerified: true,
-      lastLoginAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  },
-  {
-    password: 'Admin123!@#',
-    user: {
-      id: '1',
-      email: 'john.doe@mof.gov.gh',
-      staffId: 'GCS-2024-001',
-      firstName: 'John',
-      lastName: 'Doe',
-      displayName: 'John Doe',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
-      role: 'admin',
-      status: 'active',
-      mdaId: '1',
-      mda: {
-        id: '1',
-        name: 'Ministry of Finance',
-        abbreviation: 'MoF',
-        type: 'ministry',
-        createdAt: new Date().toISOString(),
-      },
-      department: 'Information Technology',
-      title: 'Senior Software Engineer',
-      gradeLevel: 'Deputy Director II',
-      bio: 'Passionate about digital transformation in the public sector.',
-      skills: ['TypeScript', 'React', 'Cloud Architecture'],
-      interests: ['Digital Government', 'AI/ML', 'Public Policy'],
-      socialLinks: {
-        linkedin: 'https://linkedin.com/in/johndoe',
-        twitter: 'https://twitter.com/johndoe',
-      },
-      emailVerified: true,
-      lastLoginAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  },
-  {
-    password: 'Director123!',
-    user: {
-      id: '2',
-      email: 'sarah.mensah@ohlgs.gov.gh',
-      staffId: 'GCS-2024-002',
-      firstName: 'Sarah',
-      lastName: 'Mensah',
-      displayName: 'Sarah Mensah',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-      role: 'director',
-      status: 'active',
-      mdaId: '2',
-      mda: {
-        id: '2',
-        name: 'Office of the Head of Local Government Service',
-        abbreviation: 'OHLGS',
-        type: 'agency',
-        createdAt: new Date().toISOString(),
-      },
-      department: 'Policy & Planning',
-      title: 'Director of Policy',
-      gradeLevel: 'Director II',
-      bio: 'Leading policy development for local government services.',
-      skills: ['Policy Development', 'Strategic Planning', 'Governance'],
-      interests: ['Decentralization', 'Local Government', 'Community Development'],
-      emailVerified: true,
-      lastLoginAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  },
-  {
-    password: 'User123456!',
-    user: {
-      id: '3',
-      email: 'kwame.asante@ghs.gov.gh',
-      staffId: 'GCS-2024-003',
-      firstName: 'Kwame',
-      lastName: 'Asante',
-      displayName: 'Kwame Asante',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-      role: 'user',
-      status: 'active',
-      mdaId: '3',
-      mda: {
-        id: '3',
-        name: 'Ghana Health Service',
-        abbreviation: 'GHS',
-        type: 'agency',
-        createdAt: new Date().toISOString(),
-      },
-      department: 'Health Information',
-      title: 'Health Information Officer',
-      gradeLevel: 'Principal Officer',
-      bio: 'Health information specialist focused on data-driven healthcare.',
-      skills: ['Health Informatics', 'Data Analysis', 'Epidemiology'],
-      interests: ['Public Health', 'Digital Health', 'Health Data'],
-      emailVerified: true,
-      lastLoginAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  },
-];
-
-// Default mock user for backwards compatibility
-const mockUser: User = mockUsersDatabase[1].user;
-
-// Mock permissions based on role
+// Mock permissions based on role (used until we implement permission API)
 const rolePermissions: Record<string, Permission[]> = {
   super_admin: [
     { id: '1', name: 'manage_users', description: 'Manage all users', resource: 'users', action: 'manage' },
@@ -190,6 +51,11 @@ const rolePermissions: Record<string, Permission[]> = {
     { id: '1', name: 'create_documents', description: 'Upload documents', resource: 'documents', action: 'create' },
     { id: '2', name: 'create_forum_posts', description: 'Create forum posts', resource: 'forum', action: 'create' },
   ],
+  civil_servant: [
+    { id: '1', name: 'read_documents', description: 'Read documents', resource: 'documents', action: 'read' },
+    { id: '2', name: 'create_forum_posts', description: 'Create forum posts', resource: 'forum', action: 'create' },
+    { id: '3', name: 'upload_documents', description: 'Upload documents', resource: 'documents', action: 'create' },
+  ],
   user: [
     { id: '1', name: 'read_documents', description: 'Read documents', resource: 'documents', action: 'read' },
     { id: '2', name: 'create_forum_posts', description: 'Create forum posts', resource: 'forum', action: 'create' },
@@ -212,93 +78,135 @@ export const useAuthStore = create<AuthStore>()(
 
       // Actions
       login: async (credentials: LoginCredentials) => {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        try {
+          const response = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: credentials.email.toLowerCase(),
+              password: credentials.password,
+            }),
+          });
 
-        // Validate .gov.gh email
-        if (!credentials.email.toLowerCase().endsWith('.gov.gh')) {
-          throw new Error('Please use your official .gov.gh email address');
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || data.error || 'Login failed');
+          }
+
+          const user: User = {
+            id: data.user.id,
+            email: data.user.email,
+            firstName: data.user.firstName || data.user.name?.split(' ')[0] || '',
+            lastName: data.user.lastName || data.user.name?.split(' ').slice(1).join(' ') || '',
+            displayName: data.user.displayName || data.user.name,
+            avatar: data.user.avatar,
+            role: data.user.role || 'civil_servant',
+            status: 'active',
+            department: data.user.department,
+            title: data.user.title,
+            emailVerified: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+
+          const permissions = rolePermissions[user.role] || rolePermissions.user;
+
+          set({
+            user,
+            token: data.accessToken,
+            refreshToken: data.refreshToken,
+            isAuthenticated: true,
+            isLoading: false,
+            permissions,
+          });
+
+          // Store in localStorage for persistence
+          localStorage.setItem('auth_token', data.accessToken);
+          localStorage.setItem('refresh_token', data.refreshToken);
+          localStorage.setItem('auth_user', JSON.stringify(user));
+        } catch (error) {
+          throw error;
         }
-
-        // Find user in mock database
-        const userEntry = mockUsersDatabase.find(
-          (entry) =>
-            entry.user.email.toLowerCase() === credentials.email.toLowerCase() &&
-            entry.password === credentials.password
-        );
-
-        if (!userEntry) {
-          throw new Error('Invalid email or password. Please try again.');
-        }
-
-        // Check if user is active
-        if (userEntry.user.status !== 'active') {
-          throw new Error('Your account is not active. Please contact an administrator.');
-        }
-
-        // Mock successful login
-        const response: AuthResponse = {
-          user: { ...userEntry.user, lastLoginAt: new Date().toISOString() },
-          token: 'mock_jwt_token_' + Date.now(),
-          refreshToken: 'mock_refresh_token_' + Date.now(),
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        };
-
-        const permissions = rolePermissions[response.user.role] || [];
-
-        set({
-          user: response.user,
-          token: response.token,
-          refreshToken: response.refreshToken,
-          isAuthenticated: true,
-          isLoading: false,
-          permissions,
-        });
-
-        // Store tokens and user data
-        localStorage.setItem('auth_token', response.token);
-        localStorage.setItem('refresh_token', response.refreshToken);
-        localStorage.setItem('auth_user', JSON.stringify(response.user));
       },
 
       register: async (data: RegisterData) => {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        try {
+          const response = await fetch(`${API_BASE}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: `${data.firstName} ${data.lastName}`,
+              email: data.email.toLowerCase(),
+              password: data.password,
+              mda: data.mdaId,
+            }),
+          });
 
-        // Validate .gov.gh email
-        if (!data.email.toLowerCase().endsWith('.gov.gh')) {
-          throw new Error('Registration is only available for .gov.gh email addresses');
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.message || result.error || 'Registration failed');
+          }
+
+          // If auto-login is enabled (returns tokens)
+          if (result.accessToken && result.user) {
+            const user: User = {
+              id: result.user.id,
+              email: result.user.email,
+              firstName: result.user.firstName || data.firstName,
+              lastName: result.user.lastName || data.lastName,
+              displayName: result.user.displayName || `${data.firstName} ${data.lastName}`,
+              role: result.user.role || 'civil_servant',
+              status: 'active',
+              emailVerified: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+
+            const permissions = rolePermissions[user.role] || rolePermissions.user;
+
+            set({
+              user,
+              token: result.accessToken,
+              refreshToken: result.refreshToken,
+              isAuthenticated: true,
+              isLoading: false,
+              permissions,
+            });
+
+            localStorage.setItem('auth_token', result.accessToken);
+            localStorage.setItem('refresh_token', result.refreshToken);
+            localStorage.setItem('auth_user', JSON.stringify(user));
+          }
+        } catch (error) {
+          throw error;
         }
-
-        // Mock successful registration
-        const newUser: User = {
-          id: Date.now().toString(),
-          email: data.email,
-          staffId: data.staffId,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          displayName: `${data.firstName} ${data.lastName}`,
-          role: 'user',
-          status: 'pending',
-          mdaId: data.mdaId,
-          department: data.department,
-          title: data.title,
-          skills: [],
-          interests: [],
-          emailVerified: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-
-        // In real implementation, user would receive email verification
-        // For now, just return success
-        console.log('Registration successful:', newUser);
       },
 
-      logout: () => {
+      logout: async () => {
+        const token = get().token;
+
+        // Call logout API if we have a token
+        if (token) {
+          try {
+            await fetch(`${API_BASE}/auth/logout`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            });
+          } catch (e) {
+            // Ignore logout API errors
+          }
+        }
+
+        // Clear local state
         localStorage.removeItem('auth_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('auth_user');
+
         set({
           user: null,
           token: null,
@@ -317,19 +225,22 @@ export const useAuthStore = create<AuthStore>()(
         }
 
         try {
-          // Simulate token refresh
-          await new Promise((resolve) => setTimeout(resolve, 500));
-
-          const newToken = 'mock_jwt_token_' + Date.now();
-          const newRefreshToken = 'mock_refresh_token_' + Date.now();
-
-          set({
-            token: newToken,
-            refreshToken: newRefreshToken,
+          const response = await fetch(`${API_BASE}/auth/refresh`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${currentRefreshToken}`,
+              'Content-Type': 'application/json',
+            },
           });
 
-          localStorage.setItem('auth_token', newToken);
-          localStorage.setItem('refresh_token', newRefreshToken);
+          if (!response.ok) {
+            throw new Error('Token refresh failed');
+          }
+
+          const data = await response.json();
+
+          set({ token: data.accessToken });
+          localStorage.setItem('auth_token', data.accessToken);
         } catch (error) {
           get().logout();
         }
@@ -343,7 +254,8 @@ export const useAuthStore = create<AuthStore>()(
         if (token && refreshToken && storedUser) {
           try {
             const user = JSON.parse(storedUser) as User;
-            const permissions = rolePermissions[user.role] || [];
+            const permissions = rolePermissions[user.role] || rolePermissions.user;
+
             set({
               user,
               token,
@@ -365,8 +277,9 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       setUser: (user: User) => {
-        const permissions = rolePermissions[user.role] || [];
+        const permissions = rolePermissions[user.role] || rolePermissions.user;
         set({ user, permissions });
+        localStorage.setItem('auth_user', JSON.stringify(user));
       },
 
       updateUser: (updates: Partial<User>) => {
@@ -374,6 +287,7 @@ export const useAuthStore = create<AuthStore>()(
         if (currentUser) {
           const updatedUser = { ...currentUser, ...updates, updatedAt: new Date().toISOString() };
           set({ user: updatedUser });
+          localStorage.setItem('auth_user', JSON.stringify(updatedUser));
         }
       },
 

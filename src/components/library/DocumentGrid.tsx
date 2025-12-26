@@ -20,12 +20,14 @@ interface DocumentGridProps {
   activeTab?: LibraryTab;
   bookmarkedIds?: string[];
   recentlyViewedDocs?: Document[];
+  onViewDocument?: (document: Document) => void;
 }
 
 export function DocumentGrid({
   activeTab = 'all',
   bookmarkedIds = [],
   recentlyViewedDocs = [],
+  onViewDocument,
 }: DocumentGridProps) {
   const { documents, categories, selectedCategory, isLoading, error } = useLibraryStore();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -277,6 +279,7 @@ export function DocumentGrid({
               document={document}
               category={getCategoryById(document.category)}
               viewMode={viewMode}
+              onView={onViewDocument}
             />
           ))}
         </div>

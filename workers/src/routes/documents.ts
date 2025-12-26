@@ -349,6 +349,7 @@ documentsRoutes.post('/', requireAuth, async (c: AppContext) => {
     const category = formData.get('category') as string;
     const accessLevel = formData.get('accessLevel') as string || 'internal';
     const tags = formData.get('tags') as string;
+    const isDownloadable = formData.get('isDownloadable') !== 'false'; // Default true
 
     if (!file || !title || !category) {
       return c.json({ error: 'Missing required fields' }, 400);
@@ -425,7 +426,7 @@ documentsRoutes.patch('/:id', requireAuth, async (c: AppContext) => {
     }
 
     // Build update query
-    const allowedFields = ['title', 'description', 'category', 'tags', 'accessLevel', 'status'];
+    const allowedFields = ['title', 'description', 'category', 'tags', 'accessLevel', 'status', 'isDownloadable'];
     const fieldsToUpdate: string[] = [];
     const values: any[] = [];
 
@@ -616,10 +617,18 @@ documentsRoutes.get('/:id/download', async (c: AppContext) => {
 
     const document = await DB.prepare(`
       SELECT * FROM documents WHERE id = ?
-    `).bind(documentId).first<{ fileUrl: string; fileName: string; fileType: string }>();
+    `).bind(documentId).first<{ fileUrl: string; fileName: string; fileType: string; isDownloadable: number }>();
 
     if (!document) {
       return c.json({ error: 'Document not found' }, 404);
+    }
+
+    // Check if document is downloadable
+    if (!document.isDownloadable) {
+      return c.json({
+        error: 'Download restricted',
+        message: 'This document is not available for download'
+      }, 403);
     }
 
     // Get file from R2

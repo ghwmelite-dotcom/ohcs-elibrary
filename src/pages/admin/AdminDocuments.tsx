@@ -37,6 +37,8 @@ import {
   Globe,
   Building2,
   CloudUpload,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -60,6 +62,7 @@ interface Document {
   fileType: string;
   thumbnail?: string;
   tags: string[];
+  isDownloadable: boolean;
 }
 
 // Animated Background Component
@@ -880,6 +883,29 @@ function UploadModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
                   />
                 </div>
               </div>
+
+              {/* Download Permission Toggle */}
+              <div className="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-700/50 rounded-xl border border-surface-200 dark:border-surface-600">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                    <Download className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-surface-900 dark:text-surface-50">
+                      Allow Downloads
+                    </p>
+                    <p className="text-sm text-surface-500">
+                      Users can download this document to their device
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="relative w-12 h-6 bg-primary-500 rounded-full transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                >
+                  <span className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -935,6 +961,7 @@ export default function AdminDocuments() {
       fileSize: '2.4 MB',
       fileType: 'pdf',
       tags: ['budget', 'finance', '2024'],
+      isDownloadable: true,
     },
     {
       id: '2',
@@ -954,6 +981,7 @@ export default function AdminDocuments() {
       fileSize: '5.1 MB',
       fileType: 'pdf',
       tags: ['training', 'civil service', 'manual'],
+      isDownloadable: true,
     },
     {
       id: '3',
@@ -973,6 +1001,7 @@ export default function AdminDocuments() {
       fileSize: '1.8 MB',
       fileType: 'pdf',
       tags: ['health', 'report', 'Q4'],
+      isDownloadable: false,
     },
     {
       id: '4',
@@ -992,6 +1021,7 @@ export default function AdminDocuments() {
       fileSize: '8.2 MB',
       fileType: 'pdf',
       tags: ['digital', 'strategy', 'transformation'],
+      isDownloadable: true,
     },
     {
       id: '5',
@@ -1011,6 +1041,7 @@ export default function AdminDocuments() {
       fileSize: '1.2 MB',
       fileType: 'docx',
       tags: ['procurement', 'template', 'guidelines'],
+      isDownloadable: true,
     },
     {
       id: '6',
@@ -1030,6 +1061,7 @@ export default function AdminDocuments() {
       fileSize: '3.4 MB',
       fileType: 'xlsx',
       tags: ['education', 'budget', 'analysis'],
+      isDownloadable: false,
     },
     {
       id: '7',
@@ -1049,6 +1081,7 @@ export default function AdminDocuments() {
       fileSize: '4.8 MB',
       fileType: 'pdf',
       tags: ['legislation', 'finance', 'PFM'],
+      isDownloadable: true,
     },
     {
       id: '8',
@@ -1068,6 +1101,7 @@ export default function AdminDocuments() {
       fileSize: '1.5 MB',
       fileType: 'pdf',
       tags: ['ethics', 'conduct', 'guidelines'],
+      isDownloadable: true,
     },
   ];
 

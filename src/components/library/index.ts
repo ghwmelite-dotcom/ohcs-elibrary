@@ -5,5 +5,6 @@ export { DocumentRating, RatingBreakdown } from './DocumentRating';
 export { DocumentComments } from './DocumentComments';
 export { DocumentReader } from './DocumentReader';
 export { DocumentUpload } from './DocumentUpload';
+export { DocumentViewerModal } from './DocumentViewerModal';
 export { AIAnalysisPanel } from './AIAnalysisPanel';
 export { CollectionManager } from './CollectionManager';

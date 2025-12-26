@@ -4,6 +4,7 @@ compatibility_date = "2024-01-01"
 
 [vars]
 ENVIRONMENT = "development"
+JWT_SECRET = "ohcs-elibrary-jwt-secret-key-2024-production"
 
 # D1 Database binding
 [[d1_databases]]

@@ -28,11 +28,21 @@ interface DocumentCardProps {
   document: Document;
   category?: CategoryInfo;
   viewMode?: 'grid' | 'list';
+  onView?: (document: Document) => void;
 }
 
-export function DocumentCard({ document, category, viewMode = 'grid' }: DocumentCardProps) {
+export function DocumentCard({ document, category, viewMode = 'grid', onView }: DocumentCardProps) {
   const { bookmarks, bookmarkDocument, removeBookmark } = useLibraryStore();
   const isBookmarked = bookmarks.some((b) => b.documentId === document.id);
+
+  const handleClick = (e: React.MouseEvent) => {
+    // Don't trigger if clicking on interactive elements
+    if ((e.target as HTMLElement).closest('button, a[href]')) return;
+    if (onView) {
+      e.preventDefault();
+      onView(document);
+    }
+  };
 
   const handleToggleBookmark = () => {
     if (isBookmarked) {
@@ -65,7 +75,11 @@ export function DocumentCard({ document, category, viewMode = 'grid' }: Document
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 hover:shadow-elevation-2 transition-shadow p-4"
+        onClick={handleClick}
+        className={cn(
+          "bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 hover:shadow-elevation-2 transition-shadow p-4",
+          onView && "cursor-pointer"
+        )}
       >
         <div className="flex items-center gap-4">
           <div
@@ -79,12 +93,18 @@ export function DocumentCard({ document, category, viewMode = 'grid' }: Document
           </div>
 
           <div className="flex-1 min-w-0">
-            <Link
-              to={`/library/${document.id}`}
-              className="font-semibold text-surface-900 dark:text-surface-50 hover:text-primary-600 dark:hover:text-primary-400 line-clamp-1"
-            >
-              {document.title}
-            </Link>
+            {onView ? (
+              <span className="font-semibold text-surface-900 dark:text-surface-50 hover:text-primary-600 dark:hover:text-primary-400 line-clamp-1 cursor-pointer">
+                {document.title}
+              </span>
+            ) : (
+              <Link
+                to={`/library/${document.id}`}
+                className="font-semibold text-surface-900 dark:text-surface-50 hover:text-primary-600 dark:hover:text-primary-400 line-clamp-1"
+              >
+                {document.title}
+              </Link>
+            )}
             <p className="text-sm text-surface-500 dark:text-surface-400 line-clamp-1 mt-0.5">
               {document.description}
             </p>
@@ -146,7 +166,11 @@ export function DocumentCard({ document, category, viewMode = 'grid' }: Document
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 hover:shadow-elevation-2 transition-all group overflow-hidden"
+      onClick={handleClick}
+      className={cn(
+        "bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 hover:shadow-elevation-2 transition-all group overflow-hidden",
+        onView && "cursor-pointer"
+      )}
     >
       {/* Thumbnail/Header */}
       <div
@@ -199,12 +223,18 @@ export function DocumentCard({ document, category, viewMode = 'grid' }: Document
 
       {/* Content */}
       <div className="p-4">
-        <Link
-          to={`/library/${document.id}`}
-          className="block font-semibold text-surface-900 dark:text-surface-50 hover:text-primary-600 dark:hover:text-primary-400 line-clamp-2 min-h-[3rem]"
-        >
-          {document.title}
-        </Link>
+        {onView ? (
+          <span className="block font-semibold text-surface-900 dark:text-surface-50 hover:text-primary-600 dark:hover:text-primary-400 line-clamp-2 min-h-[3rem] cursor-pointer">
+            {document.title}
+          </span>
+        ) : (
+          <Link
+            to={`/library/${document.id}`}
+            className="block font-semibold text-surface-900 dark:text-surface-50 hover:text-primary-600 dark:hover:text-primary-400 line-clamp-2 min-h-[3rem]"
+          >
+            {document.title}
+          </Link>
+        )}
 
         <p className="mt-2 text-sm text-surface-500 dark:text-surface-400 line-clamp-2">
           {document.description}
