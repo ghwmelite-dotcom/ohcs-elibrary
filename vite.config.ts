@@ -24,15 +24,29 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false, // Disable sourcemaps in production for smaller bundles
+    target: 'esnext', // Target modern browsers for smaller bundles
+    minify: 'terser', // Use terser for better minification
+    cssCodeSplit: true, // Split CSS for better caching
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.log in production
+        drop_debugger: true,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           ui: ['framer-motion', 'lucide-react'],
           forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          state: ['zustand', '@tanstack/react-query'],
           pdf: ['react-pdf'],
         },
+        // Optimize chunk file names
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
       },
     },
   },

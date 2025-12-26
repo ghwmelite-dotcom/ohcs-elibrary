@@ -59,6 +59,8 @@ export function NewsCard({
             <img
               src={article.imageUrl}
               alt={article.title}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
@@ -142,6 +144,8 @@ export function NewsCard({
             <img
               src={article.imageUrl}
               alt={article.title}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
             />
           </div>
@@ -176,6 +180,8 @@ export function NewsCard({
           <img
             src={article.imageUrl}
             alt={article.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </Link>

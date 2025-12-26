@@ -175,6 +175,8 @@ export function ArticleView({
             <img
               src={article.imageUrl}
               alt={article.title}
+              loading="lazy"
+              decoding="async"
               className="w-full aspect-video object-cover"
             />
           </motion.div>
