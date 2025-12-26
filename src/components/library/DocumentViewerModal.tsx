@@ -120,6 +120,34 @@ export function DocumentViewerModal({
     }
   }, [document?.id]);
 
+  // Verify document exists before loading (for API documents)
+  useEffect(() => {
+    if (!document || !isOpen) return;
+
+    // Skip verification for local documents or blob URLs
+    if (document.id.startsWith('local-') ||
+        document.fileUrl?.startsWith('blob:') ||
+        document.fileUrl?.startsWith('data:')) {
+      return;
+    }
+
+    // Verify the document exists via API
+    const verifyDocument = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/documents/${document.id}`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          setLoadError(errorData.error || 'Document not found. It may have been moved or deleted.');
+          setIsLoading(false);
+        }
+      } catch {
+        // Network error - let the iframe try to load anyway
+      }
+    };
+
+    verifyDocument();
+  }, [document?.id, isOpen]);
+
   // Handle iframe load events
   const handleIframeLoad = useCallback(() => {
     setIsLoading(false);
@@ -128,7 +156,7 @@ export function DocumentViewerModal({
 
   const handleIframeError = useCallback(() => {
     setIsLoading(false);
-    setLoadError('Failed to load document. Please try again.');
+    setLoadError('Failed to load document. The file may be unavailable or in an unsupported format.');
   }, []);
 
   // Handle escape key
@@ -460,24 +488,35 @@ export function DocumentViewerModal({
 
               {/* Error State */}
               {loadError && (
-                <div className="absolute inset-0 flex items-center justify-center bg-surface-900/80 z-10">
-                  <div className="flex flex-col items-center gap-4 text-center px-8">
-                    <div className="w-16 h-16 rounded-full bg-error-500/20 flex items-center justify-center">
-                      <AlertCircle className="w-8 h-8 text-error-400" />
+                <div className="absolute inset-0 flex items-center justify-center bg-surface-900/90 z-10">
+                  <div className="flex flex-col items-center gap-4 text-center px-8 max-w-lg">
+                    <div className="w-20 h-20 rounded-full bg-error-500/20 flex items-center justify-center">
+                      <AlertCircle className="w-10 h-10 text-error-400" />
                     </div>
                     <div>
-                      <p className="text-error-400 font-semibold mb-1">Failed to Load Document</p>
-                      <p className="text-surface-400 text-sm max-w-md">{loadError}</p>
+                      <p className="text-xl text-white font-semibold mb-2">Document Unavailable</p>
+                      <p className="text-surface-400 text-sm">{loadError}</p>
                     </div>
-                    <button
-                      onClick={() => {
-                        setIsLoading(true);
-                        setLoadError(null);
-                      }}
-                      className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
-                    >
-                      Try Again
-                    </button>
+                    <p className="text-surface-500 text-xs">
+                      This could happen if the document was deleted, moved, or hasn't been uploaded to the server yet.
+                    </p>
+                    <div className="flex items-center gap-3 mt-2">
+                      <button
+                        onClick={onClose}
+                        className="px-4 py-2 bg-surface-700 hover:bg-surface-600 text-white rounded-lg transition-colors"
+                      >
+                        Close
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsLoading(true);
+                          setLoadError(null);
+                        }}
+                        className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
+                      >
+                        Try Again
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
