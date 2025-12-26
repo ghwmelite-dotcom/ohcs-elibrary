@@ -1,0 +1,383 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Root variables for theming */
+  :root {
+    --color-ghana-green: 0 107 63;
+    --color-ghana-gold: 252 209 22;
+    --color-ghana-red: 206 17 38;
+    --color-black-star: 0 0 0;
+
+    /* Background colors */
+    --bg-primary: 255 255 255;
+    --bg-secondary: 250 250 248;
+    --bg-tertiary: 245 245 240;
+
+    /* Text colors */
+    --text-primary: 20 20 16;
+    --text-secondary: 86 86 72;
+    --text-tertiary: 127 127 112;
+
+    /* Border colors */
+    --border-primary: 209 209 196;
+    --border-secondary: 232 232 224;
+  }
+
+  .dark {
+    --bg-primary: 20 20 16;
+    --bg-secondary: 30 30 24;
+    --bg-tertiary: 45 45 36;
+
+    --text-primary: 250 250 248;
+    --text-secondary: 200 200 190;
+    --text-tertiary: 160 160 150;
+
+    --border-primary: 70 70 60;
+    --border-secondary: 50 50 42;
+  }
+
+  /* Base typography */
+  html {
+    @apply scroll-smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-50 font-body;
+    min-height: 100vh;
+  }
+
+  /* Heading styles */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-semibold text-surface-900 dark:text-surface-50;
+  }
+
+  /* Selection colors */
+  ::selection {
+    @apply bg-ghana-gold-200 text-surface-900;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-100 dark:bg-surface-800;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-400 dark:bg-surface-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-surface-500 dark:bg-surface-500;
+  }
+
+  /* Focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-white dark:ring-offset-surface-900;
+  }
+
+  /* Link styles */
+  a {
+    @apply text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors;
+  }
+}
+
+@layer components {
+  /* Ghana Flag Stripe */
+  .ghana-flag-stripe {
+    @apply h-1 w-full;
+    background: linear-gradient(
+      to right,
+      #CE1126 0%,
+      #CE1126 33.33%,
+      #FCD116 33.33%,
+      #FCD116 66.66%,
+      #006B3F 66.66%,
+      #006B3F 100%
+    );
+  }
+
+  .ghana-flag-stripe-vertical {
+    @apply w-1 h-full;
+    background: linear-gradient(
+      to bottom,
+      #CE1126 0%,
+      #CE1126 33.33%,
+      #FCD116 33.33%,
+      #FCD116 66.66%,
+      #006B3F 66.66%,
+      #006B3F 100%
+    );
+  }
+
+  /* Glass morphism card */
+  .glass-card {
+    @apply bg-white/80 dark:bg-surface-800/80 backdrop-blur-md border border-surface-200 dark:border-surface-700 rounded-xl shadow-elevation-2;
+  }
+
+  /* Ghana themed card with subtle border */
+  .ghana-card {
+    @apply bg-white dark:bg-surface-800 rounded-xl shadow-elevation-2 overflow-hidden;
+    border: 1px solid rgba(0, 107, 63, 0.1);
+  }
+
+  .ghana-card:hover {
+    @apply shadow-elevation-3;
+    border-color: rgba(0, 107, 63, 0.2);
+  }
+
+  /* Kente pattern background */
+  .kente-bg {
+    @apply relative;
+  }
+
+  .kente-bg::before {
+    content: '';
+    @apply absolute inset-0 pointer-events-none;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(252, 209, 22, 0.05) 10px,
+      rgba(252, 209, 22, 0.05) 20px
+    );
+  }
+
+  /* Black Star motif */
+  .black-star {
+    @apply text-ghana-black;
+    text-shadow: 0 0 10px rgba(252, 209, 22, 0.5);
+  }
+
+  /* Shimmer loading effect */
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+
+  .shimmer::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    animation: shimmer 2s linear infinite;
+    background-size: 200% 100%;
+  }
+
+  /* Form input base */
+  .input-base {
+    @apply w-full px-4 py-3 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg text-surface-900 dark:text-surface-50 placeholder:text-surface-400 dark:placeholder:text-surface-500 transition-all duration-200;
+  }
+
+  .input-base:focus {
+    @apply border-primary-500 ring-2 ring-primary-500/20;
+  }
+
+  .input-base:disabled {
+    @apply bg-surface-100 dark:bg-surface-700 cursor-not-allowed opacity-60;
+  }
+
+  /* Button base */
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn-base bg-primary-500 text-white hover:bg-primary-600 active:bg-primary-700 shadow-elevation-1 hover:shadow-elevation-2;
+  }
+
+  .btn-secondary {
+    @apply btn-base bg-secondary-500 text-surface-900 hover:bg-secondary-400 active:bg-secondary-600 shadow-elevation-1 hover:shadow-elevation-2;
+  }
+
+  .btn-outline {
+    @apply btn-base border-2 border-primary-500 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 active:bg-primary-100;
+  }
+
+  .btn-ghost {
+    @apply btn-base text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 active:bg-surface-200;
+  }
+
+  .btn-danger {
+    @apply btn-base bg-error-500 text-white hover:bg-error-600 active:bg-error-700 shadow-elevation-1;
+  }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-300;
+  }
+
+  .badge-secondary {
+    @apply badge bg-secondary-100 text-secondary-800 dark:bg-secondary-900/30 dark:text-secondary-300;
+  }
+
+  .badge-success {
+    @apply badge bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-300;
+  }
+
+  .badge-warning {
+    @apply badge bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-300;
+  }
+
+  .badge-error {
+    @apply badge bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-300;
+  }
+
+  .badge-info {
+    @apply badge bg-info-100 text-info-800 dark:bg-info-900/30 dark:text-info-300;
+  }
+
+  /* Avatar */
+  .avatar {
+    @apply relative inline-flex items-center justify-center rounded-full bg-primary-100 text-primary-700 font-medium overflow-hidden;
+  }
+
+  .avatar-xs { @apply w-6 h-6 text-xs; }
+  .avatar-sm { @apply w-8 h-8 text-sm; }
+  .avatar-md { @apply w-10 h-10 text-base; }
+  .avatar-lg { @apply w-12 h-12 text-lg; }
+  .avatar-xl { @apply w-16 h-16 text-xl; }
+  .avatar-2xl { @apply w-24 h-24 text-2xl; }
+
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-300;
+  }
+
+  .card-hover:hover {
+    @apply -translate-y-1 shadow-elevation-4;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-ghana-gradient;
+  }
+
+  /* Section container */
+  .container-section {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Sidebar navigation item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 hover:text-surface-900 dark:hover:text-surface-50 transition-all duration-200;
+  }
+
+  .nav-item-active {
+    @apply bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium;
+  }
+
+  /* Tooltip */
+  .tooltip {
+    @apply absolute z-50 px-2 py-1 text-xs font-medium text-white bg-surface-900 dark:bg-surface-100 dark:text-surface-900 rounded shadow-elevation-2 whitespace-nowrap;
+  }
+
+  /* Dropdown */
+  .dropdown-menu {
+    @apply absolute z-50 mt-1 w-56 bg-white dark:bg-surface-800 rounded-lg shadow-elevation-4 border border-surface-200 dark:border-surface-700 py-1 animate-fade-in;
+  }
+
+  .dropdown-item {
+    @apply flex items-center gap-2 px-4 py-2 text-sm text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 cursor-pointer transition-colors;
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in;
+  }
+
+  .modal-content {
+    @apply bg-white dark:bg-surface-800 rounded-2xl shadow-elevation-5 w-full max-w-lg max-h-[90vh] overflow-hidden animate-scale-in;
+  }
+
+  /* Toast notification */
+  .toast {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg shadow-elevation-4 animate-slide-up;
+  }
+
+  .toast-success { @apply bg-success-500 text-white; }
+  .toast-error { @apply bg-error-500 text-white; }
+  .toast-warning { @apply bg-warning-500 text-surface-900; }
+  .toast-info { @apply bg-info-500 text-white; }
+
+  /* Table */
+  .table-container {
+    @apply w-full overflow-x-auto rounded-lg border border-surface-200 dark:border-surface-700;
+  }
+
+  .table-base {
+    @apply w-full text-sm text-left;
+  }
+
+  .table-header {
+    @apply bg-surface-50 dark:bg-surface-800 text-surface-700 dark:text-surface-300 uppercase text-xs tracking-wider;
+  }
+
+  .table-row {
+    @apply border-b border-surface-200 dark:border-surface-700 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors;
+  }
+
+  .table-cell {
+    @apply px-4 py-3;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Truncate text with ellipsis */
+  .truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Safe area padding for mobile */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Focus ring utility */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
+  }
+
+  /* Ghana color utilities */
+  .text-ghana { @apply text-ghana-green-500; }
+  .bg-ghana { @apply bg-ghana-green-500; }
+  .border-ghana { @apply border-ghana-green-500; }
+}

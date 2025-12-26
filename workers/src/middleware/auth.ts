@@ -1,0 +1,117 @@
+import { Context, Next } from 'hono';
+import { verify } from 'hono/jwt';
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  role: string;
+  mda?: string;
+}
+
+declare module 'hono' {
+  interface ContextVariableMap {
+    user: AuthUser;
+  }
+}
+
+export async function authMiddleware(c: Context, next: Next) {
+  const authHeader = c.req.header('Authorization');
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return c.json({
+      error: 'Unauthorized',
+      message: 'Missing or invalid authorization header',
+    }, 401);
+  }
+
+  const token = authHeader.substring(7);
+
+  try {
+    const payload = await verify(token, c.env.JWT_SECRET);
+
+    if (!payload || !payload.sub) {
+      return c.json({
+        error: 'Unauthorized',
+        message: 'Invalid token',
+      }, 401);
+    }
+
+    // Check token expiration
+    if (payload.exp && Date.now() >= payload.exp * 1000) {
+      return c.json({
+        error: 'Unauthorized',
+        message: 'Token has expired',
+      }, 401);
+    }
+
+    // Set user in context
+    c.set('user', {
+      id: payload.sub as string,
+      email: payload.email as string,
+      role: payload.role as string,
+      mda: payload.mda as string | undefined,
+    });
+
+    await next();
+  } catch (error) {
+    console.error('Auth error:', error);
+    return c.json({
+      error: 'Unauthorized',
+      message: 'Invalid token',
+    }, 401);
+  }
+}
+
+// Role-based access control middleware
+export function requireRole(...roles: string[]) {
+  return async (c: Context, next: Next) => {
+    const user = c.get('user');
+
+    if (!user) {
+      return c.json({
+        error: 'Unauthorized',
+        message: 'Authentication required',
+      }, 401);
+    }
+
+    if (!roles.includes(user.role)) {
+      return c.json({
+        error: 'Forbidden',
+        message: 'Insufficient permissions',
+      }, 403);
+    }
+
+    await next();
+  };
+}
+
+// Permission-based access control
+export function requirePermission(permission: string) {
+  return async (c: Context, next: Next) => {
+    const user = c.get('user');
+
+    if (!user) {
+      return c.json({
+        error: 'Unauthorized',
+        message: 'Authentication required',
+      }, 401);
+    }
+
+    // Check permission in database
+    const result = await c.env.DB.prepare(`
+      SELECT 1 FROM role_permissions rp
+      JOIN permissions p ON rp.permission_id = p.id
+      JOIN roles r ON rp.role_id = r.id
+      WHERE r.name = ? AND p.name = ?
+    `).bind(user.role, permission).first();
+
+    if (!result) {
+      return c.json({
+        error: 'Forbidden',
+        message: `Missing permission: ${permission}`,
+      }, 403);
+    }
+
+    await next();
+  };
+}

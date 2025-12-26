@@ -1,0 +1,226 @@
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import {
+  FileText,
+  Eye,
+  Download,
+  Star,
+  Clock,
+  Bookmark,
+  BookmarkCheck,
+  MoreVertical,
+  Share2,
+  Lock,
+} from 'lucide-react';
+import { Document, DocumentCategory } from '@/types';
+import { useLibraryStore } from '@/stores/libraryStore';
+import { Badge } from '@/components/shared/Badge';
+import { Dropdown } from '@/components/shared/Dropdown';
+import { cn } from '@/utils/cn';
+import { formatRelativeTime, formatFileSize } from '@/utils/formatters';
+
+interface DocumentCardProps {
+  document: Document;
+  category?: DocumentCategory;
+  viewMode?: 'grid' | 'list';
+}
+
+export function DocumentCard({ document, category, viewMode = 'grid' }: DocumentCardProps) {
+  const { bookmarks, toggleBookmark } = useLibraryStore();
+  const isBookmarked = bookmarks.includes(document.id);
+
+  const accessLevelColors = {
+    public: 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400',
+    internal: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    restricted: 'bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400',
+    confidential: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+    secret: 'bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400',
+  };
+
+  const menuItems = [
+    { label: 'Share', icon: Share2, onClick: () => {} },
+    { label: 'Download', icon: Download, onClick: () => {} },
+    {
+      label: isBookmarked ? 'Remove Bookmark' : 'Add Bookmark',
+      icon: isBookmarked ? BookmarkCheck : Bookmark,
+      onClick: () => toggleBookmark(document.id),
+    },
+  ];
+
+  if (viewMode === 'list') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 hover:shadow-elevation-2 transition-shadow p-4"
+      >
+        <div className="flex items-center gap-4">
+          <div
+            className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: `${category?.color || '#006B3F'}20` }}
+          >
+            <FileText
+              className="w-6 h-6"
+              style={{ color: category?.color || '#006B3F' }}
+            />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <Link
+              to={`/library/${document.id}`}
+              className="font-semibold text-surface-900 dark:text-surface-50 hover:text-primary-600 dark:hover:text-primary-400 line-clamp-1"
+            >
+              {document.title}
+            </Link>
+            <p className="text-sm text-surface-500 dark:text-surface-400 line-clamp-1 mt-0.5">
+              {document.description}
+            </p>
+          </div>
+
+          <div className="hidden md:flex items-center gap-6 text-sm text-surface-500">
+            <div className="flex items-center gap-1.5">
+              <Eye className="w-4 h-4" />
+              {document.viewCount}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Download className="w-4 h-4" />
+              {document.downloadCount}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Star className="w-4 h-4 text-secondary-500" />
+              {document.rating.toFixed(1)}
+            </div>
+          </div>
+
+          <span
+            className={cn(
+              'hidden lg:inline-flex text-xs px-2 py-1 rounded-full capitalize',
+              accessLevelColors[document.accessLevel]
+            )}
+          >
+            {document.accessLevel === 'secret' && <Lock className="w-3 h-3 mr-1" />}
+            {document.accessLevel}
+          </span>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => toggleBookmark(document.id)}
+              className={cn(
+                'p-2 rounded-lg transition-colors',
+                isBookmarked
+                  ? 'text-secondary-500 bg-secondary-50 dark:bg-secondary-900/30'
+                  : 'text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700'
+              )}
+            >
+              {isBookmarked ? (
+                <BookmarkCheck className="w-5 h-5" />
+              ) : (
+                <Bookmark className="w-5 h-5" />
+              )}
+            </button>
+            <Dropdown items={menuItems} align="right">
+              <button className="p-2 text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors">
+                <MoreVertical className="w-5 h-5" />
+              </button>
+            </Dropdown>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 hover:shadow-elevation-2 transition-all group overflow-hidden"
+    >
+      {/* Thumbnail/Header */}
+      <div
+        className="h-32 relative flex items-center justify-center"
+        style={{ backgroundColor: `${category?.color || '#006B3F'}15` }}
+      >
+        <FileText
+          className="w-12 h-12"
+          style={{ color: category?.color || '#006B3F' }}
+        />
+
+        {/* Access Level Badge */}
+        <span
+          className={cn(
+            'absolute top-3 left-3 text-xs px-2 py-1 rounded-full capitalize flex items-center gap-1',
+            accessLevelColors[document.accessLevel]
+          )}
+        >
+          {document.accessLevel === 'secret' && <Lock className="w-3 h-3" />}
+          {document.accessLevel}
+        </span>
+
+        {/* Bookmark Button */}
+        <button
+          onClick={() => toggleBookmark(document.id)}
+          className={cn(
+            'absolute top-3 right-3 p-2 rounded-lg transition-all',
+            isBookmarked
+              ? 'text-secondary-500 bg-white dark:bg-surface-800'
+              : 'text-surface-400 bg-white/80 dark:bg-surface-800/80 opacity-0 group-hover:opacity-100'
+          )}
+        >
+          {isBookmarked ? (
+            <BookmarkCheck className="w-5 h-5" />
+          ) : (
+            <Bookmark className="w-5 h-5" />
+          )}
+        </button>
+
+        {/* Category Badge */}
+        {category && (
+          <div
+            className="absolute bottom-3 left-3 text-xs px-2 py-1 rounded-full bg-white dark:bg-surface-800 font-medium"
+            style={{ color: category.color }}
+          >
+            {category.name}
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-4">
+        <Link
+          to={`/library/${document.id}`}
+          className="block font-semibold text-surface-900 dark:text-surface-50 hover:text-primary-600 dark:hover:text-primary-400 line-clamp-2 min-h-[3rem]"
+        >
+          {document.title}
+        </Link>
+
+        <p className="mt-2 text-sm text-surface-500 dark:text-surface-400 line-clamp-2">
+          {document.description}
+        </p>
+
+        {/* Metadata */}
+        <div className="mt-4 flex items-center justify-between text-xs text-surface-500">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1">
+              <Eye className="w-3.5 h-3.5" />
+              {document.viewCount}
+            </span>
+            <span className="flex items-center gap-1">
+              <Star className="w-3.5 h-3.5 text-secondary-500" />
+              {document.rating.toFixed(1)}
+            </span>
+          </div>
+          <span className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5" />
+            {formatRelativeTime(document.createdAt)}
+          </span>
+        </div>
+
+        {/* File Info */}
+        <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex items-center justify-between text-xs text-surface-400">
+          <span className="uppercase">{document.fileType}</span>
+          <span>{formatFileSize(document.fileSize)}</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}

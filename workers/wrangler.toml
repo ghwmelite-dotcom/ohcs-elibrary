@@ -1,0 +1,47 @@
+name = "ohcs-elibrary-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+ENVIRONMENT = "development"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "ohcs-elibrary"
+database_id = "your-database-id-here"
+
+# R2 Storage binding for documents
+[[r2_buckets]]
+binding = "DOCUMENTS"
+bucket_name = "ohcs-documents"
+
+# KV namespace for caching
+[[kv_namespaces]]
+binding = "CACHE"
+id = "your-kv-id-here"
+
+# AI binding for document analysis
+[ai]
+binding = "AI"
+
+# Rate limiting
+[limits]
+cpu_ms = 50
+
+# Routes
+[[routes]]
+pattern = "api.ohcs-elibrary.gov.gh/*"
+zone_name = "ohcs-elibrary.gov.gh"
+
+# Development environment
+[env.development]
+vars = { ENVIRONMENT = "development" }
+
+# Staging environment
+[env.staging]
+vars = { ENVIRONMENT = "staging" }
+
+# Production environment
+[env.production]
+vars = { ENVIRONMENT = "production" }
