@@ -35,7 +35,12 @@ const app = new Hono<{ Bindings: Env }>();
 app.use('*', logger());
 app.use('*', prettyJSON());
 app.use('*', cors({
-  origin: ['https://ohcs-elibrary.gov.gh', 'http://localhost:5173'],
+  origin: [
+    'https://ohcs-elibrary.gov.gh',
+    'https://ohcs-elibrary.pages.dev',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ],
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
@@ -65,11 +70,13 @@ app.get('/api/v1', (c) => {
 // Public routes
 app.route('/api/v1/auth', authRoutes);
 
+// Public document routes (read-only)
+app.route('/api/v1/documents', documentsRoutes);
+
 // Protected routes (require authentication)
 app.use('/api/v1/*', authMiddleware);
 
 app.route('/api/v1/users', usersRoutes);
-app.route('/api/v1/documents', documentsRoutes);
 app.route('/api/v1/bookmarks', bookmarksRoutes);
 app.route('/api/v1/forum', forumRoutes);
 app.route('/api/v1/chat', chatRoutes);

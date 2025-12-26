@@ -1,21 +1,62 @@
 import { Hono } from 'hono';
-import type { Context } from 'hono';
+import type { Context, Next } from 'hono';
 
 interface Env {
   DB: D1Database;
   DOCUMENTS: R2Bucket;
   CACHE: KVNamespace;
   AI: any;
+  JWT_SECRET: string;
 }
 
 interface Variables {
-  userId: string;
-  userRole: string;
+  userId?: string;
+  userRole?: string;
 }
 
 type AppContext = Context<{ Bindings: Env; Variables: Variables }>;
 
+// Optional auth middleware - sets user if token provided, but doesn't require it
+async function optionalAuth(c: AppContext, next: Next) {
+  const authHeader = c.req.header('Authorization');
+
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      const { verify } = await import('hono/jwt');
+      const token = authHeader.substring(7);
+      const payload = await verify(token, c.env.JWT_SECRET);
+
+      if (payload?.sub) {
+        c.set('userId', payload.sub as string);
+        c.set('userRole', (payload.role as string) || 'user');
+      }
+    } catch {
+      // Token invalid, continue as unauthenticated
+    }
+  }
+
+  // Set default guest user for unauthenticated requests
+  if (!c.get('userId')) {
+    c.set('userId', 'guest');
+    c.set('userRole', 'guest');
+  }
+
+  await next();
+}
+
+// Require auth middleware for write operations
+async function requireAuth(c: AppContext, next: Next) {
+  const userId = c.get('userId');
+  if (!userId || userId === 'guest') {
+    return c.json({ error: 'Unauthorized', message: 'Authentication required' }, 401);
+  }
+  await next();
+}
+
 export const documentsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+// Apply optional auth to all document routes
+documentsRoutes.use('*', optionalAuth);
 
 // Document categories (static data)
 const CATEGORIES = [
@@ -32,8 +73,8 @@ const CATEGORIES = [
 // GET /documents - List documents with filtering and pagination
 documentsRoutes.get('/', async (c: AppContext) => {
   try {
-    const { DB, CACHE } = c.env;
-    const userId = c.get('userId');
+    const { DB } = c.env;
+    const userId = c.get('userId') || 'guest';
 
     // Parse query parameters
     const url = new URL(c.req.url);
@@ -44,10 +85,42 @@ documentsRoutes.get('/', async (c: AppContext) => {
     const sortOrder = url.searchParams.get('sortOrder') || 'desc';
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '12'), 50);
-    const tags = url.searchParams.get('tags')?.split(',').filter(Boolean);
+    const offset = (page - 1) * limit;
 
-    // Build query
-    let query = `
+    // Build WHERE clause
+    let whereClause = `WHERE d.status = 'published'`;
+    const countParams: any[] = [];
+    const queryParams: any[] = [userId, userId];
+
+    if (category) {
+      whereClause += ` AND d.category = ?`;
+      countParams.push(category);
+      queryParams.push(category);
+    }
+
+    if (accessLevel) {
+      whereClause += ` AND d.accessLevel = ?`;
+      countParams.push(accessLevel);
+      queryParams.push(accessLevel);
+    }
+
+    if (search) {
+      whereClause += ` AND (d.title LIKE ? OR d.description LIKE ?)`;
+      countParams.push(`%${search}%`, `%${search}%`);
+      queryParams.push(`%${search}%`, `%${search}%`);
+    }
+
+    // Get total count (simple query)
+    const countQuery = `SELECT COUNT(*) as total FROM documents d ${whereClause}`;
+    const countResult = await DB.prepare(countQuery).bind(...countParams).first<{ total: number }>();
+    const totalCount = countResult?.total || 0;
+
+    // Build main query with sorting
+    const validSortFields = ['title', 'createdAt', 'updatedAt', 'views', 'downloads', 'averageRating'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    const sortDirection = sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+    const query = `
       SELECT
         d.*,
         u.displayName as authorName,
@@ -56,47 +129,17 @@ documentsRoutes.get('/', async (c: AppContext) => {
         (SELECT rating FROM document_ratings r WHERE r.documentId = d.id AND r.userId = ?) as userRating
       FROM documents d
       LEFT JOIN users u ON d.authorId = u.id
-      WHERE d.status = 'published'
+      ${whereClause}
+      ORDER BY d.${sortField} ${sortDirection}
+      LIMIT ? OFFSET ?
     `;
-    const params: any[] = [userId, userId];
-
-    // Add filters
-    if (category) {
-      query += ` AND d.category = ?`;
-      params.push(category);
-    }
-
-    if (accessLevel) {
-      query += ` AND d.accessLevel = ?`;
-      params.push(accessLevel);
-    }
-
-    if (search) {
-      query += ` AND (d.title LIKE ? OR d.description LIKE ?)`;
-      params.push(`%${search}%`, `%${search}%`);
-    }
-
-    // Add sorting
-    const validSortFields = ['title', 'createdAt', 'updatedAt', 'views', 'downloads', 'averageRating'];
-    const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
-    const sortDirection = sortOrder === 'asc' ? 'ASC' : 'DESC';
-    query += ` ORDER BY d.${sortField} ${sortDirection}`;
-
-    // Get total count
-    const countQuery = query.replace(/SELECT[\s\S]*?FROM/, 'SELECT COUNT(*) as total FROM').replace(/ORDER BY[\s\S]*$/, '');
-    const countResult = await DB.prepare(countQuery).bind(...params.slice(0, params.length - (search ? 2 : 0) - (accessLevel ? 1 : 0) - (category ? 1 : 0))).first<{ total: number }>();
-    const totalCount = countResult?.total || 0;
-
-    // Add pagination
-    const offset = (page - 1) * limit;
-    query += ` LIMIT ? OFFSET ?`;
-    params.push(limit, offset);
+    queryParams.push(limit, offset);
 
     // Execute query
-    const { results } = await DB.prepare(query).bind(...params).all();
+    const { results } = await DB.prepare(query).bind(...queryParams).all();
 
     // Transform results
-    const documents = results.map((doc: any) => ({
+    const documents = (results || []).map((doc: any) => ({
       ...doc,
       tags: doc.tags ? JSON.parse(doc.tags) : [],
       isBookmarked: doc.isBookmarked > 0,
@@ -293,8 +336,8 @@ documentsRoutes.get('/:id', async (c: AppContext) => {
   }
 });
 
-// POST /documents - Upload new document
-documentsRoutes.post('/', async (c: AppContext) => {
+// POST /documents - Upload new document (requires auth)
+documentsRoutes.post('/', requireAuth, async (c: AppContext) => {
   try {
     const { DB, DOCUMENTS } = c.env;
     const userId = c.get('userId');
@@ -359,8 +402,8 @@ documentsRoutes.post('/', async (c: AppContext) => {
   }
 });
 
-// PATCH /documents/:id - Update document
-documentsRoutes.patch('/:id', async (c: AppContext) => {
+// PATCH /documents/:id - Update document (requires auth)
+documentsRoutes.patch('/:id', requireAuth, async (c: AppContext) => {
   try {
     const { DB } = c.env;
     const userId = c.get('userId');
@@ -415,8 +458,8 @@ documentsRoutes.patch('/:id', async (c: AppContext) => {
   }
 });
 
-// DELETE /documents/:id - Delete document
-documentsRoutes.delete('/:id', async (c: AppContext) => {
+// DELETE /documents/:id - Delete document (requires auth)
+documentsRoutes.delete('/:id', requireAuth, async (c: AppContext) => {
   try {
     const { DB, DOCUMENTS } = c.env;
     const userId = c.get('userId');
@@ -454,8 +497,8 @@ documentsRoutes.delete('/:id', async (c: AppContext) => {
   }
 });
 
-// POST /documents/:id/rate - Rate a document
-documentsRoutes.post('/:id/rate', async (c: AppContext) => {
+// POST /documents/:id/rate - Rate a document (requires auth)
+documentsRoutes.post('/:id/rate', requireAuth, async (c: AppContext) => {
   try {
     const { DB } = c.env;
     const userId = c.get('userId');
