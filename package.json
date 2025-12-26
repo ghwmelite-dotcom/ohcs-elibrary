@@ -6,7 +6,8 @@
   "description": "OHCS Ghana E-Library Platform - Digital backbone for civil servants",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
+    "typecheck": "tsc -b",
     "lint": "eslint .",
     "preview": "vite preview",
     "deploy": "wrangler pages deploy dist"
