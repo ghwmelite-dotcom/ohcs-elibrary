@@ -1,5 +1,6 @@
+import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
   FileText,
   MessageSquare,
@@ -13,71 +14,638 @@ import {
   ArrowRight,
   Zap,
   Star,
-  Flame
+  Flame,
+  Target,
+  Award,
+  Sparkles,
+  ChevronRight,
+  Play,
+  Bookmark,
+  Brain,
+  GraduationCap,
+  Calendar,
+  CheckCircle2,
 } from 'lucide-react';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { LevelProgress, CompactStreak } from '@/components/gamification';
 import { useAuthStore } from '@/stores/authStore';
+import { cn } from '@/utils/cn';
 
+// ============================================================================
+// ANIMATED BACKGROUND
+// ============================================================================
+function AnimatedBackground() {
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      {/* Floating gradient orbs */}
+      <motion.div
+        className="absolute w-[500px] h-[500px] rounded-full"
+        style={{
+          background: 'radial-gradient(circle, rgba(0, 107, 63, 0.12) 0%, transparent 70%)',
+          top: '-5%',
+          left: '-10%',
+        }}
+        animate={{
+          y: [0, 30, 0],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute w-[400px] h-[400px] rounded-full"
+        style={{
+          background: 'radial-gradient(circle, rgba(252, 209, 22, 0.08) 0%, transparent 70%)',
+          bottom: '10%',
+          right: '-5%',
+        }}
+        animate={{
+          y: [0, -20, 0],
+          scale: [1.1, 1, 1.1],
+        }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      {/* Subtle grid */}
+      <div
+        className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(0, 107, 63, 0.8) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 107, 63, 0.8) 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px',
+        }}
+      />
+    </div>
+  );
+}
+
+// ============================================================================
+// LEVEL PROGRESS CARD (Premium Version)
+// ============================================================================
+interface LevelProgressProps {
+  level: number;
+  levelName: string;
+  currentXP: number;
+  requiredXP: number;
+  totalXP: number;
+}
+
+function PremiumLevelProgress({ level, levelName, currentXP, requiredXP, totalXP }: LevelProgressProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true });
+  const progress = (currentXP / requiredXP) * 100;
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6 }}
+      className="relative overflow-hidden rounded-2xl"
+    >
+      {/* Background gradient */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 50%, #003620 100%)',
+        }}
+      />
+
+      {/* Animated patterns */}
+      <motion.div
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        }}
+        animate={{ x: [0, 60], y: [0, 60] }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+      />
+
+      {/* Floating particles */}
+      {[...Array(6)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1 h-1 bg-secondary-400 rounded-full"
+          style={{
+            left: `${20 + i * 15}%`,
+            top: '50%',
+          }}
+          animate={{
+            y: [-20, -40, -20],
+            opacity: [0.3, 0.8, 0.3],
+            scale: [1, 1.5, 1],
+          }}
+          transition={{
+            duration: 3 + i * 0.5,
+            repeat: Infinity,
+            delay: i * 0.3,
+          }}
+        />
+      ))}
+
+      <div className="relative p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            {/* Level badge */}
+            <motion.div
+              className="relative"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 4, repeat: Infinity }}
+            >
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-secondary-400 to-secondary-600 flex items-center justify-center shadow-lg">
+                <span className="text-2xl font-bold text-surface-900">{level}</span>
+              </div>
+              {/* Glow ring */}
+              <motion.div
+                className="absolute -inset-1 rounded-2xl border-2 border-secondary-400"
+                animate={{ opacity: [0.3, 0.7, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            </motion.div>
+
+            <div>
+              <h3 className="text-xl font-bold text-white">{levelName}</h3>
+              <p className="text-primary-200 text-sm">
+                {totalXP.toLocaleString()} Total XP Earned
+              </p>
+            </div>
+          </div>
+
+          {/* Next level info */}
+          <div className="text-right">
+            <p className="text-primary-200 text-sm">Next Level</p>
+            <p className="text-2xl font-bold text-white">
+              {(requiredXP - currentXP).toLocaleString()} XP
+            </p>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="relative h-4 bg-black/20 rounded-full overflow-hidden">
+          <motion.div
+            className="absolute inset-y-0 left-0 rounded-full"
+            style={{
+              background: 'linear-gradient(90deg, #FCD116, #f59e0b, #FCD116)',
+              backgroundSize: '200% 100%',
+            }}
+            initial={{ width: 0 }}
+            animate={isInView ? {
+              width: `${progress}%`,
+              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+            } : {}}
+            transition={{
+              width: { duration: 1.5, ease: 'easeOut' },
+              backgroundPosition: { duration: 3, repeat: Infinity, ease: 'linear' },
+            }}
+          />
+          {/* Shine effect */}
+          <motion.div
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+            }}
+            animate={{ x: ['-100%', '200%'] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+          />
+        </div>
+
+        {/* XP Labels */}
+        <div className="flex justify-between mt-2 text-sm">
+          <span className="text-primary-200">{currentXP.toLocaleString()} XP</span>
+          <span className="text-white font-medium">{requiredXP.toLocaleString()} XP</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ============================================================================
+// STAT CARD
+// ============================================================================
+interface StatCardProps {
+  label: string;
+  value: number | string;
+  icon: React.ElementType;
+  color: string;
+  link: string;
+  delay?: number;
+}
+
+function StatCard({ label, value, icon: Icon, color, link, delay = 0 }: StatCardProps) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const isInView = useInView(ref, { once: true });
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+      transition={{ delay, type: 'spring', stiffness: 100 }}
+    >
+      <Link
+        ref={ref}
+        to={link}
+        className="group block relative overflow-hidden rounded-2xl bg-white dark:bg-surface-800/90 backdrop-blur-xl border border-surface-200/50 dark:border-surface-700/50 p-5 transition-all duration-300"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        style={{
+          boxShadow: isHovered
+            ? `0 20px 40px -12px ${color}40, 0 0 0 1px ${color}20`
+            : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        {/* Hover glow */}
+        <motion.div
+          className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{
+            background: `radial-gradient(circle at 50% 50%, ${color}30, transparent 70%)`,
+            filter: 'blur(15px)',
+          }}
+        />
+
+        <div className="relative flex items-center gap-4">
+          {/* Icon */}
+          <motion.div
+            className="w-12 h-12 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: `${color}15` }}
+            animate={{ rotate: isHovered ? 360 : 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Icon className="w-6 h-6" style={{ color }} />
+          </motion.div>
+
+          {/* Content */}
+          <div>
+            <motion.p
+              className="text-2xl font-bold text-surface-900 dark:text-surface-50"
+              initial={{ scale: 0.8 }}
+              animate={isInView ? { scale: 1 } : {}}
+              transition={{ delay: delay + 0.2, type: 'spring' }}
+            >
+              {typeof value === 'number' ? value.toLocaleString() : value}
+            </motion.p>
+            <p className="text-sm text-surface-500">{label}</p>
+          </div>
+
+          {/* Arrow */}
+          <motion.div
+            className="absolute right-4 top-1/2 -translate-y-1/2"
+            animate={{ x: isHovered ? 0 : -5, opacity: isHovered ? 1 : 0 }}
+          >
+            <ChevronRight className="w-5 h-5" style={{ color }} />
+          </motion.div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
+// ============================================================================
+// STREAK DISPLAY
+// ============================================================================
+function StreakDisplay({ streak }: { streak: number }) {
+  return (
+    <motion.div
+      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20"
+      whileHover={{ scale: 1.05 }}
+    >
+      <motion.div
+        animate={{
+          scale: [1, 1.2, 1],
+          rotate: [0, 5, -5, 0],
+        }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+      >
+        <Flame className="w-5 h-5 text-orange-500" />
+      </motion.div>
+      <span className="font-bold text-orange-600 dark:text-orange-400">{streak}</span>
+      <span className="text-sm text-surface-600 dark:text-surface-400">day streak</span>
+    </motion.div>
+  );
+}
+
+// ============================================================================
+// DOCUMENT CARD
+// ============================================================================
+interface DocumentCardProps {
+  id: string;
+  title: string;
+  category: string;
+  progress: number;
+  delay?: number;
+}
+
+function DocumentCard({ id, title, category, progress, delay = 0 }: DocumentCardProps) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const isInView = useInView(ref, { once: true });
+  const isComplete = progress === 100;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={isInView ? { opacity: 1, x: 0 } : {}}
+      transition={{ delay }}
+    >
+      <Link
+        ref={ref}
+        to={`/library/${id}`}
+        className="group flex items-center gap-4 p-4 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-all"
+      >
+        {/* Icon */}
+        <motion.div
+          className={cn(
+            'w-12 h-12 rounded-xl flex items-center justify-center shadow-sm',
+            isComplete
+              ? 'bg-gradient-to-br from-success-400 to-success-600'
+              : 'bg-gradient-to-br from-primary-400 to-primary-600'
+          )}
+          whileHover={{ scale: 1.1, rotate: 5 }}
+        >
+          {isComplete ? (
+            <CheckCircle2 className="w-6 h-6 text-white" />
+          ) : (
+            <BookOpen className="w-6 h-6 text-white" />
+          )}
+        </motion.div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-surface-900 dark:text-surface-50 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+            {title}
+          </p>
+          <p className="text-xs text-surface-500">{category}</p>
+        </div>
+
+        {/* Progress */}
+        <div className="w-24 flex flex-col items-end gap-1">
+          <div className="w-full h-2 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
+            <motion.div
+              className={cn(
+                'h-full rounded-full',
+                isComplete
+                  ? 'bg-gradient-to-r from-success-400 to-success-600'
+                  : 'bg-gradient-to-r from-primary-400 to-primary-600'
+              )}
+              initial={{ width: 0 }}
+              animate={isInView ? { width: `${progress}%` } : {}}
+              transition={{ delay: delay + 0.3, duration: 0.8 }}
+            />
+          </div>
+          <span className={cn(
+            'text-xs font-medium',
+            isComplete ? 'text-success-600' : 'text-surface-500'
+          )}>
+            {progress}%
+          </span>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
+// ============================================================================
+// ACTIVITY ITEM
+// ============================================================================
+interface ActivityItemProps {
+  type: 'xp' | 'badge' | 'forum' | 'document';
+  message: string;
+  time: string;
+  delay?: number;
+}
+
+function ActivityItem({ type, message, time, delay = 0 }: ActivityItemProps) {
+  const icons = {
+    xp: Zap,
+    badge: Star,
+    forum: TrendingUp,
+    document: BookOpen,
+  };
+
+  const colors = {
+    xp: { bg: 'from-success-400 to-success-600', text: 'text-success-600' },
+    badge: { bg: 'from-secondary-400 to-secondary-600', text: 'text-secondary-600' },
+    forum: { bg: 'from-info-400 to-info-600', text: 'text-info-600' },
+    document: { bg: 'from-primary-400 to-primary-600', text: 'text-primary-600' },
+  };
+
+  const Icon = icons[type];
+  const color = colors[type];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+      className="flex items-start gap-3 group"
+    >
+      <motion.div
+        className={cn('w-9 h-9 rounded-lg flex items-center justify-center text-white shadow-sm bg-gradient-to-br', color.bg)}
+        whileHover={{ scale: 1.1, rotate: 5 }}
+      >
+        <Icon className="w-4 h-4" />
+      </motion.div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-100 transition-colors">
+          {message}
+        </p>
+        <p className="text-xs text-surface-400 mt-0.5 flex items-center gap-1">
+          <Clock className="w-3 h-3" />
+          {time}
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
+// ============================================================================
+// QUICK ACTION BUTTON
+// ============================================================================
+interface QuickActionProps {
+  label: string;
+  icon: React.ElementType;
+  link: string;
+  color: string;
+  delay?: number;
+}
+
+function QuickAction({ label, icon: Icon, link, color, delay = 0 }: QuickActionProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay, type: 'spring', stiffness: 100 }}
+    >
+      <Link
+        to={link}
+        className="group flex flex-col items-center gap-3 p-5 rounded-2xl bg-white dark:bg-surface-800/90 backdrop-blur-xl border border-surface-200/50 dark:border-surface-700/50 hover:shadow-lg transition-all"
+      >
+        <motion.div
+          className="w-14 h-14 rounded-xl flex items-center justify-center"
+          style={{ backgroundColor: `${color}15` }}
+          whileHover={{ scale: 1.1, rotate: 5 }}
+        >
+          <Icon className="w-7 h-7" style={{ color }} />
+        </motion.div>
+        <span className="text-sm font-medium text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-100 transition-colors">
+          {label}
+        </span>
+      </Link>
+    </motion.div>
+  );
+}
+
+// ============================================================================
+// EVENT CARD
+// ============================================================================
+interface EventCardProps {
+  title: string;
+  date: string;
+  type: string;
+  delay?: number;
+}
+
+function EventCard({ title, date, type, delay = 0 }: EventCardProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay }}
+      className="flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+    >
+      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+        <Calendar className="w-5 h-5 text-white" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-white truncate">{title}</p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-sm text-primary-200">{date}</span>
+          <span className="px-2 py-0.5 text-[10px] font-medium bg-white/20 text-white rounded-full">
+            {type}
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 export default function Dashboard() {
   const { user } = useAuthStore();
+  const [greeting, setGreeting] = useState('');
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good morning');
+    else if (hour < 18) setGreeting('Good afternoon');
+    else setGreeting('Good evening');
+  }, []);
 
   const quickStats = [
-    { label: 'Documents Read', value: 24, icon: BookOpen, color: 'primary', link: '/library' },
-    { label: 'Forum Posts', value: 12, icon: MessageSquare, color: 'info', link: '/forum' },
-    { label: 'Groups Joined', value: 5, icon: Users, color: 'secondary', link: '/groups' },
-    { label: 'Badges Earned', value: 8, icon: Trophy, color: 'accent', link: '/leaderboard' },
+    { label: 'Documents Read', value: 24, icon: BookOpen, color: '#006B3F', link: '/library' },
+    { label: 'Forum Posts', value: 12, icon: MessageSquare, color: '#3B82F6', link: '/forum' },
+    { label: 'Groups Joined', value: 5, icon: Users, color: '#FCD116', link: '/groups' },
+    { label: 'Badges Earned', value: 8, icon: Trophy, color: '#CE1126', link: '/leaderboard' },
   ];
 
   const recentDocuments = [
-    { id: '1', title: 'Annual Budget Guidelines 2024', category: 'Policy', readProgress: 75 },
-    { id: '2', title: 'Civil Service Training Manual', category: 'Training', readProgress: 100 },
-    { id: '3', title: 'Performance Evaluation Framework', category: 'Guidelines', readProgress: 30 },
+    { id: '1', title: 'Annual Budget Guidelines 2024', category: 'Policy', progress: 75 },
+    { id: '2', title: 'Civil Service Training Manual', category: 'Training', progress: 100 },
+    { id: '3', title: 'Performance Evaluation Framework', category: 'Guidelines', progress: 30 },
+    { id: '4', title: 'Digital Transformation Strategy', category: 'Policy', progress: 45 },
   ];
 
   const recentActivity = [
-    { type: 'xp', message: 'Earned 50 XP for daily login', time: '2 hours ago' },
-    { type: 'badge', message: 'Earned "Bookworm" badge', time: '1 day ago' },
-    { type: 'forum', message: 'Your post received 5 upvotes', time: '2 days ago' },
+    { type: 'xp' as const, message: 'Earned 50 XP for daily login', time: '2 hours ago' },
+    { type: 'badge' as const, message: 'Earned "Bookworm" badge', time: '1 day ago' },
+    { type: 'forum' as const, message: 'Your post received 5 upvotes', time: '2 days ago' },
+    { type: 'document' as const, message: 'Completed reading Training Manual', time: '3 days ago' },
+  ];
+
+  const quickActions = [
+    { label: 'Browse Library', icon: BookOpen, link: '/library', color: '#006B3F' },
+    { label: 'Forum', icon: MessageSquare, link: '/forum', color: '#3B82F6' },
+    { label: 'News Feed', icon: Newspaper, link: '/news', color: '#CE1126' },
+    { label: 'Leaderboard', icon: Trophy, link: '/leaderboard', color: '#FCD116' },
   ];
 
   const upcomingEvents = [
     { title: 'Digital Skills Workshop', date: 'Jan 20, 2025', type: 'Training' },
     { title: 'Policy Review Meeting', date: 'Jan 22, 2025', type: 'Meeting' },
+    { title: 'AI in Government Webinar', date: 'Jan 25, 2025', type: 'Webinar' },
   ];
 
   return (
-    <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-900 relative">
+      <AnimatedBackground />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Header */}
-        <div className="mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-          >
-            <div>
-              <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">
-                Welcome back, {user?.name?.split(' ')[0] || 'User'}!
-              </h1>
-              <p className="text-surface-600 dark:text-surface-400">
-                Here's what's happening on the platform today.
-              </p>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              {/* Avatar */}
+              <motion.div
+                className="relative"
+                whileHover={{ scale: 1.05 }}
+              >
+                <img
+                  src={user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'}
+                  alt="Profile"
+                  className="w-16 h-16 rounded-2xl object-cover shadow-lg"
+                />
+                {/* Online indicator */}
+                <motion.div
+                  className="absolute -bottom-1 -right-1 w-5 h-5 bg-success-500 rounded-full border-2 border-white dark:border-surface-900"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </motion.div>
+
+              <div>
+                <motion.h1
+                  className="text-2xl font-bold text-surface-900 dark:text-surface-50"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  {greeting}, {user?.firstName || 'User'}!
+                  <motion.span
+                    className="inline-block ml-2"
+                    animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                  >
+                    👋
+                  </motion.span>
+                </motion.h1>
+                <p className="text-surface-600 dark:text-surface-400">
+                  Ready to learn something new today?
+                </p>
+              </div>
             </div>
+
             <div className="flex items-center gap-3">
-              <CompactStreak streak={12} />
+              <StreakDisplay streak={12} />
               <Link
                 to="/notifications"
-                className="relative p-2 bg-white dark:bg-surface-800 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                className="relative p-3 bg-white dark:bg-surface-800 rounded-xl shadow-sm hover:shadow-md transition-all"
               >
                 <Bell className="w-5 h-5 text-surface-600 dark:text-surface-400" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent-500 text-white text-xs rounded-full flex items-center justify-center">
+                <motion.span
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-accent-500 text-white text-xs rounded-full flex items-center justify-center font-bold"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
                   3
-                </span>
+                </motion.span>
               </Link>
             </div>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
 
         {/* Level Progress */}
         <motion.div
@@ -86,42 +654,23 @@ export default function Dashboard() {
           transition={{ delay: 0.1 }}
           className="mb-8"
         >
-          <LevelProgress
+          <PremiumLevelProgress
             level={6}
             levelName="Expert"
             currentXP={2200}
             requiredXP={3000}
             totalXP={10200}
-            showDetails
           />
         </motion.div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {quickStats.map((stat, index) => (
-            <motion.div
+            <StatCard
               key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + index * 0.1 }}
-            >
-              <Link
-                to={stat.link}
-                className="block p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-${stat.color}-100 dark:bg-${stat.color}-900/30 text-${stat.color}-600 dark:text-${stat.color}-400`}>
-                    <stat.icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-surface-900 dark:text-surface-50">
-                      {stat.value}
-                    </p>
-                    <p className="text-xs text-surface-500">{stat.label}</p>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
+              {...stat}
+              delay={0.2 + index * 0.1}
+            />
           ))}
         </div>
 
@@ -133,45 +682,33 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-white dark:bg-surface-800 rounded-xl shadow-sm p-6"
+              className="bg-white dark:bg-surface-800/90 backdrop-blur-xl rounded-2xl border border-surface-200/50 dark:border-surface-700/50 p-6 shadow-lg"
             >
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-6">
                 <h2 className="font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-primary-600" />
+                  <motion.div
+                    className="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center"
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                  >
+                    <Clock className="w-4 h-4 text-primary-600" />
+                  </motion.div>
                   Continue Reading
                 </h2>
-                <Link to="/library" className="text-sm text-primary-600 hover:underline flex items-center gap-1">
+                <Link
+                  to="/library"
+                  className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1 font-medium"
+                >
                   View All <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
-              <div className="space-y-3">
-                {recentDocuments.map((doc) => (
-                  <Link
+
+              <div className="space-y-2">
+                {recentDocuments.map((doc, index) => (
+                  <DocumentCard
                     key={doc.id}
-                    to={`/library/doc/${doc.id}`}
-                    className="flex items-center gap-4 p-3 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors"
-                  >
-                    <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-surface-900 dark:text-surface-50 truncate">
-                        {doc.title}
-                      </p>
-                      <p className="text-xs text-surface-500">{doc.category}</p>
-                    </div>
-                    <div className="w-20">
-                      <div className="h-1.5 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary-600 rounded-full"
-                          style={{ width: `${doc.readProgress}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-surface-500 text-right mt-1">
-                        {doc.readProgress}%
-                      </p>
-                    </div>
-                  </Link>
+                    {...doc}
+                    delay={0.5 + index * 0.1}
+                  />
                 ))}
               </div>
             </motion.div>
@@ -183,24 +720,12 @@ export default function Dashboard() {
               transition={{ delay: 0.5 }}
               className="grid grid-cols-2 md:grid-cols-4 gap-4"
             >
-              {[
-                { label: 'Browse Library', icon: BookOpen, link: '/library', color: 'primary' },
-                { label: 'Forum', icon: MessageSquare, link: '/forum', color: 'info' },
-                { label: 'News Feed', icon: Newspaper, link: '/news', color: 'accent' },
-                { label: 'Leaderboard', icon: Trophy, link: '/leaderboard', color: 'secondary' },
-              ].map((action) => (
-                <Link
+              {quickActions.map((action, index) => (
+                <QuickAction
                   key={action.label}
-                  to={action.link}
-                  className="flex flex-col items-center gap-2 p-4 bg-white dark:bg-surface-800 rounded-xl shadow-sm hover:shadow-md transition-shadow text-center"
-                >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-${action.color}-100 dark:bg-${action.color}-900/30`}>
-                    <action.icon className={`w-6 h-6 text-${action.color}-600 dark:text-${action.color}-400`} />
-                  </div>
-                  <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
-                    {action.label}
-                  </span>
-                </Link>
+                  {...action}
+                  delay={0.6 + index * 0.1}
+                />
               ))}
             </motion.div>
           </div>
@@ -212,31 +737,25 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="bg-white dark:bg-surface-800 rounded-xl shadow-sm p-6"
+              className="bg-white dark:bg-surface-800/90 backdrop-blur-xl rounded-2xl border border-surface-200/50 dark:border-surface-700/50 p-6 shadow-lg"
             >
-              <h2 className="font-semibold text-surface-900 dark:text-surface-50 mb-4 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-secondary-500" />
+              <h2 className="font-semibold text-surface-900 dark:text-surface-50 mb-5 flex items-center gap-2">
+                <motion.div
+                  className="w-8 h-8 rounded-lg bg-secondary-100 dark:bg-secondary-900/30 flex items-center justify-center"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                >
+                  <Zap className="w-4 h-4 text-secondary-600" />
+                </motion.div>
                 Recent Activity
               </h2>
+
               <div className="space-y-4">
                 {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      activity.type === 'xp' ? 'bg-success-100 dark:bg-success-900/30' :
-                      activity.type === 'badge' ? 'bg-secondary-100 dark:bg-secondary-900/30' :
-                      'bg-info-100 dark:bg-info-900/30'
-                    }`}>
-                      {activity.type === 'xp' && <Zap className="w-4 h-4 text-success-600" />}
-                      {activity.type === 'badge' && <Star className="w-4 h-4 text-secondary-600" />}
-                      {activity.type === 'forum' && <TrendingUp className="w-4 h-4 text-info-600" />}
-                    </div>
-                    <div>
-                      <p className="text-sm text-surface-700 dark:text-surface-300">
-                        {activity.message}
-                      </p>
-                      <p className="text-xs text-surface-500">{activity.time}</p>
-                    </div>
-                  </div>
+                  <ActivityItem
+                    key={index}
+                    {...activity}
+                    delay={0.7 + index * 0.1}
+                  />
                 ))}
               </div>
             </motion.div>
@@ -246,26 +765,90 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
-              className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-sm p-6 text-white"
+              className="relative overflow-hidden rounded-2xl"
             >
-              <h2 className="font-semibold mb-4">Upcoming Events</h2>
-              <div className="space-y-3">
-                {upcomingEvents.map((event, index) => (
-                  <div key={index} className="bg-white/10 rounded-lg p-3">
-                    <p className="font-medium">{event.title}</p>
-                    <div className="flex items-center justify-between mt-1 text-sm text-primary-100">
-                      <span>{event.date}</span>
-                      <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs">
-                        {event.type}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+              {/* Background */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)',
+                }}
+              />
+
+              {/* Animated pattern */}
+              <motion.div
+                className="absolute inset-0 opacity-10"
+                style={{
+                  backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                  backgroundSize: '20px 20px',
+                }}
+                animate={{ x: [0, 20], y: [0, 20] }}
+                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+              />
+
+              <div className="relative p-6">
+                <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Upcoming Events
+                </h2>
+
+                <div className="space-y-3">
+                  {upcomingEvents.map((event, index) => (
+                    <EventCard
+                      key={event.title}
+                      {...event}
+                      delay={0.8 + index * 0.1}
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* AI Assistant Promo */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-surface-900 to-surface-800 p-6"
+            >
+              {/* Glow effect */}
+              <motion.div
+                className="absolute top-0 right-0 w-32 h-32 rounded-full"
+                style={{
+                  background: 'radial-gradient(circle, rgba(252, 209, 22, 0.3), transparent 70%)',
+                }}
+                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              />
+
+              <div className="relative">
+                <motion.div
+                  className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary-400 to-secondary-600 flex items-center justify-center mb-4 shadow-lg"
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 4, repeat: Infinity }}
+                >
+                  <Brain className="w-6 h-6 text-surface-900" />
+                </motion.div>
+
+                <h3 className="text-lg font-bold text-white mb-2">
+                  AI Research Assistant
+                </h3>
+                <p className="text-sm text-surface-400 mb-4">
+                  Get instant answers from our AI trained on official documents.
+                </p>
+
+                <Link
+                  to="/library"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary-500 text-surface-900 font-medium text-sm hover:bg-secondary-400 transition-colors"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Try Now
+                </Link>
               </div>
             </motion.div>
           </div>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }

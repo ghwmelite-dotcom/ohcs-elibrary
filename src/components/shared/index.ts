@@ -53,3 +53,5 @@ export { Dropdown, DropdownItem, DropdownDivider, DropdownLabel, Select } from '
 export { Tooltip, Popover } from './Tooltip';
 
 export { ErrorBoundary, ErrorMessage, InlineError } from './ErrorBoundary';
+
+export { DevTools } from './DevTools';

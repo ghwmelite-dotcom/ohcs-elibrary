@@ -11,6 +11,7 @@ import { Spinner } from '@/components/shared/Spinner';
 import { Toaster } from '@/components/shared/Toast';
 import { PWAInstallPrompt } from '@/components/shared/PWAInstallPrompt';
 import { OfflineBanner } from '@/components/shared/OfflineBanner';
+import { DevTools } from '@/components/shared/DevTools';
 
 // Lazy load pages for code splitting
 // Auth pages
@@ -262,6 +263,9 @@ export default function App() {
       {/* PWA Components */}
       <OfflineBanner />
       <PWAInstallPrompt />
+
+      {/* Development Tools */}
+      <DevTools />
     </LazyMotion>
   );
 }
