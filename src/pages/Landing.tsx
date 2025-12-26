@@ -1352,92 +1352,334 @@ export default function Landing() {
         />
 
         <div className="relative max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-20">
-          {/* Logo */}
-          <div className="flex items-center gap-3 group cursor-pointer">
+          {/* Logo - Enhanced with shimmer and glow */}
+          <motion.div
+            className="flex items-center gap-3 cursor-pointer group"
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+          >
             <motion.div
-              className="relative w-11 h-11"
-              whileHover={{ rotate: 5 }}
-              transition={{ duration: 0.3 }}
+              className="relative w-12 h-12"
+              whileHover={{ rotate: [0, -5, 5, 0] }}
+              transition={{ duration: 0.5 }}
             >
-              <div
-                className="absolute inset-0 rounded-lg"
+              {/* Outer glow ring */}
+              <motion.div
+                className="absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-500"
                 style={{
-                  background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)',
-                  boxShadow: '0 4px 15px rgba(0, 107, 63, 0.3)',
+                  background: 'linear-gradient(135deg, #006B3F, #FCD116, #006B3F)',
+                }}
+                animate={{
+                  rotate: [0, 360],
+                }}
+                transition={{
+                  rotate: { duration: 8, repeat: Infinity, ease: 'linear' },
                 }}
               />
-              <div className="relative w-full h-full rounded-lg flex items-center justify-center">
-                <Library className="w-6 h-6 text-secondary-400" />
+              {/* Main logo container */}
+              <div
+                className="absolute inset-0 rounded-xl overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)',
+                  boxShadow: isDark
+                    ? '0 4px 20px rgba(0, 107, 63, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)'
+                    : '0 4px 20px rgba(0, 107, 63, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
+                }}
+              >
+                {/* Shimmer effect */}
+                <motion.div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100"
+                  style={{
+                    background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.2) 50%, transparent 80%)',
+                  }}
+                  animate={{
+                    x: ['-100%', '200%'],
+                  }}
+                  transition={{
+                    x: { duration: 1.5, repeat: Infinity, repeatDelay: 2 },
+                  }}
+                />
+              </div>
+              <div className="relative w-full h-full rounded-xl flex items-center justify-center">
+                <motion.div
+                  animate={{
+                    rotateY: [0, 10, -10, 0],
+                  }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <Library className="w-6 h-6 text-secondary-400 drop-shadow-lg" />
+                </motion.div>
               </div>
             </motion.div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className={cn('font-heading font-bold text-lg', isDark ? 'text-amber-50' : 'text-surface-900')}>
+            <div className="overflow-hidden">
+              <motion.div
+                className="flex items-center gap-2"
+                initial={{ x: 0 }}
+                whileHover={{ x: 2 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+              >
+                <h1 className={cn(
+                  'font-heading font-bold text-lg transition-all duration-300',
+                  isDark ? 'text-amber-50 group-hover:text-white' : 'text-surface-900'
+                )}>
                   OHCS E-Library
                 </h1>
-                <span
-                  className="px-1.5 py-0.5 text-[10px] font-bold rounded"
+                <motion.span
+                  className="px-1.5 py-0.5 text-[10px] font-bold rounded relative overflow-hidden"
                   style={{
                     background: isDark ? 'rgba(252, 209, 22, 0.2)' : 'rgba(0, 107, 63, 0.1)',
                     color: isDark ? '#FCD116' : '#006B3F',
                   }}
+                  whileHover={{ scale: 1.1 }}
+                  animate={{
+                    boxShadow: [
+                      '0 0 0 rgba(252, 209, 22, 0)',
+                      '0 0 10px rgba(252, 209, 22, 0.3)',
+                      '0 0 0 rgba(252, 209, 22, 0)',
+                    ],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
                 >
                   AI
-                </span>
-              </div>
-              <div className="flex h-0.5 rounded-full overflow-hidden">
-                <div className="w-1/3 bg-accent-500" />
-                <div className="w-1/3 bg-secondary-500" />
-                <div className="w-1/3 bg-primary-500" />
+                  <motion.div
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                    }}
+                    animate={{ x: ['-100%', '100%'] }}
+                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                  />
+                </motion.span>
+              </motion.div>
+              {/* Animated Ghana flag stripe */}
+              <div className="flex h-0.5 rounded-full overflow-hidden mt-1">
+                <motion.div
+                  className="w-1/3 bg-accent-500"
+                  whileHover={{ scaleX: 1.2 }}
+                  transition={{ type: 'spring' }}
+                />
+                <motion.div
+                  className="w-1/3 bg-secondary-500"
+                  whileHover={{ scaleX: 1.2 }}
+                  transition={{ type: 'spring', delay: 0.05 }}
+                />
+                <motion.div
+                  className="w-1/3 bg-primary-500"
+                  whileHover={{ scaleX: 1.2 }}
+                  transition={{ type: 'spring', delay: 0.1 }}
+                />
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right side */}
-          <div className="flex items-center gap-4">
-            {/* Theme toggle */}
+          <div className="flex items-center gap-3">
+            {/* Theme toggle - Enhanced with rotation and glow */}
             <motion.button
               onClick={toggleTheme}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               className={cn(
-                'p-2.5 rounded-lg transition-colors',
-                isDark ? 'bg-white/5 hover:bg-white/10 text-amber-50' : 'bg-black/5 hover:bg-black/10 text-surface-700'
+                'relative p-2.5 rounded-xl overflow-hidden group/theme',
+                isDark ? 'text-amber-50' : 'text-surface-700'
               )}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9, rotate: 15 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
             >
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {/* Background glow */}
+              <motion.div
+                className="absolute inset-0 rounded-xl opacity-0 group-hover/theme:opacity-100 transition-opacity duration-300"
+                style={{
+                  background: isDark
+                    ? 'radial-gradient(circle, rgba(252, 209, 22, 0.2) 0%, transparent 70%)'
+                    : 'radial-gradient(circle, rgba(0, 107, 63, 0.15) 0%, transparent 70%)',
+                }}
+              />
+              {/* Rotating ring on hover */}
+              <motion.div
+                className="absolute inset-0 rounded-xl opacity-0 group-hover/theme:opacity-100"
+                style={{
+                  border: `1px solid ${isDark ? 'rgba(252, 209, 22, 0.3)' : 'rgba(0, 107, 63, 0.3)'}`,
+                }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+              />
+              {/* Icon with morph animation */}
+              <motion.div
+                className="relative"
+                initial={false}
+                animate={{
+                  rotate: isDark ? 0 : 180,
+                  scale: [1, 1.2, 1],
+                }}
+                transition={{
+                  rotate: { duration: 0.5 },
+                  scale: { duration: 0.3 },
+                }}
+              >
+                {isDark ? (
+                  <Sun className="w-5 h-5 drop-shadow-[0_0_8px_rgba(252,209,22,0.5)]" />
+                ) : (
+                  <Moon className="w-5 h-5 drop-shadow-[0_0_8px_rgba(0,107,63,0.5)]" />
+                )}
+              </motion.div>
+              {/* Sparkle particles on hover */}
+              <motion.div
+                className="absolute top-0 right-0 w-2 h-2 rounded-full opacity-0 group-hover/theme:opacity-100"
+                style={{ background: isDark ? '#FCD116' : '#006B3F' }}
+                animate={{
+                  scale: [0, 1, 0],
+                  y: [0, -10],
+                  x: [0, 5],
+                }}
+                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 0.5 }}
+              />
             </motion.button>
 
+            {/* Sign In - Enhanced with magnetic effect and underline */}
             <motion.button
               onClick={openLogin}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
               className={cn(
-                'text-sm font-medium transition-colors px-4 py-2',
-                isDark ? 'text-amber-50/70 hover:text-amber-50' : 'text-surface-600 hover:text-surface-900'
+                'relative text-sm font-medium px-4 py-2.5 rounded-lg overflow-hidden group/signin',
+                isDark ? 'text-amber-50/80' : 'text-surface-600'
               )}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
             >
-              Sign In
+              {/* Subtle background on hover */}
+              <motion.div
+                className="absolute inset-0 rounded-lg opacity-0 group-hover/signin:opacity-100 transition-opacity duration-300"
+                style={{
+                  background: isDark
+                    ? 'rgba(255, 255, 255, 0.05)'
+                    : 'rgba(0, 0, 0, 0.03)',
+                }}
+              />
+              {/* Text with color transition */}
+              <motion.span
+                className={cn(
+                  'relative transition-colors duration-300',
+                  isDark
+                    ? 'group-hover/signin:text-white'
+                    : 'group-hover/signin:text-surface-900'
+                )}
+              >
+                Sign In
+              </motion.span>
+              {/* Animated underline */}
+              <motion.div
+                className="absolute bottom-1.5 left-4 right-4 h-[2px] rounded-full origin-left"
+                style={{
+                  background: isDark
+                    ? 'linear-gradient(90deg, #FCD116, #f0c000)'
+                    : 'linear-gradient(90deg, #006B3F, #008a50)',
+                }}
+                initial={{ scaleX: 0 }}
+                whileHover={{ scaleX: 1 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              />
+              {/* Glow effect */}
+              <motion.div
+                className="absolute inset-0 rounded-lg opacity-0 group-hover/signin:opacity-100 blur-xl transition-opacity duration-500"
+                style={{
+                  background: isDark
+                    ? 'rgba(252, 209, 22, 0.1)'
+                    : 'rgba(0, 107, 63, 0.1)',
+                }}
+              />
             </motion.button>
+
+            {/* Get Started - Enhanced with shine sweep, border glow, and particles */}
             <motion.button
               onClick={openRegister}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className="relative px-5 py-2.5 rounded-lg font-medium text-sm overflow-hidden group"
+              className="relative px-6 py-2.5 rounded-xl font-medium text-sm overflow-hidden group/cta"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
             >
-              <div
-                className="absolute inset-0"
-                style={{ background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)' }}
+              {/* Animated border glow */}
+              <motion.div
+                className="absolute -inset-[1px] rounded-xl opacity-0 group-hover/cta:opacity-100 transition-opacity duration-500"
+                style={{
+                  background: 'linear-gradient(135deg, #FCD116, #006B3F, #FCD116, #006B3F)',
+                  backgroundSize: '300% 300%',
+                }}
+                animate={{
+                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
               />
+              {/* Main background */}
               <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{ background: 'linear-gradient(135deg, #007a47 0%, #005c35 100%)' }}
+                className="absolute inset-[1px] rounded-xl"
+                style={{
+                  background: 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)',
+                }}
               />
-              <span className="relative text-white flex items-center gap-2">
-                Get Started
-                <ArrowRight className="w-4 h-4" />
+              {/* Hover gradient overlay */}
+              <motion.div
+                className="absolute inset-[1px] rounded-xl opacity-0 group-hover/cta:opacity-100 transition-opacity duration-300"
+                style={{
+                  background: 'linear-gradient(135deg, #008a50 0%, #006B3F 100%)',
+                }}
+              />
+              {/* Shine sweep effect */}
+              <motion.div
+                className="absolute inset-0 opacity-0 group-hover/cta:opacity-100"
+                style={{
+                  background: 'linear-gradient(105deg, transparent 0%, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%, transparent 100%)',
+                }}
+                initial={{ x: '-100%' }}
+                whileHover={{ x: '100%' }}
+                transition={{ duration: 0.6, ease: 'easeInOut' }}
+              />
+              {/* Inner glow */}
+              <div
+                className="absolute inset-[1px] rounded-xl opacity-0 group-hover/cta:opacity-100 transition-opacity duration-300"
+                style={{
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.1)',
+                }}
+              />
+              {/* Button content */}
+              <span className="relative text-white flex items-center gap-2 drop-shadow-sm">
+                <span>Get Started</span>
+                <motion.div
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <ArrowRight className="w-4 h-4" />
+                </motion.div>
               </span>
+              {/* Floating particles on hover */}
+              {[...Array(3)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 rounded-full bg-secondary-400 opacity-0 group-hover/cta:opacity-100"
+                  style={{
+                    left: `${30 + i * 20}%`,
+                    bottom: '20%',
+                  }}
+                  animate={{
+                    y: [0, -20, -30],
+                    opacity: [0, 1, 0],
+                    scale: [0.5, 1, 0.5],
+                  }}
+                  transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                    delay: i * 0.2,
+                    ease: 'easeOut',
+                  }}
+                />
+              ))}
+              {/* Outer glow */}
+              <motion.div
+                className="absolute -inset-2 rounded-2xl opacity-0 group-hover/cta:opacity-100 blur-xl transition-opacity duration-500 -z-10"
+                style={{
+                  background: 'radial-gradient(circle, rgba(0, 107, 63, 0.4) 0%, transparent 70%)',
+                }}
+              />
             </motion.button>
           </div>
         </div>
