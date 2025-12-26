@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Settings,
   Shield,
@@ -11,366 +11,1320 @@ import {
   Lock,
   Save,
   RefreshCw,
+  Key,
+  Link2,
+  Upload,
+  Download,
+  Trash2,
+  CheckCircle,
+  AlertTriangle,
+  Info,
+  Server,
+  HardDrive,
+  Cpu,
+  Activity,
+  Clock,
+  Users,
+  FileText,
+  Image,
+  Archive,
+  Zap,
+  Eye,
+  EyeOff,
+  Copy,
+  RotateCcw,
+  AlertCircle,
+  Wifi,
+  WifiOff,
+  CloudOff,
+  Check,
+  X,
+  ChevronRight,
+  Sparkles,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
-import { Tabs } from '@/components/shared/Tabs';
 import { cn } from '@/utils/cn';
+
+// Animated Background Component
+function AnimatedBackground() {
+  return (
+    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 bg-gradient-to-br from-surface-50 via-surface-100 to-surface-50 dark:from-surface-900 dark:via-surface-800 dark:to-surface-900" />
+
+      <motion.div
+        className="absolute top-1/4 -left-32 w-96 h-96 rounded-full opacity-30 dark:opacity-20"
+        style={{
+          background: 'radial-gradient(circle, #006B3F 0%, transparent 70%)',
+        }}
+        animate={{
+          x: [0, 50, 0],
+          y: [0, -30, 0],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          duration: 15,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+      <motion.div
+        className="absolute top-1/2 -right-32 w-80 h-80 rounded-full opacity-25 dark:opacity-15"
+        style={{
+          background: 'radial-gradient(circle, #FCD116 0%, transparent 70%)',
+        }}
+        animate={{
+          x: [0, -40, 0],
+          y: [0, 40, 0],
+          scale: [1, 1.15, 1],
+        }}
+        transition={{
+          duration: 18,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+      <motion.div
+        className="absolute -bottom-16 left-1/3 w-72 h-72 rounded-full opacity-20 dark:opacity-10"
+        style={{
+          background: 'radial-gradient(circle, #CE1126 0%, transparent 70%)',
+        }}
+        animate={{
+          x: [0, 30, 0],
+          y: [0, -20, 0],
+          scale: [1, 1.2, 1],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+    </div>
+  );
+}
+
+// Toggle Switch Component
+interface ToggleSwitchProps {
+  enabled: boolean;
+  onChange: (enabled: boolean) => void;
+  label: string;
+  description?: string;
+  disabled?: boolean;
+}
+
+function ToggleSwitch({ enabled, onChange, label, description, disabled }: ToggleSwitchProps) {
+  return (
+    <label className={cn(
+      'flex items-center justify-between p-4 rounded-xl transition-colors cursor-pointer',
+      'bg-surface-50 dark:bg-surface-700/50 hover:bg-surface-100 dark:hover:bg-surface-700',
+      disabled && 'opacity-50 cursor-not-allowed'
+    )}>
+      <div className="flex-1 min-w-0 pr-4">
+        <p className="font-medium text-surface-900 dark:text-surface-50">{label}</p>
+        {description && (
+          <p className="text-sm text-surface-500 mt-0.5">{description}</p>
+        )}
+      </div>
+      <motion.button
+        type="button"
+        role="switch"
+        aria-checked={enabled}
+        disabled={disabled}
+        onClick={() => !disabled && onChange(!enabled)}
+        className={cn(
+          'relative w-12 h-7 rounded-full transition-colors flex-shrink-0',
+          enabled ? 'bg-primary-500' : 'bg-surface-300 dark:bg-surface-600'
+        )}
+        whileTap={{ scale: 0.95 }}
+      >
+        <motion.span
+          className="absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-sm"
+          animate={{ x: enabled ? 20 : 0 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        />
+      </motion.button>
+    </label>
+  );
+}
+
+// Setting Section Component
+interface SettingSectionProps {
+  title: string;
+  description?: string;
+  icon?: React.ElementType;
+  iconColor?: string;
+  children: React.ReactNode;
+}
+
+function SettingSection({ title, description, icon: Icon, iconColor = '#006B3F', children }: SettingSectionProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white dark:bg-surface-800 rounded-2xl p-6 shadow-sm"
+    >
+      <div className="flex items-start gap-3 mb-5">
+        {Icon && (
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: `${iconColor}15` }}
+          >
+            <Icon className="w-5 h-5" style={{ color: iconColor }} />
+          </div>
+        )}
+        <div>
+          <h3 className="font-semibold text-surface-900 dark:text-surface-50">{title}</h3>
+          {description && (
+            <p className="text-sm text-surface-500 mt-0.5">{description}</p>
+          )}
+        </div>
+      </div>
+      {children}
+    </motion.div>
+  );
+}
+
+// Storage Bar Component
+interface StorageBarProps {
+  label: string;
+  used: number;
+  total: number;
+  color: string;
+  icon: React.ElementType;
+}
+
+function StorageBar({ label, used, total, color, icon: Icon }: StorageBarProps) {
+  const percentage = (used / total) * 100;
+  const formatSize = (gb: number) => gb >= 1000 ? `${(gb / 1000).toFixed(1)} TB` : `${gb} GB`;
+
+  return (
+    <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: `${color}15` }}
+          >
+            <Icon className="w-4 h-4" style={{ color }} />
+          </div>
+          <span className="font-medium text-surface-900 dark:text-surface-50">{label}</span>
+        </div>
+        <span className="text-sm text-surface-500">
+          {formatSize(used)} / {formatSize(total)}
+        </span>
+      </div>
+      <div className="h-2 bg-surface-200 dark:bg-surface-600 rounded-full overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${percentage}%` }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="h-full rounded-full"
+          style={{ backgroundColor: color }}
+        />
+      </div>
+      <div className="flex items-center justify-between mt-2">
+        <span className="text-xs text-surface-400">{percentage.toFixed(1)}% used</span>
+        <span className="text-xs text-surface-400">{formatSize(total - used)} free</span>
+      </div>
+    </div>
+  );
+}
+
+// System Status Card
+interface SystemStatusProps {
+  label: string;
+  status: 'online' | 'offline' | 'warning';
+  value?: string;
+  icon: React.ElementType;
+}
+
+function SystemStatusCard({ label, status, value, icon: Icon }: SystemStatusProps) {
+  const statusConfig = {
+    online: { color: '#10B981', bg: 'bg-success-50 dark:bg-success-900/30', text: 'Online' },
+    offline: { color: '#EF4444', bg: 'bg-error-50 dark:bg-error-900/30', text: 'Offline' },
+    warning: { color: '#F59E0B', bg: 'bg-warning-50 dark:bg-warning-900/30', text: 'Warning' },
+  };
+
+  const config = statusConfig[status];
+
+  return (
+    <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: `${config.color}15` }}
+          >
+            <Icon className="w-5 h-5" style={{ color: config.color }} />
+          </div>
+          <div>
+            <p className="font-medium text-surface-900 dark:text-surface-50">{label}</p>
+            {value && <p className="text-sm text-surface-500">{value}</p>}
+          </div>
+        </div>
+        <div className={cn('flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium', config.bg)}>
+          <span
+            className="w-1.5 h-1.5 rounded-full animate-pulse"
+            style={{ backgroundColor: config.color }}
+          />
+          <span style={{ color: config.color }}>{config.text}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// API Key Row
+interface APIKeyProps {
+  name: string;
+  key: string;
+  lastUsed: string;
+  onRevoke: () => void;
+}
+
+function APIKeyRow({ name, key: apiKey, lastUsed, onRevoke }: APIKeyProps) {
+  const [isVisible, setIsVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const maskedKey = `${apiKey.slice(0, 8)}${'•'.repeat(24)}${apiKey.slice(-4)}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(apiKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="flex items-center justify-between p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50">
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-surface-900 dark:text-surface-50">{name}</p>
+        <div className="flex items-center gap-2 mt-1">
+          <code className="text-sm text-surface-500 font-mono">
+            {isVisible ? apiKey : maskedKey}
+          </code>
+          <button
+            onClick={() => setIsVisible(!isVisible)}
+            className="p-1 hover:bg-surface-200 dark:hover:bg-surface-600 rounded transition-colors"
+          >
+            {isVisible ? (
+              <EyeOff className="w-4 h-4 text-surface-400" />
+            ) : (
+              <Eye className="w-4 h-4 text-surface-400" />
+            )}
+          </button>
+          <button
+            onClick={handleCopy}
+            className="p-1 hover:bg-surface-200 dark:hover:bg-surface-600 rounded transition-colors"
+          >
+            {copied ? (
+              <Check className="w-4 h-4 text-success-500" />
+            ) : (
+              <Copy className="w-4 h-4 text-surface-400" />
+            )}
+          </button>
+        </div>
+        <p className="text-xs text-surface-400 mt-1">Last used: {lastUsed}</p>
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onRevoke}
+        className="text-error-600 hover:text-error-700 hover:bg-error-50"
+      >
+        Revoke
+      </Button>
+    </div>
+  );
+}
+
+// Integration Card
+interface IntegrationProps {
+  name: string;
+  description: string;
+  icon: string;
+  connected: boolean;
+  onToggle: () => void;
+}
+
+function IntegrationCard({ name, description, icon, connected, onToggle }: IntegrationProps) {
+  return (
+    <div className="flex items-center justify-between p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50 group hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors">
+      <div className="flex items-center gap-3">
+        <img src={icon} alt={name} className="w-10 h-10 rounded-lg" />
+        <div>
+          <p className="font-medium text-surface-900 dark:text-surface-50">{name}</p>
+          <p className="text-sm text-surface-500">{description}</p>
+        </div>
+      </div>
+      <Button
+        variant={connected ? 'outline' : 'primary'}
+        size="sm"
+        onClick={onToggle}
+        leftIcon={connected ? <X className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
+      >
+        {connected ? 'Disconnect' : 'Connect'}
+      </Button>
+    </div>
+  );
+}
 
 export default function AdminSettings() {
   const [selectedTab, setSelectedTab] = useState('general');
   const [isLoading, setIsLoading] = useState(false);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
   const [settings, setSettings] = useState({
+    // General
     siteName: 'OHCS E-Library',
-    siteDescription: 'Digital library for Ghana Civil Service',
+    siteDescription: 'Digital knowledge platform for Ghana Civil Service - Empowering public servants with accessible information',
     supportEmail: 'support@ohcs.gov.gh',
-    maxUploadSize: '50',
+    siteUrl: 'https://elibrary.ohcs.gov.gh',
+    timezone: 'Africa/Accra',
+    language: 'en',
+    // Access
     allowRegistration: true,
     requireEmailVerification: true,
     allowPublicAccess: false,
     maintenanceMode: false,
+    restrictToGovEmail: true,
+    // Security
     sessionTimeout: '60',
     maxLoginAttempts: '5',
     lockoutDuration: '15',
     passwordMinLength: '12',
     requireTwoFactor: false,
+    requireUppercase: true,
+    requireNumbers: true,
+    requireSymbols: true,
+    passwordExpiry: '90',
+    // Notifications
     emailNotifications: true,
     pushNotifications: true,
+    smsNotifications: false,
     digestFrequency: 'daily',
+    notifyNewUsers: true,
+    notifyNewDocuments: true,
+    notifySecurityAlerts: true,
+    // Email
+    smtpHost: 'smtp.gov.gh',
+    smtpPort: '587',
+    smtpUsername: 'elibrary@ohcs.gov.gh',
+    smtpPassword: '',
+    fromAddress: 'noreply@ohcs.gov.gh',
+    fromName: 'OHCS E-Library',
+    smtpEncryption: 'tls',
+    // Storage
+    maxUploadSize: '50',
+    allowedFileTypes: 'pdf,doc,docx,xls,xlsx,ppt,pptx',
+    autoDeleteDays: '0',
+    compressUploads: true,
+    // Appearance
+    primaryColor: '#006B3F',
+    accentColor: '#FCD116',
+    darkModeDefault: false,
+    showFooter: true,
+    customCss: '',
   });
 
   const handleSave = async () => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1500));
     setIsLoading(false);
+    setShowSaveSuccess(true);
+    setTimeout(() => setShowSaveSuccess(false), 3000);
   };
 
   const tabs = [
-    { id: 'general', label: 'General', icon: Settings },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'email', label: 'Email', icon: Mail },
-    { id: 'storage', label: 'Storage', icon: Database },
+    { id: 'general', label: 'General', icon: Settings, color: '#006B3F' },
+    { id: 'security', label: 'Security', icon: Shield, color: '#CE1126' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, color: '#FCD116' },
+    { id: 'email', label: 'Email', icon: Mail, color: '#3B82F6' },
+    { id: 'storage', label: 'Storage', icon: Database, color: '#8B5CF6' },
+    { id: 'api', label: 'API Keys', icon: Key, color: '#10B981' },
+    { id: 'integrations', label: 'Integrations', icon: Link2, color: '#F59E0B' },
+    { id: 'appearance', label: 'Appearance', icon: Palette, color: '#EC4899' },
+    { id: 'backup', label: 'Backup', icon: Archive, color: '#6366F1' },
+    { id: 'system', label: 'System', icon: Server, color: '#14B8A6' },
+  ];
+
+  const apiKeys = [
+    { name: 'Production API Key', key: 'sk_live_ghanaohcs2024prod1234567890abcdefgh', lastUsed: '2 hours ago' },
+    { name: 'Development API Key', key: 'sk_test_ghanaohcs2024dev01234567890abcdefgh', lastUsed: '1 day ago' },
+    { name: 'Mobile App Key', key: 'sk_mobile_ghanaohcs2024mob1234567890abcdef', lastUsed: '3 hours ago' },
+  ];
+
+  const integrations = [
+    { name: 'Google Workspace', description: 'Single sign-on and Drive integration', icon: 'https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png', connected: true },
+    { name: 'Microsoft 365', description: 'Office integration and OneDrive sync', icon: 'https://img.icons8.com/color/96/microsoft.png', connected: false },
+    { name: 'Slack', description: 'Notifications and team collaboration', icon: 'https://img.icons8.com/color/96/slack-new.png', connected: true },
+    { name: 'Ghana.GOV', description: 'Government authentication portal', icon: 'https://img.icons8.com/color/96/government.png', connected: true },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold font-heading text-surface-900 dark:text-surface-50">
-            System Settings
-          </h1>
-          <p className="text-surface-600 dark:text-surface-400">
-            Configure platform settings and preferences
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" leftIcon={<RefreshCw className="w-4 h-4" />}>
-            Reset to Default
-          </Button>
-          <Button leftIcon={<Save className="w-4 h-4" />} onClick={handleSave} isLoading={isLoading}>
-            Save Changes
-          </Button>
-        </div>
-      </div>
+    <div className="relative min-h-screen">
+      <AnimatedBackground />
 
-      {/* Tabs */}
-      <div className="flex gap-6">
-        <div className="w-48 flex-shrink-0">
-          <nav className="space-y-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setSelectedTab(tab.id)}
-                className={cn(
-                  'w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-colors',
-                  selectedTab === tab.id
-                    ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium'
-                    : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700'
-                )}
-              >
-                <tab.icon className="w-5 h-5" />
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
+      <div className="relative space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg">
+              <Settings className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold font-heading text-surface-900 dark:text-surface-50">
+                System Settings
+              </h1>
+              <p className="text-surface-600 dark:text-surface-400">
+                Configure platform settings and preferences
+              </p>
+            </div>
+          </div>
 
-        <div className="flex-1">
-          {selectedTab === 'general' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
+          <div className="flex items-center gap-3">
+            <AnimatePresence>
+              {showSaveSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-success-50 dark:bg-success-900/30 rounded-lg"
+                >
+                  <CheckCircle className="w-4 h-4 text-success-600" />
+                  <span className="text-sm font-medium text-success-600">Settings saved</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <Button variant="outline" leftIcon={<RotateCcw className="w-4 h-4" />}>
+              Reset
+            </Button>
+            <Button
+              leftIcon={<Save className="w-4 h-4" />}
+              onClick={handleSave}
+              isLoading={isLoading}
             >
-              <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm">
-                <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">Site Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Site Name"
-                    value={settings.siteName}
-                    onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
-                  />
-                  <Input
-                    label="Support Email"
-                    type="email"
-                    value={settings.supportEmail}
-                    onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })}
-                  />
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-                      Site Description
-                    </label>
-                    <textarea
-                      value={settings.siteDescription}
-                      onChange={(e) => setSettings({ ...settings, siteDescription: e.target.value })}
-                      rows={3}
+              Save Changes
+            </Button>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex gap-6">
+          {/* Sidebar Navigation */}
+          <div className="w-56 flex-shrink-0">
+            <div className="bg-white dark:bg-surface-800 rounded-2xl p-2 shadow-sm sticky top-6">
+              <nav className="space-y-1">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = selectedTab === tab.id;
+                  return (
+                    <motion.button
+                      key={tab.id}
+                      onClick={() => setSelectedTab(tab.id)}
                       className={cn(
-                        'w-full px-4 py-3 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg',
-                        'text-surface-900 dark:text-surface-50',
-                        'focus:outline-none focus:ring-2 focus:ring-primary-500',
-                        'resize-none'
+                        'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all',
+                        isActive
+                          ? 'bg-primary-50 dark:bg-primary-900/20'
+                          : 'hover:bg-surface-50 dark:hover:bg-surface-700/50'
                       )}
-                    />
-                  </div>
-                </div>
-              </div>
+                      whileHover={{ x: isActive ? 0 : 4 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div
+                        className={cn(
+                          'w-8 h-8 rounded-lg flex items-center justify-center transition-colors',
+                          isActive ? '' : 'bg-surface-100 dark:bg-surface-700'
+                        )}
+                        style={{
+                          backgroundColor: isActive ? `${tab.color}20` : undefined,
+                        }}
+                      >
+                        <Icon
+                          className="w-4 h-4"
+                          style={{ color: isActive ? tab.color : undefined }}
+                        />
+                      </div>
+                      <span
+                        className={cn(
+                          'font-medium',
+                          isActive
+                            ? 'text-primary-700 dark:text-primary-300'
+                            : 'text-surface-600 dark:text-surface-400'
+                        )}
+                      >
+                        {tab.label}
+                      </span>
+                      {isActive && (
+                        <ChevronRight className="w-4 h-4 ml-auto text-primary-500" />
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </nav>
+            </div>
+          </div>
 
-              <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm">
-                <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">Access Control</h3>
-                <div className="space-y-4">
-                  <label className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-surface-900 dark:text-surface-50">Allow Registration</p>
-                      <p className="text-sm text-surface-500">Allow new users to register</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={settings.allowRegistration}
-                      onChange={(e) => setSettings({ ...settings, allowRegistration: e.target.checked })}
-                      className="w-5 h-5 rounded border-surface-300"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-surface-900 dark:text-surface-50">Require Email Verification</p>
-                      <p className="text-sm text-surface-500">New users must verify their email</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={settings.requireEmailVerification}
-                      onChange={(e) => setSettings({ ...settings, requireEmailVerification: e.target.checked })}
-                      className="w-5 h-5 rounded border-surface-300"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-surface-900 dark:text-surface-50">Maintenance Mode</p>
-                      <p className="text-sm text-surface-500">Only admins can access the platform</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={settings.maintenanceMode}
-                      onChange={(e) => setSettings({ ...settings, maintenanceMode: e.target.checked })}
-                      className="w-5 h-5 rounded border-surface-300"
-                    />
-                  </label>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {selectedTab === 'security' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
-            >
-              <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm">
-                <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">Session Settings</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Session Timeout (minutes)"
-                    type="number"
-                    value={settings.sessionTimeout}
-                    onChange={(e) => setSettings({ ...settings, sessionTimeout: e.target.value })}
-                  />
-                  <Input
-                    label="Max Login Attempts"
-                    type="number"
-                    value={settings.maxLoginAttempts}
-                    onChange={(e) => setSettings({ ...settings, maxLoginAttempts: e.target.value })}
-                  />
-                  <Input
-                    label="Lockout Duration (minutes)"
-                    type="number"
-                    value={settings.lockoutDuration}
-                    onChange={(e) => setSettings({ ...settings, lockoutDuration: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm">
-                <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">Password Policy</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Minimum Password Length"
-                    type="number"
-                    value={settings.passwordMinLength}
-                    onChange={(e) => setSettings({ ...settings, passwordMinLength: e.target.value })}
-                  />
-                </div>
-                <div className="mt-4">
-                  <label className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-surface-900 dark:text-surface-50">Require Two-Factor Authentication</p>
-                      <p className="text-sm text-surface-500">All users must enable 2FA</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={settings.requireTwoFactor}
-                      onChange={(e) => setSettings({ ...settings, requireTwoFactor: e.target.checked })}
-                      className="w-5 h-5 rounded border-surface-300"
-                    />
-                  </label>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {selectedTab === 'notifications' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
-            >
-              <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm">
-                <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">Notification Channels</h3>
-                <div className="space-y-4">
-                  <label className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-surface-900 dark:text-surface-50">Email Notifications</p>
-                      <p className="text-sm text-surface-500">Send notifications via email</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={settings.emailNotifications}
-                      onChange={(e) => setSettings({ ...settings, emailNotifications: e.target.checked })}
-                      className="w-5 h-5 rounded border-surface-300"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-surface-900 dark:text-surface-50">Push Notifications</p>
-                      <p className="text-sm text-surface-500">Send browser push notifications</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={settings.pushNotifications}
-                      onChange={(e) => setSettings({ ...settings, pushNotifications: e.target.checked })}
-                      className="w-5 h-5 rounded border-surface-300"
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm">
-                <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">Digest Settings</h3>
-                <div>
-                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-                    Digest Frequency
-                  </label>
-                  <select
-                    value={settings.digestFrequency}
-                    onChange={(e) => setSettings({ ...settings, digestFrequency: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg"
+          {/* Settings Content */}
+          <div className="flex-1 space-y-6">
+            <AnimatePresence mode="wait">
+              {selectedTab === 'general' && (
+                <motion.div
+                  key="general"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  <SettingSection
+                    title="Site Information"
+                    description="Basic information about your platform"
+                    icon={Globe}
+                    iconColor="#006B3F"
                   >
-                    <option value="realtime">Real-time</option>
-                    <option value="hourly">Hourly</option>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                  </select>
-                </div>
-              </div>
-            </motion.div>
-          )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        label="Site Name"
+                        value={settings.siteName}
+                        onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
+                      />
+                      <Input
+                        label="Site URL"
+                        value={settings.siteUrl}
+                        onChange={(e) => setSettings({ ...settings, siteUrl: e.target.value })}
+                      />
+                      <Input
+                        label="Support Email"
+                        type="email"
+                        value={settings.supportEmail}
+                        onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })}
+                      />
+                      <div>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                          Timezone
+                        </label>
+                        <select
+                          value={settings.timezone}
+                          onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
+                          className="w-full px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl text-surface-900 dark:text-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                          <option value="Africa/Accra">Africa/Accra (GMT+0)</option>
+                          <option value="UTC">UTC</option>
+                          <option value="Europe/London">Europe/London</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                          Site Description
+                        </label>
+                        <textarea
+                          value={settings.siteDescription}
+                          onChange={(e) => setSettings({ ...settings, siteDescription: e.target.value })}
+                          rows={3}
+                          className="w-full px-4 py-3 bg-white dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl text-surface-900 dark:text-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                        />
+                      </div>
+                    </div>
+                  </SettingSection>
 
-          {selectedTab === 'email' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm"
-            >
-              <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">Email Configuration</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="SMTP Host" placeholder="smtp.example.com" />
-                <Input label="SMTP Port" placeholder="587" />
-                <Input label="SMTP Username" placeholder="username" />
-                <Input label="SMTP Password" type="password" placeholder="********" />
-                <Input label="From Address" placeholder="noreply@ohcs.gov.gh" />
-                <Input label="From Name" placeholder="OHCS E-Library" />
-              </div>
-              <div className="mt-4">
-                <Button variant="outline">
-                  Send Test Email
-                </Button>
-              </div>
-            </motion.div>
-          )}
+                  <SettingSection
+                    title="Access Control"
+                    description="Control who can access your platform"
+                    icon={Lock}
+                    iconColor="#CE1126"
+                  >
+                    <div className="space-y-3">
+                      <ToggleSwitch
+                        enabled={settings.allowRegistration}
+                        onChange={(v) => setSettings({ ...settings, allowRegistration: v })}
+                        label="Allow Registration"
+                        description="Allow new users to create accounts"
+                      />
+                      <ToggleSwitch
+                        enabled={settings.requireEmailVerification}
+                        onChange={(v) => setSettings({ ...settings, requireEmailVerification: v })}
+                        label="Require Email Verification"
+                        description="New users must verify their email address"
+                      />
+                      <ToggleSwitch
+                        enabled={settings.restrictToGovEmail}
+                        onChange={(v) => setSettings({ ...settings, restrictToGovEmail: v })}
+                        label="Restrict to Government Email"
+                        description="Only allow @gov.gh email addresses"
+                      />
+                      <ToggleSwitch
+                        enabled={settings.allowPublicAccess}
+                        onChange={(v) => setSettings({ ...settings, allowPublicAccess: v })}
+                        label="Allow Public Access"
+                        description="Allow viewing without login"
+                      />
+                      <ToggleSwitch
+                        enabled={settings.maintenanceMode}
+                        onChange={(v) => setSettings({ ...settings, maintenanceMode: v })}
+                        label="Maintenance Mode"
+                        description="Only administrators can access the platform"
+                      />
+                    </div>
+                  </SettingSection>
+                </motion.div>
+              )}
 
-          {selectedTab === 'storage' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
-            >
-              <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm">
-                <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">Storage Settings</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Max Upload Size (MB)"
-                    type="number"
-                    value={settings.maxUploadSize}
-                    onChange={(e) => setSettings({ ...settings, maxUploadSize: e.target.value })}
-                  />
-                </div>
-              </div>
+              {selectedTab === 'security' && (
+                <motion.div
+                  key="security"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  <SettingSection
+                    title="Session Settings"
+                    description="Configure session and login behavior"
+                    icon={Clock}
+                    iconColor="#3B82F6"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Input
+                        label="Session Timeout (minutes)"
+                        type="number"
+                        value={settings.sessionTimeout}
+                        onChange={(e) => setSettings({ ...settings, sessionTimeout: e.target.value })}
+                      />
+                      <Input
+                        label="Max Login Attempts"
+                        type="number"
+                        value={settings.maxLoginAttempts}
+                        onChange={(e) => setSettings({ ...settings, maxLoginAttempts: e.target.value })}
+                      />
+                      <Input
+                        label="Lockout Duration (minutes)"
+                        type="number"
+                        value={settings.lockoutDuration}
+                        onChange={(e) => setSettings({ ...settings, lockoutDuration: e.target.value })}
+                      />
+                    </div>
+                  </SettingSection>
 
-              <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm">
-                <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">Storage Usage</h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-surface-600 dark:text-surface-400">Documents</span>
-                      <span className="text-sm font-medium">24.5 GB / 100 GB</span>
+                  <SettingSection
+                    title="Password Policy"
+                    description="Set requirements for user passwords"
+                    icon={Key}
+                    iconColor="#CE1126"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <Input
+                        label="Minimum Password Length"
+                        type="number"
+                        value={settings.passwordMinLength}
+                        onChange={(e) => setSettings({ ...settings, passwordMinLength: e.target.value })}
+                      />
+                      <Input
+                        label="Password Expiry (days, 0 = never)"
+                        type="number"
+                        value={settings.passwordExpiry}
+                        onChange={(e) => setSettings({ ...settings, passwordExpiry: e.target.value })}
+                      />
                     </div>
-                    <div className="h-2 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
-                      <div className="h-full w-[24%] bg-primary-500 rounded-full" />
+                    <div className="space-y-3">
+                      <ToggleSwitch
+                        enabled={settings.requireUppercase}
+                        onChange={(v) => setSettings({ ...settings, requireUppercase: v })}
+                        label="Require Uppercase Letters"
+                        description="Password must contain at least one uppercase letter"
+                      />
+                      <ToggleSwitch
+                        enabled={settings.requireNumbers}
+                        onChange={(v) => setSettings({ ...settings, requireNumbers: v })}
+                        label="Require Numbers"
+                        description="Password must contain at least one number"
+                      />
+                      <ToggleSwitch
+                        enabled={settings.requireSymbols}
+                        onChange={(v) => setSettings({ ...settings, requireSymbols: v })}
+                        label="Require Special Characters"
+                        description="Password must contain at least one symbol"
+                      />
+                      <ToggleSwitch
+                        enabled={settings.requireTwoFactor}
+                        onChange={(v) => setSettings({ ...settings, requireTwoFactor: v })}
+                        label="Require Two-Factor Authentication"
+                        description="All users must enable 2FA"
+                      />
                     </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-surface-600 dark:text-surface-400">Media</span>
-                      <span className="text-sm font-medium">8.2 GB / 50 GB</span>
+                  </SettingSection>
+                </motion.div>
+              )}
+
+              {selectedTab === 'notifications' && (
+                <motion.div
+                  key="notifications"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  <SettingSection
+                    title="Notification Channels"
+                    description="Configure how notifications are delivered"
+                    icon={Bell}
+                    iconColor="#FCD116"
+                  >
+                    <div className="space-y-3">
+                      <ToggleSwitch
+                        enabled={settings.emailNotifications}
+                        onChange={(v) => setSettings({ ...settings, emailNotifications: v })}
+                        label="Email Notifications"
+                        description="Send notifications via email"
+                      />
+                      <ToggleSwitch
+                        enabled={settings.pushNotifications}
+                        onChange={(v) => setSettings({ ...settings, pushNotifications: v })}
+                        label="Push Notifications"
+                        description="Send browser push notifications"
+                      />
+                      <ToggleSwitch
+                        enabled={settings.smsNotifications}
+                        onChange={(v) => setSettings({ ...settings, smsNotifications: v })}
+                        label="SMS Notifications"
+                        description="Send SMS alerts for critical updates"
+                      />
                     </div>
-                    <div className="h-2 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
-                      <div className="h-full w-[16%] bg-secondary-500 rounded-full" />
+                  </SettingSection>
+
+                  <SettingSection
+                    title="Admin Alerts"
+                    description="Notifications for administrators"
+                    icon={AlertCircle}
+                    iconColor="#CE1126"
+                  >
+                    <div className="space-y-3">
+                      <ToggleSwitch
+                        enabled={settings.notifyNewUsers}
+                        onChange={(v) => setSettings({ ...settings, notifyNewUsers: v })}
+                        label="New User Registrations"
+                        description="Get notified when new users register"
+                      />
+                      <ToggleSwitch
+                        enabled={settings.notifyNewDocuments}
+                        onChange={(v) => setSettings({ ...settings, notifyNewDocuments: v })}
+                        label="New Document Uploads"
+                        description="Get notified when documents are uploaded"
+                      />
+                      <ToggleSwitch
+                        enabled={settings.notifySecurityAlerts}
+                        onChange={(v) => setSettings({ ...settings, notifySecurityAlerts: v })}
+                        label="Security Alerts"
+                        description="Receive alerts for suspicious activities"
+                      />
                     </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-surface-600 dark:text-surface-400">Backups</span>
-                      <span className="text-sm font-medium">12.8 GB / 25 GB</span>
+                  </SettingSection>
+
+                  <SettingSection
+                    title="Digest Settings"
+                    description="Configure email digest frequency"
+                    icon={Mail}
+                    iconColor="#3B82F6"
+                  >
+                    <div>
+                      <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                        Digest Frequency
+                      </label>
+                      <select
+                        value={settings.digestFrequency}
+                        onChange={(e) => setSettings({ ...settings, digestFrequency: e.target.value })}
+                        className="w-full md:w-64 px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl text-surface-900 dark:text-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="realtime">Real-time</option>
+                        <option value="hourly">Hourly</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="never">Never</option>
+                      </select>
                     </div>
-                    <div className="h-2 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
-                      <div className="h-full w-[51%] bg-accent-500 rounded-full" />
+                  </SettingSection>
+                </motion.div>
+              )}
+
+              {selectedTab === 'email' && (
+                <motion.div
+                  key="email"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  <SettingSection
+                    title="SMTP Configuration"
+                    description="Configure email server settings"
+                    icon={Mail}
+                    iconColor="#3B82F6"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        label="SMTP Host"
+                        value={settings.smtpHost}
+                        onChange={(e) => setSettings({ ...settings, smtpHost: e.target.value })}
+                        placeholder="smtp.example.com"
+                      />
+                      <Input
+                        label="SMTP Port"
+                        value={settings.smtpPort}
+                        onChange={(e) => setSettings({ ...settings, smtpPort: e.target.value })}
+                        placeholder="587"
+                      />
+                      <Input
+                        label="SMTP Username"
+                        value={settings.smtpUsername}
+                        onChange={(e) => setSettings({ ...settings, smtpUsername: e.target.value })}
+                      />
+                      <Input
+                        label="SMTP Password"
+                        type="password"
+                        value={settings.smtpPassword}
+                        onChange={(e) => setSettings({ ...settings, smtpPassword: e.target.value })}
+                        placeholder="••••••••"
+                      />
+                      <div>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                          Encryption
+                        </label>
+                        <select
+                          value={settings.smtpEncryption}
+                          onChange={(e) => setSettings({ ...settings, smtpEncryption: e.target.value })}
+                          className="w-full px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl text-surface-900 dark:text-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                          <option value="none">None</option>
+                          <option value="ssl">SSL</option>
+                          <option value="tls">TLS</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
+                  </SettingSection>
+
+                  <SettingSection
+                    title="Sender Information"
+                    description="Configure email sender details"
+                    icon={Building2}
+                    iconColor="#006B3F"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        label="From Address"
+                        value={settings.fromAddress}
+                        onChange={(e) => setSettings({ ...settings, fromAddress: e.target.value })}
+                        placeholder="noreply@ohcs.gov.gh"
+                      />
+                      <Input
+                        label="From Name"
+                        value={settings.fromName}
+                        onChange={(e) => setSettings({ ...settings, fromName: e.target.value })}
+                        placeholder="OHCS E-Library"
+                      />
+                    </div>
+                    <div className="mt-4">
+                      <Button variant="outline" leftIcon={<Mail className="w-4 h-4" />}>
+                        Send Test Email
+                      </Button>
+                    </div>
+                  </SettingSection>
+                </motion.div>
+              )}
+
+              {selectedTab === 'storage' && (
+                <motion.div
+                  key="storage"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  <SettingSection
+                    title="Upload Settings"
+                    description="Configure file upload behavior"
+                    icon={Upload}
+                    iconColor="#8B5CF6"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        label="Max Upload Size (MB)"
+                        type="number"
+                        value={settings.maxUploadSize}
+                        onChange={(e) => setSettings({ ...settings, maxUploadSize: e.target.value })}
+                      />
+                      <Input
+                        label="Allowed File Types"
+                        value={settings.allowedFileTypes}
+                        onChange={(e) => setSettings({ ...settings, allowedFileTypes: e.target.value })}
+                        placeholder="pdf,doc,docx,xls,xlsx"
+                      />
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      <ToggleSwitch
+                        enabled={settings.compressUploads}
+                        onChange={(v) => setSettings({ ...settings, compressUploads: v })}
+                        label="Compress Uploads"
+                        description="Automatically compress uploaded files"
+                      />
+                    </div>
+                  </SettingSection>
+
+                  <SettingSection
+                    title="Storage Usage"
+                    description="Current storage allocation and usage"
+                    icon={HardDrive}
+                    iconColor="#006B3F"
+                  >
+                    <div className="space-y-4">
+                      <StorageBar
+                        label="Documents"
+                        used={24.5}
+                        total={100}
+                        color="#006B3F"
+                        icon={FileText}
+                      />
+                      <StorageBar
+                        label="Media"
+                        used={8.2}
+                        total={50}
+                        color="#FCD116"
+                        icon={Image}
+                      />
+                      <StorageBar
+                        label="Backups"
+                        used={12.8}
+                        total={25}
+                        color="#CE1126"
+                        icon={Archive}
+                      />
+                    </div>
+                    <div className="mt-4 p-4 rounded-xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-primary-900 dark:text-primary-100">Total Storage</p>
+                        <p className="text-sm text-primary-700 dark:text-primary-300">45.5 GB used of 175 GB</p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Upgrade Plan
+                      </Button>
+                    </div>
+                  </SettingSection>
+                </motion.div>
+              )}
+
+              {selectedTab === 'api' && (
+                <motion.div
+                  key="api"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  <SettingSection
+                    title="API Keys"
+                    description="Manage API keys for external integrations"
+                    icon={Key}
+                    iconColor="#10B981"
+                  >
+                    <div className="space-y-3">
+                      {apiKeys.map((key) => (
+                        <APIKeyRow
+                          key={key.name}
+                          {...key}
+                          onRevoke={() => console.log('Revoke', key.name)}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-4">
+                      <Button variant="primary" leftIcon={<Key className="w-4 h-4" />}>
+                        Generate New Key
+                      </Button>
+                    </div>
+                  </SettingSection>
+
+                  <SettingSection
+                    title="API Settings"
+                    description="Configure API behavior and limits"
+                    icon={Zap}
+                    iconColor="#F59E0B"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        label="Rate Limit (requests/minute)"
+                        type="number"
+                        defaultValue="100"
+                      />
+                      <Input
+                        label="Max Page Size"
+                        type="number"
+                        defaultValue="100"
+                      />
+                    </div>
+                  </SettingSection>
+                </motion.div>
+              )}
+
+              {selectedTab === 'integrations' && (
+                <motion.div
+                  key="integrations"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  <SettingSection
+                    title="Connected Services"
+                    description="Manage third-party integrations"
+                    icon={Link2}
+                    iconColor="#F59E0B"
+                  >
+                    <div className="space-y-3">
+                      {integrations.map((integration) => (
+                        <IntegrationCard
+                          key={integration.name}
+                          {...integration}
+                          onToggle={() => console.log('Toggle', integration.name)}
+                        />
+                      ))}
+                    </div>
+                  </SettingSection>
+                </motion.div>
+              )}
+
+              {selectedTab === 'appearance' && (
+                <motion.div
+                  key="appearance"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  <SettingSection
+                    title="Brand Colors"
+                    description="Customize your platform colors"
+                    icon={Palette}
+                    iconColor="#EC4899"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                          Primary Color
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={settings.primaryColor}
+                            onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
+                            className="w-12 h-12 rounded-lg border-2 border-surface-300 cursor-pointer"
+                          />
+                          <Input
+                            value={settings.primaryColor}
+                            onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                          Accent Color
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={settings.accentColor}
+                            onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
+                            className="w-12 h-12 rounded-lg border-2 border-surface-300 cursor-pointer"
+                          />
+                          <Input
+                            value={settings.accentColor}
+                            onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </SettingSection>
+
+                  <SettingSection
+                    title="Display Settings"
+                    description="Configure display preferences"
+                    icon={Eye}
+                    iconColor="#6366F1"
+                  >
+                    <div className="space-y-3">
+                      <ToggleSwitch
+                        enabled={settings.darkModeDefault}
+                        onChange={(v) => setSettings({ ...settings, darkModeDefault: v })}
+                        label="Default to Dark Mode"
+                        description="New users will see dark mode by default"
+                      />
+                      <ToggleSwitch
+                        enabled={settings.showFooter}
+                        onChange={(v) => setSettings({ ...settings, showFooter: v })}
+                        label="Show Footer"
+                        description="Display the site footer"
+                      />
+                    </div>
+                  </SettingSection>
+                </motion.div>
+              )}
+
+              {selectedTab === 'backup' && (
+                <motion.div
+                  key="backup"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  <SettingSection
+                    title="Backup Management"
+                    description="Create and restore backups"
+                    icon={Archive}
+                    iconColor="#6366F1"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex flex-col md:flex-row gap-3">
+                        <Button variant="primary" leftIcon={<Download className="w-4 h-4" />}>
+                          Create Backup Now
+                        </Button>
+                        <Button variant="outline" leftIcon={<Upload className="w-4 h-4" />}>
+                          Restore from Backup
+                        </Button>
+                      </div>
+                      <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50">
+                        <p className="text-sm text-surface-600 dark:text-surface-400">
+                          <span className="font-medium text-surface-900 dark:text-surface-50">Last backup:</span>
+                          {' '}December 26, 2024 at 2:30 AM (Automatic)
+                        </p>
+                      </div>
+                    </div>
+                  </SettingSection>
+
+                  <SettingSection
+                    title="Auto Backup Settings"
+                    description="Configure automatic backups"
+                    icon={Clock}
+                    iconColor="#10B981"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                          Backup Frequency
+                        </label>
+                        <select className="w-full px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl text-surface-900 dark:text-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                          <option value="daily">Daily</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="monthly">Monthly</option>
+                        </select>
+                      </div>
+                      <Input
+                        label="Retention (days)"
+                        type="number"
+                        defaultValue="30"
+                      />
+                    </div>
+                  </SettingSection>
+                </motion.div>
+              )}
+
+              {selectedTab === 'system' && (
+                <motion.div
+                  key="system"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  <SettingSection
+                    title="System Status"
+                    description="Current system health and status"
+                    icon={Activity}
+                    iconColor="#10B981"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <SystemStatusCard
+                        label="Web Server"
+                        status="online"
+                        value="Response: 45ms"
+                        icon={Server}
+                      />
+                      <SystemStatusCard
+                        label="Database"
+                        status="online"
+                        value="Queries: 1.2ms avg"
+                        icon={Database}
+                      />
+                      <SystemStatusCard
+                        label="Cache"
+                        status="online"
+                        value="Hit rate: 94%"
+                        icon={Zap}
+                      />
+                      <SystemStatusCard
+                        label="Storage"
+                        status="warning"
+                        value="51% capacity"
+                        icon={HardDrive}
+                      />
+                    </div>
+                  </SettingSection>
+
+                  <SettingSection
+                    title="System Information"
+                    description="Platform version and environment details"
+                    icon={Info}
+                    iconColor="#3B82F6"
+                  >
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {[
+                        { label: 'Version', value: 'v2.4.1' },
+                        { label: 'Environment', value: 'Production' },
+                        { label: 'Node.js', value: 'v20.10.0' },
+                        { label: 'React', value: 'v18.2.0' },
+                      ].map((item) => (
+                        <div key={item.label} className="p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50">
+                          <p className="text-xs text-surface-500 uppercase tracking-wider">{item.label}</p>
+                          <p className="font-semibold text-surface-900 dark:text-surface-50 mt-1">{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </SettingSection>
+
+                  <SettingSection
+                    title="Danger Zone"
+                    description="Irreversible actions - proceed with caution"
+                    icon={AlertTriangle}
+                    iconColor="#EF4444"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 rounded-xl border-2 border-error-200 dark:border-error-800 bg-error-50 dark:bg-error-900/20">
+                        <div>
+                          <p className="font-medium text-error-900 dark:text-error-100">Clear All Cache</p>
+                          <p className="text-sm text-error-700 dark:text-error-300">
+                            Remove all cached data. Users may experience slower load times temporarily.
+                          </p>
+                        </div>
+                        <Button variant="outline" className="border-error-300 text-error-600 hover:bg-error-100">
+                          Clear Cache
+                        </Button>
+                      </div>
+                      <div className="flex items-center justify-between p-4 rounded-xl border-2 border-error-200 dark:border-error-800 bg-error-50 dark:bg-error-900/20">
+                        <div>
+                          <p className="font-medium text-error-900 dark:text-error-100">Reset All Settings</p>
+                          <p className="text-sm text-error-700 dark:text-error-300">
+                            Restore all settings to their default values. This cannot be undone.
+                          </p>
+                        </div>
+                        <Button variant="outline" className="border-error-300 text-error-600 hover:bg-error-100">
+                          Reset All
+                        </Button>
+                      </div>
+                    </div>
+                  </SettingSection>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>
