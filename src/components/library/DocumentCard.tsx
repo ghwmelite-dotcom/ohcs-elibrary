@@ -218,22 +218,35 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
           {document.accessLevel}
         </span>
 
-        {/* Bookmark Button */}
-        <button
-          onClick={handleToggleBookmark}
-          className={cn(
-            'absolute top-3 right-3 p-2 rounded-lg transition-all',
-            isBookmarked
-              ? 'text-secondary-500 bg-white dark:bg-surface-800'
-              : 'text-surface-400 bg-white/80 dark:bg-surface-800/80 opacity-0 group-hover:opacity-100'
-          )}
-        >
-          {isBookmarked ? (
-            <BookmarkCheck className="w-5 h-5" />
-          ) : (
-            <Bookmark className="w-5 h-5" />
-          )}
-        </button>
+        {/* Action Buttons */}
+        <div className={cn(
+          'absolute top-3 right-3 flex items-center gap-1',
+          !isBookmarked && 'opacity-0 group-hover:opacity-100 transition-opacity'
+        )}>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleToggleBookmark(); }}
+            className={cn(
+              'p-2 rounded-lg transition-all bg-white dark:bg-surface-800',
+              isBookmarked
+                ? 'text-secondary-500'
+                : 'text-surface-400 hover:text-secondary-500'
+            )}
+          >
+            {isBookmarked ? (
+              <BookmarkCheck className="w-5 h-5" />
+            ) : (
+              <Bookmark className="w-5 h-5" />
+            )}
+          </button>
+          <Dropdown items={menuItems} align="right">
+            <button
+              onClick={(e) => e.stopPropagation()}
+              className="p-2 rounded-lg bg-white dark:bg-surface-800 text-surface-400 hover:text-surface-600 transition-colors"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+          </Dropdown>
+        </div>
 
         {/* Category Badge */}
         {category && (
