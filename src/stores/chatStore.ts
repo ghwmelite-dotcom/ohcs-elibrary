@@ -1,188 +1,34 @@
 import { create } from 'zustand';
 import type { ChatRoom, ChatMessage, Conversation, DirectMessage, TypingIndicator } from '@/types';
 
-// Mock chat rooms
-const mockRooms: ChatRoom[] = [
-  {
-    id: '1',
-    name: 'General Discussion',
-    description: 'Open chat for all civil servants',
-    type: 'public',
-    createdById: '1',
-    memberCount: 1250,
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-    isJoined: true,
-    unreadCount: 3,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    name: 'Ministry of Finance',
-    description: 'Official channel for MoF staff',
-    type: 'mda',
-    mdaId: '1',
-    createdById: '2',
-    memberCount: 450,
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    isJoined: true,
-    unreadCount: 0,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    name: 'Tech Enthusiasts',
-    description: 'For discussions about technology and innovation',
-    type: 'public',
-    createdById: '1',
-    memberCount: 380,
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    isJoined: true,
-    unreadCount: 5,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    name: 'HR Network',
-    description: 'Human Resources professionals network',
-    type: 'public',
-    createdById: '4',
-    memberCount: 290,
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-    isJoined: false,
-    unreadCount: 0,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '5',
-    name: 'Digital Transformation',
-    description: 'Discussing digital initiatives across government',
-    type: 'public',
-    createdById: '2',
-    memberCount: 520,
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    isJoined: true,
-    unreadCount: 12,
-    createdAt: new Date().toISOString(),
-  },
-];
+// API base URL
+const API_BASE = import.meta.env.PROD
+  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  : '/api/v1';
 
-// Mock messages
-const mockMessages: ChatMessage[] = [
-  {
-    id: '1',
-    roomId: '1',
-    senderId: '2',
-    content: 'Good morning everyone! Hope you all had a great weekend.',
-    type: 'text',
-    attachments: [],
-    reactions: [{ emoji: '👋', users: ['3', '4', '5'], count: 3 }],
-    isEdited: false,
-    isDeleted: false,
-    readBy: ['1', '3', '4'],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-  },
-  {
-    id: '2',
-    roomId: '1',
-    senderId: '3',
-    content: 'Good morning! Has anyone seen the new circular on remote work?',
-    type: 'text',
-    attachments: [],
-    reactions: [],
-    isEdited: false,
-    isDeleted: false,
-    readBy: ['1', '2', '4'],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-  },
-  {
-    id: '3',
-    roomId: '1',
-    senderId: '1',
-    content: 'Yes! It is available in the library under Circulars. Very comprehensive document.',
-    type: 'text',
-    attachments: [],
-    reactions: [{ emoji: '👍', users: ['2', '3'], count: 2 }],
-    isEdited: false,
-    isDeleted: false,
-    readBy: ['2', '3'],
-    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-  },
-  {
-    id: '4',
-    roomId: '1',
-    senderId: '4',
-    content: 'Thanks for sharing! I will check it out.',
-    type: 'text',
-    attachments: [],
-    reactions: [],
-    isEdited: false,
-    isDeleted: false,
-    readBy: ['1', '2', '3'],
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-  },
-  {
-    id: '5',
-    roomId: '1',
-    senderId: '2',
-    content: '@john.doe Could you share the link?',
-    type: 'text',
-    attachments: [],
-    reactions: [],
-    isEdited: false,
-    isDeleted: false,
-    readBy: ['1', '3', '4'],
-    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-  },
-];
+// Helper to get auth token
+const getAuthToken = (): string | null => {
+  try {
+    const authState = JSON.parse(localStorage.getItem('ohcs-auth-storage') || '{}');
+    return authState?.state?.token || localStorage.getItem('auth_token');
+  } catch {
+    return null;
+  }
+};
 
-// Mock conversations (DMs)
-const mockConversations: Conversation[] = [
-  {
-    id: 'c1',
-    participantIds: ['1', '2'],
-    participants: [
-      { id: '2', email: 'kwame.asante@ohcs.gov.gh', staffId: 'GCS-001', firstName: 'Kwame', lastName: 'Asante', displayName: 'Kwame Asante', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', role: 'director', status: 'active', mdaId: '1', skills: [], interests: [], emailVerified: true, createdAt: '', updatedAt: '' },
-    ],
-    lastMessage: {
-      id: 'dm1',
-      conversationId: 'c1',
-      senderId: '2',
-      receiverId: '1',
-      content: 'Can we discuss the project proposal tomorrow?',
-      type: 'text',
-      attachments: [],
-      isRead: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-    },
-    unreadCount: 1,
-    updatedAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-  },
-  {
-    id: 'c2',
-    participantIds: ['1', '3'],
-    participants: [
-      { id: '3', email: 'ama.mensah@mof.gov.gh', staffId: 'GCS-002', firstName: 'Ama', lastName: 'Mensah', displayName: 'Ama Mensah', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', role: 'admin', status: 'active', mdaId: '2', skills: [], interests: [], emailVerified: true, createdAt: '', updatedAt: '' },
-    ],
-    lastMessage: {
-      id: 'dm2',
-      conversationId: 'c2',
-      senderId: '1',
-      receiverId: '3',
-      content: 'Thanks for the help with the document!',
-      type: 'text',
-      attachments: [],
-      isRead: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-    },
-    unreadCount: 0,
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-  },
-];
+// Helper for authenticated fetch
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return fetch(url, { ...options, headers });
+};
 
 interface ChatState {
   rooms: ChatRoom[];
@@ -192,8 +38,9 @@ interface ChatState {
   currentConversation: Conversation | null;
   directMessages: DirectMessage[];
   typingUsers: TypingIndicator[];
-  onlineUsers: string[];
+  roomMembers: any[];
   isLoading: boolean;
+  error: string | null;
 }
 
 interface ChatActions {
@@ -205,23 +52,19 @@ interface ChatActions {
   editMessage: (messageId: string, content: string) => Promise<void>;
   deleteMessage: (messageId: string) => Promise<void>;
   addReaction: (messageId: string, emoji: string) => Promise<void>;
-  removeReaction: (messageId: string, emoji: string) => Promise<void>;
   joinRoom: (roomId: string) => Promise<void>;
   leaveRoom: (roomId: string) => Promise<void>;
-  createRoom: (data: { name: string; description?: string; type: 'public' | 'private' }) => Promise<ChatRoom>;
+  createRoom: (data: { name: string; description?: string; type: 'public' | 'private' }) => Promise<ChatRoom | null>;
+  fetchRoomMembers: (roomId: string) => Promise<void>;
   fetchConversations: () => Promise<void>;
   fetchConversation: (id: string) => Promise<void>;
   fetchDirectMessages: (conversationId: string) => Promise<void>;
   sendDirectMessage: (conversationId: string, content: string) => Promise<void>;
-  startTyping: (roomId: string) => void;
-  stopTyping: (roomId: string) => void;
   markAsRead: (roomId: string) => void;
-  simulateIncomingMessage: () => void;
+  setError: (error: string | null) => void;
 }
 
 type ChatStore = ChatState & ChatActions;
-
-let messageSimulationInterval: ReturnType<typeof setInterval> | null = null;
 
 export const useChatStore = create<ChatStore>((set, get) => ({
   // Initial state
@@ -232,244 +75,402 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   currentConversation: null,
   directMessages: [],
   typingUsers: [],
-  onlineUsers: ['1', '2', '3', '5'],
+  roomMembers: [],
   isLoading: false,
+  error: null,
 
   // Actions
   fetchRooms: async () => {
-    set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    set({ rooms: mockRooms, isLoading: false });
+    set({ isLoading: true, error: null });
+
+    try {
+      const response = await authFetch(`${API_BASE}/chat/rooms`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch rooms');
+      }
+
+      const rooms = await response.json();
+
+      // Transform API response to match ChatRoom type
+      const transformedRooms: ChatRoom[] = (rooms || []).map((room: any) => ({
+        id: room.id,
+        name: room.name,
+        description: room.description,
+        type: room.type,
+        mdaId: room.mdaId,
+        createdById: room.createdById,
+        memberCount: room.memberCount || 0,
+        lastMessageAt: room.lastMessageAt,
+        isJoined: room.isJoined === 1,
+        unreadCount: room.unreadCount || 0,
+        createdAt: room.createdAt,
+      }));
+
+      set({ rooms: transformedRooms, isLoading: false });
+    } catch (error) {
+      console.error('Error fetching rooms:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to fetch rooms',
+        isLoading: false,
+        rooms: []
+      });
+    }
   },
 
   fetchRoom: async (id: string) => {
     set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    const room = mockRooms.find((r) => r.id === id);
-    set({ currentRoom: room || null, isLoading: false });
+
+    try {
+      const response = await authFetch(`${API_BASE}/chat/rooms/${id}`);
+
+      if (!response.ok) {
+        throw new Error('Room not found');
+      }
+
+      const room = await response.json();
+
+      const transformedRoom: ChatRoom = {
+        id: room.id,
+        name: room.name,
+        description: room.description,
+        type: room.type,
+        mdaId: room.mdaId,
+        createdById: room.createdById,
+        memberCount: room.memberCount || 0,
+        lastMessageAt: room.lastMessageAt,
+        isJoined: room.isJoined === 1,
+        unreadCount: 0,
+        createdAt: room.createdAt,
+      };
+
+      set({ currentRoom: transformedRoom, isLoading: false });
+    } catch (error) {
+      console.error('Error fetching room:', error);
+      set({ currentRoom: null, isLoading: false });
+    }
   },
 
   setCurrentRoom: (room: ChatRoom | null) => {
-    set({ currentRoom: room });
+    set({ currentRoom: room, messages: [] });
   },
 
   fetchMessages: async (roomId: string) => {
     set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const messages = mockMessages.filter((m) => m.roomId === roomId);
-    set({ messages, isLoading: false });
+
+    try {
+      const response = await authFetch(`${API_BASE}/chat/rooms/${roomId}/messages`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch messages');
+      }
+
+      const messages = await response.json();
+
+      // Transform API response to match ChatMessage type
+      const transformedMessages: ChatMessage[] = (messages || []).map((msg: any) => ({
+        id: msg.id,
+        roomId: msg.roomId,
+        senderId: msg.senderId,
+        sender: {
+          id: msg.senderId,
+          displayName: msg.senderName || 'User',
+          avatar: msg.senderAvatar,
+        },
+        content: msg.content,
+        type: msg.type || 'text',
+        attachments: [],
+        reactions: msg.reactions || [],
+        replyToId: msg.replyToId,
+        isEdited: msg.isEdited === 1,
+        isDeleted: msg.isDeleted === 1,
+        readBy: [],
+        createdAt: msg.createdAt,
+        updatedAt: msg.updatedAt,
+      }));
+
+      set({ messages: transformedMessages, isLoading: false });
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      set({ messages: [], isLoading: false });
+    }
   },
 
   sendMessage: async (roomId: string, content: string, type = 'text') => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    try {
+      const response = await authFetch(`${API_BASE}/chat/rooms/${roomId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, type }),
+      });
 
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      roomId,
-      senderId: '1',
-      content,
-      type,
-      attachments: [],
-      reactions: [],
-      isEdited: false,
-      isDeleted: false,
-      readBy: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Failed to send message');
+      }
 
-    set((state) => ({
-      messages: [...state.messages, newMessage],
-      rooms: state.rooms.map((r) =>
-        r.id === roomId
-          ? { ...r, lastMessageAt: newMessage.createdAt, lastMessage: newMessage }
-          : r
-      ),
-    }));
+      const newMessage = await response.json();
+
+      const transformedMessage: ChatMessage = {
+        id: newMessage.id,
+        roomId: newMessage.roomId,
+        senderId: newMessage.senderId,
+        sender: {
+          id: newMessage.senderId,
+          displayName: newMessage.senderName || 'User',
+          avatar: newMessage.senderAvatar,
+        },
+        content: newMessage.content,
+        type: newMessage.type || 'text',
+        attachments: [],
+        reactions: [],
+        isEdited: false,
+        isDeleted: false,
+        readBy: [],
+        createdAt: newMessage.createdAt,
+        updatedAt: newMessage.updatedAt,
+      };
+
+      set((state) => ({
+        messages: [...state.messages, transformedMessage],
+        rooms: state.rooms.map((r) =>
+          r.id === roomId
+            ? { ...r, lastMessageAt: transformedMessage.createdAt }
+            : r
+        ),
+      }));
+    } catch (error) {
+      console.error('Error sending message:', error);
+      set({ error: error instanceof Error ? error.message : 'Failed to send message' });
+    }
   },
 
   editMessage: async (messageId: string, content: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    try {
+      const response = await authFetch(`${API_BASE}/chat/messages/${messageId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
 
-    set((state) => ({
-      messages: state.messages.map((m) =>
-        m.id === messageId
-          ? { ...m, content, isEdited: true, updatedAt: new Date().toISOString() }
-          : m
-      ),
-    }));
+      if (!response.ok) {
+        throw new Error('Failed to edit message');
+      }
+
+      set((state) => ({
+        messages: state.messages.map((m) =>
+          m.id === messageId
+            ? { ...m, content, isEdited: true, updatedAt: new Date().toISOString() }
+            : m
+        ),
+      }));
+    } catch (error) {
+      console.error('Error editing message:', error);
+    }
   },
 
   deleteMessage: async (messageId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    try {
+      const response = await authFetch(`${API_BASE}/chat/messages/${messageId}`, {
+        method: 'DELETE',
+      });
 
-    set((state) => ({
-      messages: state.messages.map((m) =>
-        m.id === messageId
-          ? { ...m, isDeleted: true, content: 'This message was deleted' }
-          : m
-      ),
-    }));
+      if (!response.ok) {
+        throw new Error('Failed to delete message');
+      }
+
+      set((state) => ({
+        messages: state.messages.map((m) =>
+          m.id === messageId
+            ? { ...m, isDeleted: true, content: 'This message was deleted' }
+            : m
+        ),
+      }));
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    }
   },
 
   addReaction: async (messageId: string, emoji: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    try {
+      const response = await authFetch(`${API_BASE}/chat/messages/${messageId}/reactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emoji }),
+      });
 
-    set((state) => ({
-      messages: state.messages.map((m) => {
-        if (m.id !== messageId) return m;
+      if (!response.ok) {
+        throw new Error('Failed to add reaction');
+      }
 
-        const existingReaction = m.reactions.find((r) => r.emoji === emoji);
-        if (existingReaction) {
-          if (!existingReaction.users.includes('1')) {
+      const result = await response.json();
+
+      // Update local state based on action
+      set((state) => ({
+        messages: state.messages.map((m) => {
+          if (m.id !== messageId) return m;
+
+          const existingReaction = m.reactions.find((r) => r.emoji === emoji);
+
+          if (result.action === 'removed') {
+            // Remove user from reaction
             return {
               ...m,
-              reactions: m.reactions.map((r) =>
-                r.emoji === emoji
-                  ? { ...r, users: [...r.users, '1'], count: r.count + 1 }
-                  : r
-              ),
+              reactions: m.reactions
+                .map((r) =>
+                  r.emoji === emoji
+                    ? { ...r, count: r.count - 1 }
+                    : r
+                )
+                .filter((r) => r.count > 0),
             };
+          } else {
+            // Add reaction
+            if (existingReaction) {
+              return {
+                ...m,
+                reactions: m.reactions.map((r) =>
+                  r.emoji === emoji
+                    ? { ...r, count: r.count + 1 }
+                    : r
+                ),
+              };
+            } else {
+              return {
+                ...m,
+                reactions: [...m.reactions, { emoji, count: 1, users: [] }],
+              };
+            }
           }
-          return m;
-        }
-
-        return {
-          ...m,
-          reactions: [...m.reactions, { emoji, users: ['1'], count: 1 }],
-        };
-      }),
-    }));
-  },
-
-  removeReaction: async (messageId: string, emoji: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    set((state) => ({
-      messages: state.messages.map((m) => {
-        if (m.id !== messageId) return m;
-
-        return {
-          ...m,
-          reactions: m.reactions
-            .map((r) =>
-              r.emoji === emoji
-                ? { ...r, users: r.users.filter((u) => u !== '1'), count: r.count - 1 }
-                : r
-            )
-            .filter((r) => r.count > 0),
-        };
-      }),
-    }));
+        }),
+      }));
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+    }
   },
 
   joinRoom: async (roomId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    try {
+      const response = await authFetch(`${API_BASE}/chat/rooms/${roomId}/join`, {
+        method: 'POST',
+      });
 
-    set((state) => ({
-      rooms: state.rooms.map((r) =>
-        r.id === roomId
-          ? { ...r, isJoined: true, memberCount: r.memberCount + 1 }
-          : r
-      ),
-    }));
+      if (!response.ok) {
+        throw new Error('Failed to join room');
+      }
+
+      set((state) => ({
+        rooms: state.rooms.map((r) =>
+          r.id === roomId
+            ? { ...r, isJoined: true, memberCount: r.memberCount + 1 }
+            : r
+        ),
+      }));
+    } catch (error) {
+      console.error('Error joining room:', error);
+    }
   },
 
   leaveRoom: async (roomId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    try {
+      const response = await authFetch(`${API_BASE}/chat/rooms/${roomId}/leave`, {
+        method: 'POST',
+      });
 
-    set((state) => ({
-      rooms: state.rooms.map((r) =>
-        r.id === roomId
-          ? { ...r, isJoined: false, memberCount: r.memberCount - 1 }
-          : r
-      ),
-    }));
+      if (!response.ok) {
+        throw new Error('Failed to leave room');
+      }
+
+      set((state) => ({
+        rooms: state.rooms.map((r) =>
+          r.id === roomId
+            ? { ...r, isJoined: false, memberCount: Math.max(0, r.memberCount - 1) }
+            : r
+        ),
+      }));
+    } catch (error) {
+      console.error('Error leaving room:', error);
+    }
   },
 
   createRoom: async (data) => {
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    set({ isLoading: true, error: null });
 
-    const newRoom: ChatRoom = {
-      id: Date.now().toString(),
-      name: data.name,
-      description: data.description,
-      type: data.type,
-      createdById: '1',
-      memberCount: 1,
-      isJoined: true,
-      unreadCount: 0,
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const response = await authFetch(`${API_BASE}/chat/rooms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
 
-    set((state) => ({
-      rooms: [...state.rooms, newRoom],
-    }));
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Failed to create room');
+      }
 
-    return newRoom;
+      const room = await response.json();
+
+      const newRoom: ChatRoom = {
+        id: room.id,
+        name: room.name,
+        description: room.description,
+        type: room.type,
+        createdById: room.createdById,
+        memberCount: room.memberCount || 1,
+        isJoined: true,
+        unreadCount: 0,
+        createdAt: room.createdAt,
+      };
+
+      set((state) => ({
+        rooms: [newRoom, ...state.rooms],
+        isLoading: false,
+      }));
+
+      return newRoom;
+    } catch (error) {
+      console.error('Error creating room:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to create room',
+        isLoading: false
+      });
+      return null;
+    }
+  },
+
+  fetchRoomMembers: async (roomId: string) => {
+    try {
+      const response = await authFetch(`${API_BASE}/chat/rooms/${roomId}/members`);
+
+      if (!response.ok) {
+        return;
+      }
+
+      const members = await response.json();
+      set({ roomMembers: members || [] });
+    } catch (error) {
+      console.error('Error fetching members:', error);
+      set({ roomMembers: [] });
+    }
   },
 
   fetchConversations: async () => {
-    set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    set({ conversations: mockConversations, isLoading: false });
+    // DMs not implemented yet
+    set({ conversations: [] });
   },
 
-  fetchConversation: async (id: string) => {
-    set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    const conversation = mockConversations.find((c) => c.id === id);
-    set({ currentConversation: conversation || null, isLoading: false });
+  fetchConversation: async (_id: string) => {
+    // DMs not implemented yet
+    set({ currentConversation: null });
   },
 
   fetchDirectMessages: async (_conversationId: string) => {
-    set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    // Would fetch actual DMs based on conversation ID
-    set({ directMessages: [], isLoading: false });
+    // DMs not implemented yet
+    set({ directMessages: [] });
   },
 
-  sendDirectMessage: async (conversationId: string, content: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    const newMessage: DirectMessage = {
-      id: Date.now().toString(),
-      conversationId,
-      senderId: '1',
-      receiverId: '2',
-      content,
-      type: 'text',
-      attachments: [],
-      isRead: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    set((state) => ({
-      directMessages: [...state.directMessages, newMessage],
-      conversations: state.conversations.map((c) =>
-        c.id === conversationId
-          ? { ...c, lastMessage: newMessage, updatedAt: newMessage.createdAt }
-          : c
-      ),
-    }));
-  },
-
-  startTyping: (roomId: string) => {
-    const indicator: TypingIndicator = {
-      roomId,
-      userId: '1',
-      timestamp: new Date().toISOString(),
-    };
-
-    set((state) => ({
-      typingUsers: [...state.typingUsers.filter((t) => t.userId !== '1'), indicator],
-    }));
-  },
-
-  stopTyping: (_roomId: string) => {
-    set((state) => ({
-      typingUsers: state.typingUsers.filter((t) => t.userId !== '1'),
-    }));
+  sendDirectMessage: async (_conversationId: string, _content: string) => {
+    // DMs not implemented yet
   },
 
   markAsRead: (roomId: string) => {
@@ -480,40 +481,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }));
   },
 
-  simulateIncomingMessage: () => {
-    // Simulate incoming messages periodically
-    if (messageSimulationInterval) return;
-
-    messageSimulationInterval = setInterval(() => {
-      const { currentRoom } = get();
-      if (!currentRoom || Math.random() > 0.3) return;
-
-      const sampleMessages = [
-        'Has anyone tried the new document search feature?',
-        'Great discussion everyone!',
-        'I have a question about the policy update.',
-        'Thanks for sharing that resource.',
-        'Looking forward to the training session tomorrow.',
-      ];
-
-      const newMessage: ChatMessage = {
-        id: Date.now().toString(),
-        roomId: currentRoom.id,
-        senderId: ['2', '3', '4', '5'][Math.floor(Math.random() * 4)]!,
-        content: sampleMessages[Math.floor(Math.random() * sampleMessages.length)]!,
-        type: 'text',
-        attachments: [],
-        reactions: [],
-        isEdited: false,
-        isDeleted: false,
-        readBy: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      set((state) => ({
-        messages: [...state.messages, newMessage],
-      }));
-    }, 15000); // Every 15 seconds
+  setError: (error: string | null) => {
+    set({ error });
   },
 }));

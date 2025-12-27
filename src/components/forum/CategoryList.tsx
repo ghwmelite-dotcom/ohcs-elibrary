@@ -1,9 +1,37 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MessageSquare, Users, Clock, ChevronRight, Pin } from 'lucide-react';
+import {
+  MessageSquare,
+  Users,
+  Clock,
+  ChevronRight,
+  FileText,
+  GraduationCap,
+  Laptop,
+  MapPin,
+  Megaphone,
+  Lightbulb,
+  LucideIcon,
+} from 'lucide-react';
 import { ForumCategory } from '@/types';
 import { cn } from '@/utils/cn';
 import { formatRelativeTime } from '@/utils/formatters';
+
+// Map icon names to Lucide components
+const iconMap: Record<string, LucideIcon> = {
+  MessageSquare,
+  FileText,
+  GraduationCap,
+  Laptop,
+  Users,
+  MapPin,
+  Megaphone,
+  Lightbulb,
+};
+
+function getIconComponent(iconName: string): LucideIcon {
+  return iconMap[iconName] || MessageSquare;
+}
 
 interface CategoryListProps {
   categories: ForumCategory[];
@@ -25,6 +53,8 @@ interface CategoryCardProps {
 }
 
 function CategoryCard({ category, index }: CategoryCardProps) {
+  const IconComponent = getIconComponent(category.icon);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -32,14 +62,14 @@ function CategoryCard({ category, index }: CategoryCardProps) {
       transition={{ delay: index * 0.05 }}
       className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 overflow-hidden hover:shadow-elevation-2 transition-shadow"
     >
-      <Link to={`/forum/category/${category.id}`} className="block p-5">
-        <div className="flex items-start gap-4">
+      <Link to={`/forum/category/${category.id}`} className="block p-4 sm:p-5">
+        <div className="flex items-start gap-3 sm:gap-4">
           {/* Icon */}
           <div
-            className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: `${category.color}20` }}
           >
-            <span className="text-2xl">{category.icon}</span>
+            <IconComponent className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: category.color }} />
           </div>
 
           {/* Content */}
@@ -124,29 +154,32 @@ export function CompactCategoryList({
           <span className="text-sm font-medium flex-1 text-left">All Topics</span>
         </button>
 
-        {categories.map((category) => (
-          <button
-            key={category.id}
-            onClick={() => onSelect?.(category.id)}
-            className={cn(
-              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
-              'hover:bg-surface-100 dark:hover:bg-surface-700',
-              selectedCategory === category.id &&
-                'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-            )}
-          >
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: `${category.color}20` }}
+        {categories.map((category) => {
+          const IconComponent = getIconComponent(category.icon);
+          return (
+            <button
+              key={category.id}
+              onClick={() => onSelect?.(category.id)}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
+                'hover:bg-surface-100 dark:hover:bg-surface-700',
+                selectedCategory === category.id &&
+                  'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+              )}
             >
-              <span className="text-sm">{category.icon}</span>
-            </div>
-            <span className="text-sm font-medium flex-1 text-left truncate">
-              {category.name}
-            </span>
-            <span className="text-xs text-surface-400">{category.topicCount}</span>
-          </button>
-        ))}
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: `${category.color}20` }}
+              >
+                <IconComponent className="w-4 h-4" style={{ color: category.color }} />
+              </div>
+              <span className="text-sm font-medium flex-1 text-left truncate">
+                {category.name}
+              </span>
+              <span className="text-xs text-surface-400">{category.topicCount}</span>
+            </button>
+          );
+        })}
       </nav>
     </div>
   );

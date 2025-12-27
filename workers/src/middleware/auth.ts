@@ -62,6 +62,37 @@ export async function authMiddleware(c: Context, next: Next) {
   }
 }
 
+// Optional authentication middleware - doesn't require auth but parses token if present
+export async function optionalAuth(c: Context, next: Next) {
+  const authHeader = c.req.header('Authorization');
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+
+    try {
+      const payload = await verify(token, c.env.JWT_SECRET);
+
+      if (payload && payload.sub) {
+        // Check token expiration
+        if (!payload.exp || Date.now() < payload.exp * 1000) {
+          // Set user in context if token is valid
+          c.set('user', {
+            id: payload.sub as string,
+            email: payload.email as string,
+            role: payload.role as string,
+            mda: payload.mda as string | undefined,
+          });
+        }
+      }
+    } catch (error) {
+      // Token is invalid but we don't block the request
+      console.log('Optional auth - invalid token, continuing without auth');
+    }
+  }
+
+  await next();
+}
+
 // Role-based access control middleware
 export function requireRole(...roles: string[]) {
   return async (c: Context, next: Next) => {

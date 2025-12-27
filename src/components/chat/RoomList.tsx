@@ -23,9 +23,10 @@ interface RoomListProps {
   rooms: ChatRoom[];
   currentRoomId?: string;
   onCreateRoom?: () => void;
+  onRoomSelect?: () => void;
 }
 
-export function RoomList({ rooms, currentRoomId, onCreateRoom }: RoomListProps) {
+export function RoomList({ rooms, currentRoomId, onCreateRoom, onRoomSelect }: RoomListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'unread' | 'starred'>('all');
 
@@ -108,6 +109,7 @@ export function RoomList({ rooms, currentRoomId, onCreateRoom }: RoomListProps) 
                 key={room.id}
                 room={room}
                 isActive={room.id === currentRoomId}
+                onSelect={onRoomSelect}
               />
             ))}
           </div>
@@ -120,9 +122,10 @@ export function RoomList({ rooms, currentRoomId, onCreateRoom }: RoomListProps) 
 interface RoomItemProps {
   room: ChatRoom;
   isActive: boolean;
+  onSelect?: () => void;
 }
 
-function RoomItem({ room, isActive }: RoomItemProps) {
+function RoomItem({ room, isActive, onSelect }: RoomItemProps) {
   const menuItems = [
     {
       label: 'Mute',
@@ -141,7 +144,7 @@ function RoomItem({ room, isActive }: RoomItemProps) {
   };
 
   return (
-    <Link to={`/chat/${room.id}`}>
+    <Link to={`/chat/${room.id}`} onClick={() => onSelect?.()}>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -179,21 +182,16 @@ function RoomItem({ room, isActive }: RoomItemProps) {
             </span>
           </div>
           <div className="flex items-center text-sm text-surface-500 truncate">
-            {room.lastMessage ? (
-              <span className="truncate">
-                <span className="font-medium">{room.lastMessage.sender?.displayName || 'User'}: </span>
-                {room.lastMessage.content}
-              </span>
-            ) : (
-              <span className="text-surface-400">No messages yet</span>
-            )}
+            <span className="text-surface-400 truncate">
+              {room.description || `${room.memberCount || 0} members`}
+            </span>
           </div>
         </div>
 
         {/* Right Side */}
         <div className="flex flex-col items-end gap-1">
           <span className="text-xs text-surface-400">
-            {formatRelativeTime(room.lastActivity)}
+            {room.lastMessageAt ? formatRelativeTime(room.lastMessageAt) : ''}
           </span>
           {room.unreadCount > 0 && (
             <span className="min-w-[20px] h-5 px-1.5 bg-primary-500 text-white text-xs font-bold rounded-full flex items-center justify-center">

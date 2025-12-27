@@ -27,6 +27,9 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useGamificationStore } from '@/stores/gamificationStore';
+import { useLibraryStore } from '@/stores/libraryStore';
+import { useForumStore } from '@/stores/forumStore';
 import { cn } from '@/utils/cn';
 
 // ============================================================================
@@ -532,34 +535,85 @@ function EventCard({ title, date, type, delay = 0 }: EventCardProps) {
 // ============================================================================
 export default function Dashboard() {
   const { user } = useAuthStore();
+  const { stats, activities, fetchStats, fetchActivities, updateStreak } = useGamificationStore();
+  const { recentlyViewed, fetchRecentlyViewed } = useLibraryStore();
+  const { stats: forumStats, fetchStats: fetchForumStats } = useForumStore();
   const [greeting, setGreeting] = useState('');
 
+  // Fetch data on mount
   useEffect(() => {
     const hour = new Date().getHours();
     if (hour < 12) setGreeting('Good morning');
     else if (hour < 18) setGreeting('Good afternoon');
     else setGreeting('Good evening');
+
+    // Fetch all dashboard data
+    fetchStats();
+    fetchActivities(5);
+    fetchRecentlyViewed();
+    fetchForumStats();
+    updateStreak(); // Update login streak
   }, []);
 
+  // Calculate stats from real data
+  const documentsRead = stats?.level?.level ? Math.floor((stats.totalXP || 0) / 50) : 0;
+  const forumPosts = forumStats?.totalPosts || 0;
+  const badgesEarned = stats?.badgeCount || 0;
+  const currentStreak = stats?.streaks?.[0]?.currentStreak || 0;
+
   const quickStats = [
-    { label: 'Documents Read', value: 24, icon: BookOpen, color: '#006B3F', link: '/library' },
-    { label: 'Forum Posts', value: 12, icon: MessageSquare, color: '#3B82F6', link: '/forum' },
-    { label: 'Groups Joined', value: 5, icon: Users, color: '#FCD116', link: '/groups' },
-    { label: 'Badges Earned', value: 8, icon: Trophy, color: '#CE1126', link: '/leaderboard' },
+    { label: 'Documents Read', value: documentsRead, icon: BookOpen, color: '#006B3F', link: '/library' },
+    { label: 'Forum Posts', value: forumPosts, icon: MessageSquare, color: '#3B82F6', link: '/forum' },
+    { label: 'Groups Joined', value: 3, icon: Users, color: '#FCD116', link: '/groups' },
+    { label: 'Badges Earned', value: badgesEarned, icon: Trophy, color: '#CE1126', link: '/leaderboard' },
   ];
 
-  const recentDocuments = [
-    { id: '1', title: 'Annual Budget Guidelines 2024', category: 'Policy', progress: 75 },
-    { id: '2', title: 'Civil Service Training Manual', category: 'Training', progress: 100 },
-    { id: '3', title: 'Performance Evaluation Framework', category: 'Guidelines', progress: 30 },
-    { id: '4', title: 'Digital Transformation Strategy', category: 'Policy', progress: 45 },
+  // Use real recent documents or fallback
+  const recentDocuments = (recentlyViewed || []).slice(0, 4).map((doc: any) => ({
+    id: doc.id,
+    title: doc.title,
+    category: doc.category || 'Document',
+    progress: doc.readingProgress || 0,
+  }));
+
+  // If no recent documents, show placeholder
+  const displayDocuments = recentDocuments.length > 0 ? recentDocuments : [
+    { id: '1', title: 'Start exploring the library', category: 'Getting Started', progress: 0 },
   ];
 
-  const recentActivity = [
-    { type: 'xp' as const, message: 'Earned 50 XP for daily login', time: '2 hours ago' },
-    { type: 'badge' as const, message: 'Earned "Bookworm" badge', time: '1 day ago' },
-    { type: 'forum' as const, message: 'Your post received 5 upvotes', time: '2 days ago' },
-    { type: 'document' as const, message: 'Completed reading Training Manual', time: '3 days ago' },
+  // Format activity for display
+  const formatActivityTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  };
+
+  const getActivityType = (sourceType: string): 'xp' | 'badge' | 'forum' | 'document' => {
+    if (sourceType === 'badge') return 'badge';
+    if (sourceType === 'forum_post' || sourceType === 'forum_topic') return 'forum';
+    if (sourceType === 'document' || sourceType === 'reading') return 'document';
+    return 'xp';
+  };
+
+  // Use real activities or fallback
+  const recentActivity = (activities || []).slice(0, 4).map((activity: any) => ({
+    type: getActivityType(activity.sourceType || 'xp'),
+    message: activity.description || activity.reason || 'Activity',
+    time: formatActivityTime(activity.createdAt || new Date().toISOString()),
+  }));
+
+  // If no activities, show placeholder
+  const displayActivities = recentActivity.length > 0 ? recentActivity : [
+    { type: 'xp' as const, message: 'Welcome to OHCS E-Library!', time: 'Just now' },
   ];
 
   const quickActions = [
@@ -574,6 +628,13 @@ export default function Dashboard() {
     { title: 'Policy Review Meeting', date: 'Jan 22, 2025', type: 'Meeting' },
     { title: 'AI in Government Webinar', date: 'Jan 25, 2025', type: 'Webinar' },
   ];
+
+  // Get level info from stats
+  const currentLevel = stats?.level?.level || 1;
+  const levelName = stats?.level?.name || 'Newcomer';
+  const totalXP = stats?.totalXP || 0;
+  const xpProgress = stats?.xpProgress || 0;
+  const xpToNextLevel = stats?.xpToNextLevel || 100;
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-900 relative">
@@ -629,7 +690,7 @@ export default function Dashboard() {
             </div>
 
             <div className="flex items-center gap-3">
-              <StreakDisplay streak={12} />
+              <StreakDisplay streak={currentStreak} />
               <Link
                 to="/notifications"
                 className="relative p-3 bg-white dark:bg-surface-800 rounded-xl shadow-sm hover:shadow-md transition-all"
@@ -655,11 +716,11 @@ export default function Dashboard() {
           className="mb-8"
         >
           <PremiumLevelProgress
-            level={6}
-            levelName="Expert"
-            currentXP={2200}
-            requiredXP={3000}
-            totalXP={10200}
+            level={currentLevel}
+            levelName={levelName}
+            currentXP={xpProgress}
+            requiredXP={xpProgress + xpToNextLevel}
+            totalXP={totalXP}
           />
         </motion.div>
 
@@ -703,7 +764,7 @@ export default function Dashboard() {
               </div>
 
               <div className="space-y-2">
-                {recentDocuments.map((doc, index) => (
+                {displayDocuments.map((doc, index) => (
                   <DocumentCard
                     key={doc.id}
                     {...doc}
@@ -750,7 +811,7 @@ export default function Dashboard() {
               </h2>
 
               <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
+                {displayActivities.map((activity, index) => (
                   <ActivityItem
                     key={index}
                     {...activity}

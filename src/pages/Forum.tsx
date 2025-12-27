@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquare, TrendingUp, Flame, Clock } from 'lucide-react';
+import { MessageSquare, TrendingUp, Flame, Clock, Users } from 'lucide-react';
 import { useForumStore } from '@/stores/forumStore';
 import {
   CategoryList,
@@ -14,8 +14,10 @@ export default function Forum() {
   const {
     categories,
     topics,
+    stats,
     fetchCategories,
     fetchTopics,
+    fetchStats,
     isLoading,
   } = useForumStore();
   const [activeTab, setActiveTab] = useState('categories');
@@ -24,7 +26,8 @@ export default function Forum() {
   useEffect(() => {
     fetchCategories();
     fetchTopics();
-  }, [fetchCategories, fetchTopics]);
+    fetchStats();
+  }, [fetchCategories, fetchTopics, fetchStats]);
 
   const tabs = [
     { id: 'categories', label: 'Categories', icon: <MessageSquare className="w-4 h-4" /> },
@@ -32,36 +35,15 @@ export default function Forum() {
     { id: 'trending', label: 'Trending', icon: <Flame className="w-4 h-4" /> },
   ];
 
-  // Mock stats
+  // Use real stats from API
   const forumStats = {
-    totalTopics: 1542,
-    totalPosts: 23567,
-    totalMembers: 4821,
-    onlineMembers: 127,
-    todayTopics: 24,
-    todayPosts: 156,
+    totalTopics: stats.totalTopics || 0,
+    totalPosts: stats.totalPosts || 0,
+    totalMembers: stats.activeMembers || 0,
+    onlineMembers: 0, // We don't track this in real-time
+    todayTopics: stats.todayTopics || 0,
+    todayPosts: 0, // We can add this to the API later
   };
-
-  const topContributors = [
-    { id: '1', name: 'Kwame Asante', avatar: undefined, postCount: 342 },
-    { id: '2', name: 'Ama Serwaa', avatar: undefined, postCount: 289 },
-    { id: '3', name: 'Kofi Mensah', avatar: undefined, postCount: 234 },
-    { id: '4', name: 'Akua Owusu', avatar: undefined, postCount: 198 },
-    { id: '5', name: 'Yaw Boateng', avatar: undefined, postCount: 176 },
-  ];
-
-  const onlineUsers = [
-    { id: '1', name: 'Kwame Asante', avatar: undefined },
-    { id: '2', name: 'Ama Serwaa', avatar: undefined },
-    { id: '3', name: 'Kofi Mensah', avatar: undefined },
-    { id: '4', name: 'Akua Owusu', avatar: undefined },
-    { id: '5', name: 'Yaw Boateng', avatar: undefined },
-    { id: '6', name: 'Efua Mensah', avatar: undefined },
-    { id: '7', name: 'Nana Ama', avatar: undefined },
-    { id: '8', name: 'Kwesi Appiah', avatar: undefined },
-    { id: '9', name: 'Adwoa Kyei', avatar: undefined },
-    { id: '10', name: 'Kojo Asare', avatar: undefined },
-  ];
 
   const getTrendingTopics = () => {
     return [...topics]
@@ -91,7 +73,7 @@ export default function Forum() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4"
       >
         <StatCard
           icon={MessageSquare}
@@ -107,14 +89,14 @@ export default function Forum() {
         />
         <StatCard
           icon={TrendingUp}
-          label="Active Today"
-          value={`+${forumStats.todayPosts}`}
+          label="New Today"
+          value={forumStats.todayTopics > 0 ? `+${forumStats.todayTopics}` : '0'}
           color="success"
         />
         <StatCard
-          icon={Flame}
-          label="Online Now"
-          value={forumStats.onlineMembers.toString()}
+          icon={Users}
+          label="Members"
+          value={forumStats.totalMembers.toLocaleString()}
           color="accent"
         />
       </motion.div>
@@ -123,9 +105,9 @@ export default function Forum() {
       <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
       {/* Main Content */}
-      <div className="grid lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Main Area */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 order-2 lg:order-1">
           {activeTab === 'categories' && <CategoryList categories={categories} />}
 
           {activeTab === 'latest' && (
@@ -147,13 +129,9 @@ export default function Forum() {
           )}
         </div>
 
-        {/* Sidebar */}
-        <div className="lg:col-span-1">
-          <ForumStats
-            stats={forumStats}
-            topContributors={topContributors}
-            onlineUsers={onlineUsers}
-          />
+        {/* Sidebar - Real stats only, no fake contributors/online users */}
+        <div className="lg:col-span-1 order-1 lg:order-2">
+          <ForumStats stats={forumStats} />
         </div>
       </div>
 

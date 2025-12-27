@@ -1,171 +1,35 @@
 import { create } from 'zustand';
 import type { Group, GroupMember, GroupPost, GroupComment, GroupInvitation } from '@/types';
 
-// Mock groups
-const mockGroups: Group[] = [
-  {
-    id: '1',
-    name: 'Digital Transformation Committee',
-    description: 'Official committee for driving digital transformation across the Ghana Civil Service. We discuss strategies, share best practices, and coordinate initiatives.',
-    slug: 'digital-transformation',
-    type: 'official',
-    coverImage: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800',
-    avatar: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=150',
-    createdById: '2',
-    memberCount: 156,
-    postCount: 89,
-    isJoined: true,
-    memberRole: 'member',
-    tags: ['digital', 'technology', 'innovation', 'official'],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 180).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    name: 'Young Professionals Network',
-    description: 'A community for young professionals in the civil service to network, share opportunities, and support each other career development.',
-    slug: 'young-professionals',
-    type: 'open',
-    coverImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800',
-    avatar: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=150',
-    createdById: '3',
-    memberCount: 342,
-    postCount: 234,
-    isJoined: true,
-    memberRole: 'admin',
-    tags: ['networking', 'career', 'youth', 'professional-development'],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 120).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    name: 'Public Policy Research',
-    description: 'For civil servants interested in public policy research and analysis. Share papers, discuss methodologies, and collaborate on research projects.',
-    slug: 'policy-research',
-    type: 'closed',
-    coverImage: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800',
-    createdById: '4',
-    memberCount: 89,
-    postCount: 156,
-    isJoined: false,
-    isPendingApproval: true,
-    tags: ['research', 'policy', 'analysis', 'academic'],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 90).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    name: 'IT Professionals Hub',
-    description: 'A private group for IT professionals working in government. Discuss technical challenges, share solutions, and stay updated on tech trends.',
-    slug: 'it-professionals',
-    type: 'private',
-    coverImage: 'https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800',
-    createdById: '1',
-    memberCount: 78,
-    postCount: 112,
-    isJoined: true,
-    memberRole: 'owner',
-    tags: ['IT', 'technology', 'programming', 'infrastructure'],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '5',
-    name: 'Health Sector Workers',
-    description: 'For civil servants working in the health sector. Share updates, discuss challenges, and collaborate on health initiatives.',
-    slug: 'health-sector',
-    type: 'open',
-    coverImage: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800',
-    createdById: '5',
-    memberCount: 267,
-    postCount: 178,
-    isJoined: false,
-    tags: ['health', 'medical', 'public-health', 'ministry-of-health'],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 150).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '6',
-    name: 'Financial Management Network',
-    description: 'Connect with colleagues involved in financial management across MDAs. Discuss best practices, regulations, and professional development.',
-    slug: 'financial-management',
-    type: 'open',
-    coverImage: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800',
-    createdById: '2',
-    memberCount: 198,
-    postCount: 145,
-    isJoined: true,
-    memberRole: 'member',
-    tags: ['finance', 'accounting', 'budget', 'PFM'],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 200).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+// API base URL
+const API_BASE = import.meta.env.PROD
+  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  : '/api/v1';
 
-// Mock group posts
-const mockPosts: GroupPost[] = [
-  {
-    id: 'p1',
-    groupId: '1',
-    authorId: '2',
-    content: 'Excited to announce that we will be hosting a digital transformation workshop next month! More details coming soon. Who is interested in attending?',
-    attachments: [],
-    likes: 45,
-    commentCount: 12,
-    isLiked: true,
-    isPinned: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-  },
-  {
-    id: 'p2',
-    groupId: '1',
-    authorId: '3',
-    content: 'Just completed the pilot of our new digital filing system. Early results show 40% improvement in document retrieval time. Happy to share our learnings with anyone interested.',
-    attachments: [],
-    likes: 32,
-    commentCount: 8,
-    isLiked: false,
-    isPinned: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-  },
-  {
-    id: 'p3',
-    groupId: '2',
-    authorId: '4',
-    content: 'Looking for mentors for our upcoming mentorship program. If you have 5+ years of experience and would like to guide young professionals, please reach out!',
-    attachments: [],
-    likes: 67,
-    commentCount: 23,
-    isLiked: true,
-    isPinned: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-  },
-];
+// Helper to get auth token
+const getAuthToken = (): string | null => {
+  try {
+    const authState = JSON.parse(localStorage.getItem('ohcs-auth-storage') || '{}');
+    return authState?.state?.token || localStorage.getItem('auth_token');
+  } catch {
+    return null;
+  }
+};
 
-// Mock comments
-const mockComments: GroupComment[] = [
-  {
-    id: 'c1',
-    postId: 'p1',
-    authorId: '1',
-    content: 'Count me in! This sounds like a great opportunity.',
-    likes: 5,
-    isLiked: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
-  },
-  {
-    id: 'c2',
-    postId: 'p1',
-    authorId: '4',
-    content: 'Will this be in-person or virtual?',
-    likes: 3,
-    isLiked: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-  },
-];
+// Helper for authenticated fetch
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return fetch(url, { ...options, headers });
+};
 
 interface GroupsState {
   groups: Group[];
@@ -175,6 +39,7 @@ interface GroupsState {
   members: GroupMember[];
   invitations: GroupInvitation[];
   isLoading: boolean;
+  error: string | null;
   filter: {
     type?: Group['type'];
     search?: string;
@@ -204,6 +69,7 @@ interface GroupsActions {
   removeMember: (groupId: string, userId: string) => Promise<void>;
   updateMemberRole: (groupId: string, userId: string, role: GroupMember['role']) => Promise<void>;
   setFilter: (filter: Partial<GroupsState['filter']>) => void;
+  setError: (error: string | null) => void;
 }
 
 type GroupsStore = GroupsState & GroupsActions;
@@ -217,272 +83,562 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
   members: [],
   invitations: [],
   isLoading: false,
+  error: null,
   filter: {},
 
   // Actions
   fetchGroups: async () => {
-    set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    set({ isLoading: true, error: null });
 
-    let filteredGroups = [...mockGroups];
-    const { filter } = get();
+    try {
+      const { filter } = get();
+      const params = new URLSearchParams();
 
-    if (filter.type) {
-      filteredGroups = filteredGroups.filter((g) => g.type === filter.type);
-    }
-    if (filter.search) {
-      const searchLower = filter.search.toLowerCase();
-      filteredGroups = filteredGroups.filter(
-        (g) =>
-          g.name.toLowerCase().includes(searchLower) ||
-          g.description.toLowerCase().includes(searchLower)
-      );
-    }
-    if (filter.joinedOnly) {
-      filteredGroups = filteredGroups.filter((g) => g.isJoined);
-    }
+      if (filter.type) params.append('type', filter.type);
+      if (filter.search) params.append('search', filter.search);
+      if (filter.joinedOnly) params.append('joined', 'true');
 
-    set({ groups: filteredGroups, isLoading: false });
+      const response = await authFetch(`${API_BASE}/groups?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch groups');
+      }
+
+      const data = await response.json();
+
+      // Transform API response to match frontend types
+      const groups: Group[] = (data.groups || []).map((g: any) => ({
+        id: g.id,
+        name: g.name,
+        description: g.description || '',
+        slug: g.slug,
+        type: g.type || 'open',
+        coverImage: g.coverImage,
+        avatar: g.avatar,
+        createdById: g.createdById,
+        mdaId: g.mdaId,
+        memberCount: g.memberCount || 0,
+        postCount: g.postCount || 0,
+        isJoined: g.isJoined || false,
+        isPendingApproval: g.isPendingApproval || false,
+        memberRole: g.memberRole,
+        tags: g.tags || [],
+        isArchived: g.isArchived || false,
+        createdAt: g.createdAt,
+        updatedAt: g.updatedAt,
+      }));
+
+      set({ groups, isLoading: false });
+    } catch (error) {
+      console.error('Failed to fetch groups:', error);
+      set({ error: 'Failed to load groups', isLoading: false });
+    }
   },
 
   fetchGroup: async (id: string) => {
-    set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const group = mockGroups.find((g) => g.id === id);
-    set({ currentGroup: group || null, isLoading: false });
+    set({ isLoading: true, error: null });
+
+    try {
+      const response = await authFetch(`${API_BASE}/groups/${id}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch group');
+      }
+
+      const data = await response.json();
+      const group: Group = {
+        id: data.id,
+        name: data.name,
+        description: data.description || '',
+        slug: data.slug,
+        type: data.type || 'open',
+        coverImage: data.coverImage,
+        avatar: data.avatar,
+        createdById: data.createdById,
+        mdaId: data.mdaId,
+        memberCount: data.memberCount || 0,
+        postCount: data.postCount || 0,
+        isJoined: data.isJoined || false,
+        isPendingApproval: data.isPendingApproval || false,
+        memberRole: data.memberRole,
+        tags: data.tags || [],
+        isArchived: data.isArchived || false,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      };
+
+      set({ currentGroup: group, isLoading: false });
+    } catch (error) {
+      console.error('Failed to fetch group:', error);
+      set({ error: 'Failed to load group', isLoading: false });
+    }
   },
 
   fetchPosts: async (groupId: string) => {
-    set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const posts = mockPosts.filter((p) => p.groupId === groupId);
-    set({ posts, isLoading: false });
+    set({ isLoading: true, error: null });
+
+    try {
+      const response = await authFetch(`${API_BASE}/groups/${groupId}/posts`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch posts');
+      }
+
+      const data = await response.json();
+
+      const posts: GroupPost[] = (data.posts || []).map((p: any) => ({
+        id: p.id,
+        groupId: p.groupId,
+        authorId: p.authorId,
+        authorName: p.authorName,
+        authorAvatar: p.authorAvatar,
+        content: p.content,
+        attachments: p.attachments ? JSON.parse(p.attachments) : [],
+        likes: p.likes || 0,
+        commentCount: p.commentCount || 0,
+        isLiked: p.isLiked || false,
+        isPinned: p.isPinned || false,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+      }));
+
+      set({ posts, isLoading: false });
+    } catch (error) {
+      console.error('Failed to fetch posts:', error);
+      set({ error: 'Failed to load posts', isLoading: false, posts: [] });
+    }
   },
 
   fetchComments: async (postId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    const comments = mockComments.filter((c) => c.postId === postId);
-    set({ comments });
+    try {
+      const response = await authFetch(`${API_BASE}/groups/posts/${postId}/comments`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch comments');
+      }
+
+      const data = await response.json();
+
+      const comments: GroupComment[] = (data.comments || []).map((c: any) => ({
+        id: c.id,
+        postId: c.postId,
+        authorId: c.authorId,
+        authorName: c.authorName,
+        authorAvatar: c.authorAvatar,
+        content: c.content,
+        parentId: c.parentId,
+        likes: c.likes || 0,
+        isLiked: c.isLiked || false,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      }));
+
+      set({ comments });
+    } catch (error) {
+      console.error('Failed to fetch comments:', error);
+    }
   },
 
-  fetchMembers: async (_groupId: string) => {
+  fetchMembers: async (groupId: string) => {
     set({ isLoading: true });
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    // Would fetch actual members
-    set({ members: [], isLoading: false });
+
+    try {
+      const response = await authFetch(`${API_BASE}/groups/${groupId}/members`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch members');
+      }
+
+      const data = await response.json();
+
+      const members: GroupMember[] = (data.members || []).map((m: any) => ({
+        id: m.id,
+        groupId: m.groupId,
+        userId: m.userId,
+        displayName: m.displayName,
+        avatar: m.avatar,
+        role: m.role || 'member',
+        status: m.status || 'active',
+        joinedAt: m.joinedAt,
+      }));
+
+      set({ members, isLoading: false });
+    } catch (error) {
+      console.error('Failed to fetch members:', error);
+      set({ members: [], isLoading: false });
+    }
   },
 
   createGroup: async (data) => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      const response = await authFetch(`${API_BASE}/groups`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
 
-    const newGroup: Group = {
-      id: Date.now().toString(),
-      name: data.name,
-      description: data.description,
-      slug: data.name.toLowerCase().replace(/\s+/g, '-'),
-      type: data.type,
-      createdById: '1',
-      memberCount: 1,
-      postCount: 0,
-      isJoined: true,
-      memberRole: 'owner',
-      tags: data.tags || [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      if (!response.ok) {
+        throw new Error('Failed to create group');
+      }
 
-    set((state) => ({
-      groups: [...state.groups, newGroup],
-    }));
+      const result = await response.json();
 
-    return newGroup;
+      const newGroup: Group = {
+        id: result.id,
+        name: result.name,
+        description: result.description || '',
+        slug: result.slug,
+        type: result.type || 'open',
+        createdById: result.createdById,
+        memberCount: 1,
+        postCount: 0,
+        isJoined: true,
+        memberRole: 'owner',
+        tags: data.tags || [],
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
+      };
+
+      set((state) => ({
+        groups: [...state.groups, newGroup],
+      }));
+
+      return newGroup;
+    } catch (error) {
+      console.error('Failed to create group:', error);
+      throw error;
+    }
   },
 
   updateGroup: async (groupId: string, data: Partial<Group>) => {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    try {
+      const response = await authFetch(`${API_BASE}/groups/${groupId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
 
-    set((state) => ({
-      groups: state.groups.map((g) =>
-        g.id === groupId ? { ...g, ...data, updatedAt: new Date().toISOString() } : g
-      ),
-      currentGroup:
-        state.currentGroup?.id === groupId
-          ? { ...state.currentGroup, ...data, updatedAt: new Date().toISOString() }
-          : state.currentGroup,
-    }));
+      if (!response.ok) {
+        throw new Error('Failed to update group');
+      }
+
+      set((state) => ({
+        groups: state.groups.map((g) =>
+          g.id === groupId ? { ...g, ...data, updatedAt: new Date().toISOString() } : g
+        ),
+        currentGroup:
+          state.currentGroup?.id === groupId
+            ? { ...state.currentGroup, ...data, updatedAt: new Date().toISOString() }
+            : state.currentGroup,
+      }));
+    } catch (error) {
+      console.error('Failed to update group:', error);
+      throw error;
+    }
   },
 
   deleteGroup: async (groupId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    try {
+      const response = await authFetch(`${API_BASE}/groups/${groupId}`, {
+        method: 'DELETE',
+      });
 
-    set((state) => ({
-      groups: state.groups.filter((g) => g.id !== groupId),
-      currentGroup: state.currentGroup?.id === groupId ? null : state.currentGroup,
-    }));
+      if (!response.ok) {
+        throw new Error('Failed to delete group');
+      }
+
+      set((state) => ({
+        groups: state.groups.filter((g) => g.id !== groupId),
+        currentGroup: state.currentGroup?.id === groupId ? null : state.currentGroup,
+      }));
+    } catch (error) {
+      console.error('Failed to delete group:', error);
+      throw error;
+    }
   },
 
   joinGroup: async (groupId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    try {
+      const response = await authFetch(`${API_BASE}/groups/${groupId}/join`, {
+        method: 'POST',
+      });
 
-    set((state) => ({
-      groups: state.groups.map((g) =>
-        g.id === groupId
-          ? { ...g, isJoined: true, memberCount: g.memberCount + 1, memberRole: 'member' as const }
-          : g
-      ),
-      currentGroup:
-        state.currentGroup?.id === groupId
-          ? { ...state.currentGroup, isJoined: true, memberCount: state.currentGroup.memberCount + 1, memberRole: 'member' as const }
-          : state.currentGroup,
-    }));
+      if (!response.ok) {
+        throw new Error('Failed to join group');
+      }
+
+      const result = await response.json();
+      const isPending = result.status === 'pending';
+
+      set((state) => ({
+        groups: state.groups.map((g) =>
+          g.id === groupId
+            ? {
+                ...g,
+                isJoined: !isPending,
+                isPendingApproval: isPending,
+                memberCount: isPending ? g.memberCount : g.memberCount + 1,
+                memberRole: isPending ? undefined : ('member' as const),
+              }
+            : g
+        ),
+        currentGroup:
+          state.currentGroup?.id === groupId
+            ? {
+                ...state.currentGroup,
+                isJoined: !isPending,
+                isPendingApproval: isPending,
+                memberCount: isPending ? state.currentGroup.memberCount : state.currentGroup.memberCount + 1,
+                memberRole: isPending ? undefined : ('member' as const),
+              }
+            : state.currentGroup,
+      }));
+    } catch (error) {
+      console.error('Failed to join group:', error);
+      throw error;
+    }
   },
 
   leaveGroup: async (groupId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    try {
+      const response = await authFetch(`${API_BASE}/groups/${groupId}/leave`, {
+        method: 'POST',
+      });
 
-    set((state) => ({
-      groups: state.groups.map((g) =>
-        g.id === groupId
-          ? { ...g, isJoined: false, memberCount: g.memberCount - 1, memberRole: undefined }
-          : g
-      ),
-      currentGroup:
-        state.currentGroup?.id === groupId
-          ? { ...state.currentGroup, isJoined: false, memberCount: state.currentGroup.memberCount - 1, memberRole: undefined }
-          : state.currentGroup,
-    }));
+      if (!response.ok) {
+        throw new Error('Failed to leave group');
+      }
+
+      set((state) => ({
+        groups: state.groups.map((g) =>
+          g.id === groupId
+            ? { ...g, isJoined: false, memberCount: g.memberCount - 1, memberRole: undefined }
+            : g
+        ),
+        currentGroup:
+          state.currentGroup?.id === groupId
+            ? { ...state.currentGroup, isJoined: false, memberCount: state.currentGroup.memberCount - 1, memberRole: undefined }
+            : state.currentGroup,
+      }));
+    } catch (error) {
+      console.error('Failed to leave group:', error);
+      throw error;
+    }
   },
 
   requestJoin: async (groupId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    set((state) => ({
-      groups: state.groups.map((g) =>
-        g.id === groupId ? { ...g, isPendingApproval: true } : g
-      ),
-      currentGroup:
-        state.currentGroup?.id === groupId
-          ? { ...state.currentGroup, isPendingApproval: true }
-          : state.currentGroup,
-    }));
+    // Uses the same endpoint as joinGroup, but for closed groups it creates a pending request
+    return get().joinGroup(groupId);
   },
 
   createPost: async (groupId: string, content: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    try {
+      const response = await authFetch(`${API_BASE}/groups/${groupId}/posts`, {
+        method: 'POST',
+        body: JSON.stringify({ content }),
+      });
 
-    const newPost: GroupPost = {
-      id: Date.now().toString(),
-      groupId,
-      authorId: '1',
-      content,
-      attachments: [],
-      likes: 0,
-      commentCount: 0,
-      isLiked: false,
-      isPinned: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      if (!response.ok) {
+        throw new Error('Failed to create post');
+      }
 
-    set((state) => ({
-      posts: [newPost, ...state.posts],
-      groups: state.groups.map((g) =>
-        g.id === groupId ? { ...g, postCount: g.postCount + 1 } : g
-      ),
-      currentGroup:
-        state.currentGroup?.id === groupId
-          ? { ...state.currentGroup, postCount: state.currentGroup.postCount + 1 }
-          : state.currentGroup,
-    }));
+      const result = await response.json();
 
-    return newPost;
+      const newPost: GroupPost = {
+        id: result.id,
+        groupId,
+        authorId: result.authorId,
+        content,
+        attachments: [],
+        likes: 0,
+        commentCount: 0,
+        isLiked: false,
+        isPinned: false,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
+      };
+
+      set((state) => ({
+        posts: [newPost, ...state.posts],
+        groups: state.groups.map((g) =>
+          g.id === groupId ? { ...g, postCount: g.postCount + 1 } : g
+        ),
+        currentGroup:
+          state.currentGroup?.id === groupId
+            ? { ...state.currentGroup, postCount: state.currentGroup.postCount + 1 }
+            : state.currentGroup,
+      }));
+
+      return newPost;
+    } catch (error) {
+      console.error('Failed to create post:', error);
+      throw error;
+    }
   },
 
   deletePost: async (postId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
     const post = get().posts.find((p) => p.id === postId);
-    if (!post) return;
 
-    set((state) => ({
-      posts: state.posts.filter((p) => p.id !== postId),
-      groups: state.groups.map((g) =>
-        g.id === post.groupId ? { ...g, postCount: g.postCount - 1 } : g
-      ),
-    }));
+    try {
+      const response = await authFetch(`${API_BASE}/groups/posts/${postId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete post');
+      }
+
+      if (!post) return;
+
+      set((state) => ({
+        posts: state.posts.filter((p) => p.id !== postId),
+        groups: state.groups.map((g) =>
+          g.id === post.groupId ? { ...g, postCount: g.postCount - 1 } : g
+        ),
+      }));
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      throw error;
+    }
   },
 
   likePost: async (postId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
+    // Optimistic update
     set((state) => ({
       posts: state.posts.map((p) =>
         p.id === postId ? { ...p, likes: p.likes + 1, isLiked: true } : p
       ),
     }));
+
+    try {
+      const response = await authFetch(`${API_BASE}/groups/posts/${postId}/like`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        // Revert on failure
+        set((state) => ({
+          posts: state.posts.map((p) =>
+            p.id === postId ? { ...p, likes: p.likes - 1, isLiked: false } : p
+          ),
+        }));
+        throw new Error('Failed to like post');
+      }
+    } catch (error) {
+      console.error('Failed to like post:', error);
+    }
   },
 
   unlikePost: async (postId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
+    // Optimistic update
     set((state) => ({
       posts: state.posts.map((p) =>
         p.id === postId ? { ...p, likes: p.likes - 1, isLiked: false } : p
       ),
     }));
+
+    try {
+      const response = await authFetch(`${API_BASE}/groups/posts/${postId}/like`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        // Revert on failure
+        set((state) => ({
+          posts: state.posts.map((p) =>
+            p.id === postId ? { ...p, likes: p.likes + 1, isLiked: true } : p
+          ),
+        }));
+        throw new Error('Failed to unlike post');
+      }
+    } catch (error) {
+      console.error('Failed to unlike post:', error);
+    }
   },
 
   createComment: async (postId: string, content: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    try {
+      const response = await authFetch(`${API_BASE}/groups/posts/${postId}/comments`, {
+        method: 'POST',
+        body: JSON.stringify({ content }),
+      });
 
-    const newComment: GroupComment = {
-      id: Date.now().toString(),
-      postId,
-      authorId: '1',
-      content,
-      likes: 0,
-      isLiked: false,
-      createdAt: new Date().toISOString(),
-    };
+      if (!response.ok) {
+        throw new Error('Failed to create comment');
+      }
 
-    set((state) => ({
-      comments: [...state.comments, newComment],
-      posts: state.posts.map((p) =>
-        p.id === postId ? { ...p, commentCount: p.commentCount + 1 } : p
-      ),
-    }));
+      const result = await response.json();
 
-    return newComment;
+      const newComment: GroupComment = {
+        id: result.id,
+        postId,
+        authorId: result.authorId,
+        content,
+        likes: 0,
+        isLiked: false,
+        createdAt: result.createdAt,
+      };
+
+      set((state) => ({
+        comments: [...state.comments, newComment],
+        posts: state.posts.map((p) =>
+          p.id === postId ? { ...p, commentCount: p.commentCount + 1 } : p
+        ),
+      }));
+
+      return newComment;
+    } catch (error) {
+      console.error('Failed to create comment:', error);
+      throw error;
+    }
   },
 
   likeComment: async (commentId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
+    // Optimistic update
     set((state) => ({
       comments: state.comments.map((c) =>
         c.id === commentId ? { ...c, likes: c.likes + 1, isLiked: true } : c
       ),
     }));
+
+    try {
+      const response = await authFetch(`${API_BASE}/groups/comments/${commentId}/like`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        // Revert on failure
+        set((state) => ({
+          comments: state.comments.map((c) =>
+            c.id === commentId ? { ...c, likes: c.likes - 1, isLiked: false } : c
+          ),
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to like comment:', error);
+    }
   },
 
   inviteMember: async (_groupId: string, _userId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
     // Would send invitation in real implementation
+    console.log('Invite member not yet implemented');
   },
 
   removeMember: async (_groupId: string, _userId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
     // Would remove member in real implementation
+    console.log('Remove member not yet implemented');
   },
 
   updateMemberRole: async (_groupId: string, _userId: string, _role: GroupMember['role']) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
     // Would update member role in real implementation
+    console.log('Update member role not yet implemented');
   },
 
   setFilter: (filter) => {
     set((state) => ({
       filter: { ...state.filter, ...filter },
     }));
+  },
+
+  setError: (error: string | null) => {
+    set({ error });
   },
 }));
