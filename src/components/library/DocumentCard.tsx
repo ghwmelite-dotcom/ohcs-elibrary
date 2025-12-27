@@ -214,13 +214,13 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
       animate={{ opacity: 1, y: 0 }}
       onClick={handleClick}
       className={cn(
-        "bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 hover:shadow-elevation-2 transition-all group overflow-hidden",
+        "bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 hover:shadow-elevation-2 transition-all group",
         onView && "cursor-pointer"
       )}
     >
       {/* Thumbnail/Header */}
       <div
-        className="h-32 relative flex items-center justify-center"
+        className="h-32 relative flex items-center justify-center rounded-t-xl"
         style={{ backgroundColor: `${category?.color || '#006B3F'}15` }}
       >
         <FileText

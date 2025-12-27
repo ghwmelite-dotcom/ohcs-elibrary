@@ -391,9 +391,9 @@ export const useLibraryStore = create<LibraryStore>()(
         set({ isLoading: true, error: null });
 
         try {
-          // Get auth token from authStore
-          const authState = JSON.parse(localStorage.getItem('auth-storage') || '{}');
-          const token = authState?.state?.token;
+          // Get auth token from authStore (key is 'ohcs-auth-storage', and also check direct 'auth_token')
+          const authState = JSON.parse(localStorage.getItem('ohcs-auth-storage') || '{}');
+          const token = authState?.state?.token || localStorage.getItem('auth_token');
 
           const response = await fetch(`${API_BASE}/documents/${id}`, {
             method: 'DELETE',
