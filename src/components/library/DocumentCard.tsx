@@ -11,6 +11,8 @@ import {
   MoreVertical,
   Share2,
   Lock,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 import type { Document } from '@/types';
 import { useLibraryStore } from '@/stores/libraryStore';
@@ -32,8 +34,10 @@ interface DocumentCardProps {
 }
 
 export function DocumentCard({ document, category, viewMode = 'grid', onView }: DocumentCardProps) {
-  const { bookmarks, bookmarkDocument, removeBookmark } = useLibraryStore();
+  const { bookmarks, bookmarkDocument, removeBookmark, deleteLocalDocument } = useLibraryStore();
   const isBookmarked = bookmarks.some((b) => b.documentId === document.id);
+  const isLocalDocument = document.id.startsWith('local-');
+  const hasExpiredUrl = isLocalDocument && !document.fileUrl?.startsWith('blob:') && !document.fileUrl?.startsWith('data:');
 
   const handleClick = (e: React.MouseEvent) => {
     // Don't trigger if clicking on interactive elements
@@ -60,6 +64,12 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
     secret: 'bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400',
   };
 
+  const handleDelete = () => {
+    if (isLocalDocument && confirm('Delete this local document? This cannot be undone.')) {
+      deleteLocalDocument(document.id);
+    }
+  };
+
   const menuItems = [
     { label: 'Share', icon: Share2, onClick: () => {} },
     { label: 'Download', icon: Download, onClick: () => {} },
@@ -68,6 +78,13 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
       icon: isBookmarked ? BookmarkCheck : Bookmark,
       onClick: handleToggleBookmark,
     },
+    // Add delete option for local documents
+    ...(isLocalDocument ? [{
+      label: 'Delete',
+      icon: Trash2,
+      onClick: handleDelete,
+      className: 'text-error-600 hover:bg-error-50',
+    }] : []),
   ];
 
   if (viewMode === 'list') {
@@ -181,6 +198,14 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
           className="w-12 h-12"
           style={{ color: category?.color || '#006B3F' }}
         />
+
+        {/* Local Document Warning */}
+        {isLocalDocument && (
+          <div className="absolute bottom-2 left-2 right-2 bg-warning-500/90 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+            <span className="truncate">Local only - Re-upload to save</span>
+          </div>
+        )}
 
         {/* Access Level Badge */}
         <span
