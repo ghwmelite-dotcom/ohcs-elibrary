@@ -86,8 +86,7 @@ app.route('/api/v1/documents', documentsRoutes);
 // Apply auth middleware only to specific protected route paths
 app.use('/api/v1/users/*', authMiddleware);
 app.use('/api/v1/bookmarks/*', authMiddleware);
-// Forum, Gamification, and Chat handle their own auth (some endpoints are public)
-app.use('/api/v1/groups/*', authMiddleware);
+// Forum, Gamification, Chat, and Groups handle their own auth (some endpoints are public)
 app.use('/api/v1/news/*', authMiddleware);
 app.use('/api/v1/notifications/*', authMiddleware);
 app.use('/api/v1/admin/*', authMiddleware);

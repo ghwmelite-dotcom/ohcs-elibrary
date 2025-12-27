@@ -12,19 +12,88 @@ const generateSlug = (name: string): string => {
     .replace(/^-|-$/g, '');
 };
 
+// Get group categories
+groups.get('/categories', async (c) => {
+  const db = c.env.DB;
+
+  try {
+    const categories = await db.prepare(`
+      SELECT gc.*, COUNT(g.id) as groupCount
+      FROM group_categories gc
+      LEFT JOIN groups g ON g.categoryId = gc.id AND g.isArchived = 0
+      GROUP BY gc.id
+      ORDER BY gc.sortOrder ASC
+    `).all();
+
+    return c.json({ categories: categories.results || [] });
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return c.json({ error: 'Failed to fetch categories' }, 500);
+  }
+});
+
+// Get group stats
+groups.get('/stats', optionalAuth, async (c) => {
+  const db = c.env.DB;
+  const userId = c.get('user')?.id;
+
+  try {
+    // Get total groups count
+    const totalResult = await db.prepare(`
+      SELECT COUNT(*) as total FROM groups WHERE isArchived = 0
+    `).first();
+
+    // Get my groups count (if authenticated)
+    let myGroupsCount = 0;
+    if (userId) {
+      const myResult = await db.prepare(`
+        SELECT COUNT(*) as count FROM group_members WHERE userId = ? AND status = 'active'
+      `).bind(userId).first();
+      myGroupsCount = (myResult?.count as number) || 0;
+    }
+
+    // Get trending (groups with most recent activity)
+    const trendingResult = await db.prepare(`
+      SELECT COUNT(*) as count FROM groups
+      WHERE isArchived = 0
+      AND updatedAt >= datetime('now', '-7 days')
+    `).first();
+
+    // Get new this week
+    const newThisWeekResult = await db.prepare(`
+      SELECT COUNT(*) as count FROM groups
+      WHERE isArchived = 0
+      AND createdAt >= datetime('now', '-7 days')
+    `).first();
+
+    return c.json({
+      totalGroups: (totalResult?.total as number) || 0,
+      myGroups: myGroupsCount,
+      trending: (trendingResult?.count as number) || 0,
+      newThisWeek: (newThisWeekResult?.count as number) || 0,
+    });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    return c.json({ error: 'Failed to fetch stats' }, 500);
+  }
+});
+
 // Get all groups (public, with optional auth for joined status)
 groups.get('/', optionalAuth, async (c) => {
   const db = c.env.DB;
-  const userId = c.get('userId');
-  const { type, search, joined } = c.req.query();
+  const userId = c.get('user')?.id;
+  const { type, search, joined, category } = c.req.query();
 
   try {
     let query = `
       SELECT
         g.*,
+        gc.name as categoryName,
+        gc.icon as categoryIcon,
         GROUP_CONCAT(gt.tag) as tags
       FROM groups g
       LEFT JOIN group_tags gt ON g.id = gt.groupId
+      LEFT JOIN group_categories gc ON g.categoryId = gc.id
       WHERE g.isArchived = 0
     `;
     const params: any[] = [];
@@ -32,6 +101,11 @@ groups.get('/', optionalAuth, async (c) => {
     if (type) {
       query += ` AND g.type = ?`;
       params.push(type);
+    }
+
+    if (category) {
+      query += ` AND g.categoryId = ?`;
+      params.push(category);
     }
 
     if (search) {
@@ -60,32 +134,39 @@ groups.get('/', optionalAuth, async (c) => {
       }, {});
     }
 
-    // Transform results
-    let results = (groups.results || []).map((g: any) => ({
-      id: g.id,
-      name: g.name,
-      description: g.description,
-      slug: g.slug,
-      type: g.type,
-      coverImage: g.coverImage,
-      avatar: g.avatar,
-      createdById: g.createdById,
-      memberCount: g.memberCount || 0,
-      postCount: g.postCount || 0,
-      tags: g.tags ? g.tags.split(',') : [],
-      isJoined: membershipMap[g.id]?.isJoined || false,
-      memberRole: membershipMap[g.id]?.memberRole,
-      isPendingApproval: membershipMap[g.id]?.isPendingApproval || false,
-      createdAt: g.createdAt,
-      updatedAt: g.updatedAt,
-    }));
+    // Transform results - coverImage might contain a color value (starts with #)
+    let results = (groups.results || []).map((g: any) => {
+      const isColorValue = g.coverImage?.startsWith('#');
+      return {
+        id: g.id,
+        name: g.name,
+        description: g.description,
+        slug: g.slug,
+        type: g.type,
+        categoryId: g.categoryId,
+        categoryName: g.categoryName,
+        categoryIcon: g.categoryIcon,
+        coverImage: isColorValue ? null : g.coverImage,
+        coverColor: isColorValue ? g.coverImage : null,
+        avatar: g.avatar,
+        createdById: g.createdById,
+        memberCount: g.memberCount || 0,
+        postCount: g.postCount || 0,
+        tags: g.tags ? g.tags.split(',') : [],
+        isJoined: membershipMap[g.id]?.isJoined || false,
+        memberRole: membershipMap[g.id]?.memberRole,
+        isPendingApproval: membershipMap[g.id]?.isPendingApproval || false,
+        createdAt: g.createdAt,
+        updatedAt: g.updatedAt,
+      };
+    });
 
     // Filter by joined if requested
     if (joined === 'true' && userId) {
       results = results.filter((g: any) => g.isJoined);
     }
 
-    return c.json(results);
+    return c.json({ groups: results });
   } catch (error) {
     console.error('Error fetching groups:', error);
     return c.json({ error: 'Failed to fetch groups' }, 500);
@@ -96,7 +177,7 @@ groups.get('/', optionalAuth, async (c) => {
 groups.get('/:id', optionalAuth, async (c) => {
   const db = c.env.DB;
   const groupId = c.req.param('id');
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
 
   try {
     const group = await db.prepare(`
@@ -119,13 +200,15 @@ groups.get('/:id', optionalAuth, async (c) => {
       `).bind(groupId, userId).first();
     }
 
+    const isColorValue = (group.coverImage as string)?.startsWith('#');
     return c.json({
       id: group.id,
       name: group.name,
       description: group.description,
       slug: group.slug,
       type: group.type,
-      coverImage: group.coverImage,
+      coverImage: isColorValue ? null : group.coverImage,
+      coverColor: isColorValue ? group.coverImage : null,
       avatar: group.avatar,
       createdById: group.createdById,
       memberCount: group.memberCount || 0,
@@ -146,12 +229,17 @@ groups.get('/:id', optionalAuth, async (c) => {
 // Create group (requires auth)
 groups.post('/', authMiddleware, async (c) => {
   const db = c.env.DB;
-  const userId = c.get('userId');
+  const user = c.get('user');
+  const userId = user?.id;
   const body = await c.req.json();
-  const { name, description, type, tags } = body;
+  const { name, description, type, categoryId, tags, coverColor } = body;
 
   if (!name) {
     return c.json({ error: 'Group name is required' }, 400);
+  }
+
+  if (!userId) {
+    return c.json({ error: 'User not authenticated' }, 401);
   }
 
   try {
@@ -164,17 +252,27 @@ groups.post('/', authMiddleware, async (c) => {
       slug = `${slug}-${Date.now().toString(36)}`;
     }
 
-    // Create the group
+    // Create the group - ensure no undefined values (D1 requires null, not undefined)
     await db.prepare(`
-      INSERT INTO groups (id, name, description, slug, type, createdById, memberCount)
-      VALUES (?, ?, ?, ?, ?, ?, 1)
-    `).bind(groupId, name, description || '', slug, type || 'open', userId, 1).run();
+      INSERT INTO groups (id, name, description, slug, type, categoryId, coverImage, createdById, memberCount)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+    `).bind(
+      groupId,
+      name,
+      description ?? '',
+      slug,
+      type ?? 'open',
+      categoryId ?? null,
+      coverColor ?? null,
+      userId
+    ).run();
 
     // Add creator as owner
+    const memberId = `gm-${Date.now().toString(36)}`;
     await db.prepare(`
-      INSERT INTO group_members (groupId, userId, role, status)
-      VALUES (?, ?, 'owner', 'active')
-    `).bind(groupId, userId).run();
+      INSERT INTO group_members (id, groupId, userId, role, status)
+      VALUES (?, ?, ?, 'owner', 'active')
+    `).bind(memberId, groupId, userId).run();
 
     // Add tags
     if (tags && Array.isArray(tags)) {
@@ -194,9 +292,13 @@ groups.post('/', authMiddleware, async (c) => {
       isJoined: true,
       memberRole: 'owner',
     }, 201);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating group:', error);
-    return c.json({ error: 'Failed to create group' }, 500);
+    return c.json({
+      error: 'Failed to create group',
+      details: error?.message || 'Unknown error',
+      cause: error?.cause?.message
+    }, 500);
   }
 });
 
@@ -204,7 +306,7 @@ groups.post('/', authMiddleware, async (c) => {
 groups.put('/:id', authMiddleware, async (c) => {
   const db = c.env.DB;
   const groupId = c.req.param('id');
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
   const body = await c.req.json();
 
   try {
@@ -260,7 +362,7 @@ groups.put('/:id', authMiddleware, async (c) => {
 groups.post('/:id/join', authMiddleware, async (c) => {
   const db = c.env.DB;
   const groupId = c.req.param('id');
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
 
   try {
     const group = await db.prepare(`SELECT * FROM groups WHERE id = ? AND isArchived = 0`).bind(groupId).first();
@@ -280,10 +382,11 @@ groups.post('/:id/join', authMiddleware, async (c) => {
     // Determine status based on group type
     const status = group.type === 'open' || group.type === 'official' ? 'active' : 'pending';
 
+    const joinMemberId = `gm-${Date.now().toString(36)}`;
     await db.prepare(`
-      INSERT INTO group_members (groupId, userId, role, status)
-      VALUES (?, ?, 'member', ?)
-    `).bind(groupId, userId, status).run();
+      INSERT INTO group_members (id, groupId, userId, role, status)
+      VALUES (?, ?, ?, 'member', ?)
+    `).bind(joinMemberId, groupId, userId, status).run();
 
     // Update member count only if active
     if (status === 'active') {
@@ -305,7 +408,7 @@ groups.post('/:id/join', authMiddleware, async (c) => {
 groups.post('/:id/leave', authMiddleware, async (c) => {
   const db = c.env.DB;
   const groupId = c.req.param('id');
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
 
   try {
     const membership = await db.prepare(`
@@ -343,7 +446,7 @@ groups.get('/:id/members', optionalAuth, async (c) => {
     const members = await db.prepare(`
       SELECT
         gm.id, gm.userId, gm.role, gm.status, gm.joinedAt,
-        u.displayName, u.firstName, u.lastName, u.avatar, u.title
+        u.displayName, u.firstName, u.lastName, u.avatar
       FROM group_members gm
       LEFT JOIN users u ON gm.userId = u.id
       WHERE gm.groupId = ? AND gm.status = 'active'
@@ -357,17 +460,16 @@ groups.get('/:id/members', optionalAuth, async (c) => {
         gm.joinedAt ASC
     `).bind(groupId).all();
 
-    return c.json((members.results || []).map((m: any) => ({
+    return c.json({ members: (members.results || []).map((m: any) => ({
       id: m.userId,
       displayName: m.displayName || `${m.firstName || ''} ${m.lastName || ''}`.trim() || 'User',
       avatar: m.avatar,
-      title: m.title,
       role: m.role,
       joinedAt: m.joinedAt,
-    })));
-  } catch (error) {
+    })) });
+  } catch (error: any) {
     console.error('Error fetching members:', error);
-    return c.json({ error: 'Failed to fetch members' }, 500);
+    return c.json({ error: 'Failed to fetch members', details: error?.message || String(error) }, 500);
   }
 });
 
@@ -375,7 +477,7 @@ groups.get('/:id/members', optionalAuth, async (c) => {
 groups.get('/:id/posts', optionalAuth, async (c) => {
   const db = c.env.DB;
   const groupId = c.req.param('id');
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
 
   try {
     const posts = await db.prepare(`
@@ -388,12 +490,41 @@ groups.get('/:id/posts', optionalAuth, async (c) => {
       ORDER BY p.isPinned DESC, p.createdAt DESC
     `).bind(groupId).all();
 
-    // Get like status for each post if user is authenticated
+    const postIds = (posts.results || []).map((p: any) => p.id);
+
+    // Get reactions for all posts
+    let reactionsMap: Record<string, any[]> = {};
+    if (postIds.length > 0) {
+      const reactions = await db.prepare(`
+        SELECT postId, emoji, userId FROM group_post_reactions
+        WHERE postId IN (${postIds.map(() => '?').join(',')})
+      `).bind(...postIds).all();
+
+      // Group reactions by post and emoji
+      (reactions.results || []).forEach((r: any) => {
+        if (!reactionsMap[r.postId]) reactionsMap[r.postId] = [];
+        const existing = reactionsMap[r.postId].find((e: any) => e.emoji === r.emoji);
+        if (existing) {
+          existing.count++;
+          existing.users.push(r.userId);
+          if (r.userId === userId) existing.hasReacted = true;
+        } else {
+          reactionsMap[r.postId].push({
+            emoji: r.emoji,
+            count: 1,
+            users: [r.userId],
+            hasReacted: r.userId === userId,
+          });
+        }
+      });
+    }
+
+    // Get like status for each post if user is authenticated (legacy support)
     let likeMap: Record<string, boolean> = {};
-    if (userId) {
+    if (userId && postIds.length > 0) {
       const likes = await db.prepare(`
-        SELECT postId FROM group_post_likes WHERE userId = ? AND postId IN (${(posts.results || []).map(() => '?').join(',')})
-      `).bind(userId, ...(posts.results || []).map((p: any) => p.id)).all();
+        SELECT postId FROM group_post_likes WHERE userId = ? AND postId IN (${postIds.map(() => '?').join(',')})
+      `).bind(userId, ...postIds).all();
 
       likeMap = (likes.results || []).reduce((acc: any, l: any) => {
         acc[l.postId] = true;
@@ -401,7 +532,7 @@ groups.get('/:id/posts', optionalAuth, async (c) => {
       }, {});
     }
 
-    return c.json((posts.results || []).map((p: any) => ({
+    return c.json({ posts: (posts.results || []).map((p: any) => ({
       id: p.id,
       groupId: p.groupId,
       authorId: p.authorId,
@@ -413,9 +544,10 @@ groups.get('/:id/posts', optionalAuth, async (c) => {
       commentCount: p.commentCount || 0,
       isLiked: likeMap[p.id] || false,
       isPinned: p.isPinned === 1,
+      reactions: reactionsMap[p.id] || [],
       createdAt: p.createdAt,
       updatedAt: p.updatedAt,
-    })));
+    })) });
   } catch (error) {
     console.error('Error fetching posts:', error);
     return c.json({ error: 'Failed to fetch posts' }, 500);
@@ -426,7 +558,7 @@ groups.get('/:id/posts', optionalAuth, async (c) => {
 groups.post('/:id/posts', authMiddleware, async (c) => {
   const db = c.env.DB;
   const groupId = c.req.param('id');
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
   const body = await c.req.json();
   const { content, attachments } = body;
 
@@ -487,7 +619,7 @@ groups.post('/:id/posts', authMiddleware, async (c) => {
 groups.post('/posts/:postId/like', authMiddleware, async (c) => {
   const db = c.env.DB;
   const postId = c.req.param('postId');
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
 
   try {
     // Check if already liked
@@ -516,7 +648,7 @@ groups.post('/posts/:postId/like', authMiddleware, async (c) => {
 groups.get('/posts/:postId/comments', optionalAuth, async (c) => {
   const db = c.env.DB;
   const postId = c.req.param('postId');
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
 
   try {
     const comments = await db.prepare(`
@@ -542,7 +674,7 @@ groups.get('/posts/:postId/comments', optionalAuth, async (c) => {
       }, {});
     }
 
-    return c.json((comments.results || []).map((c: any) => ({
+    return c.json({ comments: (comments.results || []).map((c: any) => ({
       id: c.id,
       postId: c.postId,
       authorId: c.authorId,
@@ -553,7 +685,7 @@ groups.get('/posts/:postId/comments', optionalAuth, async (c) => {
       likes: c.likes || 0,
       isLiked: likeMap[c.id] || false,
       createdAt: c.createdAt,
-    })));
+    })) });
   } catch (error) {
     console.error('Error fetching comments:', error);
     return c.json({ error: 'Failed to fetch comments' }, 500);
@@ -564,7 +696,7 @@ groups.get('/posts/:postId/comments', optionalAuth, async (c) => {
 groups.post('/posts/:postId/comments', authMiddleware, async (c) => {
   const db = c.env.DB;
   const postId = c.req.param('postId');
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
   const body = await c.req.json();
   const { content, parentId } = body;
 
@@ -613,7 +745,7 @@ groups.post('/posts/:postId/comments', authMiddleware, async (c) => {
 groups.delete('/posts/:postId', authMiddleware, async (c) => {
   const db = c.env.DB;
   const postId = c.req.param('postId');
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
 
   try {
     const post = await db.prepare(`SELECT * FROM group_posts WHERE id = ?`).bind(postId).first();
@@ -637,6 +769,176 @@ groups.delete('/posts/:postId', authMiddleware, async (c) => {
   } catch (error) {
     console.error('Error deleting post:', error);
     return c.json({ error: 'Failed to delete post' }, 500);
+  }
+});
+
+// Upload file for group post
+groups.post('/:id/upload', authMiddleware, async (c) => {
+  const db = c.env.DB;
+  const DOCUMENTS = c.env.DOCUMENTS;
+  const groupId = c.req.param('id');
+  const userId = c.get('user')?.id;
+
+  try {
+    // Check if user is a member
+    const membership = await db.prepare(`
+      SELECT role FROM group_members WHERE groupId = ? AND userId = ? AND status = 'active'
+    `).bind(groupId, userId).first();
+
+    if (!membership) {
+      return c.json({ error: 'Must be a member to upload files' }, 403);
+    }
+
+    const formData = await c.req.formData();
+    const file = formData.get('file') as File;
+
+    if (!file) {
+      return c.json({ error: 'No file provided' }, 400);
+    }
+
+    // Validate file size (10MB max for images, 50MB for other files)
+    const maxSize = file.type.startsWith('image/') ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return c.json({ error: `File too large. Max size: ${maxSize / 1024 / 1024}MB` }, 400);
+    }
+
+    // Generate unique filename
+    const ext = file.name.split('.').pop() || 'bin';
+    const fileName = `${crypto.randomUUID()}.${ext}`;
+    const fileKey = `groups/${groupId}/${fileName}`;
+
+    // Upload to R2
+    const arrayBuffer = await file.arrayBuffer();
+    await DOCUMENTS.put(fileKey, arrayBuffer, {
+      httpMetadata: {
+        contentType: file.type,
+      },
+    });
+
+    // Determine attachment type
+    let attachmentType = 'file';
+    if (file.type.startsWith('image/')) attachmentType = 'image';
+    else if (file.type.startsWith('audio/')) attachmentType = 'audio';
+    else if (file.type.startsWith('video/')) attachmentType = 'video';
+
+    return c.json({
+      url: fileKey,
+      name: file.name,
+      size: file.size,
+      type: attachmentType,
+      mimeType: file.type,
+    });
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    return c.json({ error: 'Failed to upload file' }, 500);
+  }
+});
+
+// Toggle post reaction
+groups.post('/posts/:postId/reactions', authMiddleware, async (c) => {
+  const db = c.env.DB;
+  const postId = c.req.param('postId');
+  const userId = c.get('user')?.id;
+  const body = await c.req.json();
+  const { emoji } = body;
+
+  if (!emoji) {
+    return c.json({ error: 'Emoji is required' }, 400);
+  }
+
+  try {
+    // Check if post exists
+    const post = await db.prepare(`SELECT groupId FROM group_posts WHERE id = ? AND isDeleted = 0`).bind(postId).first();
+    if (!post) {
+      return c.json({ error: 'Post not found' }, 404);
+    }
+
+    // Check existing reaction
+    const existing = await db.prepare(`
+      SELECT id FROM group_post_reactions WHERE postId = ? AND userId = ? AND emoji = ?
+    `).bind(postId, userId, emoji).first();
+
+    if (existing) {
+      // Remove reaction
+      await db.prepare(`DELETE FROM group_post_reactions WHERE id = ?`).bind(existing.id).run();
+      return c.json({ action: 'removed', emoji });
+    } else {
+      // Add reaction
+      const reactionId = `reaction-${Date.now().toString(36)}`;
+      await db.prepare(`
+        INSERT INTO group_post_reactions (id, postId, userId, emoji) VALUES (?, ?, ?, ?)
+      `).bind(reactionId, postId, userId, emoji).run();
+      return c.json({ action: 'added', emoji });
+    }
+  } catch (error) {
+    console.error('Error toggling reaction:', error);
+    return c.json({ error: 'Failed to toggle reaction' }, 500);
+  }
+});
+
+// Toggle comment reaction
+groups.post('/comments/:commentId/reactions', authMiddleware, async (c) => {
+  const db = c.env.DB;
+  const commentId = c.req.param('commentId');
+  const userId = c.get('user')?.id;
+  const body = await c.req.json();
+  const { emoji } = body;
+
+  if (!emoji) {
+    return c.json({ error: 'Emoji is required' }, 400);
+  }
+
+  try {
+    // Check if comment exists
+    const comment = await db.prepare(`SELECT id FROM group_comments WHERE id = ? AND isDeleted = 0`).bind(commentId).first();
+    if (!comment) {
+      return c.json({ error: 'Comment not found' }, 404);
+    }
+
+    // Check existing reaction
+    const existing = await db.prepare(`
+      SELECT id FROM group_comment_reactions WHERE commentId = ? AND userId = ? AND emoji = ?
+    `).bind(commentId, userId, emoji).first();
+
+    if (existing) {
+      // Remove reaction
+      await db.prepare(`DELETE FROM group_comment_reactions WHERE id = ?`).bind(existing.id).run();
+      return c.json({ action: 'removed', emoji });
+    } else {
+      // Add reaction
+      const reactionId = `reaction-${Date.now().toString(36)}`;
+      await db.prepare(`
+        INSERT INTO group_comment_reactions (id, commentId, userId, emoji) VALUES (?, ?, ?, ?)
+      `).bind(reactionId, commentId, userId, emoji).run();
+      return c.json({ action: 'added', emoji });
+    }
+  } catch (error) {
+    console.error('Error toggling comment reaction:', error);
+    return c.json({ error: 'Failed to toggle reaction' }, 500);
+  }
+});
+
+// Get file from R2 (for group attachments)
+groups.get('/files/:groupId/:fileName', async (c) => {
+  const DOCUMENTS = c.env.DOCUMENTS;
+  const groupId = c.req.param('groupId');
+  const fileName = c.req.param('fileName');
+  const fileKey = `groups/${groupId}/${fileName}`;
+
+  try {
+    const object = await DOCUMENTS.get(fileKey);
+    if (!object) {
+      return c.json({ error: 'File not found' }, 404);
+    }
+
+    const headers = new Headers();
+    object.writeHttpMetadata(headers);
+    headers.set('etag', object.httpEtag);
+
+    return new Response(object.body, { headers });
+  } catch (error) {
+    console.error('Error fetching file:', error);
+    return c.json({ error: 'Failed to fetch file' }, 500);
   }
 });
 

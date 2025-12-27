@@ -119,22 +119,35 @@ export function GroupList({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-        <div className="flex-1">
-          <Input
-            placeholder="Search groups..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            leftIcon={<Search className="w-5 h-5" />}
-          />
+      <div className="flex flex-col gap-3">
+        {/* Search Row */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <Input
+              placeholder="Search groups..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              leftIcon={<Search className="w-5 h-5" />}
+            />
+          </div>
+
+          {/* Create Group Button - Icon only on mobile */}
+          <Button
+            onClick={onCreateGroup}
+            leftIcon={<Plus className="w-5 h-5" />}
+            className="flex-shrink-0"
+          >
+            <span className="hidden sm:inline">Create Group</span>
+          </Button>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Filter Row */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 -mb-1">
           {/* Filter Dropdown */}
           <Dropdown
             items={filterOptions.map((opt) => ({
@@ -145,11 +158,12 @@ export function GroupList({
                 setCurrentPage(1);
               },
             }))}
-            align="right"
+            align="left"
           >
-            <button className="px-4 py-2.5 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-2">
+            <button className="px-3 py-2 sm:px-4 sm:py-2.5 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg text-xs sm:text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5 sm:gap-2 whitespace-nowrap flex-shrink-0">
               <Filter className="w-4 h-4" />
-              {filterOptions.find((o) => o.value === filterBy)?.label}
+              <span className="hidden xs:inline">{filterOptions.find((o) => o.value === filterBy)?.label}</span>
+              <span className="xs:hidden">Filter</span>
             </button>
           </Dropdown>
 
@@ -159,48 +173,47 @@ export function GroupList({
               label: opt.label,
               onClick: () => setSortBy(opt.value as SortOption),
             }))}
-            align="right"
+            align="left"
           >
-            <button className="px-4 py-2.5 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-2">
-              {sortOptions.find((o) => o.value === sortBy)?.label}
+            <button className="px-3 py-2 sm:px-4 sm:py-2.5 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg text-xs sm:text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5 sm:gap-2 whitespace-nowrap flex-shrink-0">
+              <span className="hidden xs:inline">{sortOptions.find((o) => o.value === sortBy)?.label}</span>
+              <span className="xs:hidden">Sort</span>
             </button>
           </Dropdown>
 
+          {/* Spacer */}
+          <div className="flex-1" />
+
           {/* View Mode Toggle */}
-          <div className="flex items-center bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg overflow-hidden">
+          <div className="flex items-center bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg overflow-hidden flex-shrink-0">
             <button
               onClick={() => setViewMode('grid')}
               className={cn(
-                'p-2.5 transition-colors',
+                'p-2 sm:p-2.5 transition-colors',
                 viewMode === 'grid'
                   ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
                   : 'text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-700'
               )}
             >
-              <Grid3X3 className="w-5 h-5" />
+              <Grid3X3 className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <button
               onClick={() => setViewMode('list')}
               className={cn(
-                'p-2.5 transition-colors',
+                'p-2 sm:p-2.5 transition-colors',
                 viewMode === 'list'
                   ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
                   : 'text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-700'
               )}
             >
-              <List className="w-5 h-5" />
+              <List className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
-
-          {/* Create Group Button */}
-          <Button onClick={onCreateGroup} leftIcon={<Plus className="w-5 h-5" />}>
-            Create Group
-          </Button>
         </div>
       </div>
 
       {/* Results Info */}
-      <div className="text-sm text-surface-500">
+      <div className="text-xs sm:text-sm text-surface-500">
         Showing {paginatedGroups.length} of {filteredGroups.length} groups
       </div>
 
@@ -224,7 +237,7 @@ export function GroupList({
           }
         />
       ) : viewMode === 'grid' ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {paginatedGroups.map((group, index) => (
             <GroupCard
               key={group.id}
@@ -236,7 +249,7 @@ export function GroupList({
           ))}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {paginatedGroups.map((group) => (
             <GroupCardCompact
               key={group.id}

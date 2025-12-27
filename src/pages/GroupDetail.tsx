@@ -22,7 +22,8 @@ import {
   Shield,
 } from 'lucide-react';
 import { useGroupsStore } from '@/stores/groupsStore';
-import { GroupPost, MemberList } from '@/components/groups';
+import { useAuthStore } from '@/stores/authStore';
+import { GroupPost, MemberList, PostComposer } from '@/components/groups';
 import { Avatar, AvatarGroup } from '@/components/shared/Avatar';
 import { Button } from '@/components/shared/Button';
 import { Tabs } from '@/components/shared/Tabs';
@@ -33,40 +34,102 @@ import { cn } from '@/utils/cn';
 import { formatDate } from '@/utils/formatters';
 
 export default function GroupDetail() {
-  const { id } = useParams<{ id: string }>();
+  const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
-  const { groups, posts, members, fetchGroupById, fetchGroupPosts, fetchGroupMembers, joinGroup, leaveGroup, isLoading } = useGroupsStore();
+  const { user } = useAuthStore();
+  const {
+    groups,
+    currentGroup,
+    posts,
+    comments,
+    members,
+    fetchGroup,
+    fetchPosts,
+    fetchMembers,
+    fetchComments,
+    joinGroup,
+    leaveGroup,
+    createPost,
+    createComment,
+    likePost,
+    unlikePost,
+    toggleReaction,
+    toggleCommentReaction,
+  } = useGroupsStore();
 
   const [activeTab, setActiveTab] = useState('posts');
-  const [postContent, setPostContent] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
 
-  const group = groups.find((g) => g.id === id);
-  const groupPosts = posts.filter((p) => p.groupId === id);
-  const groupMembers = members.filter((m) => m.groupId === id);
+  // Use currentGroup if it matches the groupId, otherwise look in groups array
+  const group = currentGroup?.id === groupId ? currentGroup : groups.find((g) => g.id === groupId);
+  const groupPosts = posts.filter((p) => p.groupId === groupId);
+  const groupMembers = members;
 
   useEffect(() => {
-    if (id) {
-      fetchGroupById(id);
-      fetchGroupPosts(id);
-      fetchGroupMembers(id);
-    }
-  }, [id, fetchGroupById, fetchGroupPosts, fetchGroupMembers]);
+    if (!groupId) return;
 
-  const handleCreatePost = async () => {
-    if (!postContent.trim()) return;
-    setIsSubmitting(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Create post:', postContent);
-      setPostContent('');
-    } finally {
-      setIsSubmitting(false);
+    let isMounted = true;
+    setLoading(true);
+
+    const load = async () => {
+      try {
+        await fetchGroup(groupId);
+      } catch (e) { /* ignore */ }
+      try {
+        await fetchPosts(groupId);
+      } catch (e) { /* ignore */ }
+      try {
+        await fetchMembers(groupId);
+      } catch (e) { /* ignore */ }
+
+      if (isMounted) {
+        setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [groupId]);
+
+  const handleCreatePost = async (content: string, attachments?: any[]) => {
+    if (!groupId) return;
+    await createPost(groupId, content, attachments);
+  };
+
+  const handleExpandComments = async (postId: string) => {
+    if (!expandedPosts.has(postId)) {
+      await fetchComments(postId);
+      setExpandedPosts((prev) => new Set(prev).add(postId));
     }
   };
 
-  if (isLoading && !group) {
+  const handleLike = async (postId: string, isLiked: boolean) => {
+    if (isLiked) {
+      await unlikePost(postId);
+    } else {
+      await likePost(postId);
+    }
+  };
+
+  const handleReaction = async (postId: string, emoji: string) => {
+    await toggleReaction(postId, emoji);
+  };
+
+  const handleCommentReaction = async (commentId: string, emoji: string) => {
+    await toggleCommentReaction(commentId, emoji);
+  };
+
+  const handleCreateComment = async (postId: string, content: string) => {
+    await createComment(postId, content);
+  };
+
+  // Show loading skeleton while loading
+  if (loading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-48 rounded-xl" />
@@ -76,6 +139,7 @@ export default function GroupDetail() {
     );
   }
 
+  // Only show "not found" after load completes and group is still missing
   if (!group) {
     return (
       <div className="text-center py-16">
@@ -109,10 +173,13 @@ export default function GroupDetail() {
     { id: 'events', label: 'Events', icon: <Calendar className="w-4 h-4" /> },
   ];
 
+  const isAdmin = group.memberRole === 'admin' || group.memberRole === 'owner';
+  const currentUserId = user?.id || 'current-user';
+
   const menuItems = [
-    { label: group.isMuted ? 'Unmute' : 'Mute', icon: group.isMuted ? Bell : BellOff, onClick: () => {} },
+    { label: 'Mute', icon: BellOff, onClick: () => {} },
     { label: 'Share Group', icon: Share2, onClick: () => {} },
-    ...(group.isAdmin
+    ...(isAdmin
       ? [{ label: 'Group Settings', icon: Settings, onClick: () => {} }]
       : []),
     {
@@ -144,8 +211,8 @@ export default function GroupDetail() {
         <div
           className="h-48 relative"
           style={{
-            backgroundColor: group.coverColor || '#006B3F',
-            backgroundImage: group.coverImage ? `url(${group.coverImage})` : undefined,
+            backgroundColor: group.coverColor || (group.coverImage?.startsWith('#') ? group.coverImage : '#006B3F'),
+            backgroundImage: group.coverImage && !group.coverImage.startsWith('#') ? `url(${group.coverImage})` : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
@@ -199,7 +266,7 @@ export default function GroupDetail() {
 
             {/* Actions */}
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              {group.isMember ? (
+              {group.isJoined ? (
                 <>
                   <Button
                     variant="outline"
@@ -225,9 +292,10 @@ export default function GroupDetail() {
           {/* Member Avatars */}
           <div className="mt-4 flex items-center gap-3">
             <AvatarGroup
-              avatars={groupMembers.slice(0, 6).map((m) => ({
-                src: m.avatar,
-                name: m.name,
+              users={groupMembers.slice(0, 6).map((m) => ({
+                id: m.id,
+                name: m.displayName || 'Member',
+                avatar: m.avatar,
               }))}
               max={6}
               size="sm"
@@ -250,44 +318,13 @@ export default function GroupDetail() {
         <div className="lg:col-span-2 space-y-6">
           {activeTab === 'posts' && (
             <>
-              {/* Create Post */}
-              {group.isMember && (
-                <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-4">
-                  <div className="flex gap-3">
-                    <Avatar size="md" />
-                    <div className="flex-1">
-                      <textarea
-                        value={postContent}
-                        onChange={(e) => setPostContent(e.target.value)}
-                        placeholder="Share something with the group..."
-                        className={cn(
-                          'w-full px-4 py-3 bg-surface-100 dark:bg-surface-700 rounded-xl',
-                          'text-surface-900 dark:text-surface-50 placeholder:text-surface-400',
-                          'focus:outline-none focus:ring-2 focus:ring-primary-500',
-                          'resize-none min-h-[100px]'
-                        )}
-                      />
-                      <div className="flex items-center justify-between mt-3">
-                        <div className="flex items-center gap-2">
-                          <button className="p-2 text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-600 rounded-lg transition-colors">
-                            <ImageIcon className="w-5 h-5" />
-                          </button>
-                          <button className="p-2 text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-600 rounded-lg transition-colors">
-                            <File className="w-5 h-5" />
-                          </button>
-                        </div>
-                        <Button
-                          onClick={handleCreatePost}
-                          isLoading={isSubmitting}
-                          disabled={!postContent.trim()}
-                          rightIcon={<Send className="w-4 h-4" />}
-                        >
-                          Post
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {/* Create Post with PostComposer */}
+              {group.isJoined && groupId && (
+                <PostComposer
+                  groupId={groupId}
+                  onSubmit={handleCreatePost}
+                  placeholder="Share something with the group..."
+                />
               )}
 
               {/* Posts */}
@@ -300,17 +337,25 @@ export default function GroupDetail() {
                     </p>
                   </div>
                 ) : (
-                  groupPosts.map((post) => (
-                    <GroupPost
-                      key={post.id}
-                      post={post}
-                      isOwnPost={post.author.id === 'current-user'}
-                      isPinned={post.isPinned}
-                      onLike={() => console.log('Like:', post.id)}
-                      onComment={(content) => console.log('Comment:', post.id, content)}
-                      onShare={() => console.log('Share:', post.id)}
-                    />
-                  ))
+                  groupPosts.map((post) => {
+                    const postComments = comments.filter((c) => c.postId === post.id);
+                    return (
+                      <GroupPost
+                        key={post.id}
+                        post={post}
+                        comments={postComments}
+                        isOwnPost={post.authorId === currentUserId}
+                        isPinned={post.isPinned}
+                        onLike={() => handleLike(post.id, post.isLiked)}
+                        onReact={(emoji) => handleReaction(post.id, emoji)}
+                        onComment={(content) => handleCreateComment(post.id, content)}
+                        onCommentReact={(commentId, emoji) => handleCommentReaction(commentId, emoji)}
+                        onShare={() => {
+                          navigator.clipboard.writeText(`${window.location.origin}/groups/${groupId}/posts/${post.id}`);
+                        }}
+                      />
+                    );
+                  })
                 )}
               </div>
             </>
@@ -320,8 +365,8 @@ export default function GroupDetail() {
             <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
               <MemberList
                 members={groupMembers}
-                isAdmin={group.isAdmin}
-                currentUserId="current-user"
+                isAdmin={isAdmin}
+                currentUserId={currentUserId}
                 onMessage={(memberId) => navigate(`/messages/${memberId}`)}
               />
             </div>
@@ -394,10 +439,10 @@ export default function GroupDetail() {
                     to={`/profile/${admin.id}`}
                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors"
                   >
-                    <Avatar src={admin.avatar} name={admin.name} size="sm" />
+                    <Avatar src={admin.avatar} name={admin.displayName} size="sm" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-surface-900 dark:text-surface-50 truncate">
-                        {admin.name}
+                        {admin.displayName}
                       </p>
                       <p className="text-xs text-surface-500 capitalize">
                         {admin.role}

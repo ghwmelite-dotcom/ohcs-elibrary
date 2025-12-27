@@ -221,18 +221,28 @@ export function EmojiPicker({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          ref={containerRef}
-          initial={{ opacity: 0, scale: 0.95, y: position === 'top' ? 10 : -10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: position === 'top' ? 10 : -10 }}
-          transition={{ duration: 0.15 }}
-          className={cn(
-            'absolute z-50 w-[calc(100vw-2rem)] sm:w-[340px] max-w-[340px] bg-white dark:bg-surface-800 rounded-2xl shadow-2xl border border-surface-200 dark:border-surface-700 overflow-hidden',
-            position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
-            'right-0 sm:right-0 -right-2'
-          )}
-        >
+        <>
+          {/* Backdrop for mobile */}
+          <div
+            className="fixed inset-0 z-40 bg-black/20 sm:bg-transparent"
+            onClick={onClose}
+          />
+          <motion.div
+            ref={containerRef}
+            initial={{ opacity: 0, scale: 0.95, y: position === 'top' ? 10 : -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: position === 'top' ? 10 : -10 }}
+            transition={{ duration: 0.15 }}
+            className={cn(
+              'fixed sm:absolute z-50 bg-white dark:bg-surface-800 rounded-2xl shadow-2xl border border-surface-200 dark:border-surface-700 overflow-hidden',
+              // Mobile: centered fixed positioning
+              'inset-x-4 bottom-4 sm:inset-auto',
+              // Desktop: absolute positioning relative to parent
+              'sm:w-[340px] sm:max-w-[340px]',
+              position === 'top' ? 'sm:bottom-full sm:mb-2' : 'sm:top-full sm:mt-2',
+              'sm:left-0 sm:right-auto'
+            )}
+          >
           {/* Search bar */}
           <div className="p-3 border-b border-surface-200 dark:border-surface-700">
             <div className="relative">
@@ -282,7 +292,7 @@ export function EmojiPicker({
           )}
 
           {/* Emoji grid */}
-          <div className="h-[250px] sm:h-[280px] overflow-y-auto p-2" ref={containerRef}>
+          <div className="h-[40vh] sm:h-[280px] max-h-[350px] overflow-y-auto p-2">
             {filteredEmojis ? (
               // Search results
               <div>
@@ -355,6 +365,7 @@ export function EmojiPicker({
             </div>
           </div>
         </motion.div>
+        </>
       )}
     </AnimatePresence>
   );

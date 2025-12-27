@@ -57,7 +57,7 @@ export function GroupCard({ group, index = 0, onJoin, onLeave }: GroupCardProps)
     >
       {/* Cover Image */}
       <div
-        className="h-24 relative"
+        className="h-20 sm:h-24 relative"
         style={{
           backgroundColor: '#006B3F',
           backgroundImage: group.coverImage ? `url(${group.coverImage})` : undefined,
@@ -68,29 +68,29 @@ export function GroupCard({ group, index = 0, onJoin, onLeave }: GroupCardProps)
         {/* Type Badge */}
         <span
           className={cn(
-            'absolute top-3 right-3 text-xs px-2 py-1 rounded-full flex items-center gap-1 capitalize',
+            'absolute top-2 right-2 sm:top-3 sm:right-3 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full flex items-center gap-1 capitalize',
             getTypeColor()
           )}
         >
           {getTypeIcon()}
-          {group.type}
+          <span className="hidden xs:inline">{group.type}</span>
         </span>
       </div>
 
       {/* Content */}
-      <div className="p-4 -mt-8 relative">
+      <div className="p-3 sm:p-4 -mt-6 sm:-mt-8 relative">
         {/* Group Avatar */}
-        <div className="mb-3">
+        <div className="mb-2 sm:mb-3">
           {group.avatar ? (
             <Avatar
               src={group.avatar}
               name={group.name}
-              size="xl"
-              className="ring-4 ring-white dark:ring-surface-800"
+              size="lg"
+              className="ring-2 sm:ring-4 ring-white dark:ring-surface-800"
             />
           ) : (
-            <div className="w-16 h-16 rounded-xl bg-primary-500 flex items-center justify-center ring-4 ring-white dark:ring-surface-800">
-              <span className="text-2xl text-white font-bold">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-primary-500 flex items-center justify-center ring-2 sm:ring-4 ring-white dark:ring-surface-800">
+              <span className="text-xl sm:text-2xl text-white font-bold">
                 {group.name.charAt(0)}
               </span>
             </div>
@@ -100,28 +100,28 @@ export function GroupCard({ group, index = 0, onJoin, onLeave }: GroupCardProps)
         {/* Group Name & Description */}
         <Link
           to={`/groups/${group.id}`}
-          className="block font-semibold text-surface-900 dark:text-surface-50 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          className="block text-sm sm:text-base font-semibold text-surface-900 dark:text-surface-50 hover:text-primary-600 dark:hover:text-primary-400 transition-colors line-clamp-1"
         >
           {group.name}
         </Link>
-        <p className="mt-1 text-sm text-surface-500 line-clamp-2">
+        <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-surface-500 line-clamp-2">
           {group.description}
         </p>
 
         {/* Stats */}
-        <div className="mt-4 flex items-center gap-4 text-sm text-surface-500">
+        <div className="mt-3 sm:mt-4 flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-surface-500">
           <span className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
+            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             {group.memberCount}
           </span>
           <span className="flex items-center gap-1">
-            <MessageSquare className="w-4 h-4" />
+            <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             {group.postCount}
           </span>
         </div>
 
         {/* Action Button */}
-        <div className="mt-4 flex items-center justify-end">
+        <div className="mt-3 sm:mt-4 flex items-center justify-end">
           {group.isJoined ? (
             <Button
               variant="outline"
@@ -152,12 +152,12 @@ interface GroupCardCompactProps {
 
 export function GroupCardCompact({ group, onJoin }: GroupCardCompactProps) {
   return (
-    <div className="flex items-center gap-4 p-3 bg-white dark:bg-surface-800 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-white dark:bg-surface-800 rounded-xl shadow-sm hover:shadow-md transition-shadow">
       {group.avatar ? (
-        <Avatar src={group.avatar} name={group.name} size="md" />
+        <Avatar src={group.avatar} name={group.name} size="sm" className="sm:w-10 sm:h-10" />
       ) : (
-        <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center flex-shrink-0">
-          <span className="text-lg text-white font-bold">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary-500 flex items-center justify-center flex-shrink-0">
+          <span className="text-sm sm:text-lg text-white font-bold">
             {group.name.charAt(0)}
           </span>
         </div>
@@ -166,17 +166,17 @@ export function GroupCardCompact({ group, onJoin }: GroupCardCompactProps) {
       <div className="flex-1 min-w-0">
         <Link
           to={`/groups/${group.id}`}
-          className="font-medium text-surface-900 dark:text-surface-50 hover:text-primary-600 truncate block"
+          className="text-sm sm:text-base font-medium text-surface-900 dark:text-surface-50 hover:text-primary-600 truncate block"
         >
           {group.name}
         </Link>
-        <p className="text-xs text-surface-500">
+        <p className="text-[10px] sm:text-xs text-surface-500">
           {group.memberCount} members
         </p>
       </div>
 
       {!group.isJoined && (
-        <Button variant="ghost" size="sm" onClick={() => onJoin?.(group.id)}>
+        <Button variant="ghost" size="sm" onClick={() => onJoin?.(group.id)} className="text-xs sm:text-sm px-2 sm:px-3">
           Join
         </Button>
       )}

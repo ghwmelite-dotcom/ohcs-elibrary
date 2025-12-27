@@ -458,9 +458,11 @@ export interface Group {
   slug: string;
   type: GroupType;
   coverImage?: string;
+  coverColor?: string;
   avatar?: string;
-  createdById: UUID;
+  createdById?: UUID;
   createdBy?: User;
+  mdaId?: UUID;
   memberCount: number;
   postCount: number;
   isJoined?: boolean;
@@ -468,6 +470,7 @@ export interface Group {
   isPendingApproval?: boolean;
   tags: string[];
   rules?: string;
+  isArchived?: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -476,12 +479,24 @@ export type GroupMemberRole = 'owner' | 'admin' | 'moderator' | 'member';
 
 export interface GroupMember {
   id: UUID;
-  groupId: UUID;
-  userId: UUID;
+  groupId?: UUID;
+  userId?: UUID;
   user?: User;
   role: GroupMemberRole;
-  status: 'active' | 'pending' | 'banned';
+  status?: 'active' | 'pending' | 'banned';
   joinedAt: Timestamp;
+  // Flattened user fields from API
+  displayName?: string;
+  name?: string;
+  avatar?: string;
+  title?: string;
+}
+
+export interface GroupPostReaction {
+  emoji: string;
+  count: number;
+  users: string[];
+  hasReacted: boolean;
 }
 
 export interface GroupPost {
@@ -490,12 +505,16 @@ export interface GroupPost {
   group?: Group;
   authorId: UUID;
   author?: User;
+  authorName?: string;
+  authorAvatar?: string;
   content: string;
   attachments: Attachment[];
   likes: number;
   commentCount: number;
   isLiked?: boolean;
   isPinned: boolean;
+  reactions?: GroupPostReaction[];
+  comments?: GroupComment[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -505,11 +524,15 @@ export interface GroupComment {
   postId: UUID;
   authorId: UUID;
   author?: User;
+  authorName?: string;
+  authorAvatar?: string;
   content: string;
+  attachments?: Attachment[];
   parentId?: UUID;
   replies?: GroupComment[];
   likes: number;
   isLiked?: boolean;
+  reactions?: GroupPostReaction[];
   createdAt: Timestamp;
 }
 

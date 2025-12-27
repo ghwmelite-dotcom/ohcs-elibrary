@@ -46,9 +46,10 @@ export function MemberList({
 
   if (searchQuery) {
     const query = searchQuery.toLowerCase();
-    filteredMembers = filteredMembers.filter((member) =>
-      member.name.toLowerCase().includes(query)
-    );
+    filteredMembers = filteredMembers.filter((member) => {
+      const name = member.displayName || member.name || '';
+      return name.toLowerCase().includes(query);
+    });
   }
 
   if (roleFilter) {
@@ -231,10 +232,8 @@ function MemberItem({
     >
       <Avatar
         src={member.avatar}
-        name={member.name}
+        name={member.displayName || member.name}
         size="md"
-        showStatus
-        status={member.status as 'online' | 'away' | 'offline'}
       />
 
       <div className="flex-1 min-w-0">
@@ -243,7 +242,7 @@ function MemberItem({
             to={`/profile/${member.id}`}
             className="font-medium text-surface-900 dark:text-surface-50 hover:text-primary-600 dark:hover:text-primary-400 truncate"
           >
-            {member.name}
+            {member.displayName || member.name || 'Member'}
           </Link>
           {roleIcon}
           {roleBadgeClass && (
@@ -261,7 +260,7 @@ function MemberItem({
       </div>
 
       <div className="text-xs text-surface-400">
-        Joined {formatRelativeTime(member.joinedAt)}
+        {member.joinedAt ? `Joined ${formatRelativeTime(member.joinedAt)}` : 'Member'}
       </div>
 
       <Dropdown items={menuItems} align="right">

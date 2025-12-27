@@ -1,6 +1,16 @@
 -- Groups Tables Migration
 -- Run this migration to add groups functionality
 
+-- Group categories table
+CREATE TABLE IF NOT EXISTS group_categories (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  name TEXT NOT NULL UNIQUE,
+  description TEXT,
+  icon TEXT DEFAULT '📁',
+  sortOrder INTEGER DEFAULT 0,
+  createdAt TEXT DEFAULT (datetime('now'))
+);
+
 -- Groups table
 CREATE TABLE IF NOT EXISTS groups (
   id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
@@ -8,6 +18,7 @@ CREATE TABLE IF NOT EXISTS groups (
   description TEXT,
   slug TEXT UNIQUE NOT NULL,
   type TEXT DEFAULT 'open' CHECK (type IN ('open', 'closed', 'private', 'official')),
+  categoryId TEXT,
   coverImage TEXT,
   avatar TEXT,
   createdById TEXT,
@@ -17,7 +28,8 @@ CREATE TABLE IF NOT EXISTS groups (
   isArchived INTEGER DEFAULT 0,
   settings TEXT, -- JSON for group settings
   createdAt TEXT DEFAULT (datetime('now')),
-  updatedAt TEXT DEFAULT (datetime('now'))
+  updatedAt TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (categoryId) REFERENCES group_categories(id)
 );
 
 -- Group members table
@@ -116,14 +128,23 @@ CREATE INDEX IF NOT EXISTS idx_group_posts_author ON group_posts(authorId);
 CREATE INDEX IF NOT EXISTS idx_group_comments_post ON group_comments(postId);
 CREATE INDEX IF NOT EXISTS idx_group_tags_group ON group_tags(groupId);
 
+-- Insert seed data for group categories
+INSERT OR IGNORE INTO group_categories (id, name, description, icon, sortOrder) VALUES
+  ('cat-professional', 'Professional', 'Professional development and career-focused groups', '💼', 1),
+  ('cat-mda', 'MDA Groups', 'Groups organized by Ministry, Department or Agency', '🏛️', 2),
+  ('cat-training', 'Training', 'Training, learning and skill development groups', '📚', 3),
+  ('cat-social', 'Social', 'Social and recreational groups', '🎉', 4),
+  ('cat-technology', 'Technology', 'Technology and innovation focused groups', '💻', 5),
+  ('cat-regional', 'Regional', 'Regional and district office groups', '📍', 6);
+
 -- Insert seed data for groups
-INSERT OR IGNORE INTO groups (id, name, description, slug, type, createdById, memberCount, postCount)
+INSERT OR IGNORE INTO groups (id, name, description, slug, type, categoryId, createdById, memberCount, postCount)
 VALUES
-  ('grp-digital-transform', 'Digital Transformation Committee', 'Official committee for driving digital transformation across the Ghana Civil Service. We discuss strategies, share best practices, and coordinate initiatives.', 'digital-transformation', 'official', NULL, 0, 0),
-  ('grp-young-professionals', 'Young Professionals Network', 'A community for young professionals in the civil service to network, share opportunities, and support each other''s career development.', 'young-professionals', 'open', NULL, 0, 0),
-  ('grp-it-professionals', 'IT Professionals Hub', 'A group for IT professionals working in government. Discuss technical challenges, share solutions, and stay updated on tech trends.', 'it-professionals', 'closed', NULL, 0, 0),
-  ('grp-policy-research', 'Public Policy Research', 'For civil servants interested in public policy research and analysis. Share papers, discuss methodologies, and collaborate on research projects.', 'policy-research', 'open', NULL, 0, 0),
-  ('grp-financial-mgmt', 'Financial Management Network', 'Connect with colleagues involved in financial management across MDAs. Discuss best practices, regulations, and professional development.', 'financial-management', 'open', NULL, 0, 0);
+  ('grp-digital-transform', 'Digital Transformation Committee', 'Official committee for driving digital transformation across the Ghana Civil Service. We discuss strategies, share best practices, and coordinate initiatives.', 'digital-transformation', 'official', 'cat-technology', NULL, 0, 0),
+  ('grp-young-professionals', 'Young Professionals Network', 'A community for young professionals in the civil service to network, share opportunities, and support each other''s career development.', 'young-professionals', 'open', 'cat-professional', NULL, 0, 0),
+  ('grp-it-professionals', 'IT Professionals Hub', 'A group for IT professionals working in government. Discuss technical challenges, share solutions, and stay updated on tech trends.', 'it-professionals', 'closed', 'cat-technology', NULL, 0, 0),
+  ('grp-policy-research', 'Public Policy Research', 'For civil servants interested in public policy research and analysis. Share papers, discuss methodologies, and collaborate on research projects.', 'policy-research', 'open', 'cat-professional', NULL, 0, 0),
+  ('grp-financial-mgmt', 'Financial Management Network', 'Connect with colleagues involved in financial management across MDAs. Discuss best practices, regulations, and professional development.', 'financial-management', 'open', 'cat-professional', NULL, 0, 0);
 
 -- Insert tags for seed groups
 INSERT OR IGNORE INTO group_tags (groupId, tag) VALUES

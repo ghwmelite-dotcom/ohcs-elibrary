@@ -31,6 +31,21 @@ const authFetch = async (url: string, options: RequestInit = {}) => {
   return fetch(url, { ...options, headers });
 };
 
+export interface GroupCategory {
+  id: string;
+  name: string;
+  description?: string;
+  icon: string;
+  groupCount: number;
+}
+
+export interface GroupStats {
+  totalGroups: number;
+  myGroups: number;
+  trending: number;
+  newThisWeek: number;
+}
+
 interface GroupsState {
   groups: Group[];
   currentGroup: Group | null;
@@ -38,13 +53,28 @@ interface GroupsState {
   comments: GroupComment[];
   members: GroupMember[];
   invitations: GroupInvitation[];
+  categories: GroupCategory[];
+  stats: GroupStats;
   isLoading: boolean;
   error: string | null;
   filter: {
     type?: Group['type'];
     search?: string;
     joinedOnly?: boolean;
+    categoryId?: string;
   };
+}
+
+interface Attachment {
+  id?: string;
+  type: 'image' | 'file' | 'gif' | 'audio';
+  url: string;
+  name: string;
+  size?: number;
+  mimeType?: string;
+  file?: File;
+  preview?: string;
+  duration?: number;
 }
 
 interface GroupsActions {
@@ -53,17 +83,22 @@ interface GroupsActions {
   fetchPosts: (groupId: string) => Promise<void>;
   fetchComments: (postId: string) => Promise<void>;
   fetchMembers: (groupId: string) => Promise<void>;
-  createGroup: (data: { name: string; description: string; type: Group['type']; tags?: string[] }) => Promise<Group>;
+  fetchCategories: () => Promise<void>;
+  fetchStats: () => Promise<void>;
+  createGroup: (data: { name: string; description: string; type: Group['type']; categoryId?: string; coverColor?: string; tags?: string[] }) => Promise<Group>;
   updateGroup: (groupId: string, data: Partial<Group>) => Promise<void>;
   deleteGroup: (groupId: string) => Promise<void>;
   joinGroup: (groupId: string) => Promise<void>;
   leaveGroup: (groupId: string) => Promise<void>;
   requestJoin: (groupId: string) => Promise<void>;
-  createPost: (groupId: string, content: string) => Promise<GroupPost>;
+  createPost: (groupId: string, content: string, attachments?: Attachment[]) => Promise<GroupPost>;
+  uploadAttachment: (groupId: string, file: File) => Promise<{ url: string; name: string; size: number; type: string; mimeType: string }>;
   deletePost: (postId: string) => Promise<void>;
   likePost: (postId: string) => Promise<void>;
   unlikePost: (postId: string) => Promise<void>;
-  createComment: (postId: string, content: string) => Promise<GroupComment>;
+  toggleReaction: (postId: string, emoji: string) => Promise<void>;
+  toggleCommentReaction: (commentId: string, emoji: string) => Promise<void>;
+  createComment: (postId: string, content: string, attachments?: Attachment[]) => Promise<GroupComment>;
   likeComment: (commentId: string) => Promise<void>;
   inviteMember: (groupId: string, userId: string) => Promise<void>;
   removeMember: (groupId: string, userId: string) => Promise<void>;
@@ -82,11 +117,47 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
   comments: [],
   members: [],
   invitations: [],
+  categories: [],
+  stats: {
+    totalGroups: 0,
+    myGroups: 0,
+    trending: 0,
+    newThisWeek: 0,
+  },
   isLoading: false,
   error: null,
   filter: {},
 
   // Actions
+  fetchCategories: async () => {
+    try {
+      const response = await authFetch(`${API_BASE}/groups/categories`);
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      const data = await response.json();
+      set({ categories: data.categories || [] });
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  },
+
+  fetchStats: async () => {
+    try {
+      const response = await authFetch(`${API_BASE}/groups/stats`);
+      if (!response.ok) throw new Error('Failed to fetch stats');
+      const data = await response.json();
+      set({
+        stats: {
+          totalGroups: data.totalGroups || 0,
+          myGroups: data.myGroups || 0,
+          trending: data.trending || 0,
+          newThisWeek: data.newThisWeek || 0,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  },
+
   fetchGroups: async () => {
     set({ isLoading: true, error: null });
 
@@ -97,6 +168,7 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
       if (filter.type) params.append('type', filter.type);
       if (filter.search) params.append('search', filter.search);
       if (filter.joinedOnly) params.append('joined', 'true');
+      if (filter.categoryId) params.append('category', filter.categoryId);
 
       const response = await authFetch(`${API_BASE}/groups?${params.toString()}`);
 
@@ -114,6 +186,7 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
         slug: g.slug,
         type: g.type || 'open',
         coverImage: g.coverImage,
+        coverColor: g.coverColor,
         avatar: g.avatar,
         createdById: g.createdById,
         mdaId: g.mdaId,
@@ -153,6 +226,7 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
         slug: data.slug,
         type: data.type || 'open',
         coverImage: data.coverImage,
+        coverColor: data.coverColor,
         avatar: data.avatar,
         createdById: data.createdById,
         mdaId: data.mdaId,
@@ -193,11 +267,12 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
         authorName: p.authorName,
         authorAvatar: p.authorAvatar,
         content: p.content,
-        attachments: p.attachments ? JSON.parse(p.attachments) : [],
+        attachments: p.attachments || [],
         likes: p.likes || 0,
         commentCount: p.commentCount || 0,
         isLiked: p.isLiked || false,
         isPinned: p.isPinned || false,
+        reactions: p.reactions || [],
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
       }));
@@ -227,6 +302,8 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
         authorAvatar: c.authorAvatar,
         content: c.content,
         parentId: c.parentId,
+        attachments: c.attachments || [],
+        reactions: c.reactions || [],
         likes: c.likes || 0,
         isLiked: c.isLiked || false,
         createdAt: c.createdAt,
@@ -277,7 +354,11 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create group');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.details
+          ? `${errorData.error}: ${errorData.details}`
+          : errorData.error || 'Failed to create group';
+        throw new Error(errorMsg);
       }
 
       const result = await response.json();
@@ -289,6 +370,7 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
         slug: result.slug,
         type: result.type || 'open',
         createdById: result.createdById,
+        coverImage: result.coverImage,
         memberCount: 1,
         postCount: 0,
         isJoined: true,
@@ -299,7 +381,13 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
       };
 
       set((state) => ({
-        groups: [...state.groups, newGroup],
+        groups: [newGroup, ...state.groups],
+        stats: {
+          ...state.stats,
+          totalGroups: state.stats.totalGroups + 1,
+          myGroups: state.stats.myGroups + 1,
+          newThisWeek: state.stats.newThisWeek + 1,
+        },
       }));
 
       return newGroup;
@@ -429,11 +517,79 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
     return get().joinGroup(groupId);
   },
 
-  createPost: async (groupId: string, content: string) => {
+  uploadAttachment: async (groupId: string, file: File) => {
     try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const token = getAuthToken();
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_BASE}/groups/${groupId}/upload`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload file');
+      }
+
+      const result = await response.json();
+      return {
+        url: result.url,
+        name: result.name || file.name,
+        size: result.size || file.size,
+        type: result.type || 'file',
+        mimeType: result.mimeType || file.type,
+      };
+    } catch (error) {
+      console.error('Failed to upload attachment:', error);
+      throw error;
+    }
+  },
+
+  createPost: async (groupId: string, content: string, attachments?: Attachment[]) => {
+    try {
+      // Upload any files first
+      const uploadedAttachments: Array<{ type: string; url: string; name: string; size?: number; mimeType?: string; duration?: number }> = [];
+
+      if (attachments && attachments.length > 0) {
+        for (const attachment of attachments) {
+          if (attachment.file) {
+            // Upload file to R2
+            const uploaded = await get().uploadAttachment(groupId, attachment.file);
+            uploadedAttachments.push({
+              type: attachment.type,
+              url: uploaded.url,
+              name: uploaded.name,
+              size: uploaded.size,
+              mimeType: uploaded.mimeType,
+              duration: attachment.duration,
+            });
+          } else if (attachment.url) {
+            // Already has URL (e.g., GIF from Tenor)
+            uploadedAttachments.push({
+              type: attachment.type,
+              url: attachment.url,
+              name: attachment.name,
+              size: attachment.size,
+              mimeType: attachment.mimeType,
+              duration: attachment.duration,
+            });
+          }
+        }
+      }
+
       const response = await authFetch(`${API_BASE}/groups/${groupId}/posts`, {
         method: 'POST',
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({
+          content,
+          attachments: uploadedAttachments,
+        }),
       });
 
       if (!response.ok) {
@@ -446,12 +602,15 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
         id: result.id,
         groupId,
         authorId: result.authorId,
+        authorName: result.authorName,
+        authorAvatar: result.authorAvatar,
         content,
-        attachments: [],
+        attachments: uploadedAttachments,
         likes: 0,
         commentCount: 0,
         isLiked: false,
         isPinned: false,
+        reactions: [],
         createdAt: result.createdAt,
         updatedAt: result.updatedAt,
       };
@@ -554,11 +713,175 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
     }
   },
 
-  createComment: async (postId: string, content: string) => {
+  toggleReaction: async (postId: string, emoji: string) => {
+    // Get current user ID from auth store
+    const authState = JSON.parse(localStorage.getItem('ohcs-auth-storage') || '{}');
+    const currentUserId = authState?.state?.user?.id || 'current-user';
+
+    // Optimistic update
+    set((state) => ({
+      posts: state.posts.map((p) => {
+        if (p.id !== postId) return p;
+
+        const reactions = p.reactions || [];
+        const existingReaction = reactions.find((r) => r.emoji === emoji);
+
+        if (existingReaction?.hasReacted) {
+          // Remove reaction
+          return {
+            ...p,
+            reactions: reactions
+              .map((r) =>
+                r.emoji === emoji
+                  ? {
+                      ...r,
+                      count: r.count - 1,
+                      users: r.users.filter((u) => u !== currentUserId),
+                      hasReacted: false,
+                    }
+                  : r
+              )
+              .filter((r) => r.count > 0),
+          };
+        } else if (existingReaction) {
+          // Add to existing reaction
+          return {
+            ...p,
+            reactions: reactions.map((r) =>
+              r.emoji === emoji
+                ? { ...r, count: r.count + 1, users: [...r.users, currentUserId], hasReacted: true }
+                : r
+            ),
+          };
+        } else {
+          // Add new reaction
+          return {
+            ...p,
+            reactions: [...reactions, { emoji, count: 1, users: [currentUserId], hasReacted: true }],
+          };
+        }
+      }),
+    }));
+
     try {
+      const response = await authFetch(`${API_BASE}/groups/posts/${postId}/reactions`, {
+        method: 'POST',
+        body: JSON.stringify({ emoji }),
+      });
+
+      if (!response.ok) {
+        // Revert on failure - refetch posts
+        console.error('Failed to toggle reaction, reverting...');
+      }
+    } catch (error) {
+      console.error('Failed to toggle reaction:', error);
+    }
+  },
+
+  toggleCommentReaction: async (commentId: string, emoji: string) => {
+    // Get current user ID from auth store
+    const authState = JSON.parse(localStorage.getItem('ohcs-auth-storage') || '{}');
+    const currentUserId = authState?.state?.user?.id || 'current-user';
+
+    // Optimistic update
+    set((state) => ({
+      comments: state.comments.map((c) => {
+        if (c.id !== commentId) return c;
+
+        const reactions = c.reactions || [];
+        const existingReaction = reactions.find((r) => r.emoji === emoji);
+
+        if (existingReaction?.hasReacted) {
+          // Remove reaction
+          return {
+            ...c,
+            reactions: reactions
+              .map((r) =>
+                r.emoji === emoji
+                  ? {
+                      ...r,
+                      count: r.count - 1,
+                      users: r.users.filter((u) => u !== currentUserId),
+                      hasReacted: false,
+                    }
+                  : r
+              )
+              .filter((r) => r.count > 0),
+          };
+        } else if (existingReaction) {
+          // Add to existing reaction
+          return {
+            ...c,
+            reactions: reactions.map((r) =>
+              r.emoji === emoji
+                ? { ...r, count: r.count + 1, users: [...r.users, currentUserId], hasReacted: true }
+                : r
+            ),
+          };
+        } else {
+          // Add new reaction
+          return {
+            ...c,
+            reactions: [...reactions, { emoji, count: 1, users: [currentUserId], hasReacted: true }],
+          };
+        }
+      }),
+    }));
+
+    try {
+      const response = await authFetch(`${API_BASE}/groups/comments/${commentId}/reactions`, {
+        method: 'POST',
+        body: JSON.stringify({ emoji }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to toggle comment reaction');
+      }
+    } catch (error) {
+      console.error('Failed to toggle comment reaction:', error);
+    }
+  },
+
+  createComment: async (postId: string, content: string, attachments?: Attachment[]) => {
+    try {
+      // Get groupId from the post for uploads
+      const post = get().posts.find((p) => p.id === postId);
+      const groupId = post?.groupId || get().currentGroup?.id;
+
+      // Upload any files first
+      const uploadedAttachments: Array<{ type: string; url: string; name: string; size?: number; mimeType?: string; duration?: number }> = [];
+
+      if (attachments && attachments.length > 0 && groupId) {
+        for (const attachment of attachments) {
+          if (attachment.file) {
+            const uploaded = await get().uploadAttachment(groupId, attachment.file);
+            uploadedAttachments.push({
+              type: attachment.type,
+              url: uploaded.url,
+              name: uploaded.name,
+              size: uploaded.size,
+              mimeType: uploaded.mimeType,
+              duration: attachment.duration,
+            });
+          } else if (attachment.url) {
+            uploadedAttachments.push({
+              type: attachment.type,
+              url: attachment.url,
+              name: attachment.name,
+              size: attachment.size,
+              mimeType: attachment.mimeType,
+              duration: attachment.duration,
+            });
+          }
+        }
+      }
+
       const response = await authFetch(`${API_BASE}/groups/posts/${postId}/comments`, {
         method: 'POST',
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({
+          content,
+          attachments: uploadedAttachments,
+        }),
       });
 
       if (!response.ok) {
@@ -571,7 +894,11 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
         id: result.id,
         postId,
         authorId: result.authorId,
+        authorName: result.authorName,
+        authorAvatar: result.authorAvatar,
         content,
+        attachments: uploadedAttachments,
+        reactions: [],
         likes: 0,
         isLiked: false,
         createdAt: result.createdAt,
