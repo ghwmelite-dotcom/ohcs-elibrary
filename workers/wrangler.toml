@@ -33,6 +33,13 @@ cpu_ms = 50
 # Use workers.dev subdomain (custom domain can be added later)
 workers_dev = true
 
+# Cron triggers for scheduled tasks
+[triggers]
+crons = [
+  "0 * * * *",   # Run every hour at minute 0
+  "*/15 * * * *" # Also run every 15 minutes for more frequent updates
+]
+
 # Development environment
 [env.development]
 vars = { ENVIRONMENT = "development" }

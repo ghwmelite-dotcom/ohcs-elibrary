@@ -1,6 +1,11 @@
 // OHCS E-Library Service Worker
-const CACHE_NAME = 'ohcs-elibrary-v1';
-const RUNTIME_CACHE = 'ohcs-runtime-v1';
+const CACHE_NAME = 'ohcs-elibrary-v2';
+const RUNTIME_CACHE = 'ohcs-runtime-v2';
+const ARTICLES_CACHE = 'ohcs-articles-v1';
+const API_CACHE = 'ohcs-api-v1';
+
+// API base URL
+const API_BASE = 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
 
 // Assets to cache immediately on install
 const PRECACHE_ASSETS = [
@@ -40,14 +45,14 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
+  const validCaches = [CACHE_NAME, RUNTIME_CACHE, ARTICLES_CACHE, API_CACHE];
+
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
         return Promise.all(
           cacheNames
-            .filter((cacheName) => {
-              return cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE;
-            })
+            .filter((cacheName) => !validCaches.includes(cacheName))
             .map((cacheName) => {
               console.log('[SW] Deleting old cache:', cacheName);
               return caches.delete(cacheName);
@@ -148,6 +153,61 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+
+  // Save article for offline reading
+  if (event.data && event.data.type === 'CACHE_ARTICLE') {
+    const article = event.data.article;
+    if (article) {
+      caches.open(ARTICLES_CACHE).then((cache) => {
+        // Cache the article data
+        const articleResponse = new Response(JSON.stringify(article), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+        cache.put(`/offline/article/${article.id}`, articleResponse);
+        console.log('[SW] Article cached for offline:', article.title);
+
+        // Also cache the article image if available
+        if (article.imageUrl) {
+          fetch(article.imageUrl)
+            .then(response => {
+              if (response.ok) {
+                cache.put(article.imageUrl, response);
+              }
+            })
+            .catch(() => {
+              console.log('[SW] Could not cache article image');
+            });
+        }
+      });
+    }
+  }
+
+  // Remove article from offline cache
+  if (event.data && event.data.type === 'UNCACHE_ARTICLE') {
+    const articleId = event.data.articleId;
+    if (articleId) {
+      caches.open(ARTICLES_CACHE).then((cache) => {
+        cache.delete(`/offline/article/${articleId}`);
+        console.log('[SW] Article removed from offline cache:', articleId);
+      });
+    }
+  }
+
+  // Get all cached articles
+  if (event.data && event.data.type === 'GET_CACHED_ARTICLES') {
+    caches.open(ARTICLES_CACHE).then((cache) => {
+      cache.keys().then((keys) => {
+        const articleKeys = keys.filter(k => k.url.includes('/offline/article/'));
+        Promise.all(articleKeys.map(k => cache.match(k).then(r => r.json())))
+          .then((articles) => {
+            event.source.postMessage({
+              type: 'CACHED_ARTICLES',
+              articles: articles
+            });
+          });
+      });
+    });
   }
 });
 

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
   Bell,
+  BellRing,
   Moon,
   Sun,
   Menu,
@@ -19,22 +20,29 @@ import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useUIStore } from '@/stores/uiStore';
-import { useNotificationsStore } from '@/stores/notificationsStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
 import { Avatar } from '@/components/shared/Avatar';
 import { Badge } from '@/components/shared/Badge';
 import { Dropdown, DropdownItem, DropdownDivider, DropdownLabel } from '@/components/shared/Dropdown';
 import { SearchInput } from '@/components/shared/Input';
+import { formatRelativeTime } from '@/utils/formatters';
 
 export function Header() {
   const navigate = useNavigate();
   const { user, logout, hasRole } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const { sidebar, toggleSidebar, toggleSearch, isSearchOpen, searchQuery, setSearchQuery } = useUIStore();
-  const { unreadCount, notifications } = useNotificationsStore();
+  const { notifications, summary, fetchNotifications, fetchSummary, markAsRead, markAllAsRead } = useNotificationStore();
   const { stats } = useGamificationStore();
 
-  const [showNotifications, setShowNotifications] = useState(false);
+  // Fetch notifications on mount
+  useEffect(() => {
+    fetchNotifications();
+    fetchSummary();
+  }, []);
+
+  const unreadCount = summary?.unreadTotal || 0;
 
   const handleSearch = (query: string) => {
     if (query.trim()) {
@@ -45,7 +53,6 @@ export function Header() {
   };
 
   const isAdmin = hasRole(['admin', 'director', 'super_admin']);
-  const recentNotifications = notifications.slice(0, 5);
 
   return (
     <header
@@ -125,44 +132,79 @@ export function Header() {
                 aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
                 className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
               >
-                <Bell className="w-5 h-5" />
+                {unreadCount > 0 ? (
+                  <BellRing className="w-5 h-5" />
+                ) : (
+                  <Bell className="w-5 h-5" />
+                )}
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-error-500 rounded-full" />
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-error-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </motion.span>
                 )}
               </button>
             }
             align="right"
-            className="w-80"
+            className="w-96"
           >
             <div className="px-4 py-3 border-b border-surface-200 dark:border-surface-700">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-surface-900 dark:text-surface-50">
                   Notifications
                 </h3>
-                {unreadCount > 0 && (
-                  <Badge variant="error" size="sm">
-                    {unreadCount} new
-                  </Badge>
-                )}
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <>
+                      <Badge variant="error" size="sm">
+                        {unreadCount} new
+                      </Badge>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAllAsRead();
+                        }}
+                        className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+                      >
+                        Mark all read
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="max-h-80 overflow-y-auto">
-              {recentNotifications.length > 0 ? (
-                recentNotifications.map((notification) => (
+            <div className="max-h-96 overflow-y-auto">
+              {notifications.length > 0 ? (
+                notifications.slice(0, 5).map((notification) => (
                   <Link
                     key={notification.id}
-                    to={notification.actionUrl || '/notifications'}
+                    to={notification.link || '/notifications'}
+                    onClick={() => {
+                      if (!notification.isRead) {
+                        markAsRead(notification.id);
+                      }
+                    }}
                     className={cn(
                       'flex gap-3 px-4 py-3 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors',
                       !notification.isRead && 'bg-primary-50/50 dark:bg-primary-900/10'
                     )}
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-surface-900 dark:text-surface-50 truncate">
+                      <p className={cn(
+                        'text-sm text-surface-900 dark:text-surface-50 truncate',
+                        !notification.isRead && 'font-medium'
+                      )}>
                         {notification.title}
                       </p>
                       <p className="text-xs text-surface-500 truncate">
+                        {notification.actorName && <span className="font-medium">{notification.actorName} </span>}
                         {notification.message}
+                      </p>
+                      <p className="text-xs text-surface-400 mt-0.5">
+                        {formatRelativeTime(notification.createdAt)}
                       </p>
                     </div>
                     {!notification.isRead && (
@@ -173,16 +215,23 @@ export function Header() {
               ) : (
                 <div className="px-4 py-8 text-center text-surface-500">
                   <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No notifications</p>
+                  <p className="text-sm">No notifications yet</p>
+                  <p className="text-xs mt-1">You're all caught up!</p>
                 </div>
               )}
             </div>
-            <div className="px-4 py-3 border-t border-surface-200 dark:border-surface-700">
+            <div className="px-4 py-3 border-t border-surface-200 dark:border-surface-700 flex items-center justify-between">
               <Link
                 to="/notifications"
                 className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
               >
                 View all notifications
+              </Link>
+              <Link
+                to="/notifications?tab=settings"
+                className="text-xs text-surface-500 hover:text-surface-700 dark:hover:text-surface-300"
+              >
+                <Settings className="w-4 h-4" />
               </Link>
             </div>
           </Dropdown>

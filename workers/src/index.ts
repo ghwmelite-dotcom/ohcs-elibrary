@@ -4,6 +4,7 @@ import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 import { authMiddleware } from './middleware/auth';
 import { rateLimiter } from './middleware/rateLimit';
+import { aggregateNews, getAggregationStatus, generateArticleSummaries } from './services/newsAggregator';
 
 // Route imports
 import {
@@ -17,6 +18,7 @@ import {
   newsRoutes,
   notificationsRoutes,
   gamificationRoutes,
+  settingsRoutes,
   adminRoutes,
 } from './routes';
 
@@ -69,6 +71,26 @@ app.get('/health', (c) => {
   });
 });
 
+// News aggregation trigger (secret-protected, for testing)
+app.get('/cron/aggregate-news', async (c) => {
+  const secret = c.req.query('secret');
+  if (secret !== 'ohcs-news-2024') {
+    return c.json({ error: 'Invalid secret' }, 401);
+  }
+
+  try {
+    console.log('Secret-based news aggregation triggered');
+    const result = await aggregateNews(c.env);
+    return c.json({
+      message: 'News aggregation completed',
+      ...result,
+    });
+  } catch (error) {
+    console.error('Aggregation error:', error);
+    return c.json({ error: 'Aggregation failed', details: String(error) }, 500);
+  }
+});
+
 // API version
 app.get('/api/v1', (c) => {
   return c.json({
@@ -87,8 +109,9 @@ app.route('/api/v1/documents', documentsRoutes);
 app.use('/api/v1/users/*', authMiddleware);
 app.use('/api/v1/bookmarks/*', authMiddleware);
 // Forum, Gamification, Chat, and Groups handle their own auth (some endpoints are public)
-app.use('/api/v1/news/*', authMiddleware);
+// News routes handle their own auth - some are public (categories, sources, articles list)
 app.use('/api/v1/notifications/*', authMiddleware);
+app.use('/api/v1/settings/*', authMiddleware);
 app.use('/api/v1/admin/*', authMiddleware);
 
 app.route('/api/v1/users', usersRoutes);
@@ -98,8 +121,73 @@ app.route('/api/v1/chat', chatRoutes);
 app.route('/api/v1/groups', groupsRoutes);
 app.route('/api/v1/news', newsRoutes);
 app.route('/api/v1/notifications', notificationsRoutes);
+app.route('/api/v1/settings', settingsRoutes);
 app.route('/api/v1/gamification', gamificationRoutes);
 app.route('/api/v1/admin', adminRoutes);
+
+// News aggregation admin endpoints
+app.post('/api/v1/admin/news/aggregate', authMiddleware, async (c) => {
+  try {
+    console.log('Manual news aggregation triggered');
+    const result = await aggregateNews(c.env);
+    return c.json({
+      message: 'News aggregation completed',
+      ...result,
+    });
+  } catch (error) {
+    console.error('Aggregation error:', error);
+    return c.json({ error: 'Aggregation failed' }, 500);
+  }
+});
+
+app.get('/api/v1/admin/news/status', authMiddleware, async (c) => {
+  try {
+    const status = await getAggregationStatus(c.env);
+    return c.json(status);
+  } catch (error) {
+    console.error('Status error:', error);
+    return c.json({ error: 'Failed to get status' }, 500);
+  }
+});
+
+// AI summary generation endpoint
+app.post('/api/v1/admin/news/generate-summaries', authMiddleware, async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const limit = body.limit || 10;
+
+    console.log(`Generating AI summaries for up to ${limit} articles...`);
+    const result = await generateArticleSummaries(c.env, limit);
+
+    return c.json({
+      message: 'AI summary generation completed',
+      ...result,
+    });
+  } catch (error) {
+    console.error('Summary generation error:', error);
+    return c.json({ error: 'Summary generation failed' }, 500);
+  }
+});
+
+// Secret-protected summary generation (for testing)
+app.get('/cron/generate-summaries', async (c) => {
+  const secret = c.req.query('secret');
+  if (secret !== 'ohcs-news-2024') {
+    return c.json({ error: 'Invalid secret' }, 401);
+  }
+
+  try {
+    console.log('Secret-based summary generation triggered');
+    const result = await generateArticleSummaries(c.env, 10);
+    return c.json({
+      message: 'AI summary generation completed',
+      ...result,
+    });
+  } catch (error) {
+    console.error('Summary generation error:', error);
+    return c.json({ error: 'Summary generation failed', details: String(error) }, 500);
+  }
+});
 
 // 404 handler
 app.notFound((c) => {
@@ -119,4 +207,31 @@ app.onError((err, c) => {
   }, 500);
 });
 
-export default app;
+// Export worker with both fetch and scheduled handlers
+export default {
+  // HTTP request handler
+  fetch: app.fetch,
+
+  // Scheduled handler for cron triggers
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    console.log(`Cron triggered at ${new Date().toISOString()}`);
+
+    ctx.waitUntil(
+      (async () => {
+        try {
+          // Aggregate news first
+          const result = await aggregateNews(env);
+          console.log('Scheduled aggregation completed:', result);
+
+          // Then generate AI summaries for recent articles
+          if (result.articlesAdded > 0) {
+            const summaryResult = await generateArticleSummaries(env, 5);
+            console.log('AI summary generation completed:', summaryResult);
+          }
+        } catch (error) {
+          console.error('Scheduled aggregation failed:', error);
+        }
+      })()
+    );
+  },
+};

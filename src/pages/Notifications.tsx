@@ -1,208 +1,389 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Bell, Settings, Trash2 } from 'lucide-react';
-import { NotificationList, NotificationSettings, Notification } from '@/components/notifications';
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Bell,
+  Settings,
+  Trash2,
+  CheckCheck,
+  Filter,
+  Loader2,
+  RefreshCw,
+  Archive,
+  Inbox,
+  AlertCircle,
+  ChevronDown
+} from 'lucide-react';
+import {
+  NotificationCenter,
+  NotificationTimeline,
+  NotificationActivityChart,
+  NotificationSettings,
+  PushNotificationManager
+} from '@/components/notifications';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { cn } from '@/utils/cn';
 
+type TabType = 'inbox' | 'archived' | 'settings' | 'push';
+
 export default function Notifications() {
-  const [activeTab, setActiveTab] = useState<'all' | 'settings'>('all');
+  const [activeTab, setActiveTab] = useState<TabType>('inbox');
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Mock notifications data
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'message',
-      title: 'New Message',
-      message: 'sent you a direct message',
-      actorName: 'Kwame Asante',
-      link: '/messages/1',
-      isRead: false,
-      createdAt: new Date(Date.now() - 300000).toISOString(), // 5 min ago
-    },
-    {
-      id: '2',
-      type: 'badge_earned',
-      title: 'Achievement Unlocked',
-      message: 'You earned the "Bookworm" badge for reading 10 documents!',
-      isRead: false,
-      createdAt: new Date(Date.now() - 1800000).toISOString(), // 30 min ago
-    },
-    {
-      id: '3',
-      type: 'forum_mention',
-      title: 'Forum Mention',
-      message: 'mentioned you in "Best practices for document management"',
-      actorName: 'Ama Serwaa',
-      link: '/forum/topic/123',
-      isRead: false,
-      createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    },
-    {
-      id: '4',
-      type: 'group_invite',
-      title: 'Group Invitation',
-      message: 'invited you to join "Ministry of Finance Working Group"',
-      actorName: 'Kofi Mensah',
-      link: '/groups/456',
-      isRead: true,
-      createdAt: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-    },
-    {
-      id: '5',
-      type: 'document',
-      title: 'New Document',
-      message: 'A new document "Annual Budget Report 2024" was added to the library',
-      link: '/library/doc/789',
-      isRead: true,
-      createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-    },
-    {
-      id: '6',
-      type: 'level_up',
-      title: 'Level Up!',
-      message: 'Congratulations! You reached Level 5 - Senior Contributor',
-      isRead: true,
-      createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-    },
-    {
-      id: '7',
-      type: 'like',
-      title: 'Post Liked',
-      message: 'liked your forum post',
-      actorName: 'Efua Ankrah',
-      link: '/forum/topic/101',
-      isRead: true,
-      createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-    },
-    {
-      id: '8',
-      type: 'forum_reply',
-      title: 'New Reply',
-      message: 'replied to your topic "Questions about leave policy"',
-      actorName: 'Yaw Boateng',
-      link: '/forum/topic/102',
-      isRead: true,
-      createdAt: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
-    },
-    {
-      id: '9',
-      type: 'announcement',
-      title: 'System Announcement',
-      message: 'The platform will undergo maintenance on Saturday from 2-4 AM GMT',
-      isRead: true,
-      createdAt: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
-    },
-    {
-      id: '10',
-      type: 'xp_earned',
-      title: 'XP Earned',
-      message: 'You earned 50 XP for completing your daily login streak',
-      isRead: true,
-      createdAt: new Date(Date.now() - 604800000).toISOString(), // 1 week ago
-    },
-  ]);
+  const {
+    notifications,
+    summary,
+    preferences,
+    isLoading,
+    isSummaryLoading,
+    filter,
+    typeFilter,
+    page,
+    totalPages,
+    fetchNotifications,
+    fetchSummary,
+    fetchPreferences,
+    updatePreferences,
+    markAsRead,
+    markAllAsRead,
+    archiveNotification,
+    deleteNotification,
+    clearAll,
+    setFilter,
+    setTypeFilter,
+    subscribeToPush,
+    unsubscribeFromPush,
+    checkPushSupport
+  } = useNotificationStore();
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  // Load data on mount
+  useEffect(() => {
+    fetchNotifications();
+    fetchSummary();
+    fetchPreferences();
+    checkPushSupport();
+  }, []);
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
+  // Refresh when tab changes
+  useEffect(() => {
+    if (activeTab === 'inbox') {
+      setFilter('all');
+    } else if (activeTab === 'archived') {
+      setFilter('archived');
+    }
+  }, [activeTab]);
+
+  const unreadCount = summary?.unreadTotal || 0;
+
+  const handleLoadMore = () => {
+    if (page < totalPages && !isLoading) {
+      fetchNotifications(page + 1, true);
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  const handleRefresh = () => {
+    fetchNotifications(1);
+    fetchSummary();
   };
 
-  const handleDelete = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  };
+  const notificationTypes = [
+    { id: null, label: 'All Types' },
+    { id: 'message', label: 'Messages' },
+    { id: 'document', label: 'Documents' },
+    { id: 'forum_reply', label: 'Forum' },
+    { id: 'group_invite', label: 'Groups' },
+    { id: 'badge_earned', label: 'Achievements' },
+    { id: 'announcement', label: 'Announcements' },
+    { id: 'security', label: 'Security' }
+  ];
 
-  const handleClearAll = () => {
-    setNotifications([]);
-  };
-
-  const handleSaveSettings = (preferences: any) => {
-    console.log('Saving notification preferences:', preferences);
-    // In production, this would save to the backend
-  };
+  const tabs = [
+    { id: 'inbox' as TabType, label: 'Inbox', icon: Inbox, count: unreadCount },
+    { id: 'archived' as TabType, label: 'Archived', icon: Archive },
+    { id: 'settings' as TabType, label: 'Settings', icon: Settings },
+    { id: 'push' as TabType, label: 'Push', icon: Bell }
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center">
-              <Bell className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">
-                Notifications
-              </h1>
-              <p className="text-surface-600 dark:text-surface-400">
-                {unreadCount > 0
-                  ? `You have ${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}`
-                  : 'All caught up!'}
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <NotificationCenter summary={summary} isLoading={isSummaryLoading} />
+      </motion.div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-surface-200 dark:border-surface-700">
+      {/* Activity Chart */}
+      {summary?.recentActivity && summary.recentActivity.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
+        >
+          <NotificationActivityChart data={summary.recentActivity} />
+        </motion.div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-2 mb-6 border-b border-surface-200 dark:border-surface-700 pb-4">
+        {tabs.map((tab) => (
           <button
-            onClick={() => setActiveTab('all')}
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
             className={cn(
-              'flex items-center gap-2 px-4 py-3 font-medium border-b-2 -mb-px transition-colors',
-              activeTab === 'all'
-                ? 'border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400'
-                : 'border-transparent text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-200'
+              'flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all',
+              activeTab === tab.id
+                ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700'
             )}
           >
-            <Bell className="w-4 h-4" />
-            All Notifications
-            {unreadCount > 0 && (
-              <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-xs font-medium rounded-full">
-                {unreadCount}
+            <tab.icon className="w-4 h-4" />
+            {tab.label}
+            {tab.count !== undefined && tab.count > 0 && (
+              <span className="px-2 py-0.5 bg-primary-600 text-white text-xs font-medium rounded-full">
+                {tab.count}
               </span>
             )}
           </button>
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={cn(
-              'flex items-center gap-2 px-4 py-3 font-medium border-b-2 -mb-px transition-colors',
-              activeTab === 'settings'
-                ? 'border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400'
-                : 'border-transparent text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-200'
-            )}
-          >
-            <Settings className="w-4 h-4" />
-            Settings
-          </button>
-        </div>
+        ))}
+      </div>
 
-        {/* Content */}
-        {activeTab === 'all' ? (
+      {/* Content */}
+      <AnimatePresence mode="wait">
+        {activeTab === 'inbox' || activeTab === 'archived' ? (
           <motion.div
+            key={activeTab}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
           >
-            <NotificationList
-              notifications={notifications}
-              onMarkAsRead={handleMarkAsRead}
-              onMarkAllAsRead={handleMarkAllAsRead}
-              onDelete={handleDelete}
-              onClearAll={handleClearAll}
+            {/* Toolbar */}
+            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-4 mb-6">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  {/* Filter Toggle */}
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={cn(
+                      'flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors',
+                      showFilters
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
+                        : 'border-surface-200 dark:border-surface-600 hover:bg-surface-50 dark:hover:bg-surface-700'
+                    )}
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span className="text-sm font-medium">Filters</span>
+                    <ChevronDown className={cn('w-4 h-4 transition-transform', showFilters && 'rotate-180')} />
+                  </button>
+
+                  {/* Unread/All Toggle */}
+                  {activeTab === 'inbox' && (
+                    <div className="flex items-center bg-surface-100 dark:bg-surface-700 rounded-lg p-1">
+                      <button
+                        onClick={() => setFilter('all')}
+                        className={cn(
+                          'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                          filter === 'all'
+                            ? 'bg-white dark:bg-surface-600 text-surface-900 dark:text-white shadow-sm'
+                            : 'text-surface-600 dark:text-surface-400'
+                        )}
+                      >
+                        All
+                      </button>
+                      <button
+                        onClick={() => setFilter('unread')}
+                        className={cn(
+                          'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                          filter === 'unread'
+                            ? 'bg-white dark:bg-surface-600 text-surface-900 dark:text-white shadow-sm'
+                            : 'text-surface-600 dark:text-surface-400'
+                        )}
+                      >
+                        Unread
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {/* Refresh */}
+                  <button
+                    onClick={handleRefresh}
+                    disabled={isLoading}
+                    className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+                    title="Refresh"
+                  >
+                    <RefreshCw className={cn('w-4 h-4 text-surface-500', isLoading && 'animate-spin')} />
+                  </button>
+
+                  {/* Mark All Read */}
+                  {unreadCount > 0 && activeTab === 'inbox' && (
+                    <button
+                      onClick={markAllAsRead}
+                      className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                    >
+                      <CheckCheck className="w-4 h-4" />
+                      Mark all read
+                    </button>
+                  )}
+
+                  {/* Clear All */}
+                  {notifications.length > 0 && (
+                    <button
+                      onClick={() => clearAll(activeTab === 'archived')}
+                      className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Clear all
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Filter Options */}
+              <AnimatePresence>
+                {showFilters && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pt-4 mt-4 border-t border-surface-200 dark:border-surface-700">
+                      <p className="text-xs font-medium text-surface-500 uppercase tracking-wide mb-2">
+                        Filter by type
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {notificationTypes.map((type) => (
+                          <button
+                            key={type.id || 'all'}
+                            onClick={() => setTypeFilter(type.id)}
+                            className={cn(
+                              'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                              typeFilter === type.id
+                                ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                                : 'bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-600'
+                            )}
+                          >
+                            {type.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Notification List */}
+            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
+              {isLoading && notifications.length === 0 ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+                </div>
+              ) : (
+                <>
+                  <NotificationTimeline
+                    notifications={notifications}
+                    onMarkAsRead={markAsRead}
+                    onDelete={deleteNotification}
+                    onArchive={archiveNotification}
+                  />
+
+                  {/* Load More */}
+                  {page < totalPages && (
+                    <div className="mt-6 text-center">
+                      <button
+                        onClick={handleLoadMore}
+                        disabled={isLoading}
+                        className="px-6 py-2.5 bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300 font-medium rounded-xl hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors disabled:opacity-50"
+                      >
+                        {isLoading ? (
+                          <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                        ) : (
+                          'Load More'
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </motion.div>
+        ) : activeTab === 'settings' ? (
+          <motion.div
+            key="settings"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            <NotificationSettings
+              initialPreferences={preferences ? {
+                email: preferences.emailEnabled,
+                push: preferences.pushEnabled,
+                inApp: preferences.inAppEnabled,
+                sound: preferences.soundEnabled,
+                quietHours: {
+                  enabled: preferences.quietHoursEnabled,
+                  start: preferences.quietHoursStart,
+                  end: preferences.quietHoursEnd
+                },
+                categories: preferences.categoryPreferences
+              } : undefined}
+              onSave={async (prefs) => {
+                await updatePreferences({
+                  emailEnabled: prefs.email,
+                  pushEnabled: prefs.push,
+                  inAppEnabled: prefs.inApp,
+                  soundEnabled: prefs.sound,
+                  quietHoursEnabled: prefs.quietHours.enabled,
+                  quietHoursStart: prefs.quietHours.start,
+                  quietHoursEnd: prefs.quietHours.end,
+                  categoryPreferences: prefs.categories
+                });
+              }}
             />
           </motion.div>
-        ) : (
+        ) : activeTab === 'push' ? (
           <motion.div
+            key="push"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
           >
-            <NotificationSettings onSave={handleSaveSettings} />
+            <PushNotificationManager
+              isEnabled={preferences?.pushEnabled || false}
+              onSubscribe={subscribeToPush}
+              onUnsubscribe={unsubscribeFromPush}
+            />
+
+            {/* Additional Push Info */}
+            <div className="mt-6 bg-surface-50 dark:bg-surface-800 rounded-xl p-6 border border-surface-200 dark:border-surface-700">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-surface-900 dark:text-white mb-1">
+                    About Push Notifications
+                  </h4>
+                  <p className="text-sm text-surface-600 dark:text-surface-400 mb-3">
+                    Push notifications let you receive updates even when you're not actively using the platform.
+                    They work on both desktop and mobile browsers.
+                  </p>
+                  <ul className="text-sm text-surface-500 space-y-1">
+                    <li>• Notifications respect your quiet hours settings</li>
+                    <li>• You can control which types of notifications you receive</li>
+                    <li>• You can unsubscribe at any time</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </motion.div>
-        )}
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

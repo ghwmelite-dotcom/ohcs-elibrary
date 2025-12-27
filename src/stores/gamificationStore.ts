@@ -44,11 +44,82 @@ const levels: Level[] = [
   { id: '10', level: 10, name: 'Grandmaster', minXP: 10000, maxXP: Infinity, icon: '⭐', color: '#FCD116' },
 ];
 
+interface QuickStats {
+  totalXp: number;
+  level: number;
+  levelTitle: string;
+  xpToNextLevel: number;
+  xpProgress: number;
+  currentStreak: number;
+  longestStreak: number;
+  badgesEarned: number;
+  xpToday: number;
+  rank: number;
+  documentsRead: number;
+  forumPosts: number;
+}
+
+interface Challenge {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  targetType: string;
+  targetValue: number;
+  xpReward: number;
+  currentProgress: number;
+  isCompleted: boolean;
+  completedAt?: string;
+  startDate: string;
+  endDate: string;
+}
+
+interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: string;
+  triggerType: string;
+  triggerValue: number;
+  xpReward: number;
+  rarity: string;
+  earned: boolean;
+  earnedAt?: string;
+  isNew?: boolean;
+}
+
+interface MDALeaderboardEntry {
+  rank: number;
+  mdaId: string;
+  mdaName: string;
+  abbreviation: string;
+  memberCount: number;
+  totalXp: number;
+  avgXp: number;
+  documentsRead: number;
+  forumActivity: number;
+}
+
+interface UserRank {
+  rank: number;
+  totalUsers: number;
+  change: number;
+  percentile: number;
+  scope: 'national' | 'mda';
+}
+
 interface GamificationState {
   stats: GamificationStats | null;
+  quickStats: QuickStats | null;
   levels: Level[];
   allBadges: Badge[];
   leaderboard: LeaderboardEntry[];
+  mdaLeaderboard: MDALeaderboardEntry[];
+  challenges: Challenge[];
+  achievements: Achievement[];
+  userRank: UserRank | null;
+  activityHeatmap: { date: string; xpEarned: number; activityCount: number }[];
   recentXPTransactions: XPTransaction[];
   activities: any[];
   isLoading: boolean;
@@ -59,8 +130,14 @@ interface GamificationState {
 
 interface GamificationActions {
   fetchStats: () => Promise<void>;
+  fetchQuickStats: () => Promise<void>;
   fetchBadges: () => Promise<void>;
   fetchLeaderboard: (period?: 'daily' | 'weekly' | 'monthly' | 'allTime') => Promise<void>;
+  fetchMDALeaderboard: () => Promise<void>;
+  fetchChallenges: () => Promise<void>;
+  fetchAchievements: () => Promise<void>;
+  fetchUserRank: (scope?: 'national' | 'mda') => Promise<void>;
+  fetchActivityHeatmap: () => Promise<void>;
   fetchActivities: (limit?: number) => Promise<void>;
   updateStreak: () => Promise<void>;
   awardXP: (amount: number, reason: string, sourceType: string, sourceId?: string) => void;
@@ -76,9 +153,15 @@ type GamificationStore = GamificationState & GamificationActions;
 export const useGamificationStore = create<GamificationStore>((set, get) => ({
   // Initial state
   stats: null,
+  quickStats: null,
   levels,
   allBadges: [],
   leaderboard: [],
+  mdaLeaderboard: [],
+  challenges: [],
+  achievements: [],
+  userRank: null,
+  activityHeatmap: [],
   recentXPTransactions: [],
   activities: [],
   isLoading: false,
@@ -149,6 +232,21 @@ export const useGamificationStore = create<GamificationStore>((set, get) => ({
         },
         isLoading: false,
       });
+    }
+  },
+
+  fetchQuickStats: async () => {
+    try {
+      const response = await authFetch(`${API_BASE}/gamification/quick-stats`);
+
+      if (!response.ok) {
+        return;
+      }
+
+      const quickStats = await response.json();
+      set({ quickStats });
+    } catch (error) {
+      console.error('Error fetching quick stats:', error);
     }
   },
 
@@ -226,6 +324,85 @@ export const useGamificationStore = create<GamificationStore>((set, get) => ({
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
       set({ leaderboard: [], isLoading: false });
+    }
+  },
+
+  fetchMDALeaderboard: async () => {
+    try {
+      const response = await fetch(`${API_BASE}/gamification/mda-leaderboard?limit=10`);
+
+      if (!response.ok) {
+        return;
+      }
+
+      const mdaLeaderboard = await response.json();
+      set({ mdaLeaderboard });
+    } catch (error) {
+      console.error('Error fetching MDA leaderboard:', error);
+      set({ mdaLeaderboard: [] });
+    }
+  },
+
+  fetchChallenges: async () => {
+    try {
+      const response = await authFetch(`${API_BASE}/gamification/challenges`);
+
+      if (!response.ok) {
+        return;
+      }
+
+      const challenges = await response.json();
+      set({ challenges });
+    } catch (error) {
+      console.error('Error fetching challenges:', error);
+      set({ challenges: [] });
+    }
+  },
+
+  fetchAchievements: async () => {
+    try {
+      const response = await authFetch(`${API_BASE}/gamification/achievements`);
+
+      if (!response.ok) {
+        return;
+      }
+
+      const achievements = await response.json();
+      set({ achievements });
+    } catch (error) {
+      console.error('Error fetching achievements:', error);
+      set({ achievements: [] });
+    }
+  },
+
+  fetchUserRank: async (scope = 'national') => {
+    try {
+      const response = await authFetch(`${API_BASE}/gamification/user-rank?scope=${scope}`);
+
+      if (!response.ok) {
+        return;
+      }
+
+      const userRank = await response.json();
+      set({ userRank });
+    } catch (error) {
+      console.error('Error fetching user rank:', error);
+    }
+  },
+
+  fetchActivityHeatmap: async () => {
+    try {
+      const response = await authFetch(`${API_BASE}/gamification/activity-heatmap`);
+
+      if (!response.ok) {
+        return;
+      }
+
+      const activityHeatmap = await response.json();
+      set({ activityHeatmap });
+    } catch (error) {
+      console.error('Error fetching activity heatmap:', error);
+      set({ activityHeatmap: [] });
     }
   },
 

@@ -1,146 +1,65 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Newspaper, Search, RefreshCw, Rss, TrendingUp } from 'lucide-react';
-import { NewsFeed, CategoryFilter, SourceFilter, BreakingNews } from '@/components/news';
+import { Newspaper, Search, TrendingUp, Rss, AlertCircle, RefreshCw, WifiOff, Clock } from 'lucide-react';
+import { NewsFeed, CategoryFilter, SourceFilter, BreakingNews, HeroCarousel, TrendingTopicsList } from '@/components/news';
+import { RefreshableContainer, OfflineStatusBadge } from '@/components/shared';
 import { useNewsStore } from '@/stores/newsStore';
+import { useOfflineArticles } from '@/hooks/useOfflineArticles';
+import { formatRelativeTime } from '@/utils/formatters';
+import type { NewsCategory } from '@/types';
 
 export default function News() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [showBreakingNews, setShowBreakingNews] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Mock news data
-  const mockArticles = [
-    {
-      id: '1',
-      title: 'Government Announces New Digital Transformation Initiative for Civil Service',
-      excerpt: 'The Office of the Head of Civil Service has unveiled a comprehensive digital transformation plan aimed at modernizing government operations across all MDAs.',
-      source: 'Ghana News Agency',
-      sourceIcon: '',
-      category: 'Government',
-      imageUrl: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800',
-      publishedAt: new Date(Date.now() - 3600000).toISOString(),
-      url: 'https://gna.org.gh',
-      relevanceScore: 95,
-      isTrending: true,
-    },
-    {
-      id: '2',
-      title: 'Public Services Commission Reviews Promotion Guidelines for 2025',
-      excerpt: 'New guidelines aim to create a more transparent and merit-based promotion system for civil servants nationwide.',
-      source: 'Daily Graphic',
-      category: 'Government',
-      imageUrl: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800',
-      publishedAt: new Date(Date.now() - 7200000).toISOString(),
-      url: 'https://graphic.com.gh',
-      relevanceScore: 88,
-    },
-    {
-      id: '3',
-      title: 'Ministry of Finance Releases Q4 Budget Performance Report',
-      excerpt: 'The report highlights fiscal achievements and challenges faced during the last quarter, with key insights for civil service operations.',
-      source: 'Joy News',
-      category: 'Economy',
-      imageUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800',
-      publishedAt: new Date(Date.now() - 14400000).toISOString(),
-      url: 'https://myjoyonline.com',
-      relevanceScore: 82,
-      isTrending: true,
-    },
-    {
-      id: '4',
-      title: 'Ghana Health Service Launches Training Program for Regional Staff',
-      excerpt: 'A new capacity building initiative aims to enhance healthcare delivery at the regional and district levels.',
-      source: 'Citi FM',
-      category: 'Health',
-      imageUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800',
-      publishedAt: new Date(Date.now() - 21600000).toISOString(),
-      url: 'https://citifmonline.com',
-      relevanceScore: 75,
-    },
-    {
-      id: '5',
-      title: 'Ministry of Education Implements New Teacher Evaluation Framework',
-      excerpt: 'The framework introduces competency-based assessments to improve teaching quality in public schools.',
-      source: 'Ghana News Agency',
-      category: 'Education',
-      imageUrl: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800',
-      publishedAt: new Date(Date.now() - 28800000).toISOString(),
-      url: 'https://gna.org.gh',
-      relevanceScore: 70,
-    },
-    {
-      id: '6',
-      title: 'Local Government Ministry Announces Smart City Initiative',
-      excerpt: 'Major metropolitan areas to receive technology upgrades as part of the national digitization agenda.',
-      source: 'Daily Graphic',
-      category: 'Technology',
-      imageUrl: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800',
-      publishedAt: new Date(Date.now() - 43200000).toISOString(),
-      url: 'https://graphic.com.gh',
-      relevanceScore: 78,
-    },
-    {
-      id: '7',
-      title: 'Ghana Signs MoU with Singapore on Public Service Excellence',
-      excerpt: 'The partnership will facilitate knowledge exchange and training opportunities for Ghanaian civil servants.',
-      source: 'Ghana News Agency',
-      category: 'International',
-      imageUrl: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800',
-      publishedAt: new Date(Date.now() - 57600000).toISOString(),
-      url: 'https://gna.org.gh',
-      relevanceScore: 85,
-    },
-    {
-      id: '8',
-      title: 'National Sports Authority Plans Inter-MDA Sports Festival',
-      excerpt: 'The annual event returns with new disciplines and increased participation from ministries and agencies.',
-      source: 'Joy News',
-      category: 'Sports',
-      imageUrl: 'https://images.unsplash.com/photo-1461896836934- voices-68b78c6?w=800',
-      publishedAt: new Date(Date.now() - 72000000).toISOString(),
-      url: 'https://myjoyonline.com',
-      relevanceScore: 60,
-    },
-  ];
+  const {
+    articles,
+    sources,
+    categories,
+    breakingNews,
+    isLoading,
+    error,
+    total,
+    fetchArticles,
+    fetchSources,
+    fetchCategories,
+    fetchBreakingNews,
+    bookmarkArticle,
+    removeBookmark,
+    setFilter,
+    clearError,
+  } = useNewsStore();
 
-  const mockBreakingNews = [
-    {
-      id: 'b1',
-      title: 'President addresses Civil Servants at Annual Conference',
-      source: 'Ghana News Agency',
-      url: 'https://gna.org.gh',
-      timestamp: new Date().toISOString(),
-    },
-    {
-      id: 'b2',
-      title: 'New minimum wage adjustments to take effect January 2025',
-      source: 'Daily Graphic',
-      url: 'https://graphic.com.gh',
-      timestamp: new Date().toISOString(),
-    },
-  ];
+  const { offlineArticles, isOnline, isLoading: offlineLoading } = useOfflineArticles();
 
-  const categories = [
-    { id: 'government', name: 'Government', icon: 'government', count: 25 },
-    { id: 'economy', name: 'Economy', icon: 'economy', count: 18 },
-    { id: 'health', name: 'Health', icon: 'health', count: 12 },
-    { id: 'education', name: 'Education', icon: 'education', count: 15 },
-    { id: 'technology', name: 'Technology', icon: 'technology', count: 8 },
-    { id: 'international', name: 'International', icon: 'international', count: 10 },
-    { id: 'sports', name: 'Sports', icon: 'sports', count: 5 },
-  ];
+  // Fetch data on mount
+  useEffect(() => {
+    fetchSources();
+    fetchCategories();
+    fetchBreakingNews();
+    fetchArticles();
+  }, []);
 
-  const sources = [
-    { id: 'gna', name: 'Ghana News Agency', count: 42 },
-    { id: 'graphic', name: 'Daily Graphic', count: 35 },
-    { id: 'joy', name: 'Joy News', count: 28 },
-    { id: 'citi', name: 'Citi FM', count: 22 },
-    { id: 'tv3', name: 'TV3 Ghana', count: 15 },
-    { id: 'peacefm', name: 'Peace FM', count: 12 },
-  ];
+  // Fetch articles when filters change
+  useEffect(() => {
+    const category = selectedCategories.length === 1 ? selectedCategories[0] : undefined;
+    const sourceId = selectedSources.length === 1 ? selectedSources[0] : undefined;
+
+    setFilter({
+      category,
+      sourceId,
+      search: searchQuery || undefined,
+    });
+
+    fetchArticles({
+      category,
+      sourceId,
+      search: searchQuery || undefined,
+    });
+  }, [searchQuery, selectedCategories, selectedSources]);
 
   const handleCategoryToggle = (categoryId: string) => {
     setSelectedCategories((prev) =>
@@ -159,51 +78,135 @@ export default function News() {
   };
 
   const handleRefresh = async () => {
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
+    await Promise.all([
+      fetchArticles(),
+      fetchBreakingNews(),
+    ]);
   };
 
   const handleBookmark = (articleId: string) => {
-    // Toggle bookmark
-    console.log('Bookmark article:', articleId);
+    const article = articles.find(a => a.id === articleId);
+    if (article?.isBookmarked) {
+      removeBookmark(articleId);
+    } else {
+      bookmarkArticle(articleId);
+    }
   };
 
-  const handleShare = (article: any) => {
-    // Open share dialog
-    console.log('Share article:', article);
+  const handleShare = async (article: any) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: article.title,
+          text: article.excerpt || article.summary,
+          url: article.url,
+        });
+      } catch {
+        // User cancelled or error
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(article.url);
+    }
   };
 
-  // Filter articles based on selection
-  const filteredArticles = mockArticles.filter((article) => {
-    const matchesSearch = searchQuery
-      ? article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        article.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
-      : true;
+  // Transform articles for NewsFeed component
+  const transformedArticles = articles.map((article) => ({
+    id: article.id,
+    title: article.title,
+    excerpt: article.summary || '',
+    source: article.source?.name || 'Unknown Source',
+    sourceIcon: article.source?.logoUrl,
+    category: article.category,
+    imageUrl: article.imageUrl,
+    publishedAt: article.publishedAt,
+    url: article.url,
+    relevanceScore: article.relevanceScore,
+    isBookmarked: article.isBookmarked,
+    isTrending: article.isBreaking || (article.relevanceScore && article.relevanceScore > 90),
+    readingTimeMinutes: (article as any).readingTimeMinutes || 1,
+    sentiment: (article as any).sentiment || 'neutral',
+    aiSummary: (article as any).aiSummary || null,
+  }));
 
-    const matchesCategory = selectedCategories.length
-      ? selectedCategories.includes(article.category.toLowerCase())
-      : true;
+  // Transform breaking news for BreakingNews component
+  const transformedBreakingNews = breakingNews.map((article) => ({
+    id: article.id,
+    title: article.title,
+    source: article.source?.name || 'Unknown Source',
+    url: article.url,
+    timestamp: article.publishedAt,
+  }));
 
-    const matchesSource = selectedSources.length
-      ? selectedSources.some((s) =>
-          article.source.toLowerCase().includes(s.toLowerCase())
-        )
-      : true;
+  // Transform categories for CategoryFilter component
+  const transformedCategories = categories.map((cat: NewsCategory) => ({
+    id: cat.slug,
+    name: cat.name,
+    icon: cat.slug,
+    count: cat.articleCount,
+  }));
 
-    return matchesSearch && matchesCategory && matchesSource;
+  // Transform sources for SourceFilter component
+  const transformedSources = sources.map((source) => ({
+    id: source.id,
+    name: source.name,
+    icon: source.logoUrl,
+    count: (source as any).articleCount,
+  }));
+
+  // Filter articles client-side for additional filtering
+  const filteredArticles = transformedArticles.filter((article) => {
+    // If multiple categories selected, filter by any matching
+    if (selectedCategories.length > 1) {
+      const matchesCategory = selectedCategories.some(
+        (cat) => article.category.toLowerCase() === cat.toLowerCase()
+      );
+      if (!matchesCategory) return false;
+    }
+
+    // If multiple sources selected, filter by any matching
+    if (selectedSources.length > 1) {
+      const matchesSource = selectedSources.some((srcId) => {
+        const source = sources.find((s) => s.id === srcId);
+        return source && article.source.toLowerCase().includes(source.name.toLowerCase());
+      });
+      if (!matchesSource) return false;
+    }
+
+    return true;
   });
 
   const featuredArticle = filteredArticles.find((a) => a.isTrending);
   const regularArticles = filteredArticles.filter((a) => a !== featuredArticle);
 
+  const trendingCount = articles.filter(a => a.isBreaking || (a.relevanceScore && a.relevanceScore > 90)).length;
+
   return (
     <div className="space-y-6">
+      {/* Error Banner */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-2 text-red-700 dark:text-red-300">
+            <AlertCircle className="w-5 h-5" />
+            <span>{error}</span>
+          </div>
+          <button
+            onClick={clearError}
+            className="text-red-600 hover:text-red-800 dark:text-red-400"
+          >
+            Dismiss
+          </button>
+        </motion.div>
+      )}
+
       {/* Breaking News Banner */}
-      {showBreakingNews && mockBreakingNews.length > 0 && (
+      {showBreakingNews && transformedBreakingNews.length > 0 && (
         <BreakingNews
-          items={mockBreakingNews}
+          items={transformedBreakingNews}
           onDismiss={() => setShowBreakingNews(false)}
         />
       )}
@@ -238,11 +241,36 @@ export default function News() {
           </div>
         </div>
 
+        {/* Hero Carousel - Featured Articles */}
+        {filteredArticles.filter(a => a.isTrending || (a.relevanceScore && a.relevanceScore >= 80)).length > 0 && (
+          <div className="mb-8">
+            <HeroCarousel
+              articles={filteredArticles
+                .filter(a => a.isTrending || (a.relevanceScore && a.relevanceScore >= 80))
+                .slice(0, 5)
+                .map(article => ({
+                  id: article.id,
+                  title: article.title,
+                  excerpt: article.excerpt,
+                  source: article.source,
+                  sourceIcon: article.sourceIcon,
+                  category: article.category,
+                  imageUrl: article.imageUrl,
+                  publishedAt: article.publishedAt,
+                  url: article.url,
+                  aiSummary: article.aiSummary,
+                  readingTimeMinutes: article.readingTimeMinutes,
+                }))}
+              autoPlayInterval={6000}
+            />
+          </div>
+        )}
+
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Total Articles', value: mockArticles.length, icon: Newspaper, color: 'text-primary-600' },
-            { label: 'Trending', value: mockArticles.filter(a => a.isTrending).length, icon: TrendingUp, color: 'text-accent-600' },
+            { label: 'Total Articles', value: total || articles.length, icon: Newspaper, color: 'text-primary-600' },
+            { label: 'Trending', value: trendingCount, icon: TrendingUp, color: 'text-accent-600' },
             { label: 'Sources', value: sources.length, icon: Rss, color: 'text-success-600' },
             { label: 'Categories', value: categories.length, icon: Search, color: 'text-secondary-600' },
           ].map((stat, index) => (
@@ -266,22 +294,111 @@ export default function News() {
           ))}
         </div>
 
+        {/* Offline Articles Section - Show when offline or has saved articles */}
+        {(!isOnline || offlineArticles.length > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                  <WifiOff className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-surface-900 dark:text-surface-50">
+                    {!isOnline ? 'Offline Mode' : 'Saved for Offline'}
+                  </h3>
+                  <p className="text-sm text-surface-500">
+                    {offlineArticles.length} article{offlineArticles.length !== 1 ? 's' : ''} available offline
+                  </p>
+                </div>
+              </div>
+              <OfflineStatusBadge />
+            </div>
+
+            {offlineArticles.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {offlineArticles.map((article) => (
+                  <Link
+                    key={article.id}
+                    to={`/news/${article.id}`}
+                    className="bg-white dark:bg-surface-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    {article.imageUrl && (
+                      <div className="aspect-video bg-surface-100 dark:bg-surface-700">
+                        <img
+                          src={article.imageUrl}
+                          alt={article.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded text-xs font-medium">
+                          Offline
+                        </span>
+                        <span className="text-xs text-surface-500 capitalize">{article.category}</span>
+                      </div>
+                      <h4 className="font-medium text-surface-900 dark:text-surface-50 line-clamp-2 mb-2">
+                        {article.title}
+                      </h4>
+                      <div className="flex items-center gap-2 text-xs text-surface-500">
+                        <Clock className="w-3 h-3" />
+                        <span>Saved {formatRelativeTime(article.savedAt)}</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-orange-50 dark:bg-orange-900/10 rounded-xl p-6 text-center">
+                <WifiOff className="w-12 h-12 text-orange-400 mx-auto mb-3" />
+                <p className="text-surface-600 dark:text-surface-400">
+                  {!isOnline
+                    ? "You're offline. No articles have been saved for offline reading."
+                    : 'No articles saved for offline reading yet.'}
+                </p>
+                <p className="text-sm text-surface-500 mt-2">
+                  Click the download icon on any article to save it for offline reading.
+                </p>
+              </div>
+            )}
+          </motion.div>
+        )}
+
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <aside className="lg:col-span-1 space-y-6">
             <CategoryFilter
-              categories={categories}
+              categories={transformedCategories}
               selectedCategories={selectedCategories}
               onCategoryToggle={handleCategoryToggle}
               onClearAll={() => setSelectedCategories([])}
             />
 
             <SourceFilter
-              sources={sources}
+              sources={transformedSources}
               selectedSources={selectedSources}
               onSourceToggle={handleSourceToggle}
               onClearAll={() => setSelectedSources([])}
+            />
+
+            {/* Trending Topics */}
+            <TrendingTopicsList
+              articles={articles.map(a => ({
+                title: a.title,
+                category: a.category,
+                tags: (a as any).tags,
+              }))}
+              onTopicClick={(topic) => setSearchQuery(topic)}
+              maxTopics={8}
             />
 
             {/* AI Relevance Info */}
@@ -297,14 +414,20 @@ export default function News() {
 
           {/* News Feed */}
           <main className="lg:col-span-3">
-            <NewsFeed
-              articles={regularArticles}
-              featuredArticle={featuredArticle}
-              isLoading={isLoading}
+            <RefreshableContainer
               onRefresh={handleRefresh}
-              onBookmark={handleBookmark}
-              onShare={handleShare}
-            />
+              isRefreshing={isLoading}
+              className="min-h-[400px]"
+            >
+              <NewsFeed
+                articles={regularArticles}
+                featuredArticle={featuredArticle}
+                isLoading={isLoading}
+                onRefresh={handleRefresh}
+                onBookmark={handleBookmark}
+                onShare={handleShare}
+              />
+            </RefreshableContainer>
           </main>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { useGamificationStore } from '@/stores/gamificationStore';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { OfflineIndicator } from '@/components/shared/OfflineIndicator';
 
 export function MainLayout() {
   const { sidebar } = useUIStore();
@@ -27,6 +28,9 @@ export function MainLayout() {
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
+      {/* Offline Status Banner */}
+      <OfflineIndicator />
+
       {/* Sidebar */}
       <Sidebar />
 

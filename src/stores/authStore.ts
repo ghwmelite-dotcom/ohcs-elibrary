@@ -7,8 +7,16 @@ const API_BASE = import.meta.env.PROD
   ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
   : '/api/v1';
 
+interface TwoFAState {
+  requires2FA: boolean;
+  tempToken: string | null;
+  email: string | null;
+}
+
 interface AuthActions {
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<{ requires2FA: boolean }>;
+  verify2FA: (code: string) => Promise<void>;
+  cancel2FA: () => void;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   refreshTokens: () => Promise<void>;
@@ -19,7 +27,11 @@ interface AuthActions {
   hasRole: (roles: string[]) => boolean;
 }
 
-type AuthStore = AuthState & AuthActions;
+interface AuthStoreState extends AuthState {
+  twoFA: TwoFAState;
+}
+
+type AuthStore = AuthStoreState & AuthActions;
 
 // Mock permissions based on role (used until we implement permission API)
 const rolePermissions: Record<string, Permission[]> = {
@@ -75,6 +87,11 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
       isLoading: true,
       permissions: [],
+      twoFA: {
+        requires2FA: false,
+        tempToken: null,
+        email: null,
+      },
 
       // Actions
       login: async (credentials: LoginCredentials) => {
@@ -92,6 +109,18 @@ export const useAuthStore = create<AuthStore>()(
 
           if (!response.ok) {
             throw new Error(data.message || data.error || 'Login failed');
+          }
+
+          // Check if 2FA is required
+          if (data.requires2FA && data.tempToken) {
+            set({
+              twoFA: {
+                requires2FA: true,
+                tempToken: data.tempToken,
+                email: credentials.email.toLowerCase(),
+              },
+            });
+            return { requires2FA: true };
           }
 
           const user: User = {
@@ -119,6 +148,93 @@ export const useAuthStore = create<AuthStore>()(
             isAuthenticated: true,
             isLoading: false,
             permissions,
+            twoFA: {
+              requires2FA: false,
+              tempToken: null,
+              email: null,
+            },
+          });
+
+          // Store in localStorage for persistence
+          localStorage.setItem('auth_token', data.accessToken);
+          localStorage.setItem('refresh_token', data.refreshToken);
+          localStorage.setItem('auth_user', JSON.stringify(user));
+
+          // Create a session record for security tracking
+          try {
+            await fetch(`${API_BASE}/settings/sessions`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${data.accessToken}`,
+              },
+              body: JSON.stringify({
+                location: 'Unknown', // Could be obtained from geo API if needed
+              }),
+            });
+          } catch (sessionError) {
+            // Don't fail login if session creation fails
+            console.warn('Failed to create session record:', sessionError);
+          }
+
+          return { requires2FA: false };
+        } catch (error) {
+          throw error;
+        }
+      },
+
+      verify2FA: async (code: string) => {
+        const { twoFA } = get();
+        if (!twoFA.tempToken) {
+          throw new Error('No pending 2FA verification');
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/auth/login/verify-2fa`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${twoFA.tempToken}`,
+            },
+            body: JSON.stringify({ code }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || data.error || '2FA verification failed');
+          }
+
+          const user: User = {
+            id: data.user.id,
+            email: data.user.email,
+            firstName: data.user.firstName || data.user.name?.split(' ')[0] || '',
+            lastName: data.user.lastName || data.user.name?.split(' ').slice(1).join(' ') || '',
+            displayName: data.user.displayName || data.user.name,
+            avatar: data.user.avatar,
+            role: data.user.role || 'civil_servant',
+            status: 'active',
+            department: data.user.department,
+            title: data.user.title,
+            emailVerified: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+
+          const permissions = rolePermissions[user.role] || rolePermissions.user;
+
+          set({
+            user,
+            token: data.accessToken,
+            refreshToken: data.refreshToken,
+            isAuthenticated: true,
+            isLoading: false,
+            permissions,
+            twoFA: {
+              requires2FA: false,
+              tempToken: null,
+              email: null,
+            },
           });
 
           // Store in localStorage for persistence
@@ -128,6 +244,16 @@ export const useAuthStore = create<AuthStore>()(
         } catch (error) {
           throw error;
         }
+      },
+
+      cancel2FA: () => {
+        set({
+          twoFA: {
+            requires2FA: false,
+            tempToken: null,
+            email: null,
+          },
+        });
       },
 
       register: async (data: RegisterData) => {

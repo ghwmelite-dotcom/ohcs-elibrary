@@ -4,3 +4,8 @@ export { LeaderboardTable } from './LeaderboardTable';
 export { StreakDisplay, CompactStreak } from './StreakDisplay';
 export { XPNotification, LevelUpModal } from './XPNotification';
 export { AchievementList, XPHistory } from './AchievementList';
+export { Podium } from './Podium';
+export { WeeklyChallenges } from './WeeklyChallenges';
+export { ActivityHeatmap } from './ActivityHeatmap';
+export { MDALeaderboard } from './MDALeaderboard';
+export { StatsCard, StatsCardGrid } from './StatsCard';

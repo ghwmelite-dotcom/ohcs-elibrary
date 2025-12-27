@@ -1,8 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, Filter, Grid, List, SortAsc, SortDesc } from 'lucide-react';
-import { NewsCard } from './NewsCard';
+import { RefreshCw, Filter, Grid, List, Bookmark, Share2 } from 'lucide-react';
+import { NewsCard, NewsCardSkeleton } from './NewsCard';
+import { SwipeableCard } from './SwipeableCard';
 import { cn } from '@/utils/cn';
+
+// Hook for detecting mobile/touch devices
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+}
 
 interface NewsArticle {
   id: string;
@@ -17,6 +34,9 @@ interface NewsArticle {
   relevanceScore?: number;
   isBookmarked?: boolean;
   isTrending?: boolean;
+  readingTimeMinutes?: number;
+  sentiment?: 'positive' | 'neutral' | 'negative';
+  aiSummary?: string | null;
 }
 
 interface NewsFeedProps {
@@ -38,6 +58,7 @@ export function NewsFeed({
 }: NewsFeedProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'latest' | 'relevance' | 'trending'>('latest');
+  const isMobile = useIsMobile();
 
   const sortedArticles = [...articles].sort((a, b) => {
     switch (sortBy) {
@@ -119,19 +140,15 @@ export function NewsFeed({
         />
       )}
 
-      {/* Loading State */}
+      {/* Loading State - Beautiful Skeleton Loaders */}
       {isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className={cn(
+          viewMode === 'grid'
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+            : 'space-y-4'
+        )}>
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="bg-white dark:bg-surface-800 rounded-xl overflow-hidden animate-pulse">
-              <div className="aspect-video bg-surface-200 dark:bg-surface-700" />
-              <div className="p-4 space-y-3">
-                <div className="h-4 bg-surface-200 dark:bg-surface-700 rounded w-1/4" />
-                <div className="h-5 bg-surface-200 dark:bg-surface-700 rounded w-3/4" />
-                <div className="h-4 bg-surface-200 dark:bg-surface-700 rounded w-full" />
-                <div className="h-3 bg-surface-200 dark:bg-surface-700 rounded w-1/2" />
-              </div>
-            </div>
+            <NewsCardSkeleton key={i} variant={viewMode === 'list' ? 'compact' : 'default'} />
           ))}
         </div>
       )}
@@ -152,12 +169,37 @@ export function NewsFeed({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <NewsCard
-                article={article}
-                variant={viewMode === 'list' ? 'compact' : 'default'}
-                onBookmark={onBookmark}
-                onShare={onShare}
-              />
+              {/* Wrap in SwipeableCard on mobile for swipe gestures */}
+              {isMobile && viewMode === 'grid' ? (
+                <SwipeableCard
+                  onSwipeRight={() => onBookmark?.(article.id)}
+                  onSwipeLeft={() => onShare?.(article)}
+                  rightAction={{
+                    icon: <Bookmark className="w-5 h-5" />,
+                    color: 'bg-primary-500',
+                    label: article.isBookmarked ? 'Bookmarked' : 'Bookmark',
+                  }}
+                  leftAction={{
+                    icon: <Share2 className="w-5 h-5" />,
+                    color: 'bg-secondary-500',
+                    label: 'Share',
+                  }}
+                >
+                  <NewsCard
+                    article={article}
+                    variant="default"
+                    onBookmark={onBookmark}
+                    onShare={onShare}
+                  />
+                </SwipeableCard>
+              ) : (
+                <NewsCard
+                  article={article}
+                  variant={viewMode === 'list' ? 'compact' : 'default'}
+                  onBookmark={onBookmark}
+                  onShare={onShare}
+                />
+              )}
             </motion.div>
           ))}
         </div>

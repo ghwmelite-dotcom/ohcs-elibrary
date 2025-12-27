@@ -1,112 +1,480 @@
-import { useParams } from 'react-router-dom';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { ArticleView } from '@/components/news';
+import { useEffect, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import {
+  ArrowLeft,
+  Clock,
+  ExternalLink,
+  Bookmark,
+  BookmarkCheck,
+  Share2,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Copy,
+  Check,
+  AlertCircle,
+  Loader2,
+  Newspaper,
+  Download,
+  WifiOff
+} from 'lucide-react';
+import { TextToSpeech } from '@/components/news';
+import { useNewsStore } from '@/stores/newsStore';
+import { useOfflineArticles } from '@/hooks/useOfflineArticles';
+import { formatDate, formatRelativeTime } from '@/utils/formatters';
+import { cn } from '@/utils/cn';
 
 export default function Article() {
-  const { id } = useParams<{ id: string }>();
+  const { articleId } = useParams<{ articleId: string }>();
+  const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
 
-  // Mock article data - in production this would come from API
-  const mockArticle = {
-    id: id || '1',
-    title: 'Government Announces New Digital Transformation Initiative for Civil Service',
-    excerpt: 'The Office of the Head of Civil Service has unveiled a comprehensive digital transformation plan aimed at modernizing government operations across all MDAs.',
-    content: `
-      <p>The Office of the Head of Civil Service (OHCS) has today announced a comprehensive digital transformation initiative that aims to revolutionize how government services are delivered across Ghana.</p>
+  const {
+    currentArticle,
+    articles,
+    isLoading,
+    error,
+    fetchArticle,
+    bookmarkArticle,
+    removeBookmark,
+    clearError,
+    clearCurrentArticle,
+  } = useNewsStore();
 
-      <h2>Key Components of the Initiative</h2>
-      <p>The initiative, dubbed "Digital Civil Service 2030," encompasses several key areas:</p>
+  const { isArticleSaved, toggleOffline, isOnline } = useOfflineArticles();
 
-      <ul>
-        <li><strong>E-Government Services:</strong> All major government services will be available online within the next three years</li>
-        <li><strong>Staff Training:</strong> Over 50,000 civil servants will receive digital skills training</li>
-        <li><strong>Infrastructure Upgrade:</strong> Modern IT infrastructure will be deployed across all MDAs</li>
-        <li><strong>Data Management:</strong> A unified government data platform will be established</li>
-      </ul>
+  useEffect(() => {
+    if (articleId) {
+      // Clear any previous article when loading a new one
+      clearCurrentArticle();
+      fetchArticle(articleId);
+    }
 
-      <h2>Investment and Timeline</h2>
-      <p>The government has allocated GHS 500 million for the first phase of implementation, which will run from January 2025 to December 2027. International development partners, including the World Bank and African Development Bank, have expressed interest in supporting the initiative.</p>
+    // Cleanup when component unmounts
+    return () => {
+      clearCurrentArticle();
+    };
+  }, [articleId, fetchArticle, clearCurrentArticle]);
 
-      <blockquote>
-        "This digital transformation will not only improve service delivery but also enhance transparency and accountability in government operations," said the Head of Civil Service during the launch ceremony.
-      </blockquote>
-
-      <h2>Expected Benefits</h2>
-      <p>The initiative is expected to deliver significant benefits to both civil servants and citizens:</p>
-
-      <ul>
-        <li>Reduced processing times for government services by up to 70%</li>
-        <li>Improved inter-agency collaboration and data sharing</li>
-        <li>Enhanced citizen engagement through digital platforms</li>
-        <li>Cost savings estimated at GHS 200 million annually</li>
-        <li>Creation of a more agile and responsive civil service</li>
-      </ul>
-
-      <h2>Implementation Approach</h2>
-      <p>The implementation will follow a phased approach, starting with pilot programs in selected ministries before rolling out nationwide. The Ministry of Finance, Public Services Commission, and Ministry of Health have been selected as pilot agencies.</p>
-
-      <p>A dedicated Digital Transformation Unit will be established within OHCS to oversee implementation and coordinate with all stakeholders. This unit will report directly to the Head of Civil Service and will include representatives from all major MDAs.</p>
-
-      <h2>Stakeholder Reactions</h2>
-      <p>The announcement has been welcomed by various stakeholders, including the Civil Servants Association of Ghana (CSAG), which described it as "a long-overdue step towards modernizing the civil service."</p>
-
-      <p>Private sector technology partners have also expressed enthusiasm, with several local and international companies indicating interest in supporting the initiative through public-private partnerships.</p>
-    `,
-    source: 'Ghana News Agency',
-    sourceIcon: '',
-    sourceUrl: 'https://gna.org.gh',
-    category: 'Government',
-    imageUrl: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=1200',
-    publishedAt: new Date(Date.now() - 3600000).toISOString(),
-    url: 'https://gna.org.gh/article/digital-transformation',
-    author: 'Kwame Asante',
-    readTime: 5,
-    relevanceScore: 95,
-    isBookmarked: false,
-    tags: ['Digital Transformation', 'Civil Service', 'OHCS', 'E-Government', 'Technology'],
+  const handleCopyLink = async () => {
+    await navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  const mockRelatedArticles = [
+  const handleBookmark = () => {
+    if (!currentArticle) return;
+    if (currentArticle.isBookmarked) {
+      removeBookmark(currentArticle.id);
+    } else {
+      bookmarkArticle(currentArticle.id);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!currentArticle) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: currentArticle.title,
+          text: currentArticle.summary,
+          url: currentArticle.url,
+        });
+      } catch {
+        // User cancelled
+      }
+    } else {
+      setShowShareMenu(!showShareMenu);
+    }
+  };
+
+  const handleSaveOffline = () => {
+    if (!currentArticle) return;
+    toggleOffline({
+      id: currentArticle.id,
+      title: currentArticle.title,
+      summary: currentArticle.summary,
+      content: currentArticle.content,
+      imageUrl: currentArticle.imageUrl,
+      category: currentArticle.category,
+      publishedAt: currentArticle.publishedAt,
+      source: currentArticle.source,
+      readingTimeMinutes: currentArticle.readingTimeMinutes,
+    });
+  };
+
+  const isSavedOffline = currentArticle ? isArticleSaved(currentArticle.id) : false;
+
+  // Get related articles (same category, different article)
+  const relatedArticles = articles
+    .filter(a => a.id !== articleId && a.category === currentArticle?.category)
+    .slice(0, 3);
+
+  const shareUrl = encodeURIComponent(window.location.href);
+  const shareTitle = encodeURIComponent(currentArticle?.title || '');
+
+  const socialLinks = [
     {
-      id: '2',
-      title: 'Public Services Commission Reviews Promotion Guidelines for 2025',
-      source: 'Daily Graphic',
-      imageUrl: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800',
-      publishedAt: new Date(Date.now() - 7200000).toISOString(),
+      name: 'Facebook',
+      icon: Facebook,
+      url: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
+      color: 'hover:text-blue-600',
     },
     {
-      id: '3',
-      title: 'Ministry of Finance Releases Q4 Budget Performance Report',
-      source: 'Joy News',
-      imageUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800',
-      publishedAt: new Date(Date.now() - 14400000).toISOString(),
+      name: 'Twitter',
+      icon: Twitter,
+      url: `https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareTitle}`,
+      color: 'hover:text-sky-500',
     },
     {
-      id: '6',
-      title: 'Local Government Ministry Announces Smart City Initiative',
-      source: 'Daily Graphic',
-      imageUrl: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800',
-      publishedAt: new Date(Date.now() - 43200000).toISOString(),
+      name: 'LinkedIn',
+      icon: Linkedin,
+      url: `https://www.linkedin.com/shareArticle?mini=true&url=${shareUrl}&title=${shareTitle}`,
+      color: 'hover:text-blue-700',
     },
   ];
 
-  const handleBookmark = () => {
-    console.log('Toggle bookmark for article:', id);
-  };
+  // Loading state - show loading if isLoading is true OR if we haven't loaded the article yet
+  if (isLoading || (!currentArticle && !error)) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="w-12 h-12 text-primary-600 animate-spin mb-4" />
+          <p className="text-surface-600 dark:text-surface-400">Loading article...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const handleShare = () => {
-    console.log('Share article:', id);
-  };
+  // Error state - only show if there's an actual error
+  if (error || !currentArticle) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Link
+          to="/news"
+          className="inline-flex items-center gap-2 text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to News
+        </Link>
+
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-50 mb-2">
+            Article Not Found
+          </h2>
+          <p className="text-surface-600 dark:text-surface-400 mb-6">
+            {error || "The article you're looking for doesn't exist or has been removed."}
+          </p>
+          <button
+            onClick={() => navigate('/news')}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            Browse All News
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Format tags
+  const tags = currentArticle.tags || [];
 
   return (
-    <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ArticleView
-          article={mockArticle}
-          relatedArticles={mockRelatedArticles}
-          onBookmark={handleBookmark}
-          onShare={handleShare}
-        />
-      </div>
-    </MainLayout>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Back Button */}
+      <Link
+        to="/news"
+        className="inline-flex items-center gap-2 text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 mb-6 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to News
+      </Link>
+
+      <article>
+          {/* Header */}
+          <header className="mb-8">
+            {/* Category & Relevance */}
+            <div className="flex items-center gap-3 mb-4">
+              <span className="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm font-medium capitalize">
+                {currentArticle.category}
+              </span>
+              {currentArticle.relevanceScore && currentArticle.relevanceScore >= 80 && (
+                <span className="px-3 py-1 bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-300 rounded-full text-sm font-medium">
+                  Highly Relevant
+                </span>
+              )}
+              {currentArticle.isBreaking && (
+                <span className="px-3 py-1 bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 rounded-full text-sm font-medium">
+                  Breaking
+                </span>
+              )}
+            </div>
+
+            {/* Title */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-3xl md:text-4xl font-bold text-surface-900 dark:text-surface-50 mb-4"
+            >
+              {currentArticle.title}
+            </motion.h1>
+
+            {/* Summary */}
+            <p className="text-lg text-surface-600 dark:text-surface-400 mb-6">
+              {currentArticle.summary}
+            </p>
+
+            {/* Meta */}
+            <div className="flex flex-wrap items-center gap-4 text-sm text-surface-500">
+              <div className="flex items-center gap-2">
+                {currentArticle.source?.logoUrl && (
+                  <img
+                    src={currentArticle.source.logoUrl}
+                    alt={currentArticle.source.name}
+                    className="w-5 h-5 rounded"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                )}
+                <a
+                  href={currentArticle.source?.url || currentArticle.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium hover:text-primary-600 transition-colors"
+                >
+                  {currentArticle.source?.name || 'Unknown Source'}
+                </a>
+              </div>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                {formatDate(currentArticle.publishedAt)}
+              </span>
+              <span className="text-surface-400">
+                ({formatRelativeTime(currentArticle.publishedAt)})
+              </span>
+            </div>
+          </header>
+
+          {/* Featured Image */}
+          {currentArticle.imageUrl && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-8 rounded-xl overflow-hidden"
+            >
+              <img
+                src={currentArticle.imageUrl}
+                alt={currentArticle.title}
+                loading="lazy"
+                decoding="async"
+                className="w-full aspect-video object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </motion.div>
+          )}
+
+          {/* Actions Bar */}
+          <div className="flex items-center justify-between py-4 border-y border-surface-200 dark:border-surface-700 mb-8">
+            <div className="flex items-center gap-2">
+              {/* Text-to-Speech */}
+              <TextToSpeech
+                text={`${currentArticle.title}. ${currentArticle.summary}`}
+                variant="button"
+              />
+
+              <button
+                onClick={handleBookmark}
+                className={cn(
+                  'flex items-center gap-2 px-3 py-2 rounded-lg transition-colors',
+                  currentArticle.isBookmarked
+                    ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
+                    : 'hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-400'
+                )}
+              >
+                {currentArticle.isBookmarked ? (
+                  <BookmarkCheck className="w-5 h-5" />
+                ) : (
+                  <Bookmark className="w-5 h-5" />
+                )}
+                <span className="text-sm font-medium">
+                  {currentArticle.isBookmarked ? 'Saved' : 'Save'}
+                </span>
+              </button>
+
+              <button
+                onClick={handleSaveOffline}
+                className={cn(
+                  'flex items-center gap-2 px-3 py-2 rounded-lg transition-colors',
+                  isSavedOffline
+                    ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400'
+                    : 'hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-400'
+                )}
+                title={isSavedOffline ? 'Remove from offline' : 'Save for offline reading'}
+              >
+                {isSavedOffline ? (
+                  <WifiOff className="w-5 h-5" />
+                ) : (
+                  <Download className="w-5 h-5" />
+                )}
+                <span className="text-sm font-medium hidden sm:inline">
+                  {isSavedOffline ? 'Offline' : 'Offline'}
+                </span>
+              </button>
+
+              <div className="relative">
+                <button
+                  onClick={handleShare}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-400 transition-colors"
+                >
+                  <Share2 className="w-5 h-5" />
+                  <span className="text-sm font-medium">Share</span>
+                </button>
+
+                {showShareMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute top-full left-0 mt-2 bg-white dark:bg-surface-800 rounded-xl shadow-elevation-3 p-2 z-10 min-w-[180px]"
+                  >
+                    {socialLinks.map((social) => (
+                      <a
+                        key={social.name}
+                        href={social.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-2 rounded-lg text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors',
+                          social.color
+                        )}
+                      >
+                        <social.icon className="w-4 h-4" />
+                        <span className="text-sm">{social.name}</span>
+                      </a>
+                    ))}
+                    <button
+                      onClick={handleCopyLink}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
+                    >
+                      {copied ? (
+                        <Check className="w-4 h-4 text-success-500" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                      <span className="text-sm">{copied ? 'Copied!' : 'Copy Link'}</span>
+                    </button>
+                  </motion.div>
+                )}
+              </div>
+            </div>
+
+            <a
+              href={currentArticle.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+            >
+              <span className="text-sm font-medium">Read Full Article</span>
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+
+          {/* Content Section - For RSS articles, show summary with CTA */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8"
+          >
+            {currentArticle.content ? (
+              <div
+                className="prose prose-lg dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: currentArticle.content }}
+              />
+            ) : (
+              <div className="bg-surface-50 dark:bg-surface-800/50 rounded-xl p-8 text-center">
+                <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Newspaper className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-surface-900 dark:text-surface-50 mb-2">
+                  Continue Reading on {currentArticle.source?.name || 'Source'}
+                </h3>
+                <p className="text-surface-600 dark:text-surface-400 mb-6 max-w-md mx-auto">
+                  This article is provided by {currentArticle.source?.name}. Click below to read the full story on their website.
+                </p>
+                <a
+                  href={currentArticle.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors font-medium"
+                >
+                  Read Full Article
+                  <ExternalLink className="w-5 h-5" />
+                </a>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Tags */}
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-8">
+              {tags.map((tag) => (
+                <Link
+                  key={tag}
+                  to={`/news?search=${encodeURIComponent(tag)}`}
+                  className="px-3 py-1 bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400 rounded-full text-sm hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors"
+                >
+                  #{tag}
+                </Link>
+              ))}
+            </div>
+          )}
+        </article>
+
+        {/* Related Articles */}
+        {relatedArticles.length > 0 && (
+          <section className="mt-12 pt-8 border-t border-surface-200 dark:border-surface-700">
+            <h2 className="text-xl font-bold text-surface-900 dark:text-surface-50 mb-6">
+              Related Articles
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {relatedArticles.map((related) => (
+                <Link
+                  key={related.id}
+                  to={`/news/${related.id}`}
+                  className="group"
+                >
+                  {related.imageUrl && (
+                    <div className="aspect-video rounded-lg overflow-hidden mb-3 bg-surface-100 dark:bg-surface-800">
+                      <img
+                        src={related.imageUrl}
+                        alt={related.title}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  <h3 className="font-medium text-surface-900 dark:text-surface-50 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                    {related.title}
+                  </h3>
+                  <p className="text-sm text-surface-500 mt-1">
+                    {related.source?.name || 'Unknown'} • {formatRelativeTime(related.publishedAt)}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+    </div>
   );
 }

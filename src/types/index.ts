@@ -692,6 +692,18 @@ export interface NewsFilter {
   limit?: number;
 }
 
+export interface NewsCategory {
+  id: UUID;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  sortOrder: number;
+  isActive: boolean;
+  articleCount?: number;
+}
+
 // ============================================================================
 // Notification Types
 // ============================================================================

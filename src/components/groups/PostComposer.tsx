@@ -53,6 +53,7 @@ export function PostComposer({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [showTools, setShowTools] = useState(!isCompact);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -311,6 +312,7 @@ export function PostComposer({
                           <VoiceMessagePlayer
                             audioUrl={attachment.url}
                             duration={attachment.duration || 0}
+                            isOwn={true}
                           />
                           <button
                             onClick={() => removeAttachment(attachment.id)}
@@ -440,8 +442,16 @@ export function PostComposer({
                           className="absolute bottom-full left-0 mb-2 z-50 bg-white dark:bg-surface-800 rounded-xl shadow-elevation-3 p-4"
                         >
                           <VoiceRecorder
-                            onRecordingComplete={handleVoiceRecord}
-                            onCancel={() => setShowVoiceRecorder(false)}
+                            isRecording={isRecording}
+                            onStartRecording={() => setIsRecording(true)}
+                            onSend={(audioBlob, duration) => {
+                              handleVoiceRecord(audioBlob, duration);
+                              setIsRecording(false);
+                            }}
+                            onCancel={() => {
+                              setShowVoiceRecorder(false);
+                              setIsRecording(false);
+                            }}
                           />
                         </motion.div>
                       )}

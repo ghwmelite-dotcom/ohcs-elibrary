@@ -1,193 +1,331 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Trophy, Crown, Medal, TrendingUp, Users, Building2 } from 'lucide-react';
-import { LeaderboardTable, LevelProgress, BadgeGrid, StreakDisplay, AchievementList, XPHistory } from '@/components/gamification';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Trophy,
+  Crown,
+  Medal,
+  TrendingUp,
+  Users,
+  Building2,
+  Flame,
+  Target,
+  Sparkles,
+  Zap,
+  BookOpen,
+  MessageSquare,
+  Award,
+  Star,
+  ChevronRight,
+} from 'lucide-react';
+import {
+  LeaderboardTable,
+  LevelProgress,
+  BadgeGrid,
+  StreakDisplay,
+  AchievementList,
+  XPHistory,
+  Podium,
+  WeeklyChallenges,
+  ActivityHeatmap,
+  MDALeaderboard,
+  StatsCard,
+  StatsCardGrid,
+} from '@/components/gamification';
+import { Skeleton } from '@/components/shared/Skeleton';
 import { useAuthStore } from '@/stores/authStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
 import { cn } from '@/utils/cn';
 
-type Period = 'daily' | 'weekly' | 'monthly' | 'all-time';
+type Period = 'daily' | 'weekly' | 'monthly' | 'allTime';
 type LeaderboardType = 'national' | 'mda';
+type Tab = 'leaderboard' | 'achievements' | 'badges' | 'activity';
 
 export default function Leaderboard() {
   const { user } = useAuthStore();
   const {
     leaderboard,
-    userStats,
-    badges,
+    mdaLeaderboard,
+    quickStats,
+    challenges,
     achievements,
-    xpHistory,
-    fetchLeaderboard
+    allBadges,
+    activityHeatmap,
+    userRank,
+    activities,
+    isLoading,
+    fetchLeaderboard,
+    fetchMDALeaderboard,
+    fetchQuickStats,
+    fetchChallenges,
+    fetchAchievements,
+    fetchBadges,
+    fetchActivityHeatmap,
+    fetchUserRank,
+    fetchActivities,
   } = useGamificationStore();
 
   const [period, setPeriod] = useState<Period>('weekly');
   const [leaderboardType, setLeaderboardType] = useState<LeaderboardType>('national');
-  const [activeTab, setActiveTab] = useState<'leaderboard' | 'achievements' | 'badges'>('leaderboard');
+  const [activeTab, setActiveTab] = useState<Tab>('leaderboard');
+
+  // Fetch all data on mount
+  useEffect(() => {
+    fetchQuickStats();
+    fetchLeaderboard(period);
+    fetchMDALeaderboard();
+    fetchChallenges();
+    fetchAchievements();
+    fetchBadges();
+    fetchActivityHeatmap();
+    fetchUserRank();
+    fetchActivities(10);
+  }, []);
+
+  // Refetch leaderboard when period changes
+  useEffect(() => {
+    fetchLeaderboard(period);
+  }, [period, fetchLeaderboard]);
 
   const periods: { value: Period; label: string }[] = [
     { value: 'daily', label: 'Today' },
     { value: 'weekly', label: 'This Week' },
     { value: 'monthly', label: 'This Month' },
-    { value: 'all-time', label: 'All Time' },
+    { value: 'allTime', label: 'All Time' },
   ];
 
-  // Mock data for demonstration
-  const mockLeaderboard = [
-    { userId: '1', name: 'Kwame Asante', avatar: '', xp: 15420, level: 8, rank: 1, change: 2, mda: 'Ministry of Finance' },
-    { userId: '2', name: 'Ama Serwaa', avatar: '', xp: 14850, level: 8, rank: 2, change: -1, mda: 'Public Services Commission' },
-    { userId: '3', name: 'Kofi Mensah', avatar: '', xp: 13200, level: 7, rank: 3, change: 1, mda: 'Ministry of Health' },
-    { userId: '4', name: 'Abena Pokua', avatar: '', xp: 12100, level: 7, rank: 4, change: 0, mda: 'Ministry of Education' },
-    { userId: '5', name: 'Yaw Boateng', avatar: '', xp: 11500, level: 6, rank: 5, change: 3, mda: 'OHCS' },
-    { userId: user?.id || '6', name: user?.displayName || 'You', avatar: user?.avatar || '', xp: 10200, level: 6, rank: 6, change: -2, mda: user?.mda?.name || 'OHCS' },
-    { userId: '7', name: 'Efua Ankrah', avatar: '', xp: 9800, level: 6, rank: 7, change: 1, mda: 'Ministry of Foreign Affairs' },
-    { userId: '8', name: 'Kwesi Appiah', avatar: '', xp: 9200, level: 5, rank: 8, change: -1, mda: 'Ministry of Justice' },
-    { userId: '9', name: 'Akosua Darko', avatar: '', xp: 8700, level: 5, rank: 9, change: 0, mda: 'Ministry of Trade' },
-    { userId: '10', name: 'Nana Yeboah', avatar: '', xp: 8100, level: 5, rank: 10, change: 2, mda: 'Ministry of Communications' },
+  const tabs = [
+    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
+    { id: 'achievements', label: 'Achievements', icon: Medal },
+    { id: 'badges', label: 'Badges', icon: Award },
+    { id: 'activity', label: 'Activity', icon: Zap },
   ];
 
-  const mockUserStats = {
-    level: 6,
-    levelName: 'Expert',
-    currentXP: 2200,
-    requiredXP: 3000,
-    totalXP: 10200,
-    rank: 6,
-    rankChange: -2,
-    streak: 12,
-    longestStreak: 21,
-    lastActivityDate: new Date().toISOString(),
-    weeklyActivity: [true, true, false, true, true, true, true],
-  };
+  // Transform leaderboard data for podium
+  const podiumUsers = leaderboard.slice(0, 3).map((entry) => ({
+    userId: entry.userId,
+    name: entry.user?.displayName || 'Anonymous',
+    avatar: entry.user?.avatar,
+    xp: entry.xp,
+    level: entry.level,
+    rank: entry.rank,
+  }));
 
-  const mockBadges = [
-    { id: '1', name: 'First Steps', description: 'Complete your profile', icon: '👋', rarity: 'common' as const, earnedAt: '2024-01-15', category: 'onboarding' },
-    { id: '2', name: 'Bookworm', description: 'Read 10 documents', icon: '📚', rarity: 'uncommon' as const, earnedAt: '2024-01-20', category: 'library' },
-    { id: '3', name: 'Contributor', description: 'Upload 5 documents', icon: '📤', rarity: 'rare' as const, earnedAt: '2024-02-01', category: 'library' },
-    { id: '4', name: 'Helpful', description: 'Get 10 upvotes on forum posts', icon: '👍', rarity: 'uncommon' as const, earnedAt: '2024-02-10', category: 'forum' },
-    { id: '5', name: 'Socialite', description: 'Join 5 groups', icon: '👥', rarity: 'common' as const, earnedAt: '2024-02-15', category: 'social' },
-    { id: '6', name: 'Fire Starter', description: '7-day login streak', icon: '🔥', rarity: 'uncommon' as const, earnedAt: '2024-02-20', category: 'engagement', isNew: true },
-    { id: '7', name: 'Legend', description: 'Reach level 10', icon: '🏆', rarity: 'legendary' as const, category: 'progression' },
-    { id: '8', name: 'Master Reviewer', description: 'Rate 50 documents', icon: '⭐', rarity: 'epic' as const, category: 'library' },
-  ];
+  // Transform leaderboard for table
+  const tableEntries = leaderboard.map((entry) => ({
+    userId: entry.userId,
+    name: entry.user?.displayName || 'Anonymous',
+    avatar: entry.user?.avatar,
+    xp: entry.xp,
+    level: entry.level,
+    rank: entry.rank,
+    change: 0,
+    mda: '',
+  }));
 
-  const mockAchievements = [
-    { id: '1', title: '7-Day Streak!', description: 'Logged in for 7 consecutive days', icon: '🔥', xpEarned: 100, earnedAt: new Date().toISOString(), category: 'streak' },
-    { id: '2', title: 'Document Master', description: 'Read 50 documents', icon: '📚', xpEarned: 250, earnedAt: new Date(Date.now() - 86400000).toISOString(), category: 'library' },
-    { id: '3', title: 'Forum Star', description: 'Received 25 upvotes', icon: '⭐', xpEarned: 150, earnedAt: new Date(Date.now() - 172800000).toISOString(), category: 'forum' },
-  ];
-
-  const mockXPHistory = [
-    { id: '1', amount: 50, reason: 'Daily login bonus', timestamp: new Date().toISOString(), category: 'login' },
-    { id: '2', amount: 25, reason: 'Read: Annual Budget Report 2024', timestamp: new Date(Date.now() - 3600000).toISOString(), category: 'document' },
-    { id: '3', amount: 15, reason: 'Forum post upvoted', timestamp: new Date(Date.now() - 7200000).toISOString(), category: 'forum' },
-    { id: '4', amount: 100, reason: 'Earned badge: Fire Starter', timestamp: new Date(Date.now() - 86400000).toISOString(), category: 'badge' },
-    { id: '5', amount: 10, reason: 'Joined study group', timestamp: new Date(Date.now() - 172800000).toISOString(), category: 'group' },
-  ];
+  // Show skeleton while loading
+  if (isLoading && !quickStats) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-32 rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-64 rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-xl flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">
-                Leaderboard & Achievements
-              </h1>
-              <p className="text-surface-600 dark:text-surface-400">
-                Track your progress and compete with colleagues
-              </p>
-            </div>
-          </div>
+      {/* Hero Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-700 rounded-2xl p-6 md:p-8 overflow-hidden"
+      >
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-secondary-400 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
         </div>
 
-        {/* User Stats Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Level Progress */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="col-span-1 md:col-span-2"
-          >
-            <LevelProgress
-              level={mockUserStats.level}
-              levelName={mockUserStats.levelName}
-              currentXP={mockUserStats.currentXP}
-              requiredXP={mockUserStats.requiredXP}
-              totalXP={mockUserStats.totalXP}
-              showDetails
-              size="lg"
-            />
-          </motion.div>
-
-          {/* Rank Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6"
-          >
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                {mockUserStats.rank <= 3 ? (
-                  mockUserStats.rank === 1 ? (
-                    <Crown className="w-8 h-8 text-white" />
-                  ) : (
-                    <Medal className="w-8 h-8 text-white" />
-                  )
-                ) : (
-                  <span className="text-2xl font-bold text-white">#{mockUserStats.rank}</span>
-                )}
-              </div>
-              <p className="text-4xl font-bold text-surface-900 dark:text-surface-50">
-                #{mockUserStats.rank}
-              </p>
-              <p className="text-surface-600 dark:text-surface-400 mb-2">
-                Your Rank
-              </p>
-              <div className={cn(
-                'inline-flex items-center gap-1 text-sm font-medium',
-                mockUserStats.rankChange > 0 ? 'text-success-600' :
-                mockUserStats.rankChange < 0 ? 'text-error-600' : 'text-surface-500'
-              )}>
-                <TrendingUp className={cn(
-                  'w-4 h-4',
-                  mockUserStats.rankChange < 0 && 'rotate-180'
-                )} />
-                {mockUserStats.rankChange > 0 ? '+' : ''}{mockUserStats.rankChange} this week
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-surface-200 dark:border-surface-700">
-          {[
-            { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
-            { id: 'achievements', label: 'Achievements', icon: Medal },
-            { id: 'badges', label: 'Badges', icon: Crown },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={cn(
-                'flex items-center gap-2 px-4 py-3 font-medium border-b-2 -mb-px transition-colors',
-                activeTab === tab.id
-                  ? 'border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400'
-                  : 'border-transparent text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-200'
-              )}
+        {/* Floating Icons */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[Trophy, Star, Crown, Medal].map((Icon, i) => (
+            <motion.div
+              key={i}
+              className="absolute text-white/10"
+              initial={{ opacity: 0 }}
+              animate={{
+                opacity: [0.1, 0.2, 0.1],
+                y: [0, -10, 0],
+                rotate: [0, 5, 0],
+              }}
+              transition={{
+                duration: 4,
+                delay: i * 0.5,
+                repeat: Infinity,
+              }}
+              style={{
+                left: `${20 + i * 20}%`,
+                top: `${30 + (i % 2) * 30}%`,
+              }}
             >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </button>
+              <Icon className="w-12 h-12" />
+            </motion.div>
           ))}
         </div>
 
-        {/* Leaderboard Tab */}
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', delay: 0.2 }}
+              className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center"
+            >
+              <Trophy className="w-8 h-8 text-white" />
+            </motion.div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">
+                Leaderboard & Achievements
+              </h1>
+              <p className="text-white/80 mt-1">
+                Compete, earn XP, and climb the ranks!
+              </p>
+            </div>
+          </div>
+
+          {/* User Rank Card */}
+          {userRank && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
+            >
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mb-1">
+                    <span className="text-xl font-bold text-white">#{userRank.rank}</span>
+                  </div>
+                  <p className="text-white/80 text-xs">Your Rank</p>
+                </div>
+                <div className="h-12 w-px bg-white/20" />
+                <div>
+                  <p className="text-white/80 text-sm">Top {userRank.percentile}%</p>
+                  <p className="text-white font-semibold">of all users</p>
+                  {userRank.change !== 0 && (
+                    <div className={cn(
+                      'flex items-center gap-1 text-sm mt-1',
+                      userRank.change > 0 ? 'text-success-300' : 'text-error-300'
+                    )}>
+                      <TrendingUp className={cn('w-4 h-4', userRank.change < 0 && 'rotate-180')} />
+                      {Math.abs(userRank.change)} this week
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Quick Stats */}
+      <StatsCardGrid columns={4}>
+        <StatsCard
+          title="Total XP"
+          value={quickStats?.totalXp || 0}
+          icon={Zap}
+          color="primary"
+          description={`Level ${quickStats?.level || 1} • ${quickStats?.levelTitle || 'Newcomer'}`}
+          delay={0}
+        />
+        <StatsCard
+          title="Current Streak"
+          value={quickStats?.currentStreak || 0}
+          suffix=" days"
+          icon={Flame}
+          color="warning"
+          description={`Longest: ${quickStats?.longestStreak || 0} days`}
+          delay={0.1}
+        />
+        <StatsCard
+          title="Badges Earned"
+          value={quickStats?.badgesEarned || 0}
+          icon={Award}
+          color="secondary"
+          description="Collect them all!"
+          delay={0.2}
+        />
+        <StatsCard
+          title="XP Today"
+          value={quickStats?.xpToday || 0}
+          prefix="+"
+          icon={Sparkles}
+          color="success"
+          description="Keep it up!"
+          delay={0.3}
+        />
+      </StatsCardGrid>
+
+      {/* Level Progress */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <LevelProgress
+          level={quickStats?.level || 1}
+          levelName={quickStats?.levelTitle || 'Newcomer'}
+          currentXP={quickStats?.xpProgress ? Math.round((quickStats.xpProgress / 100) * (quickStats.xpToNextLevel || 100)) : 0}
+          requiredXP={quickStats?.xpToNextLevel || 100}
+          totalXP={quickStats?.totalXp || 0}
+          showDetails
+          size="lg"
+        />
+      </motion.div>
+
+      {/* Weekly Challenges */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <WeeklyChallenges challenges={challenges} />
+      </motion.div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-2 border-b border-surface-200 dark:border-surface-700">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as Tab)}
+            className={cn(
+              'flex items-center gap-2 px-4 py-3 font-medium border-b-2 -mb-px transition-colors whitespace-nowrap',
+              activeTab === tab.id
+                ? 'border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400'
+                : 'border-transparent text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-200'
+            )}
+          >
+            <tab.icon className="w-4 h-4" />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <AnimatePresence mode="wait">
         {activeTab === 'leaderboard' && (
-          <div className="space-y-6">
+          <motion.div
+            key="leaderboard"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6"
+          >
             {/* Filters */}
             <div className="flex flex-wrap items-center gap-4">
               {/* Period Filter */}
@@ -232,92 +370,219 @@ export default function Leaderboard() {
                   )}
                 >
                   <Building2 className="w-4 h-4" />
-                  My MDA
+                  MDA Rankings
                 </button>
               </div>
             </div>
 
-            {/* Leaderboard Table */}
-            <LeaderboardTable
-              entries={mockLeaderboard}
-              currentUserId={user?.id || '6'}
-              period={period}
-              showPodium
-            />
-          </div>
+            {leaderboardType === 'national' ? (
+              <>
+                {/* Podium */}
+                {podiumUsers.length >= 3 && (
+                  <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 py-6">
+                    <Podium users={podiumUsers} currentUserId={user?.id} />
+                  </div>
+                )}
+
+                {/* Full Leaderboard */}
+                <LeaderboardTable
+                  entries={tableEntries}
+                  currentUserId={user?.id}
+                  period={period}
+                  showPodium={false}
+                />
+              </>
+            ) : (
+              <MDALeaderboard
+                entries={mdaLeaderboard}
+                userMdaId={user?.mdaId}
+              />
+            )}
+          </motion.div>
         )}
 
-        {/* Achievements Tab */}
         {activeTab === 'achievements' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <motion.div
+            key="achievements"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+          >
             {/* Streak Display */}
             <StreakDisplay
-              currentStreak={mockUserStats.streak}
-              longestStreak={mockUserStats.longestStreak}
-              lastActivityDate={mockUserStats.lastActivityDate}
-              weeklyActivity={mockUserStats.weeklyActivity}
+              currentStreak={quickStats?.currentStreak || 0}
+              longestStreak={quickStats?.longestStreak || 0}
+              lastActivityDate={new Date().toISOString()}
+              weeklyActivity={[true, true, false, true, true, true, true]}
             />
 
-            {/* Recent Achievements */}
-            <AchievementList
-              achievements={mockAchievements}
-              maxItems={5}
-            />
+            {/* Achievements List */}
+            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
+              <h3 className="font-semibold text-surface-900 dark:text-white mb-4 flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-yellow-500" />
+                Achievements ({achievements.filter((a) => a.earned).length}/{achievements.length})
+              </h3>
+              <div className="space-y-3 max-h-80 overflow-y-auto">
+                {achievements.length === 0 ? (
+                  <p className="text-surface-500 text-center py-4">Loading achievements...</p>
+                ) : (
+                  achievements.map((achievement) => (
+                    <div
+                      key={achievement.id}
+                      className={cn(
+                        'flex items-center gap-3 p-3 rounded-lg transition-colors',
+                        achievement.earned
+                          ? 'bg-success-50 dark:bg-success-900/20'
+                          : 'bg-surface-50 dark:bg-surface-700/50 opacity-60'
+                      )}
+                    >
+                      <span className="text-2xl">{achievement.icon}</span>
+                      <div className="flex-1">
+                        <p className={cn(
+                          'font-medium',
+                          achievement.earned
+                            ? 'text-success-700 dark:text-success-400'
+                            : 'text-surface-600 dark:text-surface-400'
+                        )}>
+                          {achievement.name}
+                        </p>
+                        <p className="text-sm text-surface-500">{achievement.description}</p>
+                      </div>
+                      <span className={cn(
+                        'text-sm font-bold px-2 py-0.5 rounded',
+                        achievement.earned
+                          ? 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400'
+                          : 'bg-surface-100 text-surface-500 dark:bg-surface-600 dark:text-surface-400'
+                      )}>
+                        +{achievement.xpReward} XP
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
 
             {/* XP History */}
             <div className="lg:col-span-2">
               <XPHistory
-                history={mockXPHistory}
+                history={activities.map((a: any) => ({
+                  id: a.id,
+                  amount: a.xpEarned || 0,
+                  reason: a.title,
+                  timestamp: a.createdAt,
+                  category: a.activityType,
+                }))}
                 maxItems={10}
               />
             </div>
-          </div>
+          </motion.div>
         )}
 
-        {/* Badges Tab */}
         {activeTab === 'badges' && (
-          <BadgeGrid
-            badges={mockBadges}
-            columns={4}
-          />
+          <motion.div
+            key="badges"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <BadgeGrid
+              badges={allBadges.map((b) => ({
+                id: b.id,
+                name: b.name,
+                description: b.description || '',
+                icon: b.icon,
+                rarity: (b.rarity as 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary') || 'common',
+                earnedAt: b.earnedAt,
+                category: b.category,
+                isNew: false,
+              }))}
+              columns={4}
+            />
+          </motion.div>
         )}
 
-        {/* How to Earn XP Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mt-8 bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-xl p-6"
-        >
-          <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-            How to Earn XP
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { action: 'Daily Login', xp: '50 XP', icon: '🔐' },
-              { action: 'Read Document', xp: '25 XP', icon: '📄' },
-              { action: 'Upload Document', xp: '100 XP', icon: '📤' },
-              { action: 'Forum Post', xp: '30 XP', icon: '💬' },
-              { action: 'Get Upvote', xp: '15 XP', icon: '👍' },
-              { action: 'Join Group', xp: '20 XP', icon: '👥' },
-              { action: 'Complete Profile', xp: '200 XP', icon: '✅' },
-              { action: 'Earn Badge', xp: '50-500 XP', icon: '🏆' },
-            ].map((item, index) => (
-              <div
-                key={index}
-                className="bg-white dark:bg-surface-800 rounded-lg p-3 text-center"
-              >
-                <span className="text-2xl mb-2 block">{item.icon}</span>
-                <p className="text-sm font-medium text-surface-900 dark:text-surface-50">
-                  {item.action}
-                </p>
-                <p className="text-sm text-secondary-600 dark:text-secondary-400 font-bold">
-                  +{item.xp}
-                </p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+        {activeTab === 'activity' && (
+          <motion.div
+            key="activity"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6"
+          >
+            {/* Activity Heatmap */}
+            <ActivityHeatmap data={activityHeatmap} weeks={12} />
+
+            {/* Stats Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <StatsCard
+                title="Documents Read"
+                value={quickStats?.documentsRead || 0}
+                icon={BookOpen}
+                color="primary"
+                delay={0}
+              />
+              <StatsCard
+                title="Forum Contributions"
+                value={quickStats?.forumPosts || 0}
+                icon={MessageSquare}
+                color="secondary"
+                delay={0.1}
+              />
+              <StatsCard
+                title="National Rank"
+                value={userRank?.rank || 0}
+                prefix="#"
+                icon={Trophy}
+                color="warning"
+                description={`Top ${userRank?.percentile || 0}% of users`}
+                delay={0.2}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* How to Earn XP Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-xl p-6"
+      >
+        <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-yellow-500" />
+          How to Earn XP
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { action: 'Daily Login', xp: '50 XP', icon: '🔐' },
+            { action: 'Read Document', xp: '25 XP', icon: '📄' },
+            { action: 'Upload Document', xp: '100 XP', icon: '📤' },
+            { action: 'Forum Post', xp: '30 XP', icon: '💬' },
+            { action: 'Get Upvote', xp: '15 XP', icon: '👍' },
+            { action: 'Join Group', xp: '20 XP', icon: '👥' },
+            { action: 'Complete Profile', xp: '200 XP', icon: '✅' },
+            { action: 'Earn Badge', xp: '50-500 XP', icon: '🏆' },
+          ].map((item, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 + index * 0.05 }}
+              className="bg-white dark:bg-surface-800 rounded-lg p-3 text-center hover:shadow-md transition-shadow"
+            >
+              <span className="text-2xl mb-2 block">{item.icon}</span>
+              <p className="text-sm font-medium text-surface-900 dark:text-surface-50">
+                {item.action}
+              </p>
+              <p className="text-sm text-secondary-600 dark:text-secondary-400 font-bold">
+                +{item.xp}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 }

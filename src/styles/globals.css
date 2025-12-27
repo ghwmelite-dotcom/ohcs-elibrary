@@ -337,6 +337,67 @@
 }
 
 @layer utilities {
+  /* Reduced Motion - disable animations and transitions */
+  .reduce-motion * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* High Contrast - increase color contrast */
+  .high-contrast {
+    --text-primary: 0 0 0;
+    --text-secondary: 30 30 30;
+    --bg-primary: 255 255 255;
+    --border-primary: 0 0 0;
+  }
+
+  .dark.high-contrast {
+    --text-primary: 255 255 255;
+    --text-secondary: 230 230 230;
+    --bg-primary: 0 0 0;
+    --border-primary: 255 255 255;
+  }
+
+  .high-contrast .text-surface-500,
+  .high-contrast .text-surface-600 {
+    @apply !text-surface-900 dark:!text-surface-50;
+  }
+
+  .high-contrast button,
+  .high-contrast a {
+    @apply !underline underline-offset-2;
+  }
+
+  /* Compact Mode - reduce spacing using custom properties */
+  .compact-mode {
+    --spacing-scale: 0.75;
+    --compact-p-sm: 0.625rem;
+    --compact-p-md: 0.75rem;
+    --compact-p-lg: 1rem;
+    --compact-gap-sm: 0.5rem;
+    --compact-gap-md: 0.75rem;
+    --compact-space-sm: 0.5rem;
+    --compact-space-md: 0.75rem;
+  }
+
+  /* Apply compact spacing through CSS rules instead of @apply */
+  .compact-mode [class*="p-4"],
+  .compact-mode [class*="p-6"] {
+    padding: var(--compact-p-md, 0.75rem) !important;
+  }
+
+  .compact-mode [class*="gap-4"],
+  .compact-mode [class*="gap-6"] {
+    gap: var(--compact-gap-md, 0.75rem) !important;
+  }
+
+  .compact-mode [class*="mb-4"],
+  .compact-mode [class*="mb-6"] {
+    margin-bottom: var(--compact-space-md, 0.75rem) !important;
+  }
+
   /* Hide scrollbar but keep functionality */
   .scrollbar-hide {
     -ms-overflow-style: none;
