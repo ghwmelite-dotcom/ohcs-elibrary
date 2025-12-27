@@ -158,7 +158,7 @@ const config: Config = {
       },
       fontFamily: {
         heading: ['Playfair Display', 'Georgia', 'serif'],
-        body: ['Source Sans 3', 'system-ui', 'sans-serif'],
+        body: ['"Bookman Old Style"', 'Bookman', 'Palatino Linotype', 'Georgia', 'serif'],
         mono: ['JetBrains Mono', 'Consolas', 'monospace'],
       },
       fontSize: {

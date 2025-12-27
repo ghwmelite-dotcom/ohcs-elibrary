@@ -293,37 +293,66 @@ documentsRoutes.get('/:id', async (c: AppContext) => {
     const userId = c.get('userId');
     const documentId = c.req.param('id');
 
+    // First, get the basic document with author info (simpler query that won't fail)
     const document = await DB.prepare(`
       SELECT
         d.*,
         u.displayName as authorName,
-        u.avatar as authorAvatar,
-        (SELECT COUNT(*) FROM bookmarks b WHERE b.documentId = d.id AND b.userId = ?) as isBookmarked,
-        (SELECT rating FROM document_ratings r WHERE r.documentId = d.id AND r.userId = ?) as userRating
+        u.avatar as authorAvatar
       FROM documents d
       LEFT JOIN users u ON d.authorId = u.id
       WHERE d.id = ?
-    `).bind(userId, userId, documentId).first();
+    `).bind(documentId).first();
 
     if (!document) {
       return c.json({ error: 'Document not found' }, 404);
     }
 
-    // Increment view count
-    await DB.prepare(`
-      UPDATE documents SET views = views + 1 WHERE id = ?
-    `).bind(documentId).run();
+    // Try to get bookmark status (non-blocking)
+    let isBookmarked = false;
+    try {
+      const bookmark = await DB.prepare(`
+        SELECT 1 FROM bookmarks WHERE documentId = ? AND userId = ?
+      `).bind(documentId, userId).first();
+      isBookmarked = !!bookmark;
+    } catch (e) {
+      console.log('Could not check bookmark status:', e);
+    }
 
-    // Record view
-    await DB.prepare(`
-      INSERT OR REPLACE INTO document_views (documentId, userId, viewedAt)
-      VALUES (?, ?, datetime('now'))
-    `).bind(documentId, userId).run();
+    // Try to get user rating (non-blocking)
+    let userRating = null;
+    try {
+      const rating = await DB.prepare(`
+        SELECT rating FROM document_ratings WHERE documentId = ? AND userId = ?
+      `).bind(documentId, userId).first<{ rating: number }>();
+      userRating = rating?.rating || null;
+    } catch (e) {
+      console.log('Could not check user rating:', e);
+    }
+
+    // Increment view count and record view (non-blocking, don't fail if tables don't exist)
+    try {
+      await DB.prepare(`
+        UPDATE documents SET views = views + 1 WHERE id = ?
+      `).bind(documentId).run();
+    } catch (e) {
+      console.log('Could not update view count:', e);
+    }
+
+    try {
+      await DB.prepare(`
+        INSERT OR REPLACE INTO document_views (documentId, userId, viewedAt)
+        VALUES (?, ?, datetime('now'))
+      `).bind(documentId, userId).run();
+    } catch (e) {
+      console.log('Could not record view:', e);
+    }
 
     return c.json({
       ...document,
       tags: document.tags ? JSON.parse(document.tags as string) : [],
-      isBookmarked: (document.isBookmarked as number) > 0,
+      isBookmarked,
+      userRating,
       author: document.authorName ? {
         id: document.authorId,
         displayName: document.authorName,
@@ -341,6 +370,7 @@ documentsRoutes.post('/', requireAuth, async (c: AppContext) => {
   try {
     const { DB, DOCUMENTS } = c.env;
     const userId = c.get('userId');
+    const userRole = c.get('userRole');
 
     const formData = await c.req.formData();
     const file = formData.get('file') as File;
@@ -368,16 +398,20 @@ documentsRoutes.post('/', requireAuth, async (c: AppContext) => {
       },
     });
 
+    // Auto-publish for admins, librarians, and contributors; pending for regular users
+    const privilegedRoles = ['super_admin', 'admin', 'librarian', 'contributor'];
+    const status = privilegedRoles.includes(userRole || '') ? 'published' : 'pending';
+
     // Create document record
     const documentId = crypto.randomUUID();
     await DB.prepare(`
       INSERT INTO documents (
         id, title, description, category, tags,
         fileName, fileUrl, fileSize, fileType,
-        accessLevel, status, authorId,
+        accessLevel, status, authorId, isDownloadable,
         views, downloads, averageRating, totalRatings, version,
         createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, 0, 0, 0, 0, 1, datetime('now'), datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, 1, datetime('now'), datetime('now'))
     `).bind(
       documentId,
       title,
@@ -389,7 +423,9 @@ documentsRoutes.post('/', requireAuth, async (c: AppContext) => {
       file.size,
       file.type,
       accessLevel,
-      userId
+      status,
+      userId,
+      isDownloadable ? 1 : 0
     ).run();
 
     const document = await DB.prepare(`
@@ -421,7 +457,7 @@ documentsRoutes.patch('/:id', requireAuth, async (c: AppContext) => {
     }
 
     const userRole = c.get('userRole');
-    if (document.authorId !== userId && !['admin', 'librarian'].includes(userRole)) {
+    if (document.authorId !== userId && !['super_admin', 'admin', 'librarian'].includes(userRole)) {
       return c.json({ error: 'Unauthorized' }, 403);
     }
 
@@ -476,7 +512,7 @@ documentsRoutes.delete('/:id', requireAuth, async (c: AppContext) => {
     }
 
     const userRole = c.get('userRole');
-    if (document.authorId !== userId && !['admin', 'librarian'].includes(userRole)) {
+    if (document.authorId !== userId && !['super_admin', 'admin', 'librarian'].includes(userRole)) {
       return c.json({ error: 'Unauthorized' }, 403);
     }
 
@@ -606,19 +642,15 @@ documentsRoutes.get('/:id/view', async (c: AppContext) => {
     headers.set('Content-Security-Policy', "frame-ancestors 'self' https://ohcs-elibrary.pages.dev https://*.ohcs-elibrary.pages.dev https://ohcs-elibrary.gov.gh http://localhost:5173 http://localhost:3000");
     headers.set('X-Frame-Options', 'ALLOWALL'); // Deprecated but some browsers still check it
 
-    // CORS headers for cross-origin access
+    // CORS headers for cross-origin access - be permissive for document viewing
     const origin = c.req.header('Origin') || '';
-    const allowedOrigins = [
-      'https://ohcs-elibrary.pages.dev',
-      'https://ohcs-elibrary.gov.gh',
-      'http://localhost:5173',
-      'http://localhost:3000',
-    ];
-    // Also allow Cloudflare Pages preview deployments
-    const isAllowed = allowedOrigins.includes(origin) ||
-      origin.match(/^https:\/\/[a-z0-9]+\.ohcs-elibrary\.pages\.dev$/);
-    if (isAllowed) {
+    if (origin) {
+      // Allow any origin that requested the document - PDFs need this for cross-origin viewing
       headers.set('Access-Control-Allow-Origin', origin);
+      headers.set('Access-Control-Allow-Credentials', 'true');
+    } else {
+      // No origin header - allow all (for direct browser access)
+      headers.set('Access-Control-Allow-Origin', '*');
     }
 
     return new Response(object.body, { headers });

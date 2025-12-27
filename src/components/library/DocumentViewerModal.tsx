@@ -565,17 +565,27 @@ export function DocumentViewerModal({
                     return null;
                   }
 
-                  // PDF Viewer - use iframe with Google Docs viewer as fallback
+                  // PDF Viewer - use object tag for better cross-origin support
                   if (fileCategory === 'pdf') {
                     return (
-                      <iframe
-                        src={documentUrl}
-                        className="w-full h-full border-0"
-                        title={document.title}
-                        onLoad={handleIframeLoad}
-                        onError={handleIframeError}
-                        sandbox="allow-same-origin allow-scripts allow-forms"
-                      />
+                      <div className="w-full h-full flex flex-col">
+                        {/* Primary: object tag which handles PDFs better cross-origin */}
+                        <object
+                          data={documentUrl}
+                          type="application/pdf"
+                          className="w-full h-full"
+                          onLoad={handleIframeLoad}
+                        >
+                          {/* Fallback: iframe without sandbox restrictions */}
+                          <iframe
+                            src={documentUrl}
+                            className="w-full h-full border-0"
+                            title={document.title}
+                            onLoad={handleIframeLoad}
+                            onError={handleIframeError}
+                          />
+                        </object>
+                      </div>
                     );
                   }
 

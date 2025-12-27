@@ -36,16 +36,21 @@ app.use('*', logger());
 app.use('*', prettyJSON());
 app.use('*', cors({
   origin: (origin) => {
+    // If no origin, allow (for direct API access)
+    if (!origin) return '*';
+
     const allowedOrigins = [
       'https://ohcs-elibrary.gov.gh',
       'https://ohcs-elibrary.pages.dev',
       'http://localhost:5173',
       'http://localhost:3000',
     ];
-    // Allow exact matches or Cloudflare Pages preview deployments
+    // Allow exact matches
     if (allowedOrigins.includes(origin)) return origin;
-    if (origin?.match(/^https:\/\/[a-z0-9]+\.ohcs-elibrary\.pages\.dev$/)) return origin;
-    return allowedOrigins[0]; // Default fallback
+    // Allow any Cloudflare Pages deployment (main or preview)
+    if (origin.match(/^https:\/\/[a-z0-9-]+\.ohcs-elibrary\.pages\.dev$/)) return origin;
+    // Allow the origin anyway for document viewing (PDFs need this)
+    return origin;
   },
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

@@ -7,8 +7,10 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  Download,
+  Lock,
 } from 'lucide-react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/shared/Button';
@@ -42,6 +44,7 @@ const uploadSchema = z.object({
   categoryId: z.string().min(1, 'Please select a category'),
   accessLevel: z.enum(['public', 'internal', 'restricted', 'confidential', 'secret']),
   tags: z.string().optional(),
+  isDownloadable: z.boolean().default(true),
 });
 
 type UploadFormData = z.infer<typeof uploadSchema>;
@@ -67,15 +70,18 @@ export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
   const {
     register,
     handleSubmit,
-    control,
+    watch,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<UploadFormData>({
     resolver: zodResolver(uploadSchema),
     defaultValues: {
       accessLevel: 'internal',
+      isDownloadable: true,
     },
   });
+
+  const isDownloadable = watch('isDownloadable');
 
   const validateFile = (file: File): string | null => {
     if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
@@ -158,6 +164,7 @@ export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
       formData.append('description', data.description);
       formData.append('category', data.categoryId);
       formData.append('accessLevel', data.accessLevel);
+      formData.append('isDownloadable', String(data.isDownloadable));
       if (data.tags) {
         formData.append('tags', data.tags);
       }
@@ -472,6 +479,50 @@ export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
                   <option value="secret">Secret</option>
                 </select>
               </div>
+            </div>
+
+            {/* Download Permission Toggle */}
+            <div className="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-700/50 rounded-xl border border-surface-200 dark:border-surface-600">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  'w-10 h-10 rounded-lg flex items-center justify-center',
+                  isDownloadable
+                    ? 'bg-success-100 dark:bg-success-900/30'
+                    : 'bg-surface-200 dark:bg-surface-600'
+                )}>
+                  {isDownloadable ? (
+                    <Download className="w-5 h-5 text-success-600 dark:text-success-400" />
+                  ) : (
+                    <Lock className="w-5 h-5 text-surface-500" />
+                  )}
+                </div>
+                <div>
+                  <p className="font-medium text-surface-900 dark:text-surface-50">
+                    Allow Downloads
+                  </p>
+                  <p className="text-sm text-surface-500 dark:text-surface-400">
+                    {isDownloadable
+                      ? 'Users can download this document'
+                      : 'Users can only view, not download'}
+                  </p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  {...register('isDownloadable')}
+                />
+                <div className={cn(
+                  'w-11 h-6 rounded-full peer transition-colors duration-200',
+                  'bg-surface-300 dark:bg-surface-600',
+                  'peer-checked:bg-success-500 dark:peer-checked:bg-success-600',
+                  'after:content-[""] after:absolute after:top-[2px] after:left-[2px]',
+                  'after:bg-white after:rounded-full after:h-5 after:w-5',
+                  'after:transition-transform after:duration-200',
+                  'peer-checked:after:translate-x-5'
+                )} />
+              </label>
             </div>
 
             <Input

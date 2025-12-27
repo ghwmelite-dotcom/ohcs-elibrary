@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -13,9 +14,11 @@ import {
   Lock,
   Trash2,
   AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 import type { Document } from '@/types';
 import { useLibraryStore } from '@/stores/libraryStore';
+import { useAuthStore } from '@/stores/authStore';
 import { Dropdown } from '@/components/shared/Dropdown';
 import { cn } from '@/utils/cn';
 import { formatRelativeTime, formatFileSize } from '@/utils/formatters';
@@ -34,10 +37,20 @@ interface DocumentCardProps {
 }
 
 export function DocumentCard({ document, category, viewMode = 'grid', onView }: DocumentCardProps) {
-  const { bookmarks, bookmarkDocument, removeBookmark, deleteLocalDocument } = useLibraryStore();
+  const { bookmarks, bookmarkDocument, removeBookmark, deleteLocalDocument, deleteDocument } = useLibraryStore();
+  const { user } = useAuthStore();
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const isBookmarked = bookmarks.some((b) => b.documentId === document.id);
   const isLocalDocument = document.id.startsWith('local-');
   const hasExpiredUrl = isLocalDocument && !document.fileUrl?.startsWith('blob:') && !document.fileUrl?.startsWith('data:');
+
+  // Check if user can delete - admin roles or document owner
+  const canDelete = user && (
+    ['super_admin', 'admin', 'librarian'].includes(user.role || '') ||
+    document.uploadedBy?.id === user.id ||
+    isLocalDocument
+  );
 
   const handleClick = (e: React.MouseEvent) => {
     // Don't trigger if clicking on interactive elements
@@ -64,9 +77,25 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
     secret: 'bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400',
   };
 
-  const handleDelete = () => {
-    if (isLocalDocument && confirm('Delete this local document? This cannot be undone.')) {
-      deleteLocalDocument(document.id);
+  const handleDelete = async () => {
+    const confirmMessage = isLocalDocument
+      ? 'Delete this local document? This cannot be undone.'
+      : `Delete "${document.title}"? This will permanently remove the document from the library.`;
+
+    if (!confirm(confirmMessage)) return;
+
+    setIsDeleting(true);
+    try {
+      if (isLocalDocument) {
+        deleteLocalDocument(document.id);
+      } else {
+        await deleteDocument(document.id);
+      }
+    } catch (error) {
+      console.error('Failed to delete document:', error);
+      alert('Failed to delete document. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -78,12 +107,12 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
       icon: isBookmarked ? BookmarkCheck : Bookmark,
       onClick: handleToggleBookmark,
     },
-    // Add delete option for local documents
-    ...(isLocalDocument ? [{
-      label: 'Delete',
-      icon: Trash2,
+    // Add delete option for users with permission
+    ...(canDelete ? [{
+      label: isDeleting ? 'Deleting...' : 'Delete',
+      icon: isDeleting ? Loader2 : Trash2,
       onClick: handleDelete,
-      className: 'text-error-600 hover:bg-error-50',
+      className: 'text-error-600 hover:bg-error-50 dark:text-error-400 dark:hover:bg-error-900/30',
     }] : []),
   ];
 
@@ -240,7 +269,6 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
           </button>
           <Dropdown items={menuItems} align="right">
             <button
-              onClick={(e) => e.stopPropagation()}
               className="p-2 rounded-lg bg-white dark:bg-surface-800 text-surface-400 hover:text-surface-600 transition-colors"
             >
               <MoreVertical className="w-5 h-5" />

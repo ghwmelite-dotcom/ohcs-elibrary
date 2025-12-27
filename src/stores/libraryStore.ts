@@ -391,12 +391,20 @@ export const useLibraryStore = create<LibraryStore>()(
         set({ isLoading: true, error: null });
 
         try {
+          // Get auth token from authStore
+          const authState = JSON.parse(localStorage.getItem('auth-storage') || '{}');
+          const token = authState?.state?.token;
+
           const response = await fetch(`${API_BASE}/documents/${id}`, {
             method: 'DELETE',
+            headers: {
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
           });
 
           if (!response.ok) {
-            throw new Error('Failed to delete document');
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || 'Failed to delete document');
           }
 
           set((state) => ({
@@ -406,11 +414,13 @@ export const useLibraryStore = create<LibraryStore>()(
           }));
 
           await get().fetchStats();
+          await get().fetchCategories();
         } catch (error) {
           set({
             isLoading: false,
             error: error instanceof Error ? error.message : 'Failed to delete document',
           });
+          throw error; // Re-throw so the component can handle it
         }
       },
 

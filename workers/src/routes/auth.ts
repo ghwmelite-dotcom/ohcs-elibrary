@@ -53,7 +53,7 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
   const { email, password } = c.req.valid('json');
 
   try {
-    // Find user (using actual schema column names)
+    // Find user (using deployed DB column names)
     const user = await c.env.DB.prepare(`
       SELECT id, email, passwordHash, displayName, firstName, lastName,
              avatar, role, mdaId, department, jobTitle as title,
@@ -175,7 +175,7 @@ authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
     // Generate user ID
     const userId = crypto.randomUUID();
 
-    // Create user - auto-verify for development (using actual schema column names)
+    // Create user - auto-verify for development (using deployed DB column names)
     await c.env.DB.prepare(`
       INSERT INTO users (id, email, passwordHash, displayName, firstName, lastName, role, mdaId, isActive, isVerified)
       VALUES (?, ?, ?, ?, ?, ?, 'civil_servant', ?, 1, 1)
@@ -314,7 +314,7 @@ authRoutes.post('/refresh', async (c) => {
       return c.json({ error: 'Invalid token type' }, 401);
     }
 
-    // Verify session exists (using actual schema column names)
+    // Verify session exists (using deployed DB column names)
     const session = await c.env.DB.prepare(`
       SELECT userId FROM sessions
       WHERE token = ? AND expiresAt > datetime('now')
@@ -324,7 +324,7 @@ authRoutes.post('/refresh', async (c) => {
       return c.json({ error: 'Session expired' }, 401);
     }
 
-    // Get user (using actual schema column names)
+    // Get user (using deployed DB column names)
     const user = await c.env.DB.prepare(`
       SELECT id, email, role
       FROM users

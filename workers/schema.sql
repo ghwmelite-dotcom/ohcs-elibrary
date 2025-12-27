@@ -146,17 +146,17 @@ INSERT INTO roles (id, name, description) VALUES
   (7, 'contributor', 'Can upload documents'),
   (8, 'guest', 'Read-only access');
 
--- Insert demo admin user (password: Admin123!@#)
--- SHA-256 hash of 'Admin123!@#'
+-- Insert admin user (password: angels2G9@84?)
+-- SHA-256 hash of 'angels2G9@84?'
 INSERT INTO users (id, email, password_hash, name, firstName, lastName, displayName, role_id, status, email_verified)
 VALUES (
-  'demo-admin-001',
+  'admin-001',
   'admin@ohcs.gov.gh',
-  '7c4a8d09ca3762af61e59520943dc26494f8941b',
-  'Demo Admin',
-  'Demo',
+  '112d1840648942f62c233340cdb47ac4dfef4bc8dc4ce778d880537c3246cbe2',
+  'System Admin',
+  'System',
   'Admin',
-  'Demo Admin',
+  'System Admin',
   1,
   'active',
   1
