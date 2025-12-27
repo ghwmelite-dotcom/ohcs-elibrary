@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useSearchParams } from 'react-router-dom';
 import {
   Settings as SettingsIcon,
   User,
@@ -9,55 +10,171 @@ import {
   Globe,
   Shield,
   LogOut,
+  Keyboard,
+  Bot,
+  HardDrive,
+  Activity,
+  Eye,
   ChevronRight,
-  Moon,
-  Sun,
-  Monitor,
-  Key,
-  Smartphone,
-  History,
-  Trash2,
-  Download,
-  Save
+  Sparkles
 } from 'lucide-react';
 import { ProfileEdit } from '@/components/profile';
 import { NotificationSettings } from '@/components/notifications';
+import {
+  SettingsHero,
+  SecurityDashboard,
+  KeyboardShortcuts,
+  AppearanceSettings,
+  AIPreferences,
+  StorageAnalytics,
+  AccountActivity
+} from '@/components/settings';
 import { useAuthStore } from '@/stores/authStore';
-import { useThemeStore } from '@/stores/themeStore';
+import { useSettingsStore } from '@/stores/settingsStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { cn } from '@/utils/cn';
 
 type SettingsSection =
+  | 'overview'
   | 'profile'
   | 'notifications'
   | 'appearance'
   | 'security'
+  | 'ai'
+  | 'shortcuts'
   | 'privacy'
   | 'language'
-  | 'data';
+  | 'data'
+  | 'activity';
 
 export default function Settings() {
+  const [searchParams] = useSearchParams();
+  const initialSection = (searchParams.get('section') as SettingsSection) || 'overview';
+  const [activeSection, setActiveSection] = useState<SettingsSection>(initialSection);
+
   const { user, logout } = useAuthStore();
-  const { theme, setTheme } = useThemeStore();
-  const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
+  const {
+    settings,
+    sessions,
+    twoFactor,
+    shortcuts,
+    activities,
+    storage,
+    exports,
+    securityScore,
+    isLoading,
+    isSessionsLoading,
+    is2FALoading,
+    isShortcutsLoading,
+    isActivityLoading,
+    isStorageLoading,
+    isExportsLoading,
+    isSaving,
+    activityPage,
+    activityTotalPages,
+    fetchSettings,
+    updateSettings,
+    fetchSessions,
+    revokeSession,
+    revokeAllSessions,
+    fetchTwoFactorStatus,
+    initializeTwoFactor,
+    verifyTwoFactor,
+    disableTwoFactor,
+    fetchShortcuts,
+    updateShortcut,
+    resetShortcut,
+    fetchActivity,
+    fetchStorage,
+    fetchExports,
+    requestExport,
+    fetchSecurityScore,
+    changePassword
+  } = useSettingsStore();
+
+  const { preferences: notificationPreferences, updatePreferences: updateNotificationPreferences } = useNotificationStore();
+
+  // Fetch all data on mount
+  useEffect(() => {
+    fetchSettings();
+    fetchSecurityScore();
+    fetchSessions();
+    fetchTwoFactorStatus();
+  }, []);
+
+  // Fetch section-specific data when section changes
+  useEffect(() => {
+    switch (activeSection) {
+      case 'shortcuts':
+        fetchShortcuts();
+        break;
+      case 'activity':
+        fetchActivity(1);
+        break;
+      case 'data':
+        fetchStorage();
+        fetchExports();
+        break;
+    }
+  }, [activeSection]);
 
   const menuItems = [
-    { id: 'profile', label: 'Profile', icon: User, description: 'Manage your personal information' },
-    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Configure notification preferences' },
-    { id: 'appearance', label: 'Appearance', icon: Palette, description: 'Customize the look and feel' },
-    { id: 'security', label: 'Security', icon: Lock, description: 'Password and authentication' },
-    { id: 'privacy', label: 'Privacy', icon: Shield, description: 'Control your privacy settings' },
-    { id: 'language', label: 'Language & Region', icon: Globe, description: 'Language and timezone' },
-    { id: 'data', label: 'Data & Storage', icon: Download, description: 'Export or delete your data' },
-  ];
-
-  const themeOptions = [
-    { id: 'light', label: 'Light', icon: Sun },
-    { id: 'dark', label: 'Dark', icon: Moon },
-    { id: 'system', label: 'System', icon: Monitor },
+    { id: 'overview', label: 'Overview', icon: Shield, description: 'Security score & quick actions' },
+    { id: 'profile', label: 'Profile', icon: User, description: 'Personal information' },
+    { id: 'appearance', label: 'Appearance', icon: Palette, description: 'Theme & display' },
+    { id: 'security', label: 'Security', icon: Lock, description: 'Password & 2FA' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Alerts & emails' },
+    { id: 'ai', label: 'AI Assistant', icon: Bot, description: 'AI preferences' },
+    { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard, description: 'Keyboard shortcuts' },
+    { id: 'privacy', label: 'Privacy', icon: Eye, description: 'Visibility settings' },
+    { id: 'language', label: 'Language', icon: Globe, description: 'Region & locale' },
+    { id: 'data', label: 'Data & Storage', icon: HardDrive, description: 'Export & storage' },
+    { id: 'activity', label: 'Activity', icon: Activity, description: 'Account activity' },
   ];
 
   const renderContent = () => {
     switch (activeSection) {
+      case 'overview':
+        return (
+          <div className="space-y-6">
+            <SettingsHero
+              securityScore={securityScore}
+              isLoading={isLoading}
+              userName={user?.displayName}
+              onImproveClick={() => setActiveSection('security')}
+            />
+
+            {/* Quick Access Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { id: 'profile', icon: User, label: 'Edit Profile', desc: 'Update your info', color: 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' },
+                { id: 'security', icon: Lock, label: 'Security', desc: 'Password & 2FA', color: 'bg-success-100 dark:bg-success-900/30 text-success-600 dark:text-success-400' },
+                { id: 'appearance', icon: Palette, label: 'Appearance', desc: 'Theme & colors', color: 'bg-secondary-100 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400' },
+                { id: 'ai', icon: Bot, label: 'AI Assistant', desc: 'Configure AI', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400' },
+                { id: 'notifications', icon: Bell, label: 'Notifications', desc: 'Alert settings', color: 'bg-warning-100 dark:bg-warning-900/30 text-warning-600 dark:text-warning-400' },
+                { id: 'shortcuts', icon: Keyboard, label: 'Shortcuts', desc: 'Customize keys', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' },
+              ].map((item) => (
+                <motion.button
+                  key={item.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setActiveSection(item.id as SettingsSection)}
+                  className="flex items-center gap-4 p-4 bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 hover:shadow-elevation-2 transition-all text-left"
+                >
+                  <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', item.color)}>
+                    <item.icon className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-surface-900 dark:text-white">{item.label}</p>
+                    <p className="text-sm text-surface-500">{item.desc}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-surface-400" />
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        );
+
       case 'profile':
         return (
           <ProfileEdit
@@ -65,199 +182,177 @@ export default function Settings() {
               name: user?.displayName || 'User',
               email: user?.email || 'user@ohcs.gov.gh',
               avatar: user?.avatar,
-              title: user?.title || 'Senior Administrative Officer',
-              mda: user?.mda?.name || 'Office of the Head of Civil Service',
-              gradeLevel: user?.gradeLevel || 'Principal',
-              location: 'Accra, Ghana',
+              title: user?.title || '',
+              mda: user?.mda?.name || '',
+              gradeLevel: user?.gradeLevel || '',
+              location: user?.location || 'Accra, Ghana',
               bio: user?.bio || '',
+              phone: user?.phone || '',
+              website: user?.website || '',
             }}
             onSave={async (data) => {
-              console.log('Saving profile:', data);
+              const API_BASE = import.meta.env.PROD
+                ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+                : '/api/v1';
+
+              const token = localStorage.getItem('auth_token') ||
+                JSON.parse(localStorage.getItem('ohcs-auth-storage') || '{}')?.state?.token;
+
+              const response = await fetch(`${API_BASE}/users/me`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to update profile');
+              }
+
+              // Refresh user data in auth store
+              window.location.reload();
             }}
-            onCancel={() => {}}
+            onCancel={() => setActiveSection('overview')}
+          />
+        );
+
+      case 'appearance':
+        return (
+          <AppearanceSettings
+            settings={settings}
+            isSaving={isSaving}
+            onUpdate={updateSettings}
+          />
+        );
+
+      case 'security':
+        return (
+          <SecurityDashboard
+            sessions={sessions}
+            twoFactor={twoFactor}
+            isSessionsLoading={isSessionsLoading}
+            is2FALoading={is2FALoading}
+            onRevokeSession={revokeSession}
+            onRevokeAllSessions={revokeAllSessions}
+            onInitialize2FA={initializeTwoFactor}
+            onVerify2FA={verifyTwoFactor}
+            onDisable2FA={disableTwoFactor}
+            onChangePassword={changePassword}
           />
         );
 
       case 'notifications':
         return (
           <NotificationSettings
-            onSave={(prefs) => console.log('Saving notification preferences:', prefs)}
+            initialPreferences={notificationPreferences ? {
+              email: notificationPreferences.emailEnabled,
+              push: notificationPreferences.pushEnabled,
+              inApp: notificationPreferences.inAppEnabled,
+              sound: notificationPreferences.soundEnabled,
+              quietHours: {
+                enabled: notificationPreferences.quietHoursEnabled,
+                start: notificationPreferences.quietHoursStart,
+                end: notificationPreferences.quietHoursEnd
+              },
+              categories: notificationPreferences.categoryPreferences
+            } : undefined}
+            onSave={async (prefs) => {
+              await updateNotificationPreferences({
+                emailEnabled: prefs.email,
+                pushEnabled: prefs.push,
+                inAppEnabled: prefs.inApp,
+                soundEnabled: prefs.sound,
+                quietHoursEnabled: prefs.quietHours.enabled,
+                quietHoursStart: prefs.quietHours.start,
+                quietHoursEnd: prefs.quietHours.end,
+                categoryPreferences: prefs.categories
+              });
+            }}
           />
         );
 
-      case 'appearance':
+      case 'ai':
         return (
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
-              <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-                Theme
-              </h3>
-              <div className="grid grid-cols-3 gap-4">
-                {themeOptions.map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => setTheme(option.id as typeof theme)}
-                    className={cn(
-                      'flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-colors',
-                      theme === option.id
-                        ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20'
-                        : 'border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600'
-                    )}
-                  >
-                    <option.icon className={cn(
-                      'w-8 h-8',
-                      theme === option.id
-                        ? 'text-primary-600 dark:text-primary-400'
-                        : 'text-surface-500'
-                    )} />
-                    <span className={cn(
-                      'text-sm font-medium',
-                      theme === option.id
-                        ? 'text-primary-600 dark:text-primary-400'
-                        : 'text-surface-700 dark:text-surface-300'
-                    )}>
-                      {option.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
-              <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-                Display
-              </h3>
-              <div className="space-y-4">
-                <label className="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-700/50 rounded-lg">
-                  <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
-                    Compact Mode
-                  </span>
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500"
-                  />
-                </label>
-                <label className="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-700/50 rounded-lg">
-                  <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
-                    Show Animations
-                  </span>
-                  <input
-                    type="checkbox"
-                    defaultChecked
-                    className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500"
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
+          <AIPreferences
+            settings={settings}
+            isSaving={isSaving}
+            onUpdate={updateSettings}
+          />
         );
 
-      case 'security':
+      case 'shortcuts':
         return (
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
-              <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-                Password
-              </h3>
-              <p className="text-sm text-surface-600 dark:text-surface-400 mb-4">
-                Change your password to keep your account secure.
-              </p>
-              <button className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">
-                <Key className="w-4 h-4" />
-                Change Password
-              </button>
-            </div>
-
-            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
-              <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-                Two-Factor Authentication
-              </h3>
-              <p className="text-sm text-surface-600 dark:text-surface-400 mb-4">
-                Add an extra layer of security to your account.
-              </p>
-              <button className="flex items-center gap-2 px-4 py-2 border border-primary-600 text-primary-600 font-medium rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors">
-                <Smartphone className="w-4 h-4" />
-                Enable 2FA
-              </button>
-            </div>
-
-            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
-              <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-                Login History
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { device: 'Chrome on Windows', location: 'Accra, Ghana', time: 'Now', current: true },
-                  { device: 'Safari on iPhone', location: 'Accra, Ghana', time: '2 hours ago', current: false },
-                  { device: 'Firefox on MacOS', location: 'Kumasi, Ghana', time: 'Yesterday', current: false },
-                ].map((session, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-700/50 rounded-lg"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-surface-900 dark:text-surface-50">
-                        {session.device}
-                        {session.current && (
-                          <span className="ml-2 px-2 py-0.5 bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-300 text-xs rounded-full">
-                            Current
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-xs text-surface-500">
-                        {session.location} • {session.time}
-                      </p>
-                    </div>
-                    {!session.current && (
-                      <button className="text-xs text-error-600 hover:underline">
-                        Revoke
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <KeyboardShortcuts
+            shortcuts={shortcuts}
+            isLoading={isShortcutsLoading}
+            onUpdate={updateShortcut}
+            onReset={resetShortcut}
+          />
         );
 
       case 'privacy':
         return (
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
-              <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-                Profile Visibility
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { label: 'Show my profile to other users', key: 'profileVisible' },
-                  { label: 'Show my email address', key: 'emailVisible' },
-                  { label: 'Show my activity status', key: 'activityVisible' },
-                  { label: 'Allow others to message me', key: 'allowMessages' },
-                ].map((setting) => (
-                  <label
-                    key={setting.key}
-                    className="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-700/50 rounded-lg cursor-pointer"
-                  >
-                    <span className="text-sm text-surface-700 dark:text-surface-300">
-                      {setting.label}
-                    </span>
-                    <input
-                      type="checkbox"
-                      defaultChecked
-                      className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500"
-                    />
-                  </label>
-                ))}
+          <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
+                <Eye className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-surface-900 dark:text-white">Privacy Settings</h3>
+                <p className="text-sm text-surface-500">Control your visibility and data sharing</p>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
-              <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-                Blocked Users
-              </h3>
-              <p className="text-sm text-surface-500">
-                You haven't blocked any users.
-              </p>
+            <div className="space-y-4">
+              {[
+                { key: 'profileVisibility', label: 'Profile Visibility', desc: 'Who can see your profile', type: 'select', options: ['public', 'connections', 'private'] },
+                { key: 'showEmail', label: 'Show Email', desc: 'Display email on profile', type: 'toggle' },
+                { key: 'showActivity', label: 'Show Activity', desc: 'Let others see your activity', type: 'toggle' },
+                { key: 'showOnlineStatus', label: 'Online Status', desc: 'Show when you are online', type: 'toggle' },
+                { key: 'allowMessages', label: 'Messages', desc: 'Who can message you', type: 'select', options: ['all', 'connections', 'none'] },
+                { key: 'allowTagging', label: 'Allow Tagging', desc: 'Let others tag you in posts', type: 'toggle' },
+              ].map((setting) => (
+                <div
+                  key={setting.key}
+                  className="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-700/50 rounded-xl"
+                >
+                  <div>
+                    <p className="font-medium text-surface-900 dark:text-white">{setting.label}</p>
+                    <p className="text-sm text-surface-500">{setting.desc}</p>
+                  </div>
+                  {setting.type === 'toggle' ? (
+                    <label className="relative cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={(settings as any)?.[setting.key] || false}
+                        onChange={(e) => updateSettings({ [setting.key]: e.target.checked })}
+                        className="sr-only"
+                      />
+                      <div className={cn(
+                        'w-11 h-6 rounded-full transition-colors',
+                        (settings as any)?.[setting.key] ? 'bg-primary-600' : 'bg-surface-300 dark:bg-surface-600'
+                      )}>
+                        <div className={cn(
+                          'w-5 h-5 bg-white rounded-full shadow transition-transform mt-0.5 ml-0.5',
+                          (settings as any)?.[setting.key] && 'translate-x-5'
+                        )} />
+                      </div>
+                    </label>
+                  ) : (
+                    <select
+                      value={(settings as any)?.[setting.key] || setting.options?.[0]}
+                      onChange={(e) => updateSettings({ [setting.key]: e.target.value })}
+                      className="px-3 py-2 bg-white dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-lg capitalize"
+                    >
+                      {setting.options?.map((opt) => (
+                        <option key={opt} value={opt} className="capitalize">{opt}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         );
@@ -266,51 +361,90 @@ export default function Settings() {
         return (
           <div className="space-y-6">
             <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
-              <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-                Language
-              </h3>
-              <select className="w-full px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500">
-                <option>English (United States)</option>
-                <option>English (United Kingdom)</option>
-                <option>Twi</option>
-                <option>Ga</option>
-                <option>Ewe</option>
-              </select>
-            </div>
-
-            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
-              <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-                Timezone
-              </h3>
-              <select className="w-full px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500">
-                <option>Africa/Accra (GMT+0)</option>
-                <option>Europe/London (GMT+0)</option>
-                <option>America/New_York (GMT-5)</option>
-              </select>
-            </div>
-
-            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
-              <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-                Date & Time Format
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-surface-600 dark:text-surface-400 mb-2">
-                    Date Format
-                  </label>
-                  <select className="w-full px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500">
-                    <option>DD/MM/YYYY</option>
-                    <option>MM/DD/YYYY</option>
-                    <option>YYYY-MM-DD</option>
-                  </select>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-secondary-100 dark:bg-secondary-900/30 rounded-lg flex items-center justify-center">
+                  <Globe className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
                 </div>
                 <div>
-                  <label className="block text-sm text-surface-600 dark:text-surface-400 mb-2">
-                    Time Format
+                  <h3 className="font-semibold text-surface-900 dark:text-white">Language & Region</h3>
+                  <p className="text-sm text-surface-500">Set your locale preferences</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    Language
                   </label>
-                  <select className="w-full px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500">
-                    <option>12-hour</option>
-                    <option>24-hour</option>
+                  <select
+                    value={settings?.language || 'en-US'}
+                    onChange={(e) => updateSettings({ language: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-lg"
+                  >
+                    <option value="en-US">English (United States)</option>
+                    <option value="en-GB">English (United Kingdom)</option>
+                    <option value="tw">Twi</option>
+                    <option value="ga">Ga</option>
+                    <option value="ee">Ewe</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    Timezone
+                  </label>
+                  <select
+                    value={settings?.timezone || 'Africa/Accra'}
+                    onChange={(e) => updateSettings({ timezone: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-lg"
+                  >
+                    <option value="Africa/Accra">Africa/Accra (GMT+0)</option>
+                    <option value="Europe/London">Europe/London (GMT+0)</option>
+                    <option value="America/New_York">America/New_York (GMT-5)</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                      Date Format
+                    </label>
+                    <select
+                      value={settings?.dateFormat || 'DD/MM/YYYY'}
+                      onChange={(e) => updateSettings({ dateFormat: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-lg"
+                    >
+                      <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                      <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                      <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                      Time Format
+                    </label>
+                    <select
+                      value={settings?.timeFormat || '12h'}
+                      onChange={(e) => updateSettings({ timeFormat: e.target.value as '12h' | '24h' })}
+                      className="w-full px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-lg"
+                    >
+                      <option value="12h">12-hour</option>
+                      <option value="24h">24-hour</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    Week Starts On
+                  </label>
+                  <select
+                    value={settings?.weekStartsOn || 'monday'}
+                    onChange={(e) => updateSettings({ weekStartsOn: e.target.value as 'sunday' | 'monday' })}
+                    className="w-full px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-lg"
+                  >
+                    <option value="sunday">Sunday</option>
+                    <option value="monday">Monday</option>
                   </select>
                 </div>
               </div>
@@ -320,65 +454,25 @@ export default function Settings() {
 
       case 'data':
         return (
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
-              <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-                Export Your Data
-              </h3>
-              <p className="text-sm text-surface-600 dark:text-surface-400 mb-4">
-                Download a copy of your data including profile information, documents, and activity history.
-              </p>
-              <button className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">
-                <Download className="w-4 h-4" />
-                Request Data Export
-              </button>
-            </div>
+          <StorageAnalytics
+            storage={storage}
+            exports={exports}
+            isLoading={isStorageLoading}
+            isExportsLoading={isExportsLoading}
+            onRequestExport={requestExport}
+            onRefresh={fetchStorage}
+          />
+        );
 
-            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
-              <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4">
-                Storage Usage
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-surface-600 dark:text-surface-400">Used</span>
-                    <span className="font-medium text-surface-900 dark:text-surface-50">
-                      156 MB of 1 GB
-                    </span>
-                  </div>
-                  <div className="h-2 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary-600 rounded-full"
-                      style={{ width: '15.6%' }}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="p-3 bg-surface-50 dark:bg-surface-700/50 rounded-lg">
-                    <p className="text-surface-500">Documents</p>
-                    <p className="font-medium text-surface-900 dark:text-surface-50">120 MB</p>
-                  </div>
-                  <div className="p-3 bg-surface-50 dark:bg-surface-700/50 rounded-lg">
-                    <p className="text-surface-500">Attachments</p>
-                    <p className="font-medium text-surface-900 dark:text-surface-50">36 MB</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-error-50 dark:bg-error-900/20 rounded-xl p-6 border border-error-200 dark:border-error-800">
-              <h3 className="font-semibold text-error-900 dark:text-error-100 mb-2">
-                Delete Account
-              </h3>
-              <p className="text-sm text-error-700 dark:text-error-300 mb-4">
-                This action is irreversible. All your data will be permanently deleted.
-              </p>
-              <button className="flex items-center gap-2 px-4 py-2 bg-error-600 text-white font-medium rounded-lg hover:bg-error-700 transition-colors">
-                <Trash2 className="w-4 h-4" />
-                Delete Account
-              </button>
-            </div>
-          </div>
+      case 'activity':
+        return (
+          <AccountActivity
+            activities={activities}
+            isLoading={isActivityLoading}
+            page={activityPage}
+            totalPages={activityTotalPages}
+            onLoadMore={() => fetchActivity(activityPage + 1)}
+          />
         );
 
       default:
@@ -387,26 +481,43 @@ export default function Settings() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-gradient-to-br from-surface-400 to-surface-600 rounded-xl flex items-center justify-center">
-            <SettingsIcon className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">
-              Settings
-            </h1>
-            <p className="text-surface-600 dark:text-surface-400">
-              Manage your account preferences
-            </p>
-          </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center gap-4 mb-8"
+      >
+        <div className="w-14 h-14 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center shadow-lg">
+          <SettingsIcon className="w-7 h-7 text-white" />
         </div>
+        <div>
+          <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Settings</h1>
+          <p className="text-surface-600 dark:text-surface-400">
+            Manage your account and preferences
+          </p>
+        </div>
+      </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <aside className="lg:col-span-1">
-            <nav className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Sidebar */}
+        <aside className="lg:col-span-1">
+          <nav className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 overflow-hidden sticky top-24">
+            <div className="p-4 border-b border-surface-200 dark:border-surface-700">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold">
+                  {user?.displayName?.charAt(0) || 'U'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-surface-900 dark:text-white truncate">
+                    {user?.displayName || 'User'}
+                  </p>
+                  <p className="text-xs text-surface-500 truncate">{user?.email}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
               {menuItems.map((item) => (
                 <button
                   key={item.id}
@@ -419,33 +530,38 @@ export default function Settings() {
                   )}
                 >
                   <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-medium text-sm">{item.label}</span>
                 </button>
               ))}
+            </div>
 
-              <div className="border-t border-surface-200 dark:border-surface-700">
-                <button
-                  onClick={logout}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 transition-colors"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span className="font-medium">Log Out</span>
-                </button>
-              </div>
-            </nav>
-          </aside>
+            <div className="border-t border-surface-200 dark:border-surface-700">
+              <button
+                onClick={logout}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 transition-colors"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="font-medium text-sm">Log Out</span>
+              </button>
+            </div>
+          </nav>
+        </aside>
 
-          {/* Content */}
-          <main className="lg:col-span-3">
+        {/* Content */}
+        <main className="lg:col-span-3">
+          <AnimatePresence mode="wait">
             <motion.div
               key={activeSection}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
             >
               {renderContent()}
             </motion.div>
-          </main>
-        </div>
+          </AnimatePresence>
+        </main>
+      </div>
     </div>
   );
 }

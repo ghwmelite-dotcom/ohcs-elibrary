@@ -4,6 +4,7 @@ import { LazyMotion } from 'framer-motion';
 import { loadMotionFeatures } from '@/utils/motionFeatures';
 import { useAuthStore } from '@/stores/authStore';
 import { useThemeStore } from '@/stores/themeStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { AdminLayout } from '@/components/layout/AdminLayout';
@@ -12,6 +13,7 @@ import { Toaster } from '@/components/shared/Toast';
 import { PWAInstallPrompt } from '@/components/shared/PWAInstallPrompt';
 import { OfflineBanner } from '@/components/shared/OfflineBanner';
 import { DevTools } from '@/components/shared/DevTools';
+import { KeyboardShortcutsProvider } from '@/hooks/useKeyboardShortcuts';
 
 // Lazy load pages for code splitting
 // Auth pages
@@ -119,9 +121,18 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Font size mapping
+const fontSizeMap: Record<string, string> = {
+  small: '14px',
+  medium: '16px',
+  large: '18px',
+  xlarge: '20px',
+};
+
 export default function App() {
   const { theme, initializeTheme } = useThemeStore();
-  const { initializeAuth } = useAuthStore();
+  const { initializeAuth, isAuthenticated } = useAuthStore();
+  const { settings, fetchSettings } = useSettingsStore();
 
   // Initialize theme on mount
   useEffect(() => {
@@ -132,6 +143,13 @@ export default function App() {
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
+
+  // Fetch settings when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchSettings();
+    }
+  }, [isAuthenticated, fetchSettings]);
 
   // Apply theme class to document
   useEffect(() => {
@@ -148,10 +166,44 @@ export default function App() {
     }
   }, [theme]);
 
+  // Apply settings to document when they change
+  useEffect(() => {
+    if (!settings) return;
+
+    const root = document.documentElement;
+
+    // Apply font size
+    if (settings.fontSize) {
+      root.style.fontSize = fontSizeMap[settings.fontSize] || '16px';
+    }
+
+    // Apply reduced motion
+    if (settings.reducedMotion) {
+      root.classList.add('reduce-motion');
+    } else {
+      root.classList.remove('reduce-motion');
+    }
+
+    // Apply high contrast
+    if (settings.highContrast) {
+      root.classList.add('high-contrast');
+    } else {
+      root.classList.remove('high-contrast');
+    }
+
+    // Apply compact mode
+    if (settings.compactMode) {
+      root.classList.add('compact-mode');
+    } else {
+      root.classList.remove('compact-mode');
+    }
+  }, [settings]);
+
   return (
     <LazyMotion features={loadMotionFeatures}>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
+      <KeyboardShortcutsProvider>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
           {/* Public routes */}
           <Route path="/" element={<Landing />} />
 
@@ -255,17 +307,18 @@ export default function App() {
           {/* 404 route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </Suspense>
+        </Suspense>
 
-      {/* Global toast notifications */}
-      <Toaster />
+        {/* Global toast notifications */}
+        <Toaster />
 
-      {/* PWA Components */}
-      <OfflineBanner />
-      <PWAInstallPrompt />
+        {/* PWA Components */}
+        <OfflineBanner />
+        <PWAInstallPrompt />
 
-      {/* Development Tools */}
-      <DevTools />
+        {/* Development Tools */}
+        <DevTools />
+      </KeyboardShortcutsProvider>
     </LazyMotion>
   );
 }
