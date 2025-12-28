@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -15,6 +15,13 @@ import {
   Menu,
   X,
   ChevronLeft,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -71,6 +78,73 @@ export default function Chat() {
   const [newRoomPrivate, setNewRoomPrivate] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileMembers, setShowMobileMembers] = useState(false);
+
+  // Collapsible panel states with localStorage persistence
+  const [isRoomListCollapsed, setIsRoomListCollapsed] = useState(() => {
+    const saved = localStorage.getItem('chat-roomlist-collapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [isMembersCollapsed, setIsMembersCollapsed] = useState(() => {
+    const saved = localStorage.getItem('chat-members-collapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [isFocusMode, setIsFocusMode] = useState(false);
+
+  // Persist collapse states
+  useEffect(() => {
+    localStorage.setItem('chat-roomlist-collapsed', JSON.stringify(isRoomListCollapsed));
+  }, [isRoomListCollapsed]);
+
+  useEffect(() => {
+    localStorage.setItem('chat-members-collapsed', JSON.stringify(isMembersCollapsed));
+  }, [isMembersCollapsed]);
+
+  // Toggle functions with keyboard shortcut support
+  const toggleRoomList = useCallback(() => {
+    setIsRoomListCollapsed(prev => !prev);
+  }, []);
+
+  const toggleMembers = useCallback(() => {
+    setIsMembersCollapsed(prev => !prev);
+  }, []);
+
+  const toggleFocusMode = useCallback(() => {
+    setIsFocusMode(prev => {
+      const newValue = !prev;
+      if (newValue) {
+        setIsRoomListCollapsed(true);
+        setIsMembersCollapsed(true);
+      } else {
+        setIsRoomListCollapsed(false);
+        setIsMembersCollapsed(false);
+      }
+      return newValue;
+    });
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + B = Toggle room list
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        toggleRoomList();
+      }
+      // Ctrl/Cmd + M = Toggle members
+      if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+        e.preventDefault();
+        toggleMembers();
+      }
+      // Ctrl/Cmd + Shift + F = Focus mode
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'F') {
+        e.preventDefault();
+        toggleFocusMode();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleRoomList, toggleMembers, toggleFocusMode]);
 
   // Open pre-call setup modal
   const handleOpenPreCallSetup = (type: CallType) => {
@@ -294,14 +368,103 @@ export default function Chat() {
         )}
       </AnimatePresence>
 
-      {/* Room List Sidebar - Desktop */}
-      <div className="w-80 flex-shrink-0 hidden lg:block">
-        <RoomList
-          rooms={rooms}
-          currentRoomId={currentRoom?.id}
-          onCreateRoom={() => setShowCreateRoom(true)}
-        />
-      </div>
+      {/* Room List Sidebar - Desktop with Collapse */}
+      <motion.div
+        className="hidden lg:flex flex-shrink-0 relative"
+        initial={false}
+        animate={{
+          width: isRoomListCollapsed ? 0 : 320,
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      >
+        <motion.div
+          className="w-80 h-full overflow-hidden"
+          initial={false}
+          animate={{
+            opacity: isRoomListCollapsed ? 0 : 1,
+            x: isRoomListCollapsed ? -20 : 0,
+          }}
+          transition={{ duration: 0.2 }}
+        >
+          <RoomList
+            rooms={rooms}
+            currentRoomId={currentRoom?.id}
+            onCreateRoom={() => setShowCreateRoom(true)}
+          />
+        </motion.div>
+
+        {/* Collapse Toggle Button */}
+        <motion.button
+          onClick={toggleRoomList}
+          className={cn(
+            'absolute top-1/2 -translate-y-1/2 z-10 flex items-center justify-center',
+            'w-6 h-12 rounded-r-lg shadow-lg transition-all duration-200',
+            'bg-white dark:bg-surface-700 border border-l-0 border-surface-200 dark:border-surface-600',
+            'hover:bg-surface-50 dark:hover:bg-surface-600 hover:w-7',
+            'text-surface-500 hover:text-primary-600 dark:hover:text-primary-400',
+            isRoomListCollapsed ? 'right-0' : '-right-3'
+          )}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          title={isRoomListCollapsed ? 'Show rooms (Ctrl+B)' : 'Hide rooms (Ctrl+B)'}
+        >
+          <motion.div
+            animate={{ rotate: isRoomListCollapsed ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </motion.div>
+        </motion.button>
+      </motion.div>
+
+      {/* Collapsed Room List Indicator */}
+      <AnimatePresence>
+        {isRoomListCollapsed && (
+          <motion.div
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: 48 }}
+            exit={{ opacity: 0, width: 0 }}
+            className="hidden lg:flex flex-col items-center py-4 border-r border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50"
+          >
+            <motion.button
+              onClick={toggleRoomList}
+              className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-400 mb-4"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              title="Show rooms (Ctrl+B)"
+            >
+              <PanelLeftOpen className="w-5 h-5" />
+            </motion.button>
+
+            {/* Mini room indicators */}
+            <div className="flex-1 flex flex-col gap-2 overflow-y-auto px-1">
+              {rooms.slice(0, 8).map((room, index) => (
+                <motion.button
+                  key={room.id}
+                  onClick={() => {
+                    navigate(`/chat/${room.id}`);
+                  }}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={cn(
+                    'w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold transition-all',
+                    currentRoom?.id === room.id
+                      ? 'bg-primary-500 text-white shadow-lg'
+                      : 'bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-400 hover:bg-primary-100 dark:hover:bg-primary-900/30'
+                  )}
+                  title={room.name}
+                >
+                  {room.name.charAt(0).toUpperCase()}
+                </motion.button>
+              ))}
+              {rooms.length > 8 && (
+                <span className="text-xs text-surface-400 text-center">+{rooms.length - 8}</span>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -351,6 +514,25 @@ export default function Chat() {
                   className="hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 p-1.5 sm:p-2"
                 >
                   <Video className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Button>
+                {/* Focus Mode Toggle */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleFocusMode}
+                  title={isFocusMode ? 'Exit focus mode (Ctrl+Shift+F)' : 'Enter focus mode (Ctrl+Shift+F)'}
+                  className={cn(
+                    'p-1.5 sm:p-2 hidden lg:flex transition-all',
+                    isFocusMode
+                      ? 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30'
+                      : 'hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+                  )}
+                >
+                  {isFocusMode ? (
+                    <Minimize2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                  ) : (
+                    <Maximize2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                  )}
                 </Button>
                 <Button
                   variant="ghost"
@@ -426,34 +608,124 @@ export default function Chat() {
         )}
       </div>
 
-      {/* Members Sidebar - Only show if room has members */}
+      {/* Collapsed Members Indicator */}
+      <AnimatePresence>
+        {isMembersCollapsed && currentRoom && roomMembers.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: 48 }}
+            exit={{ opacity: 0, width: 0 }}
+            className="hidden xl:flex flex-col items-center py-4 border-l border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50"
+          >
+            <motion.button
+              onClick={toggleMembers}
+              className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-400 mb-4"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              title="Show members (Ctrl+M)"
+            >
+              <PanelRightOpen className="w-5 h-5" />
+            </motion.button>
+
+            {/* Mini member avatars */}
+            <div className="flex-1 flex flex-col gap-2 overflow-y-auto px-1">
+              {roomMembers.slice(0, 8).map((member, index) => (
+                <motion.div
+                  key={member.id}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="relative"
+                  title={member.displayName}
+                >
+                  <Avatar name={member.displayName} src={member.avatar} size="sm" />
+                  {/* Online indicator */}
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success-500 border-2 border-white dark:border-surface-800 rounded-full" />
+                </motion.div>
+              ))}
+              {roomMembers.length > 8 && (
+                <span className="text-xs text-surface-400 text-center">+{roomMembers.length - 8}</span>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Members Sidebar - Desktop with Collapse */}
       {currentRoom && roomMembers.length > 0 && (
-        <div className="w-64 flex-shrink-0 hidden xl:block border-l border-surface-200 dark:border-surface-700 p-4 overflow-y-auto">
-          <div className="mb-4">
-            <h3 className="font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Members ({roomMembers.length})
-            </h3>
-          </div>
-          <div className="space-y-2">
-            {roomMembers.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700/50"
-              >
-                <Avatar name={member.displayName} src={member.avatar} size="sm" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-surface-700 dark:text-surface-300 truncate">
-                    {member.displayName}
-                  </p>
-                  {member.role !== 'member' && (
-                    <p className="text-xs text-surface-500 capitalize">{member.role}</p>
-                  )}
-                </div>
+        <motion.div
+          className="hidden xl:flex flex-shrink-0 relative"
+          initial={false}
+          animate={{
+            width: isMembersCollapsed ? 0 : 256,
+          }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
+          {/* Collapse Toggle Button */}
+          <motion.button
+            onClick={toggleMembers}
+            className={cn(
+              'absolute top-1/2 -translate-y-1/2 z-10 flex items-center justify-center',
+              'w-6 h-12 rounded-l-lg shadow-lg transition-all duration-200',
+              'bg-white dark:bg-surface-700 border border-r-0 border-surface-200 dark:border-surface-600',
+              'hover:bg-surface-50 dark:hover:bg-surface-600 hover:w-7',
+              'text-surface-500 hover:text-primary-600 dark:hover:text-primary-400',
+              isMembersCollapsed ? 'left-0' : '-left-3'
+            )}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title={isMembersCollapsed ? 'Show members (Ctrl+M)' : 'Hide members (Ctrl+M)'}
+          >
+            <motion.div
+              animate={{ rotate: isMembersCollapsed ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </motion.div>
+          </motion.button>
+
+          <motion.div
+            className="w-64 h-full overflow-hidden border-l border-surface-200 dark:border-surface-700"
+            initial={false}
+            animate={{
+              opacity: isMembersCollapsed ? 0 : 1,
+              x: isMembersCollapsed ? 20 : 0,
+            }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="p-4 h-full overflow-y-auto">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Members ({roomMembers.length})
+                </h3>
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="space-y-2">
+                {roomMembers.map((member) => (
+                  <motion.div
+                    key={member.id}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700/50 cursor-pointer transition-colors"
+                    whileHover={{ x: 4 }}
+                  >
+                    <div className="relative">
+                      <Avatar name={member.displayName} src={member.avatar} size="sm" />
+                      {/* Online indicator */}
+                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success-500 border-2 border-white dark:border-surface-800 rounded-full" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-surface-700 dark:text-surface-300 truncate">
+                        {member.displayName}
+                      </p>
+                      {member.role !== 'member' && (
+                        <p className="text-xs text-surface-500 capitalize">{member.role}</p>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
       )}
 
       {/* Room Info Modal */}
