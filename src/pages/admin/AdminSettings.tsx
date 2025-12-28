@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuthStore } from '@/stores/authStore';
 import {
   Settings,
   Shield,
@@ -42,10 +43,37 @@ import {
   ChevronRight,
   Sparkles,
   Building2,
+  Loader2,
+  History,
+  Calendar,
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
 import { cn } from '@/utils/cn';
+
+// API base URL
+const API_BASE = import.meta.env.PROD
+  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  : '/api/v1';
+
+// Backup types
+interface Backup {
+  id: string;
+  filename: string;
+  type: 'manual' | 'auto';
+  size: number;
+  sizeFormatted: string;
+  createdAt: string;
+}
+
+interface BackupStats {
+  totalBackups: number;
+  manualBackups: number;
+  autoBackups: number;
+  totalSize: number;
+  totalSizeFormatted: string;
+  lastBackup: Backup | null;
+}
 
 // Animated Background Component
 function AnimatedBackground() {
@@ -375,6 +403,169 @@ export default function AdminSettings() {
   const [isLoading, setIsLoading] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
+  // Backup state
+  const { token } = useAuthStore();
+  const [backups, setBackups] = useState<Backup[]>([]);
+  const [backupStats, setBackupStats] = useState<BackupStats | null>(null);
+  const [isCreatingBackup, setIsCreatingBackup] = useState(false);
+  const [isRestoringBackup, setIsRestoringBackup] = useState(false);
+  const [backupError, setBackupError] = useState<string | null>(null);
+  const [backupSuccess, setBackupSuccess] = useState<string | null>(null);
+  const [restoringBackupId, setRestoringBackupId] = useState<string | null>(null);
+
+  // Fetch backups when backup tab is selected
+  useEffect(() => {
+    if (selectedTab === 'backup') {
+      fetchBackups();
+      fetchBackupStats();
+    }
+  }, [selectedTab]);
+
+  const fetchBackups = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/backup`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBackups(data.backups || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch backups:', error);
+    }
+  };
+
+  const fetchBackupStats = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/backup/stats/summary`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBackupStats(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch backup stats:', error);
+    }
+  };
+
+  const createBackup = async () => {
+    setIsCreatingBackup(true);
+    setBackupError(null);
+    setBackupSuccess(null);
+
+    try {
+      const response = await fetch(`${API_BASE}/admin/backup`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type: 'manual' }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setBackupSuccess(`Backup created: ${data.backup.filename} (${data.backup.sizeFormatted})`);
+        fetchBackups();
+        fetchBackupStats();
+      } else {
+        const error = await response.json();
+        setBackupError(error.error || 'Failed to create backup');
+      }
+    } catch (error) {
+      setBackupError('Failed to create backup');
+    } finally {
+      setIsCreatingBackup(false);
+    }
+  };
+
+  const restoreBackup = async (backupId: string) => {
+    if (!confirm('Are you sure you want to restore from this backup? This will overwrite all current data.')) {
+      return;
+    }
+
+    setIsRestoringBackup(true);
+    setRestoringBackupId(backupId);
+    setBackupError(null);
+    setBackupSuccess(null);
+
+    try {
+      const response = await fetch(`${API_BASE}/admin/backup/restore/${encodeURIComponent(backupId)}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setBackupSuccess(`Backup restored successfully. ${data.totalRestored} records restored.`);
+      } else {
+        const error = await response.json();
+        setBackupError(error.error || 'Failed to restore backup');
+      }
+    } catch (error) {
+      setBackupError('Failed to restore backup');
+    } finally {
+      setIsRestoringBackup(false);
+      setRestoringBackupId(null);
+    }
+  };
+
+  const downloadBackup = async (backupId: string, filename: string) => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/backup/${encodeURIComponent(backupId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      setBackupError('Failed to download backup');
+    }
+  };
+
+  const deleteBackup = async (backupId: string) => {
+    if (!confirm('Are you sure you want to delete this backup?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/admin/backup/${encodeURIComponent(backupId)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        setBackupSuccess('Backup deleted');
+        fetchBackups();
+        fetchBackupStats();
+      } else {
+        setBackupError('Failed to delete backup');
+      }
+    } catch (error) {
+      setBackupError('Failed to delete backup');
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   const [settings, setSettings] = useState({
     // General
     siteName: 'OHCS E-Library',
@@ -449,18 +640,10 @@ export default function AdminSettings() {
     { id: 'system', label: 'System', icon: Server, color: '#14B8A6' },
   ];
 
-  const apiKeys = [
-    { name: 'Production API Key', key: 'sk_live_ghanaohcs2024prod1234567890abcdefgh', lastUsed: '2 hours ago' },
-    { name: 'Development API Key', key: 'sk_test_ghanaohcs2024dev01234567890abcdefgh', lastUsed: '1 day ago' },
-    { name: 'Mobile App Key', key: 'sk_mobile_ghanaohcs2024mob1234567890abcdef', lastUsed: '3 hours ago' },
-  ];
+  // Settings data - to be populated from API
+  const apiKeys: { name: string; key: string; lastUsed: string }[] = [];
 
-  const integrations = [
-    { name: 'Google Workspace', description: 'Single sign-on and Drive integration', icon: 'https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png', connected: true },
-    { name: 'Microsoft 365', description: 'Office integration and OneDrive sync', icon: 'https://img.icons8.com/color/96/microsoft.png', connected: false },
-    { name: 'Slack', description: 'Notifications and team collaboration', icon: 'https://img.icons8.com/color/96/slack-new.png', connected: true },
-    { name: 'Ghana.GOV', description: 'Government authentication portal', icon: 'https://img.icons8.com/color/96/government.png', connected: true },
-  ];
+  const integrations: { name: string; description: string; icon: string; connected: boolean }[] = [];
 
   return (
     <div className="relative min-h-screen">
@@ -978,21 +1161,21 @@ export default function AdminSettings() {
                     <div className="space-y-4">
                       <StorageBar
                         label="Documents"
-                        used={24.5}
+                        used={0}
                         total={100}
                         color="#006B3F"
                         icon={FileText}
                       />
                       <StorageBar
                         label="Media"
-                        used={8.2}
+                        used={0}
                         total={50}
                         color="#FCD116"
                         icon={Image}
                       />
                       <StorageBar
                         label="Backups"
-                        used={12.8}
+                        used={0}
                         total={25}
                         color="#CE1126"
                         icon={Archive}
@@ -1001,7 +1184,7 @@ export default function AdminSettings() {
                     <div className="mt-4 p-4 rounded-xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-between">
                       <div>
                         <p className="font-medium text-primary-900 dark:text-primary-100">Total Storage</p>
-                        <p className="text-sm text-primary-700 dark:text-primary-300">45.5 GB used of 175 GB</p>
+                        <p className="text-sm text-primary-700 dark:text-primary-300">0 GB used of 175 GB</p>
                       </div>
                       <Button variant="outline" size="sm">
                         Upgrade Plan
@@ -1176,52 +1359,205 @@ export default function AdminSettings() {
                   exit={{ opacity: 0, y: -20 }}
                   className="space-y-6"
                 >
+                  {/* Success/Error Messages */}
+                  <AnimatePresence>
+                    {backupSuccess && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-2 p-4 bg-success-50 dark:bg-success-900/30 rounded-xl border border-success-200 dark:border-success-800"
+                      >
+                        <CheckCircle className="w-5 h-5 text-success-600" />
+                        <span className="text-success-700 dark:text-success-300">{backupSuccess}</span>
+                        <button onClick={() => setBackupSuccess(null)} className="ml-auto">
+                          <X className="w-4 h-4 text-success-600" />
+                        </button>
+                      </motion.div>
+                    )}
+                    {backupError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-2 p-4 bg-error-50 dark:bg-error-900/30 rounded-xl border border-error-200 dark:border-error-800"
+                      >
+                        <AlertTriangle className="w-5 h-5 text-error-600" />
+                        <span className="text-error-700 dark:text-error-300">{backupError}</span>
+                        <button onClick={() => setBackupError(null)} className="ml-auto">
+                          <X className="w-4 h-4 text-error-600" />
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <SettingSection
                     title="Backup Management"
-                    description="Create and restore backups"
+                    description="Create and restore database backups"
                     icon={Archive}
                     iconColor="#6366F1"
                   >
                     <div className="space-y-4">
                       <div className="flex flex-col md:flex-row gap-3">
-                        <Button variant="primary" leftIcon={<Download className="w-4 h-4" />}>
-                          Create Backup Now
+                        <Button
+                          variant="primary"
+                          leftIcon={isCreatingBackup ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                          onClick={createBackup}
+                          disabled={isCreatingBackup}
+                        >
+                          {isCreatingBackup ? 'Creating Backup...' : 'Create Backup Now'}
                         </Button>
-                        <Button variant="outline" leftIcon={<Upload className="w-4 h-4" />}>
-                          Restore from Backup
+                        <Button
+                          variant="outline"
+                          leftIcon={<RefreshCw className="w-4 h-4" />}
+                          onClick={() => { fetchBackups(); fetchBackupStats(); }}
+                        >
+                          Refresh
                         </Button>
                       </div>
-                      <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50">
-                        <p className="text-sm text-surface-600 dark:text-surface-400">
-                          <span className="font-medium text-surface-900 dark:text-surface-50">Last backup:</span>
-                          {' '}December 26, 2024 at 2:30 AM (Automatic)
-                        </p>
-                      </div>
+
+                      {/* Backup Stats */}
+                      {backupStats && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50">
+                            <p className="text-xs text-surface-500 uppercase tracking-wider">Total Backups</p>
+                            <p className="text-2xl font-bold text-surface-900 dark:text-surface-50 mt-1">{backupStats.totalBackups}</p>
+                          </div>
+                          <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50">
+                            <p className="text-xs text-surface-500 uppercase tracking-wider">Manual</p>
+                            <p className="text-2xl font-bold text-surface-900 dark:text-surface-50 mt-1">{backupStats.manualBackups}</p>
+                          </div>
+                          <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50">
+                            <p className="text-xs text-surface-500 uppercase tracking-wider">Automatic</p>
+                            <p className="text-2xl font-bold text-surface-900 dark:text-surface-50 mt-1">{backupStats.autoBackups}</p>
+                          </div>
+                          <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50">
+                            <p className="text-xs text-surface-500 uppercase tracking-wider">Total Size</p>
+                            <p className="text-2xl font-bold text-surface-900 dark:text-surface-50 mt-1">{backupStats.totalSizeFormatted}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Last Backup Info */}
+                      {backupStats?.lastBackup && (
+                        <div className="p-4 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Calendar className="w-4 h-4 text-primary-600" />
+                            <span className="font-medium text-primary-900 dark:text-primary-100">Last Backup</span>
+                          </div>
+                          <p className="text-sm text-primary-700 dark:text-primary-300">
+                            {formatDate(backupStats.lastBackup.createdAt)} ({backupStats.lastBackup.type === 'auto' ? 'Automatic' : 'Manual'})
+                          </p>
+                          <p className="text-xs text-primary-600 dark:text-primary-400 mt-1">
+                            {backupStats.lastBackup.filename} • {backupStats.lastBackup.sizeFormatted}
+                          </p>
+                        </div>
+                      )}
+
+                      {!backupStats?.lastBackup && (
+                        <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50 text-center">
+                          <Archive className="w-8 h-8 text-surface-400 mx-auto mb-2" />
+                          <p className="text-surface-600 dark:text-surface-400">No backups yet</p>
+                          <p className="text-sm text-surface-500">Create your first backup to get started</p>
+                        </div>
+                      )}
+                    </div>
+                  </SettingSection>
+
+                  <SettingSection
+                    title="Backup History"
+                    description="View and manage all backups"
+                    icon={History}
+                    iconColor="#10B981"
+                  >
+                    <div className="space-y-3">
+                      {backups.length === 0 ? (
+                        <div className="p-8 text-center text-surface-500">
+                          <Archive className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                          <p>No backups available</p>
+                        </div>
+                      ) : (
+                        backups.map((backup) => (
+                          <div
+                            key={backup.id}
+                            className="flex items-center justify-between p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={cn(
+                                'w-10 h-10 rounded-lg flex items-center justify-center',
+                                backup.type === 'auto' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'
+                              )}>
+                                {backup.type === 'auto' ? (
+                                  <Clock className="w-5 h-5 text-blue-600" />
+                                ) : (
+                                  <Archive className="w-5 h-5 text-purple-600" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-medium text-surface-900 dark:text-surface-50">
+                                  {backup.filename}
+                                </p>
+                                <p className="text-sm text-surface-500">
+                                  {formatDate(backup.createdAt)} • {backup.sizeFormatted}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => downloadBackup(backup.id, backup.filename)}
+                                title="Download backup"
+                              >
+                                <Download className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => restoreBackup(backup.id)}
+                                disabled={isRestoringBackup}
+                                title="Restore from backup"
+                              >
+                                {restoringBackupId === backup.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Upload className="w-4 h-4" />
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteBackup(backup.id)}
+                                className="text-error-600 hover:text-error-700 hover:bg-error-50"
+                                title="Delete backup"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </SettingSection>
 
                   <SettingSection
                     title="Auto Backup Settings"
-                    description="Configure automatic backups"
+                    description="Automatic backups run daily at midnight UTC (keeping last 7)"
                     icon={Clock}
-                    iconColor="#10B981"
+                    iconColor="#F59E0B"
                   >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-                          Backup Frequency
-                        </label>
-                        <select className="w-full px-4 py-2.5 bg-white dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl text-surface-900 dark:text-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                          <option value="daily">Daily</option>
-                          <option value="weekly">Weekly</option>
-                          <option value="monthly">Monthly</option>
-                        </select>
+                    <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-success-100 dark:bg-success-900/30 flex items-center justify-center">
+                          <CheckCircle className="w-5 h-5 text-success-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-surface-900 dark:text-surface-50">Automatic Backups Enabled</p>
+                          <p className="text-sm text-surface-500">
+                            Daily backups at 00:00 UTC • Last 7 backups retained
+                          </p>
+                        </div>
                       </div>
-                      <Input
-                        label="Retention (days)"
-                        type="number"
-                        defaultValue="30"
-                      />
                     </div>
                   </SettingSection>
                 </motion.div>
@@ -1245,25 +1581,25 @@ export default function AdminSettings() {
                       <SystemStatusCard
                         label="Web Server"
                         status="online"
-                        value="Response: 45ms"
+                        value="Operational"
                         icon={Server}
                       />
                       <SystemStatusCard
                         label="Database"
                         status="online"
-                        value="Queries: 1.2ms avg"
+                        value="Connected"
                         icon={Database}
                       />
                       <SystemStatusCard
                         label="Cache"
                         status="online"
-                        value="Hit rate: 94%"
+                        value="Active"
                         icon={Zap}
                       />
                       <SystemStatusCard
                         label="Storage"
-                        status="warning"
-                        value="51% capacity"
+                        status="online"
+                        value="Available"
                         icon={HardDrive}
                       />
                     </div>
@@ -1277,10 +1613,10 @@ export default function AdminSettings() {
                   >
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {[
-                        { label: 'Version', value: 'v2.4.1' },
+                        { label: 'Version', value: 'v1.0.0' },
                         { label: 'Environment', value: 'Production' },
-                        { label: 'Node.js', value: 'v20.10.0' },
-                        { label: 'React', value: 'v18.2.0' },
+                        { label: 'Node.js', value: 'v18+' },
+                        { label: 'React', value: 'v18.3.1' },
                       ].map((item) => (
                         <div key={item.label} className="p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50">
                           <p className="text-xs text-surface-500 uppercase tracking-wider">{item.label}</p>

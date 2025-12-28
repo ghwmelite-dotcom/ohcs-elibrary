@@ -21,6 +21,9 @@ import {
   settingsRoutes,
   adminRoutes,
   counselorRoutes,
+  backupRoutes,
+  createScheduledBackup,
+  adminUsersRoutes,
 } from './routes';
 
 export interface Env {
@@ -132,6 +135,8 @@ app.route('/api/v1/notifications', notificationsRoutes);
 app.route('/api/v1/settings', settingsRoutes);
 app.route('/api/v1/gamification', gamificationRoutes);
 app.route('/api/v1/admin', adminRoutes);
+app.route('/api/v1/admin/backup', backupRoutes);
+app.route('/api/v1/admin/users', adminUsersRoutes);
 app.route('/api/v1/counselor', counselorRoutes);
 
 // News aggregation admin endpoints
@@ -237,8 +242,16 @@ export default {
             const summaryResult = await generateArticleSummaries(env, 5);
             console.log('AI summary generation completed:', summaryResult);
           }
+
+          // Run daily backup at midnight (check if it's the 0 * * * * cron)
+          const now = new Date();
+          if (now.getUTCHours() === 0 && now.getUTCMinutes() < 15) {
+            console.log('Running scheduled daily backup...');
+            const backupResult = await createScheduledBackup(env);
+            console.log('Scheduled backup completed:', backupResult);
+          }
         } catch (error) {
-          console.error('Scheduled aggregation failed:', error);
+          console.error('Scheduled task failed:', error);
         }
       })()
     );

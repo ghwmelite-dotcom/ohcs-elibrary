@@ -639,10 +639,10 @@ export async function aggregateNews(env: Env): Promise<{
       }
     }
 
-    // Clean up old articles (older than 30 days)
+    // Clean up old articles (older than 24 hours)
     await env.DB.prepare(`
       DELETE FROM news_articles
-      WHERE publishedAt < datetime('now', '-30 days')
+      WHERE publishedAt < datetime('now', '-24 hours')
     `).run();
 
     return {

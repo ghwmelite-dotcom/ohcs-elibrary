@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import {
   Users,
@@ -32,8 +32,72 @@ import {
   XCircle,
   LayoutGrid,
   TableProperties,
+  Loader2,
+  Key,
+  Lock,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { useAuthStore } from '@/stores/authStore';
+
+const API_BASE = import.meta.env.PROD
+  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  : '/api/v1';
+
+// Permission groups for UI organization
+const PERMISSION_GROUPS = {
+  dashboard: { label: 'Dashboard', permissions: ['view_admin_dashboard'] },
+  users: { label: 'User Management', permissions: ['view_users', 'create_users', 'edit_users', 'delete_users', 'manage_user_roles'] },
+  documents: { label: 'Documents', permissions: ['view_documents', 'upload_documents', 'edit_documents', 'delete_documents', 'approve_documents'] },
+  forum: { label: 'Forum', permissions: ['view_forum_admin', 'moderate_forum', 'delete_forum_posts', 'manage_forum_categories'] },
+  chat: { label: 'Chat', permissions: ['view_chat_admin', 'moderate_chat', 'delete_chat_messages'] },
+  groups: { label: 'Groups', permissions: ['view_groups_admin', 'create_groups', 'edit_groups', 'delete_groups'] },
+  news: { label: 'News', permissions: ['view_news_admin', 'manage_news_sources', 'edit_articles', 'delete_articles'] },
+  analytics: { label: 'Analytics', permissions: ['view_analytics', 'export_reports'] },
+  settings: { label: 'Settings', permissions: ['view_settings', 'edit_settings'] },
+  backup: { label: 'Backup', permissions: ['manage_backups', 'restore_backups'] },
+  audit: { label: 'Audit', permissions: ['view_audit_logs'] },
+  wellness: { label: 'Wellness', permissions: ['view_wellness_admin', 'manage_wellness_resources', 'view_escalations', 'manage_counselors'] },
+};
+
+const PERMISSION_LABELS: Record<string, string> = {
+  view_admin_dashboard: 'View Dashboard',
+  view_users: 'View Users',
+  create_users: 'Create Users',
+  edit_users: 'Edit Users',
+  delete_users: 'Delete Users',
+  manage_user_roles: 'Manage Roles',
+  view_documents: 'View Documents',
+  upload_documents: 'Upload Documents',
+  edit_documents: 'Edit Documents',
+  delete_documents: 'Delete Documents',
+  approve_documents: 'Approve Documents',
+  view_forum_admin: 'View Forum Admin',
+  moderate_forum: 'Moderate Forum',
+  delete_forum_posts: 'Delete Posts',
+  manage_forum_categories: 'Manage Categories',
+  view_chat_admin: 'View Chat Admin',
+  moderate_chat: 'Moderate Chat',
+  delete_chat_messages: 'Delete Messages',
+  view_groups_admin: 'View Groups Admin',
+  create_groups: 'Create Groups',
+  edit_groups: 'Edit Groups',
+  delete_groups: 'Delete Groups',
+  view_news_admin: 'View News Admin',
+  manage_news_sources: 'Manage Sources',
+  edit_articles: 'Edit Articles',
+  delete_articles: 'Delete Articles',
+  view_analytics: 'View Analytics',
+  export_reports: 'Export Reports',
+  view_settings: 'View Settings',
+  edit_settings: 'Edit Settings',
+  manage_backups: 'Manage Backups',
+  restore_backups: 'Restore Backups',
+  view_audit_logs: 'View Audit Logs',
+  view_wellness_admin: 'View Wellness Admin',
+  manage_wellness_resources: 'Manage Resources',
+  view_escalations: 'View Escalations',
+  manage_counselors: 'Manage Counselors',
+};
 
 // ============================================================================
 // TYPES
@@ -52,6 +116,228 @@ interface User {
   createdAt: string;
   xp: number;
   level: number;
+  permissions?: Record<string, boolean>;
+}
+
+// ============================================================================
+// PERMISSIONS MODAL
+// ============================================================================
+interface PermissionsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  user: User | null;
+  onSave: (userId: string, role: string, permissions: Record<string, boolean>) => Promise<void>;
+}
+
+function PermissionsModal({ isOpen, onClose, user, onSave }: PermissionsModalProps) {
+  const [role, setRole] = useState(user?.role || 'user');
+  const [permissions, setPermissions] = useState<Record<string, boolean>>({});
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setRole(user.role);
+      setPermissions(user.permissions || {});
+    }
+  }, [user]);
+
+  const handleTogglePermission = (permission: string) => {
+    setPermissions(prev => ({
+      ...prev,
+      [permission]: !prev[permission]
+    }));
+  };
+
+  const handleToggleGroup = (groupKey: string) => {
+    const group = PERMISSION_GROUPS[groupKey as keyof typeof PERMISSION_GROUPS];
+    const allEnabled = group.permissions.every(p => permissions[p]);
+
+    const newPermissions = { ...permissions };
+    group.permissions.forEach(p => {
+      newPermissions[p] = !allEnabled;
+    });
+    setPermissions(newPermissions);
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    setIsSaving(true);
+    try {
+      await onSave(user.id, role, permissions);
+      onClose();
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const roles = [
+    { value: 'user', label: 'User' },
+    { value: 'contributor', label: 'Contributor' },
+    { value: 'moderator', label: 'Moderator' },
+    { value: 'librarian', label: 'Librarian' },
+    { value: 'counselor', label: 'Counselor' },
+    { value: 'admin', label: 'Admin' },
+    { value: 'director', label: 'Director' },
+    { value: 'super_admin', label: 'Super Admin' },
+  ];
+
+  return (
+    <AnimatePresence>
+      {isOpen && user && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div className="relative w-full max-w-2xl bg-white dark:bg-surface-800 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-surface-200 dark:border-surface-700 flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-surface-900 dark:text-surface-50">
+                      Manage Permissions
+                    </h2>
+                    <p className="text-sm text-surface-500">{user.name} ({user.email})</p>
+                  </div>
+                </div>
+                <motion.button
+                  onClick={onClose}
+                  className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <X className="w-5 h-5 text-surface-500" />
+                </motion.button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Role Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    Role
+                  </label>
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    {roles.map(r => (
+                      <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Permissions */}
+                <div>
+                  <h3 className="text-sm font-medium text-surface-700 dark:text-surface-300 mb-3">
+                    Granular Permissions
+                  </h3>
+                  <div className="space-y-4">
+                    {Object.entries(PERMISSION_GROUPS).map(([groupKey, group]) => {
+                      const enabledCount = group.permissions.filter(p => permissions[p]).length;
+                      const allEnabled = enabledCount === group.permissions.length;
+                      const someEnabled = enabledCount > 0 && !allEnabled;
+
+                      return (
+                        <div key={groupKey} className="rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden">
+                          <button
+                            onClick={() => handleToggleGroup(groupKey)}
+                            className="w-full flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-700/50 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={cn(
+                                'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
+                                allEnabled
+                                  ? 'bg-primary-500 border-primary-500 text-white'
+                                  : someEnabled
+                                    ? 'bg-primary-200 border-primary-500'
+                                    : 'border-surface-300 dark:border-surface-600'
+                              )}>
+                                {allEnabled && <Check className="w-3 h-3" />}
+                                {someEnabled && <div className="w-2 h-2 bg-primary-500 rounded-sm" />}
+                              </div>
+                              <span className="font-medium text-surface-900 dark:text-surface-50">
+                                {group.label}
+                              </span>
+                            </div>
+                            <span className="text-sm text-surface-500">
+                              {enabledCount}/{group.permissions.length}
+                            </span>
+                          </button>
+                          <div className="p-4 grid grid-cols-2 gap-2">
+                            {group.permissions.map(permission => (
+                              <label
+                                key={permission}
+                                className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={!!permissions[permission]}
+                                  onChange={() => handleTogglePermission(permission)}
+                                  className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+                                />
+                                <span className="text-sm text-surface-700 dark:text-surface-300">
+                                  {PERMISSION_LABELS[permission] || permission}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-surface-200 dark:border-surface-700 flex-shrink-0">
+                <motion.button
+                  onClick={onClose}
+                  className="px-5 py-2.5 rounded-xl text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors font-medium"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-700 text-white font-medium shadow-lg shadow-primary-500/30 hover:shadow-primary-500/50 transition-all disabled:opacity-50"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {isSaving ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Check className="w-4 h-4" />
+                      Save Permissions
+                    </span>
+                  )}
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
 }
 
 // ============================================================================
@@ -800,103 +1086,150 @@ function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
 // MAIN COMPONENT
 // ============================================================================
 export default function AdminUsers() {
+  const { token } = useAuthStore();
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  const mockUsers: User[] = [
-    {
-      id: '1',
-      name: 'Kwame Asante',
-      email: 'kwame.asante@ohcs.gov.gh',
-      role: 'civil_servant',
-      mda: 'Office of the Head of Civil Service',
-      department: 'IT Directorate',
-      title: 'Senior Software Engineer',
-      status: 'active',
-      lastLogin: '2024-01-15T10:30:00Z',
-      createdAt: '2023-06-15',
-      xp: 10200,
-      level: 6,
-    },
-    {
-      id: '2',
-      name: 'Ama Serwaa',
-      email: 'ama.serwaa@psc.gov.gh',
-      role: 'moderator',
-      mda: 'Public Services Commission',
-      department: 'Policy Unit',
-      title: 'Policy Analyst',
-      status: 'active',
-      lastLogin: '2024-01-15T09:45:00Z',
-      createdAt: '2023-05-20',
-      xp: 14850,
-      level: 8,
-    },
-    {
-      id: '3',
-      name: 'Kofi Mensah',
-      email: 'kofi.mensah@mof.gov.gh',
-      role: 'civil_servant',
-      mda: 'Ministry of Finance',
-      department: 'Budget Office',
-      title: 'Budget Officer',
-      status: 'inactive',
-      lastLogin: '2024-01-10T14:20:00Z',
-      createdAt: '2023-08-01',
-      xp: 5400,
-      level: 4,
-    },
-    {
-      id: '4',
-      name: 'Abena Pokua',
-      email: 'abena.pokua@moh.gov.gh',
-      role: 'admin',
-      mda: 'Ministry of Health',
-      department: 'HR Directorate',
-      title: 'HR Director',
-      status: 'active',
-      lastLogin: '2024-01-15T11:00:00Z',
-      createdAt: '2023-03-10',
-      xp: 18500,
-      level: 9,
-    },
-    {
-      id: '5',
-      name: 'Yaw Boateng',
-      email: 'yaw.boateng@moe.gov.gh',
-      role: 'civil_servant',
-      mda: 'Ministry of Education',
-      department: 'Planning Unit',
-      title: 'Planning Officer',
-      status: 'suspended',
-      lastLogin: '2024-01-05T08:30:00Z',
-      createdAt: '2023-09-25',
-      xp: 2100,
-      level: 2,
-    },
-    {
-      id: '6',
-      name: 'Efua Nyamaa',
-      email: 'efua.nyamaa@ohcs.gov.gh',
-      role: 'director',
-      mda: 'Office of the Head of Civil Service',
-      department: 'Executive Office',
-      title: 'Deputy Director',
-      status: 'active',
-      lastLogin: '2024-01-15T08:00:00Z',
-      createdAt: '2022-01-15',
-      xp: 25000,
-      level: 10,
-    },
-  ];
+  // API state
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, suspended: 0 });
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Fetch users from API
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery) params.set('search', searchQuery);
+      if (filterStatus !== 'all') params.set('status', filterStatus);
+      if (filterRole !== 'all') params.set('role', filterRole);
+      params.set('limit', '50');
+
+      const response = await fetch(`${API_BASE}/admin/users?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch stats
+  const fetchStats = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/users/stats/summary`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setStats({
+          total: data.stats?.total || 0,
+          active: data.stats?.active || 0,
+          inactive: data.stats?.inactive || 0,
+          suspended: data.stats?.suspended || 0,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+    fetchStats();
+  }, [searchQuery, filterStatus, filterRole]);
+
+  // Save user permissions
+  const handleSavePermissions = async (userId: string, role: string, permissions: Record<string, boolean>) => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ role, permissions }),
+      });
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Permissions updated successfully' });
+        fetchUsers();
+      } else {
+        const error = await response.json();
+        setMessage({ type: 'error', text: error.error || 'Failed to update permissions' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to update permissions' });
+    }
+
+    setTimeout(() => setMessage(null), 3000);
+  };
+
+  // Suspend/unsuspend user
+  const handleSuspendUser = async (userId: string, suspend: boolean) => {
+    if (!confirm(suspend ? 'Are you sure you want to suspend this user?' : 'Unsuspend this user?')) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/admin/users/${userId}/suspend`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ suspend }),
+      });
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: suspend ? 'User suspended' : 'User unsuspended' });
+        fetchUsers();
+        fetchStats();
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to update user' });
+    }
+
+    setTimeout(() => setMessage(null), 3000);
+  };
+
+  // Delete user
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'User deleted' });
+        fetchUsers();
+        fetchStats();
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to delete user' });
+    }
+
+    setTimeout(() => setMessage(null), 3000);
+  };
 
   // Filter users
-  const filteredUsers = mockUsers.filter(user => {
+  const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           user.mda.toLowerCase().includes(searchQuery.toLowerCase());
@@ -922,14 +1255,31 @@ export default function AdminUsers() {
   };
 
   const handleUserAction = (userId: string, action: string) => {
-    console.log(`Action: ${action} on user: ${userId}`);
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    switch (action) {
+      case 'role':
+      case 'edit':
+        setSelectedUser(user);
+        setShowPermissionsModal(true);
+        break;
+      case 'suspend':
+        handleSuspendUser(userId, user.status !== 'suspended');
+        break;
+      case 'delete':
+        handleDeleteUser(userId);
+        break;
+      default:
+        console.log(`Action: ${action} on user: ${userId}`);
+    }
   };
 
-  const stats = [
-    { label: 'Total Users', value: mockUsers.length, icon: Users, color: '#006B3F', change: 12 },
-    { label: 'Active', value: mockUsers.filter(u => u.status === 'active').length, icon: UserCheck, color: '#10B981', change: 8 },
-    { label: 'Inactive', value: mockUsers.filter(u => u.status === 'inactive').length, icon: UserX, color: '#6B7280', change: -5 },
-    { label: 'Suspended', value: mockUsers.filter(u => u.status === 'suspended').length, icon: Ban, color: '#CE1126', change: 0 },
+  const statCards = [
+    { label: 'Total Users', value: stats.total, icon: Users, color: '#006B3F' },
+    { label: 'Active', value: stats.active, icon: UserCheck, color: '#10B981' },
+    { label: 'Inactive', value: stats.inactive, icon: UserX, color: '#6B7280' },
+    { label: 'Suspended', value: stats.suspended, icon: Ban, color: '#CE1126' },
   ];
 
   return (
@@ -971,9 +1321,35 @@ export default function AdminUsers() {
           </motion.button>
         </motion.div>
 
+        {/* Success/Error Message */}
+        <AnimatePresence>
+          {message && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className={cn(
+                'mb-6 p-4 rounded-xl flex items-center gap-3',
+                message.type === 'success'
+                  ? 'bg-success-50 dark:bg-success-900/30 border border-success-200 dark:border-success-800'
+                  : 'bg-error-50 dark:bg-error-900/30 border border-error-200 dark:border-error-800'
+              )}
+            >
+              {message.type === 'success' ? (
+                <CheckCircle2 className="w-5 h-5 text-success-600" />
+              ) : (
+                <AlertTriangle className="w-5 h-5 text-error-600" />
+              )}
+              <span className={message.type === 'success' ? 'text-success-700 dark:text-success-300' : 'text-error-700 dark:text-error-300'}>
+                {message.text}
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {stats.map((stat, index) => (
+          {statCards.map((stat, index) => (
             <StatCard
               key={stat.label}
               {...stat}
@@ -1056,6 +1432,17 @@ export default function AdminUsers() {
                 </button>
               </div>
 
+              {/* Refresh */}
+              <motion.button
+                onClick={() => { fetchUsers(); fetchStats(); }}
+                className="p-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title="Refresh"
+              >
+                <RefreshCw className={cn("w-5 h-5", isLoading && "animate-spin")} />
+              </motion.button>
+
               {/* Export */}
               <motion.button
                 className="p-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
@@ -1074,19 +1461,31 @@ export default function AdminUsers() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredUsers.map((user, index) => (
-                <UserCard
-                  key={user.id}
-                  user={user}
-                  isSelected={selectedUsers.includes(user.id)}
-                  onSelect={() => toggleUserSelection(user.id)}
-                  onAction={(action) => handleUserAction(user.id, action)}
-                  delay={index * 0.05}
-                />
-              ))}
+          {isLoading ? (
+            <div className="bg-white dark:bg-surface-800/90 backdrop-blur-xl rounded-2xl border border-surface-200/50 dark:border-surface-700/50 py-16 text-center">
+              <Loader2 className="w-12 h-12 text-primary-500 mx-auto mb-4 animate-spin" />
+              <p className="text-surface-500">Loading users...</p>
             </div>
+          ) : viewMode === 'grid' ? (
+            filteredUsers.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredUsers.map((user, index) => (
+                  <UserCard
+                    key={user.id}
+                    user={user}
+                    isSelected={selectedUsers.includes(user.id)}
+                    onSelect={() => toggleUserSelection(user.id)}
+                    onAction={(action) => handleUserAction(user.id, action)}
+                    delay={index * 0.05}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white dark:bg-surface-800/90 backdrop-blur-xl rounded-2xl border border-surface-200/50 dark:border-surface-700/50 py-16 text-center">
+                <Users className="w-12 h-12 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+                <p className="text-surface-500">No users found</p>
+              </div>
+            )
           ) : (
             <div className="bg-white dark:bg-surface-800/90 backdrop-blur-xl rounded-2xl border border-surface-200/50 dark:border-surface-700/50 overflow-hidden">
               <table className="w-full">
@@ -1209,6 +1608,17 @@ export default function AdminUsers() {
 
         {/* Add User Modal */}
         <AddUserModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
+
+        {/* Permissions Modal */}
+        <PermissionsModal
+          isOpen={showPermissionsModal}
+          onClose={() => {
+            setShowPermissionsModal(false);
+            setSelectedUser(null);
+          }}
+          user={selectedUser}
+          onSave={handleSavePermissions}
+        />
       </div>
     </div>
   );

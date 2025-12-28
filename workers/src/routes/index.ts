@@ -12,6 +12,8 @@ export { newsRoutes } from './news';
 export { default as notificationsRoutes } from './notifications';
 export { default as settingsRoutes } from './settings';
 export { counselorRoutes } from './counselor';
+export { backupRoutes, createScheduledBackup } from './backup';
+export { adminUsersRoutes } from './admin-users';
 
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
