@@ -293,28 +293,31 @@ export default function ResearchLab() {
                   Quick Start
                 </h3>
                 <div className="space-y-2">
-                  {templates.slice(0, 4).map((template) => (
-                    <button
-                      key={template.id}
-                      onClick={() => setIsCreateModalOpen(true)}
-                      className="w-full flex items-center gap-3 p-3 text-left rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
-                    >
-                      <div
-                        className={cn(
-                          'w-8 h-8 rounded-lg flex items-center justify-center text-sm',
-                          RESEARCH_CATEGORIES[template.category].color
-                        )}
+                  {templates.slice(0, 4).map((template) => {
+                    const category = RESEARCH_CATEGORIES[template.category] || RESEARCH_CATEGORIES.other;
+                    return (
+                      <button
+                        key={template.id}
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="w-full flex items-center gap-3 p-3 text-left rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
                       >
-                        {RESEARCH_CATEGORIES[template.category].icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 block truncate group-hover:text-primary-600 dark:group-hover:text-primary-400">
-                          {template.name}
-                        </span>
-                      </div>
-                      <ArrowRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </button>
-                  ))}
+                        <div
+                          className={cn(
+                            'w-8 h-8 rounded-lg flex items-center justify-center text-sm',
+                            category.color
+                          )}
+                        >
+                          {category.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 block truncate group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                            {template.name}
+                          </span>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </motion.div>

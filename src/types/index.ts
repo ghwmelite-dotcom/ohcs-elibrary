@@ -1254,6 +1254,8 @@ export type ResearchCategory =
   | 'hr_management'
   | 'service_delivery'
   | 'governance'
+  | 'policy'
+  | 'reform'
   | 'other';
 
 export type ResearchTeamRole = 'lead' | 'researcher' | 'reviewer' | 'advisor' | 'contributor';

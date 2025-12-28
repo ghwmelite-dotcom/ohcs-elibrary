@@ -60,6 +60,8 @@ export const RESEARCH_CATEGORIES: Record<ResearchCategory, { label: string; icon
   hr_management: { label: 'HR Management', icon: '👥', color: 'bg-orange-500' },
   service_delivery: { label: 'Service Delivery', icon: '🚀', color: 'bg-indigo-500' },
   governance: { label: 'Governance', icon: '🏛️', color: 'bg-slate-500' },
+  policy: { label: 'Policy Analysis', icon: '📜', color: 'bg-teal-500' },
+  reform: { label: 'Reform', icon: '🔄', color: 'bg-rose-500' },
   other: { label: 'Other', icon: '📁', color: 'bg-gray-500' },
 };
 
