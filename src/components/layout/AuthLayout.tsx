@@ -62,20 +62,20 @@ export function AuthLayout() {
               className="mt-12 grid grid-cols-2 gap-6"
             >
               <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <p className="text-3xl font-bold text-white">50K+</p>
+                <p className="text-3xl font-bold text-white">20K+</p>
                 <p className="text-white/70">Civil Servants</p>
               </div>
               <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <p className="text-3xl font-bold text-white">10K+</p>
-                <p className="text-white/70">Documents</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <p className="text-3xl font-bold text-white">200+</p>
-                <p className="text-white/70">MDAs</p>
+                <p className="text-3xl font-bold text-white">50+</p>
+                <p className="text-white/70">MDAs Targeted</p>
               </div>
               <div className="bg-white/10 backdrop-blur rounded-xl p-4">
                 <p className="text-3xl font-bold text-white">24/7</p>
-                <p className="text-white/70">Access</p>
+                <p className="text-white/70">AI Assistance</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
+                <p className="text-3xl font-bold text-white">100%</p>
+                <p className="text-white/70">Secured</p>
               </div>
             </motion.div>
           </div>
