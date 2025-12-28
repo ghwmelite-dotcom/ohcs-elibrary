@@ -761,163 +761,12 @@ export default function AdminForum() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Mock data
-  const topics: ForumTopic[] = [
-    {
-      id: '1',
-      title: 'Best practices for digital document management in MDAs',
-      author: 'Kwame Asante',
-      authorRole: 'Senior Admin Officer',
-      category: 'Best Practices',
-      categoryColor: '#006B3F',
-      content: 'I would like to share some insights on how we have successfully implemented digital document management at the Ministry of Finance...',
-      replies: 24,
-      views: 456,
-      likes: 38,
-      status: 'active',
-      isPinned: true,
-      isHot: true,
-      isSolved: false,
-      createdAt: new Date(Date.now() - 86400000 * 7),
-      lastActivity: new Date(Date.now() - 3600000),
-      lastReplyBy: 'Ama Serwaa',
-    },
-    {
-      id: '2',
-      title: 'How to implement e-services in your MDA - A complete guide',
-      author: 'Ama Serwaa',
-      authorRole: 'IT Director',
-      category: 'How-To Guides',
-      categoryColor: '#3B82F6',
-      content: 'This comprehensive guide will walk you through the process of implementing e-services from planning to execution...',
-      replies: 18,
-      views: 312,
-      likes: 25,
-      status: 'active',
-      isPinned: false,
-      isHot: false,
-      isSolved: true,
-      createdAt: new Date(Date.now() - 86400000 * 5),
-      lastActivity: new Date(Date.now() - 7200000),
-    },
-    {
-      id: '3',
-      title: 'Question about leave management policy interpretation',
-      author: 'Kofi Mensah',
-      authorRole: 'HR Officer',
-      category: 'General Discussion',
-      categoryColor: '#8B5CF6',
-      content: 'Can someone help clarify the new leave management policy? Specifically regarding the accrual rates...',
-      replies: 5,
-      views: 89,
-      likes: 3,
-      status: 'flagged',
-      isPinned: false,
-      isHot: false,
-      isSolved: false,
-      createdAt: new Date(Date.now() - 86400000 * 2),
-      lastActivity: new Date(Date.now() - 86400000),
-    },
-    {
-      id: '4',
-      title: 'Annual performance review preparation tips',
-      author: 'Yaw Boateng',
-      authorRole: 'Deputy Director',
-      category: 'Career Development',
-      categoryColor: '#F59E0B',
-      content: 'With the annual review season approaching, here are some tips to help you prepare and showcase your achievements...',
-      replies: 32,
-      views: 567,
-      likes: 45,
-      status: 'active',
-      isPinned: true,
-      isHot: true,
-      isSolved: false,
-      createdAt: new Date(Date.now() - 86400000 * 3),
-      lastActivity: new Date(Date.now() - 1800000),
-    },
-    {
-      id: '5',
-      title: 'Discussion locked due to policy violation',
-      author: 'Anonymous',
-      authorRole: 'User',
-      category: 'General Discussion',
-      categoryColor: '#8B5CF6',
-      content: 'This discussion has been locked by moderators due to violation of community guidelines...',
-      replies: 12,
-      views: 234,
-      likes: 0,
-      status: 'locked',
-      isPinned: false,
-      isHot: false,
-      isSolved: false,
-      createdAt: new Date(Date.now() - 86400000 * 10),
-      lastActivity: new Date(Date.now() - 86400000 * 5),
-    },
-    {
-      id: '6',
-      title: 'New procurement procedures explained',
-      author: 'Akua Mensah',
-      authorRole: 'Procurement Officer',
-      category: 'Policy Updates',
-      categoryColor: '#CE1126',
-      content: 'The new procurement procedures effective from January 2024 have several important changes that all MDAs need to be aware of...',
-      replies: 15,
-      views: 423,
-      likes: 28,
-      status: 'active',
-      isPinned: false,
-      isHot: false,
-      isSolved: false,
-      createdAt: new Date(Date.now() - 86400000 * 4),
-      lastActivity: new Date(Date.now() - 14400000),
-    },
-  ];
+  // Forum data - to be populated from API
+  const topics: ForumTopic[] = [];
 
-  const categories: ForumCategory[] = [
-    { id: '1', name: 'General Discussion', description: 'Open discussions about civil service matters', icon: '💬', color: '#8B5CF6', topicsCount: 234, postsCount: 1567, isActive: true },
-    { id: '2', name: 'Best Practices', description: 'Share and learn best practices across MDAs', icon: '⭐', color: '#006B3F', topicsCount: 89, postsCount: 456, isActive: true },
-    { id: '3', name: 'How-To Guides', description: 'Step-by-step guides and tutorials', icon: '📚', color: '#3B82F6', topicsCount: 67, postsCount: 312, isActive: true },
-    { id: '4', name: 'Policy Updates', description: 'Latest policy changes and announcements', icon: '📋', color: '#CE1126', topicsCount: 45, postsCount: 178, isActive: true },
-    { id: '5', name: 'Career Development', description: 'Career growth and professional development', icon: '🚀', color: '#F59E0B', topicsCount: 78, postsCount: 423, isActive: true },
-    { id: '6', name: 'Technical Support', description: 'Get help with technical issues', icon: '🔧', color: '#10B981', topicsCount: 123, postsCount: 567, isActive: false },
-  ];
+  const categories: ForumCategory[] = [];
 
-  const flaggedContent: FlaggedContent[] = [
-    {
-      id: '1',
-      type: 'topic',
-      title: 'Inappropriate discussion content',
-      content: 'This topic contains content that violates our community guidelines regarding professional conduct...',
-      author: 'Anonymous',
-      reportedBy: 'Kwame Asante',
-      reason: 'Inappropriate language and personal attacks',
-      reportedAt: new Date(Date.now() - 86400000),
-      status: 'pending',
-    },
-    {
-      id: '2',
-      type: 'reply',
-      title: 'RE: Budget allocation discussion',
-      content: 'A reply containing potentially sensitive information that should not be publicly shared...',
-      author: 'Kofi Mensah',
-      reportedBy: 'Ama Serwaa',
-      reason: 'Contains confidential information',
-      reportedAt: new Date(Date.now() - 86400000 * 2),
-      status: 'pending',
-    },
-    {
-      id: '3',
-      type: 'topic',
-      title: 'Spam promotional content',
-      content: 'This appears to be promotional spam unrelated to civil service matters...',
-      author: 'New User',
-      reportedBy: 'System',
-      reason: 'Spam / Promotional content',
-      reportedAt: new Date(Date.now() - 3600000 * 5),
-      status: 'reviewed',
-    },
-  ];
+  const flaggedContent: FlaggedContent[] = [];
 
   // Filter topics
   const filteredTopics = topics.filter(topic => {
@@ -985,7 +834,6 @@ export default function AdminForum() {
           <StatCard
             title="Total Topics"
             value={totalTopics}
-            change="+12%"
             icon={MessageSquare}
             color="primary"
             subtitle={`${categories.filter(c => c.isActive).length} active categories`}
@@ -993,7 +841,6 @@ export default function AdminForum() {
           <StatCard
             title="Active Discussions"
             value={activeDiscussions}
-            change="+5%"
             icon={TrendingUp}
             color="success"
             subtitle="Last 7 days"
@@ -1001,7 +848,6 @@ export default function AdminForum() {
           <StatCard
             title="Flagged Content"
             value={flaggedCount}
-            change="-3"
             icon={Flag}
             color="error"
             subtitle="Requires attention"
@@ -1009,7 +855,6 @@ export default function AdminForum() {
           <StatCard
             title="Total Replies"
             value={totalReplies}
-            change="+18%"
             icon={Reply}
             color="info"
             subtitle="Community engagement"

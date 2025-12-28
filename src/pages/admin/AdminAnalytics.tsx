@@ -512,79 +512,29 @@ export default function AdminAnalytics() {
   const [dateRange, setDateRange] = useState('30d');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Analytics data - to be populated from API
   const stats: StatCardProps[] = [
-    { label: 'Total Users', value: '20847', change: '+12.5%', trend: 'up', icon: Users, color: '#006B3F', subValue: '1,234 active today' },
-    { label: 'Documents', value: '2543', change: '+8.3%', trend: 'up', icon: FileText, color: '#3B82F6', subValue: '89 uploaded this week' },
-    { label: 'Forum Posts', value: '15672', change: '+23.1%', trend: 'up', icon: MessageSquare, color: '#8B5CF6', subValue: '342 discussions active' },
-    { label: 'Page Views', value: '456000', change: '+15.7%', trend: 'up', icon: Eye, color: '#FCD116', subValue: 'Avg 3.2 pages/session' },
-    { label: 'Avg Session', value: '8', change: '+5.2%', trend: 'up', icon: Clock, color: '#10B981', subValue: '8m 34s average' },
-    { label: 'Engagement Rate', value: '67', change: '-2.1%', trend: 'down', icon: Activity, color: '#CE1126', subValue: '67% interaction rate' },
+    { label: 'Total Users', value: '0', icon: Users, color: '#006B3F' },
+    { label: 'Documents', value: '0', icon: FileText, color: '#3B82F6' },
+    { label: 'Forum Posts', value: '0', icon: MessageSquare, color: '#8B5CF6' },
+    { label: 'Page Views', value: '0', icon: Eye, color: '#FCD116' },
+    { label: 'Avg Session', value: '0', icon: Clock, color: '#10B981' },
+    { label: 'Engagement Rate', value: '0', icon: Activity, color: '#CE1126' },
   ];
 
-  const userGrowthData = [
-    { month: 'Jul', users: 14200 },
-    { month: 'Aug', users: 15800 },
-    { month: 'Sep', users: 16900 },
-    { month: 'Oct', users: 18200 },
-    { month: 'Nov', users: 19500 },
-    { month: 'Dec', users: 20847 },
-  ];
+  const userGrowthData: { month: string; users: number }[] = [];
 
-  const contentDistribution = [
-    { label: 'Policies', value: 856, color: '#006B3F' },
-    { label: 'Circulars', value: 524, color: '#FCD116' },
-    { label: 'Guidelines', value: 467, color: '#3B82F6' },
-    { label: 'Reports', value: 356, color: '#8B5CF6' },
-    { label: 'Forms', value: 204, color: '#CE1126' },
-    { label: 'Training', value: 136, color: '#10B981' },
-  ];
+  const contentDistribution: { label: string; value: number; color: string }[] = [];
 
-  const engagementByType = [
-    { label: 'Documents', value: 4500, color: '#006B3F' },
-    { label: 'Forum', value: 6200, color: '#FCD116' },
-    { label: 'Chat', value: 3800, color: '#3B82F6' },
-    { label: 'Groups', value: 2100, color: '#8B5CF6' },
-    { label: 'News', value: 1800, color: '#CE1126' },
-  ];
+  const engagementByType: { label: string; value: number; color: string }[] = [];
 
-  const mdaLeaderboard: MDAStats[] = [
-    { rank: 1, name: 'Ministry of Finance', acronym: 'MoF', users: 1456, documents: 534, posts: 2341, engagement: 89, trend: 'up', change: 12 },
-    { rank: 2, name: 'Ministry of Health', acronym: 'MoH', users: 1289, documents: 467, posts: 1987, engagement: 84, trend: 'up', change: 8 },
-    { rank: 3, name: 'Ministry of Education', acronym: 'MoE', users: 1145, documents: 389, posts: 1654, engagement: 78, trend: 'same', change: 0 },
-    { rank: 4, name: 'Ministry of Communications', acronym: 'MoC', users: 989, documents: 312, posts: 1432, engagement: 72, trend: 'up', change: 5 },
-    { rank: 5, name: 'Ministry of Trade & Industry', acronym: 'MoTI', users: 856, documents: 278, posts: 1198, engagement: 68, trend: 'down', change: -3 },
-    { rank: 6, name: 'Ghana Revenue Authority', acronym: 'GRA', users: 789, documents: 245, posts: 987, engagement: 64, trend: 'up', change: 7 },
-    { rank: 7, name: 'Ministry of Lands', acronym: 'MoL', users: 678, documents: 198, posts: 876, engagement: 59, trend: 'down', change: -2 },
-    { rank: 8, name: 'Ministry of Roads', acronym: 'MoR', users: 567, documents: 167, posts: 765, engagement: 54, trend: 'up', change: 4 },
-  ];
+  const mdaLeaderboard: MDAStats[] = [];
 
-  const recentActivities: ActivityItem[] = [
-    { id: '1', type: 'user_joined', user: 'Kwame Asante', content: 'joined the platform', time: subHours(new Date(), 1) },
-    { id: '2', type: 'document_uploaded', user: 'Akosua Mensah', content: 'uploaded "2024 Budget Guidelines"', time: subHours(new Date(), 2) },
-    { id: '3', type: 'badge_earned', user: 'Kofi Appiah', content: 'earned the "Knowledge Seeker" badge', time: subHours(new Date(), 3) },
-    { id: '4', type: 'post_created', user: 'Ama Osei', content: 'started a discussion on "Remote Work Policies"', time: subHours(new Date(), 4) },
-    { id: '5', type: 'comment_added', user: 'Yaw Boateng', content: 'commented on "Staff Training Manual"', time: subHours(new Date(), 5) },
-    { id: '6', type: 'user_joined', user: 'Efua Darko', content: 'joined the platform', time: subHours(new Date(), 6) },
-    { id: '7', type: 'document_uploaded', user: 'Nana Agyeman', content: 'uploaded "Q4 Performance Report"', time: subHours(new Date(), 7) },
-  ];
+  const recentActivities: ActivityItem[] = [];
 
-  const heatMapData = [
-    [12, 8, 5, 15, 45, 67, 78, 54],
-    [34, 12, 8, 23, 56, 89, 92, 67],
-    [45, 23, 12, 34, 67, 95, 98, 78],
-    [38, 18, 10, 28, 62, 88, 94, 72],
-    [42, 20, 14, 32, 58, 92, 96, 68],
-    [25, 15, 8, 18, 42, 65, 72, 48],
-    [18, 10, 6, 12, 28, 45, 52, 35],
-  ];
+  const heatMapData: number[][] = [];
 
-  const topContent: TopContentItem[] = [
-    { id: '1', title: 'Civil Service Reform Guidelines 2024', type: 'document', views: 4532, likes: 234, shares: 89, author: 'OHCS Director' },
-    { id: '2', title: 'Best Practices for Remote Work', type: 'post', views: 3421, likes: 456, shares: 123, author: 'HR Division' },
-    { id: '3', title: 'Annual Budget Preparation Manual', type: 'document', views: 2987, likes: 178, shares: 67, author: 'Finance Ministry' },
-    { id: '4', title: 'Digital Transformation Roadmap', type: 'article', views: 2654, likes: 312, shares: 98, author: 'ICT Division' },
-    { id: '5', title: 'Performance Evaluation Framework', type: 'document', views: 2341, likes: 145, shares: 54, author: 'HR Division' },
-  ];
+  const topContent: TopContentItem[] = [];
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },

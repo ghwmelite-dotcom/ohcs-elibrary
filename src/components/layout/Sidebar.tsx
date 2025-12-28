@@ -83,12 +83,16 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 h-screen bg-white dark:bg-surface-800 border-r border-surface-200 dark:border-surface-700 z-40 transition-all duration-300 flex flex-col',
+        'fixed left-0 top-0 h-screen z-40 transition-all duration-300 flex flex-col',
+        // Light mode
+        'bg-white border-r border-surface-200',
+        // Dark mode - rich warm tones inspired by landing page
+        'dark:bg-gradient-to-b dark:from-[#1a1510] dark:via-[#15120d] dark:to-[#1a1510] dark:border-r dark:border-amber-900/20',
         isCollapsed ? 'w-20' : 'w-64'
       )}
     >
       {/* Logo and Toggle */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-surface-200 dark:border-surface-700">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-surface-200 dark:border-amber-900/20">
         <AnimatePresence mode="wait">
           {!isCollapsed ? (
             <motion.div
@@ -115,7 +119,7 @@ export function Sidebar() {
         {!isCollapsed && (
           <button
             onClick={() => setSidebarCollapsed(!isCollapsed)}
-            className="p-1.5 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+            className="p-1.5 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:text-amber-50/40 dark:hover:text-amber-50/80 dark:hover:bg-amber-900/20 transition-colors"
             title="Collapse sidebar"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -128,7 +132,7 @@ export function Sidebar() {
         <div className="px-3 py-2">
           <button
             onClick={() => setSidebarCollapsed(false)}
-            className="w-full p-2 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors flex items-center justify-center"
+            className="w-full p-2 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:text-amber-50/40 dark:hover:text-amber-50/80 dark:hover:bg-amber-900/20 transition-colors flex items-center justify-center"
             title="Expand sidebar"
           >
             <ChevronRight className="w-5 h-5" />
@@ -159,10 +163,10 @@ export function Sidebar() {
             };
 
             const getHoverClasses = () => {
-              if (isLibrary) return 'text-surface-600 dark:text-surface-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-700 dark:hover:text-amber-300';
-              if (isResearchLab) return 'text-surface-600 dark:text-surface-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300';
-              if (isWellness) return 'text-surface-600 dark:text-surface-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-700 dark:hover:text-teal-300';
-              return 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 hover:text-surface-900 dark:hover:text-surface-50';
+              if (isLibrary) return 'text-surface-600 dark:text-amber-50/60 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300';
+              if (isResearchLab) return 'text-surface-600 dark:text-amber-50/60 hover:bg-violet-50 dark:hover:bg-violet-900/30 hover:text-violet-700 dark:hover:text-violet-300';
+              if (isWellness) return 'text-surface-600 dark:text-amber-50/60 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300';
+              return 'text-surface-600 dark:text-amber-50/60 hover:bg-surface-100 dark:hover:bg-amber-900/20 hover:text-surface-900 dark:hover:text-amber-50';
             };
 
             return (
@@ -278,7 +282,7 @@ export function Sidebar() {
       </nav>
 
       {/* Bottom Navigation */}
-      <div className="px-3 py-4 border-t border-surface-200 dark:border-surface-700">
+      <div className="px-3 py-4 border-t border-surface-200 dark:border-amber-900/20">
         <ul className="space-y-1">
           {bottomNavItems.map((item) => {
             const badgeCount = item.path === '/notifications' ? unreadCount : undefined;
@@ -290,8 +294,8 @@ export function Sidebar() {
                     cn(
                       'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm',
                       isActive
-                        ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium'
-                        : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 hover:text-surface-900 dark:hover:text-surface-50',
+                        ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 font-medium'
+                        : 'text-surface-600 dark:text-amber-50/60 hover:bg-surface-100 dark:hover:bg-amber-900/20 hover:text-surface-900 dark:hover:text-amber-50',
                       isCollapsed && 'justify-center px-2'
                     )
                   }
@@ -326,7 +330,7 @@ export function Sidebar() {
 
       {/* User Profile */}
       {user && (
-        <div className="px-3 py-4 border-t border-surface-200 dark:border-surface-700">
+        <div className="px-3 py-4 border-t border-surface-200 dark:border-amber-900/20">
           <div
             className={cn(
               'flex items-center gap-3',
@@ -344,10 +348,10 @@ export function Sidebar() {
             </NavLink>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-surface-900 dark:text-surface-50 truncate">
+                <p className="font-medium text-sm text-surface-900 dark:text-amber-50 truncate">
                   {user.displayName}
                 </p>
-                <p className="text-xs text-surface-500 truncate">
+                <p className="text-xs text-surface-500 dark:text-amber-50/50 truncate">
                   {user.title || user.role}
                 </p>
               </div>
@@ -356,7 +360,7 @@ export function Sidebar() {
               <button
                 onClick={logout}
                 aria-label="Sign out"
-                className="p-2 text-surface-400 hover:text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded-lg transition-colors"
+                className="p-2 text-surface-400 hover:text-error-500 hover:bg-error-50 dark:text-amber-50/40 dark:hover:text-error-400 dark:hover:bg-error-900/30 rounded-lg transition-colors"
               >
                 <LogOut className="w-4 h-4" />
               </button>

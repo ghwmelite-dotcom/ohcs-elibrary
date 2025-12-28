@@ -27,7 +27,7 @@ const API_BASE = import.meta.env.PROD
   ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
   : '/api/v1';
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
 const ACCEPTED_FILE_TYPES = [
   'application/pdf',
   'application/msword',
@@ -193,7 +193,7 @@ export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
         xhr.addEventListener('timeout', () => resolve(false));
 
         xhr.open('POST', `${API_BASE}/documents`);
-        xhr.timeout = 60000; // 60 second timeout
+        xhr.timeout = 600000; // 10 minute timeout for large files
 
         // Add auth header if token exists
         if (token) {

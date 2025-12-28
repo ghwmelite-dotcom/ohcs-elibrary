@@ -1565,3 +1565,170 @@ export interface ResearchDashboardData {
     relatedProjects: ResearchProject[];
   };
 }
+
+// ============================================================================
+// Research Lab - Phase 3: Collaboration Types
+// ============================================================================
+
+export type ResearchNoteType = 'general' | 'methodology' | 'findings' | 'discussion' | 'conclusion' | 'appendix';
+
+export interface ResearchNote {
+  id: UUID;
+  projectId: UUID;
+  title: string;
+  content: string;
+  noteType: ResearchNoteType;
+  isPinned: boolean;
+  version: number;
+  createdBy: User;
+  lastEditedBy?: User;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface ResearchNoteVersion {
+  id: UUID;
+  noteId: UUID;
+  content: string;
+  version: number;
+  editedBy: User;
+  changeSummary?: string;
+  createdAt: Timestamp;
+}
+
+export type AnnotationType = 'highlight' | 'comment' | 'question' | 'important' | 'methodology' | 'finding';
+
+export interface ResearchLiteratureAnnotation {
+  id: UUID;
+  literatureId: UUID;
+  annotationType: AnnotationType;
+  content: string;
+  quote?: string;
+  color: string;
+  pageNumber?: number;
+  positionData?: Record<string, unknown>;
+  isPrivate: boolean;
+  user: User;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export type ReviewStatus = 'pending' | 'in_progress' | 'approved' | 'rejected' | 'changes_requested';
+export type ReviewType = 'full' | 'methodology' | 'findings' | 'writing' | 'final';
+
+export interface ResearchReview {
+  id: UUID;
+  projectId: UUID;
+  reviewer: User;
+  requestedBy: User;
+  status: ReviewStatus;
+  reviewType: ReviewType;
+  deadline?: Timestamp;
+  overallRating?: number;
+  summary?: string;
+  strengths?: string;
+  weaknesses?: string;
+  recommendations?: string;
+  isAnonymous: boolean;
+  submittedAt?: Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export type ReviewCommentType = 'suggestion' | 'correction' | 'question' | 'praise' | 'critical';
+
+export interface ResearchReviewComment {
+  id: UUID;
+  reviewId: UUID;
+  section?: string;
+  lineReference?: string;
+  commentType: ReviewCommentType;
+  content: string;
+  isResolved: boolean;
+  resolvedBy?: User;
+  resolvedAt?: Timestamp;
+  createdAt: Timestamp;
+}
+
+export type CitationType = 'article' | 'book' | 'chapter' | 'conference' | 'thesis' | 'report' | 'website' | 'other';
+
+export interface ResearchCitation {
+  id: UUID;
+  projectId: UUID;
+  literatureId?: UUID;
+  citationKey: string;
+  citationType: CitationType;
+  title: string;
+  authors?: string;
+  year?: number;
+  journal?: string;
+  volume?: string;
+  issue?: string;
+  pages?: string;
+  publisher?: string;
+  doi?: string;
+  url?: string;
+  abstract?: string;
+  keywords?: string;
+  notes?: string;
+  formatted: {
+    apa: string;
+    mla: string;
+    chicago: string;
+    harvard: string;
+  };
+  createdBy: User;
+  createdAt: Timestamp;
+}
+
+export type DiscussionStatus = 'open' | 'resolved' | 'closed';
+export type DiscussionContextType = 'general' | 'note' | 'literature' | 'methodology' | 'findings' | 'review';
+
+export interface ResearchDiscussion {
+  id: UUID;
+  projectId: UUID;
+  title: string;
+  contextType: DiscussionContextType;
+  contextId?: UUID;
+  status: DiscussionStatus;
+  isPinned: boolean;
+  replyCount: number;
+  lastReplyAt?: Timestamp;
+  lastReplyBy?: User;
+  createdBy: User;
+  createdAt: Timestamp;
+}
+
+export interface ResearchDiscussionReply {
+  id: UUID;
+  discussionId: UUID;
+  parentReplyId?: UUID;
+  content: string;
+  isSolution: boolean;
+  reactionCount: number;
+  createdBy: User;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export type ReactionType = 'thumbsup' | 'thumbsdown' | 'heart' | 'celebrate' | 'thinking' | 'eyes';
+
+export type TeamActivityType =
+  | 'note_created' | 'note_updated' | 'note_deleted'
+  | 'annotation_added' | 'annotation_updated'
+  | 'review_requested' | 'review_submitted' | 'review_approved' | 'review_rejected'
+  | 'citation_added' | 'citation_updated'
+  | 'discussion_started' | 'discussion_replied' | 'discussion_resolved'
+  | 'member_joined' | 'member_left' | 'phase_changed';
+
+export interface ResearchTeamActivity {
+  id: UUID;
+  projectId: UUID;
+  user: User;
+  activityType: TeamActivityType;
+  targetType?: string;
+  targetId?: UUID;
+  details?: string;
+  isRead: boolean;
+  createdAt: Timestamp;
+}

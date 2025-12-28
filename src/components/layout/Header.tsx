@@ -5,8 +5,6 @@ import {
   Search,
   Bell,
   BellRing,
-  Moon,
-  Sun,
   Menu,
   X,
   ChevronDown,
@@ -18,7 +16,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
-import { useThemeStore } from '@/stores/themeStore';
 import { useUIStore } from '@/stores/uiStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
@@ -26,12 +23,12 @@ import { Avatar } from '@/components/shared/Avatar';
 import { Badge } from '@/components/shared/Badge';
 import { Dropdown, DropdownItem, DropdownDivider, DropdownLabel } from '@/components/shared/Dropdown';
 import { SearchInput } from '@/components/shared/Input';
+import { AnimatedThemeToggle } from '@/components/shared/AnimatedThemeToggle';
 import { formatRelativeTime } from '@/utils/formatters';
 
 export function Header() {
   const navigate = useNavigate();
   const { user, logout, hasRole } = useAuthStore();
-  const { theme, toggleTheme } = useThemeStore();
   const { sidebar, toggleSidebar, toggleSearch, isSearchOpen, searchQuery, setSearchQuery } = useUIStore();
   const { notifications, summary, fetchNotifications, fetchSummary, markAsRead, markAllAsRead } = useNotificationStore();
   const { stats } = useGamificationStore();
@@ -57,7 +54,11 @@ export function Header() {
   return (
     <header
       className={cn(
-        'fixed top-0 right-0 h-16 bg-white/95 dark:bg-surface-800/95 backdrop-blur-sm border-b border-surface-200 dark:border-surface-700 z-30 transition-all duration-300',
+        'fixed top-0 right-0 h-16 backdrop-blur-sm z-30 transition-all duration-300',
+        // Light mode
+        'bg-white/95 border-b border-surface-200',
+        // Dark mode - rich warm tones
+        'dark:bg-[#1a1510]/95 dark:border-b dark:border-amber-900/20',
         sidebar.isCollapsed ? 'left-20' : 'left-64'
       )}
     >
@@ -112,18 +113,8 @@ export function Header() {
             </Link>
           )}
 
-          {/* Theme toggle */}
-          <button
-            onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
-          >
-            {theme === 'dark' ? (
-              <Sun className="w-5 h-5" />
-            ) : (
-              <Moon className="w-5 h-5" />
-            )}
-          </button>
+          {/* Animated Theme Toggle */}
+          <AnimatedThemeToggle size="md" />
 
           {/* Notifications */}
           <Dropdown

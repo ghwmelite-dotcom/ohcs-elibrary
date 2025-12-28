@@ -942,175 +942,15 @@ export default function AdminDocuments() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  const mockDocuments: Document[] = [
-    {
-      id: '1',
-      title: 'Annual Budget Guidelines 2024',
-      description: 'Comprehensive guidelines for budget preparation and implementation across all MDAs for the fiscal year 2024.',
-      category: 'Policy Documents',
-      author: 'Kwame Asante',
-      mda: 'Ministry of Finance',
-      accessLevel: 'public',
-      downloads: 1245,
-      views: 3420,
-      rating: 4.5,
-      ratingCount: 89,
-      status: 'published',
-      createdAt: '2024-01-10',
-      updatedAt: 'Jan 15, 2024',
-      fileSize: '2.4 MB',
-      fileType: 'pdf',
-      tags: ['budget', 'finance', '2024'],
-      isDownloadable: true,
-    },
-    {
-      id: '2',
-      title: 'Civil Service Training Manual',
-      description: 'Official training manual for civil service personnel covering ethics, procedures, and best practices.',
-      category: 'Training Materials',
-      author: 'Ama Serwaa',
-      mda: 'Public Services Commission',
-      accessLevel: 'internal',
-      downloads: 892,
-      views: 2150,
-      rating: 4.8,
-      ratingCount: 156,
-      status: 'published',
-      createdAt: '2024-01-08',
-      updatedAt: 'Jan 12, 2024',
-      fileSize: '5.1 MB',
-      fileType: 'pdf',
-      tags: ['training', 'civil service', 'manual'],
-      isDownloadable: true,
-    },
-    {
-      id: '3',
-      title: 'Health Sector Performance Report Q4',
-      description: 'Quarterly performance review of the health sector including key metrics and improvement areas.',
-      category: 'Reports',
-      author: 'Kofi Mensah',
-      mda: 'Ministry of Health',
-      accessLevel: 'restricted',
-      downloads: 156,
-      views: 420,
-      rating: 4.2,
-      ratingCount: 34,
-      status: 'pending',
-      createdAt: '2024-01-12',
-      updatedAt: 'Jan 14, 2024',
-      fileSize: '1.8 MB',
-      fileType: 'pdf',
-      tags: ['health', 'report', 'Q4'],
-      isDownloadable: false,
-    },
-    {
-      id: '4',
-      title: 'Digital Transformation Strategy 2025-2030',
-      description: 'Strategic roadmap for digital transformation across the civil service over the next five years.',
-      category: 'Policy Documents',
-      author: 'Yaw Boateng',
-      mda: 'Ministry of Communications',
-      accessLevel: 'public',
-      downloads: 2340,
-      views: 5670,
-      rating: 4.9,
-      ratingCount: 203,
-      status: 'published',
-      createdAt: '2024-01-05',
-      updatedAt: 'Jan 10, 2024',
-      fileSize: '8.2 MB',
-      fileType: 'pdf',
-      tags: ['digital', 'strategy', 'transformation'],
-      isDownloadable: true,
-    },
-    {
-      id: '5',
-      title: 'Procurement Guidelines Template',
-      description: 'Standard template for procurement processes in compliance with PPA regulations.',
-      category: 'Forms & Templates',
-      author: 'Akua Mensah',
-      mda: 'Public Procurement Authority',
-      accessLevel: 'internal',
-      downloads: 567,
-      views: 1234,
-      rating: 4.3,
-      ratingCount: 67,
-      status: 'published',
-      createdAt: '2024-01-07',
-      updatedAt: 'Jan 09, 2024',
-      fileSize: '1.2 MB',
-      fileType: 'docx',
-      tags: ['procurement', 'template', 'guidelines'],
-      isDownloadable: true,
-    },
-    {
-      id: '6',
-      title: 'Education Sector Budget Analysis',
-      description: 'Detailed analysis of education sector budget allocation and utilization patterns.',
-      category: 'Reports',
-      author: 'Kwesi Appiah',
-      mda: 'Ministry of Education',
-      accessLevel: 'restricted',
-      downloads: 234,
-      views: 567,
-      rating: 4.1,
-      ratingCount: 28,
-      status: 'draft',
-      createdAt: '2024-01-11',
-      updatedAt: 'Jan 13, 2024',
-      fileSize: '3.4 MB',
-      fileType: 'xlsx',
-      tags: ['education', 'budget', 'analysis'],
-      isDownloadable: false,
-    },
-    {
-      id: '7',
-      title: 'Public Financial Management Act',
-      description: 'Full text of the Public Financial Management Act with annotations and guidelines.',
-      category: 'Legislation',
-      author: 'Ministry of Finance',
-      mda: 'Ministry of Finance',
-      accessLevel: 'public',
-      downloads: 4521,
-      views: 12340,
-      rating: 4.7,
-      ratingCount: 312,
-      status: 'published',
-      createdAt: '2023-12-15',
-      updatedAt: 'Dec 20, 2023',
-      fileSize: '4.8 MB',
-      fileType: 'pdf',
-      tags: ['legislation', 'finance', 'PFM'],
-      isDownloadable: true,
-    },
-    {
-      id: '8',
-      title: 'Civil Service Code of Conduct',
-      description: 'Official code of conduct for all civil servants in Ghana.',
-      category: 'Guidelines',
-      author: 'OHCS',
-      mda: 'Office of the Head of Civil Service',
-      accessLevel: 'public',
-      downloads: 3456,
-      views: 8901,
-      rating: 4.6,
-      ratingCount: 189,
-      status: 'published',
-      createdAt: '2023-11-20',
-      updatedAt: 'Nov 25, 2023',
-      fileSize: '1.5 MB',
-      fileType: 'pdf',
-      tags: ['ethics', 'conduct', 'guidelines'],
-      isDownloadable: true,
-    },
-  ];
+  // Documents data - to be populated from API
+  const documents: Document[] = [];
 
   const categories = ['Policy Documents', 'Reports', 'Training Materials', 'Guidelines', 'Forms & Templates', 'Legislation', 'Research Papers'];
   const accessLevels = ['public', 'internal', 'restricted', 'confidential'];
   const statuses = ['published', 'draft', 'pending', 'archived'];
 
   // Filter documents
-  const filteredDocs = mockDocuments.filter(doc => {
+  const filteredDocs = documents.filter(doc => {
     const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           doc.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           doc.mda.toLowerCase().includes(searchQuery.toLowerCase());
@@ -1135,10 +975,10 @@ export default function AdminDocuments() {
   };
 
   // Stats
-  const totalDocs = mockDocuments.length;
-  const publishedDocs = mockDocuments.filter(d => d.status === 'published').length;
-  const pendingDocs = mockDocuments.filter(d => d.status === 'pending').length;
-  const totalDownloads = mockDocuments.reduce((sum, d) => sum + d.downloads, 0);
+  const totalDocs = documents.length;
+  const publishedDocs = documents.filter(d => d.status === 'published').length;
+  const pendingDocs = documents.filter(d => d.status === 'pending').length;
+  const totalDownloads = documents.reduce((sum, d) => sum + d.downloads, 0);
 
   return (
     <div className="min-h-screen">
@@ -1171,7 +1011,6 @@ export default function AdminDocuments() {
           <StatCard
             title="Total Documents"
             value={totalDocs}
-            change={8.3}
             icon={FileText}
             color="primary"
             subtitle={`${categories.length} categories`}
@@ -1193,10 +1032,8 @@ export default function AdminDocuments() {
           <StatCard
             title="Total Downloads"
             value={totalDownloads}
-            change={12.5}
             icon={Download}
             color="secondary"
-            subtitle="This month"
           />
         </div>
 
@@ -1369,7 +1206,7 @@ export default function AdminDocuments() {
         {/* Results count */}
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm text-surface-500">
-            Showing {filteredDocs.length} of {mockDocuments.length} documents
+            Showing {filteredDocs.length} of {documents.length} documents
           </p>
           {viewMode === 'grid' && filteredDocs.length > 0 && (
             <button
