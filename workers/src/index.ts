@@ -24,6 +24,8 @@ import {
   backupRoutes,
   createScheduledBackup,
   adminUsersRoutes,
+  broadcastsRoutes,
+  researchRoutes,
 } from './routes';
 
 export interface Env {
@@ -138,6 +140,8 @@ app.route('/api/v1/admin', adminRoutes);
 app.route('/api/v1/admin/backup', backupRoutes);
 app.route('/api/v1/admin/users', adminUsersRoutes);
 app.route('/api/v1/counselor', counselorRoutes);
+app.route('/api/v1/broadcasts', broadcastsRoutes);
+app.route('/api/v1/research', researchRoutes);
 
 // News aggregation admin endpoints
 app.post('/api/v1/admin/news/aggregate', authMiddleware, async (c) => {

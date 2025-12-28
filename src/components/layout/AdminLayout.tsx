@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   Star,
   UserCog,
+  Megaphone,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
@@ -24,6 +25,7 @@ import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 const adminNavItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { path: '/admin/broadcasts', label: 'Broadcasts', icon: Megaphone },
   { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/documents', label: 'Documents', icon: FileText },
   { path: '/admin/forum', label: 'Forum', icon: MessageSquare },

@@ -11,6 +11,7 @@ export { useNewsStore } from './newsStore';
 export { useSearchStore } from './searchStore';
 export { useGamificationStore } from './gamificationStore';
 export { useSettingsStore, useSettings, useSessions, useSecurityScore } from './settingsStore';
+export { useBroadcastStore } from './broadcastStore';
 
 // Legacy export for backwards compatibility
 export { useNotificationStore as useNotificationsStore } from './notificationStore';

@@ -14,6 +14,7 @@ import { PWAInstallPrompt } from '@/components/shared/PWAInstallPrompt';
 import { OfflineBanner } from '@/components/shared/OfflineBanner';
 import { DevTools } from '@/components/shared/DevTools';
 import { KeyboardShortcutsProvider } from '@/hooks/useKeyboardShortcuts';
+import { BroadcastAlertContainer } from '@/components/broadcasts';
 
 // Lazy load pages for code splitting
 // Auth pages
@@ -68,6 +69,7 @@ const AdminAudit = lazy(() => import('@/pages/admin/AdminAudit'));
 const AdminWellness = lazy(() => import('@/pages/admin/AdminWellness'));
 const AdminCounselors = lazy(() => import('@/pages/admin/AdminCounselors'));
 const CounselorReports = lazy(() => import('@/pages/admin/CounselorReports'));
+const AdminBroadcasts = lazy(() => import('@/pages/admin/AdminBroadcasts'));
 
 // Loading fallback component
 function PageLoader() {
@@ -323,6 +325,7 @@ export default function App() {
             <Route path="/admin/wellness" element={<AdminWellness />} />
             <Route path="/admin/wellness/reports" element={<CounselorReports />} />
             <Route path="/admin/counselors" element={<AdminCounselors />} />
+            <Route path="/admin/broadcasts" element={<AdminBroadcasts />} />
           </Route>
 
           {/* 404 route */}
@@ -332,6 +335,9 @@ export default function App() {
 
         {/* Global toast notifications */}
         <Toaster />
+
+        {/* Emergency Broadcast Alerts */}
+        <BroadcastAlertContainer />
 
         {/* PWA Components */}
         <OfflineBanner />

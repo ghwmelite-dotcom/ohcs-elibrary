@@ -11,9 +11,11 @@ export { groupsRoutes } from './groups';
 export { newsRoutes } from './news';
 export { default as notificationsRoutes } from './notifications';
 export { default as settingsRoutes } from './settings';
+export { default as broadcastsRoutes } from './broadcasts';
 export { counselorRoutes } from './counselor';
 export { backupRoutes, createScheduledBackup } from './backup';
 export { adminUsersRoutes } from './admin-users';
+export { researchRoutes } from './research';
 
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
