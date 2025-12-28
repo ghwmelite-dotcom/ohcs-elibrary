@@ -222,6 +222,7 @@ function SourceCard({
   onToggle,
   onRefresh,
   onDelete,
+  isRefreshing = false,
 }: {
   source: NewsSource;
   isSelected: boolean;
@@ -231,6 +232,7 @@ function SourceCard({
   onToggle: () => void;
   onRefresh: () => void;
   onDelete: () => void;
+  isRefreshing?: boolean;
 }) {
   const statusConfig: Record<string, { icon: React.ElementType; color: string; bg: string; label: string }> = {
     active: { icon: CheckCircle, color: 'text-primary-600', bg: 'bg-primary-100 dark:bg-primary-900/30', label: 'Active' },
@@ -378,12 +380,18 @@ function SourceCard({
               e.stopPropagation();
               onRefresh();
             }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300 text-sm font-medium hover:bg-surface-200 dark:hover:bg-surface-600"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            disabled={isRefreshing}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+              isRefreshing
+                ? "bg-amber-200 text-amber-800 cursor-wait"
+                : "bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900/40 dark:hover:bg-amber-800/50 dark:text-amber-300"
+            )}
+            whileHover={isRefreshing ? {} : { scale: 1.05 }}
+            whileTap={isRefreshing ? {} : { scale: 0.95 }}
           >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
+            <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </motion.button>
           <motion.button
             onClick={(e) => {
@@ -427,6 +435,7 @@ function SourceRow({
   onToggle,
   onRefresh,
   onDelete,
+  isRefreshing = false,
 }: {
   source: NewsSource;
   isSelected: boolean;
@@ -435,6 +444,7 @@ function SourceRow({
   onToggle: () => void;
   onRefresh: () => void;
   onDelete: () => void;
+  isRefreshing?: boolean;
 }) {
   const statusConfig: Record<string, { icon: React.ElementType; color: string; bg: string; label: string }> = {
     active: { icon: CheckCircle, color: 'text-primary-600', bg: 'bg-primary-100 dark:bg-primary-900/30', label: 'Active' },
@@ -528,11 +538,17 @@ function SourceRow({
           </motion.button>
           <motion.button
             onClick={onRefresh}
-            className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-400"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            disabled={isRefreshing}
+            className={cn(
+              "p-2 rounded-lg transition-colors",
+              isRefreshing
+                ? "bg-amber-200 text-amber-800 cursor-wait"
+                : "hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+            )}
+            whileHover={isRefreshing ? {} : { scale: 1.1 }}
+            whileTap={isRefreshing ? {} : { scale: 0.9 }}
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
           </motion.button>
           <motion.button
             onClick={onToggle}
@@ -721,6 +737,7 @@ export default function AdminNews() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshingSourceId, setRefreshingSourceId] = useState<string | null>(null);
   const [sources, setSources] = useState<NewsSource[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [categories, setCategories] = useState<NewsCategory[]>([]);
@@ -856,6 +873,32 @@ export default function AdminNews() {
       console.error('Error triggering aggregation:', error);
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  // View source website
+  const handleViewSource = (source: NewsSource) => {
+    if (source.url) {
+      window.open(source.url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  // Refresh a specific source
+  const handleRefreshSource = async (sourceId: string) => {
+    setRefreshingSourceId(sourceId);
+    try {
+      await fetch(`${API_URL}/admin/news/aggregate?sourceId=${sourceId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      // Refetch data after aggregation
+      await fetchNewsData();
+    } catch (error) {
+      console.error('Error refreshing source:', error);
+    } finally {
+      setRefreshingSourceId(null);
     }
   };
 
@@ -1166,11 +1209,12 @@ export default function AdminNews() {
                       source={source}
                       isSelected={selectedSources.includes(source.id)}
                       onSelect={() => toggleSourceSelection(source.id)}
-                      onView={() => {}}
+                      onView={() => handleViewSource(source)}
                       onEdit={() => {}}
                       onToggle={() => {}}
-                      onRefresh={() => {}}
+                      onRefresh={() => handleRefreshSource(source.id)}
                       onDelete={() => {}}
+                      isRefreshing={refreshingSourceId === source.id}
                     />
                   ))}
                 </AnimatePresence>
@@ -1222,10 +1266,11 @@ export default function AdminNews() {
                         source={source}
                         isSelected={selectedSources.includes(source.id)}
                         onSelect={() => toggleSourceSelection(source.id)}
-                        onView={() => {}}
+                        onView={() => handleViewSource(source)}
                         onToggle={() => {}}
-                        onRefresh={() => {}}
+                        onRefresh={() => handleRefreshSource(source.id)}
                         onDelete={() => {}}
+                        isRefreshing={refreshingSourceId === source.id}
                       />
                     ))}
                   </tbody>
