@@ -16,6 +16,8 @@ The OHCS E-Library is a comprehensive digital knowledge management platform desi
 
 - **Digital Document Library** - Centralized repository for official documents, policies, circulars, and guidelines with AI-powered search and summarization
 - **AI-Powered Analysis** - Intelligent document search, automatic summarization, and content analysis using advanced AI
+- **Research Lab** - Complete research workspace with AI assistant (Kofi), project management, milestones, templates, analytics, and export capabilities
+- **Wellness Hub** - Mental health resources, stress management tools, AI counselor, and 24/7 support
 - **Community Forums** - Discussion boards for knowledge sharing, Q&A, and professional discourse
 - **Real-Time Chat** - Instant messaging with voice messages, file sharing, and group conversations
 - **Groups & Collaboration** - Create and join professional groups for team collaboration
@@ -209,15 +211,45 @@ ohcs-elibrary/
 │   │   ├── forum/              # Forum components
 │   │   ├── groups/             # Groups components
 │   │   ├── layout/             # Layout components
-│   │   └── ui/                 # Base UI components
+│   │   ├── library/            # Library components
+│   │   ├── news/               # News components
+│   │   ├── notifications/      # Notification components
+│   │   ├── research/           # Research Lab components
+│   │   │   ├── AnalyticsPanel.tsx
+│   │   │   ├── CollaborationPanel.tsx
+│   │   │   ├── CreateProjectModal.tsx
+│   │   │   ├── ExportPanel.tsx
+│   │   │   ├── KofiChat.tsx
+│   │   │   ├── MilestonesPanel.tsx
+│   │   │   ├── PhaseProgress.tsx
+│   │   │   ├── ProjectCard.tsx
+│   │   │   └── TemplatesGallery.tsx
+│   │   ├── shared/             # Shared UI components
+│   │   ├── ui/                 # Base UI components
+│   │   └── wellness/           # Wellness Hub components
 │   ├── hooks/                  # Custom React hooks
 │   ├── lib/                    # Utility libraries
 │   ├── pages/                  # Page components
-│   │   ├── admin/              # Admin pages
-│   │   └── settings/           # Settings pages
+│   │   ├── admin/              # Admin pages (15+ pages)
+│   │   ├── settings/           # Settings pages
+│   │   ├── Landing.tsx         # Landing page with feature showcase
+│   │   ├── ResearchLab.tsx     # Research Lab dashboard
+│   │   ├── ResearchProject.tsx # Individual project view
+│   │   ├── ResearchProjects.tsx # All projects list
+│   │   ├── Wellness.tsx        # Wellness Hub
+│   │   └── ...                 # Other pages
 │   ├── services/               # API service layers
 │   ├── stores/                 # Zustand state stores
+│   │   ├── authStore.ts        # Authentication state
+│   │   ├── chatStore.ts        # Chat state
+│   │   ├── forumStore.ts       # Forum state
+│   │   ├── groupsStore.ts      # Groups state
+│   │   ├── libraryStore.ts     # Library state
+│   │   ├── researchStore.ts    # Research Lab state
+│   │   ├── themeStore.ts       # Theme state
+│   │   └── wellnessStore.ts    # Wellness state
 │   ├── types/                  # TypeScript type definitions
+│   ├── utils/                  # Utility functions
 │   ├── App.tsx                 # Main application component
 │   ├── main.tsx                # Application entry point
 │   └── index.css               # Global styles
@@ -225,16 +257,26 @@ ohcs-elibrary/
 │   ├── src/
 │   │   ├── middleware/         # API middleware
 │   │   ├── routes/             # API route handlers
+│   │   │   ├── auth.ts         # Auth routes
+│   │   │   ├── chat.ts         # Chat routes
+│   │   │   ├── documents.ts    # Document routes
+│   │   │   ├── forum.ts        # Forum routes
+│   │   │   ├── groups.ts       # Groups routes
+│   │   │   ├── news.ts         # News routes
+│   │   │   ├── research.ts     # Research Lab routes (3800+ lines)
+│   │   │   ├── wellness.ts     # Wellness routes
+│   │   │   └── ...             # Other routes
 │   │   ├── services/           # Backend services
 │   │   └── index.ts            # Worker entry point
-│   ├── migrations/             # Database migrations
-│   ├── schema.sql              # Database schema
+│   ├── migrations/             # Database migrations (25+ files)
+│   ├── schema.sql              # Base database schema
 │   └── wrangler.toml           # Cloudflare configuration
 ├── docs/                       # Documentation
 ├── package.json                # Frontend dependencies
 ├── tailwind.config.js          # Tailwind configuration
 ├── tsconfig.json               # TypeScript configuration
 ├── vite.config.ts              # Vite configuration
+├── CHANGELOG.md                # Version history
 └── README.md                   # This file
 ```
 
@@ -312,15 +354,57 @@ ohcs-elibrary/
 - **Bookmarking** - Save articles
 - **Sharing** - Share with colleagues
 
-### 8. Admin Panel
+### 8. Research Lab
 
-- **Dashboard** - System overview and analytics
-- **User Management** - Manage all users
+The Research Lab is a comprehensive workspace for conducting policy research with AI-powered tools.
+
+- **Project Management** - Create and manage research projects with structured phases
+- **Kofi AI Assistant** - Intelligent research partner for data analysis, insights, and policy briefs
+- **Literature Management** - Link and organize research literature
+- **Notes & Annotations** - Take notes, highlight key findings, create annotations
+- **Collaboration** - Team discussions, peer reviews, and shared citations
+- **Milestones & Timeline** - Track deliverables, deadlines, and project progress
+- **Analytics Dashboard** - Visualize progress, contributions, and activity metrics
+- **Research Templates** - 12+ pre-built templates for policy analysis, case studies, evaluations
+- **Export & Publish** - Generate reports in Markdown, PDF, DOCX with automatic citations
+
+#### Research Categories
+| Category | Description |
+|----------|-------------|
+| `policy_impact` | Policy Impact Assessment |
+| `performance_audit` | Performance Audit |
+| `capacity_assessment` | Capacity Needs Assessment |
+| `citizen_feedback` | Citizen Feedback Analysis |
+| `budget_analysis` | Budget Efficiency Study |
+| `digital_transformation` | Digital Readiness Assessment |
+| `governance` | Governance & Policy |
+| `service_delivery` | Service Delivery Analysis |
+| `reform` | Reform Studies |
+
+### 9. Wellness Hub
+
+A comprehensive mental health and wellness support system for civil servants.
+
+- **Resource Library** - Mental health articles, guides, and multimedia content
+- **AI Counselor** - Anonymous chat with AI wellness assistant
+- **Mood Tracking** - Daily mood check-ins and analytics
+- **Stress Management** - Breathing exercises, meditation guides
+- **Crisis Support** - Emergency resources and hotlines
+- **Counselor Sessions** - Connect with professional counselors
+- **Progress Reports** - Track wellness journey over time
+
+### 10. Admin Panel
+
+- **Dashboard** - Real-time system overview and analytics
+- **User Management** - Manage all users with role assignment
 - **Document Management** - Approve and manage documents
 - **Forum Moderation** - Moderate discussions
-- **Analytics** - Usage statistics
+- **Research Management** - Oversee research projects
+- **Wellness Management** - Manage counselors and resources
+- **Analytics** - Comprehensive usage statistics
 - **System Settings** - Configure platform settings
 - **Audit Log** - Track all system activities
+- **Backup & Restore** - System backup management
 
 ---
 
@@ -388,6 +472,54 @@ The API is RESTful and follows standard conventions. Base URL: `/api/v1`
 | GET | `/groups/:id` | Get group |
 | POST | `/groups/:id/join` | Join group |
 | POST | `/groups/:id/posts` | Create post |
+
+### Research Lab Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/research/projects` | List research projects |
+| POST | `/research/projects` | Create project |
+| GET | `/research/projects/:id` | Get project details |
+| PUT | `/research/projects/:id` | Update project |
+| DELETE | `/research/projects/:id` | Delete project |
+| GET | `/research/projects/:id/literature` | Get linked literature |
+| POST | `/research/projects/:id/literature` | Add literature |
+| GET | `/research/projects/:id/notes` | Get project notes |
+| POST | `/research/projects/:id/notes` | Create note |
+| GET | `/research/projects/:id/discussions` | Get discussions |
+| POST | `/research/projects/:id/discussions` | Create discussion |
+| GET | `/research/projects/:id/milestones` | List milestones |
+| POST | `/research/projects/:id/milestones` | Create milestone |
+| PUT | `/research/projects/:id/milestones/:mid` | Update milestone |
+| GET | `/research/projects/:id/analytics` | Get analytics |
+| POST | `/research/projects/:id/export` | Generate export |
+| GET | `/research/templates` | List templates |
+| GET | `/research/templates/:id` | Get template |
+| POST | `/research/templates/:id/use` | Create project from template |
+| POST | `/research/kofi/chat` | Chat with Kofi AI |
+| POST | `/research/kofi/insights` | Generate insights |
+| POST | `/research/kofi/brief` | Generate policy brief |
+
+### Wellness Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/wellness/resources` | List resources |
+| GET | `/wellness/resources/:id` | Get resource |
+| POST | `/counselor/sessions` | Start counselor session |
+| POST | `/counselor/sessions/:id/messages` | Send message |
+| GET | `/counselor/sessions/:id/messages` | Get messages |
+| GET | `/wellness/mood` | Get mood history |
+| POST | `/wellness/mood` | Log mood entry |
+
+### News Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/news/articles` | List news articles |
+| GET | `/news/articles/:id` | Get article |
+| GET | `/news/categories` | List categories |
+| POST | `/news/articles/:id/bookmark` | Bookmark article |
 
 For complete API documentation, see [docs/API.md](docs/API.md)
 
@@ -495,6 +627,7 @@ This software is proprietary and confidential. Unauthorized copying, distributio
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 1.1.0 | December 28, 2025 | Research Lab Phase 4, Wellness Hub, Landing page enhancements |
 | 1.0.0 | December 28, 2025 | Initial release |
 
 For detailed changelog, see [CHANGELOG.md](CHANGELOG.md)

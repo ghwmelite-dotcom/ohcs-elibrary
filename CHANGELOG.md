@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2025-12-28
+
+### Research Lab Phase 4 - Advanced Analytics & Publishing
+
+A major update bringing the complete Research Lab experience with advanced features for policy research.
+
+### Added
+
+#### Research Lab - Phase 4 Features
+- **Analytics Dashboard** - Comprehensive project analytics with progress tracking, activity timeline, and contributor rankings
+- **Milestone Tracking** - Timeline visualization with status workflow (pending, in_progress, completed, delayed, cancelled)
+- **Research Templates** - 12+ pre-built templates including:
+  - Policy Analysis Framework
+  - Case Study Research
+  - Survey Research Design
+  - Systematic Literature Review
+  - Program Evaluation
+- **Export & Publishing** - Generate professional reports in Markdown with automatic citations (PDF/DOCX coming soon)
+- **Enhanced Tags System** - Project tagging and filtering capabilities
+
+#### Research Lab - Previous Phases (Complete)
+- **Phase 1: Foundation** - Project CRUD, literature linking, dashboard
+- **Phase 2: AI Core** - Kofi AI assistant, insights generation, policy briefs, summarization
+- **Phase 3: Collaboration** - Notes, annotations, peer reviews, citations, team discussions
+
+#### Wellness Hub Enhancements
+- **AI Counselor** - Anonymous chat with wellness AI assistant
+- **Counselor Management** - Admin panel for managing professional counselors
+- **Session Reporting** - Comprehensive wellness analytics for administrators
+- **Resource Library** - Mental health articles and multimedia content
+
+#### Landing Page Redesign
+- **Research Lab Section** - Stunning showcase with animated gradient backgrounds
+- **Platform Features Section** - Community, Groups, Wellness, News, Gamification, Chat highlights
+- **Bento Grid Layout** - Modern card-based feature display
+- **Enhanced Animations** - Scroll-triggered animations with Framer Motion
+- **Gradient Badges** - Visual feature stats indicators
+
+#### Admin Panel Updates
+- **Research Management** - Oversee all research projects
+- **Wellness Management** - Manage counselors and wellness resources
+- **Enhanced Analytics** - Deeper insights into platform usage
+- **Backup System** - System backup and restore capabilities
+
+### Changed
+- Updated project structure documentation
+- Enhanced API documentation with 50+ new endpoints
+- Improved TypeScript types for all new features
+
+### Database
+- Added `research_milestones` table
+- Added `research_templates` table (with new columns)
+- Added `research_exports` table
+- Added `research_analytics` table
+- Added `research_contributions` table
+- Added `research_tags` and `research_project_tags` tables
+- Seeded 5 featured research templates
+
+---
+
 ## [1.0.0] - 2025-12-28
 
 ### Initial Release
@@ -155,6 +215,7 @@ The first production release of the OHCS E-Library platform for Ghana's Office o
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 1.1.0 | 2025-12-28 | Research Lab Phase 4, Wellness Hub, Landing page enhancements |
 | 1.0.0 | 2025-12-28 | Initial production release |
 
 ---
