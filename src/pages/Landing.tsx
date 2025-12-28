@@ -37,6 +37,20 @@ import {
   Briefcase,
   AlertCircle,
   Check,
+  FlaskConical,
+  BarChart3,
+  Target,
+  FileDown,
+  Newspaper,
+  Heart,
+  MessagesSquare,
+  UsersRound,
+  Trophy,
+  TrendingUp,
+  Clock,
+  CheckCircle2,
+  Layout,
+  Layers,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useThemeStore, useEffectiveTheme } from '@/stores/themeStore';
@@ -2004,6 +2018,86 @@ const features = [
   },
 ];
 
+// Research Lab Features
+const researchFeatures = [
+  {
+    icon: FlaskConical,
+    title: 'Research Projects',
+    description: 'Create and manage comprehensive research projects with structured phases and milestones.',
+    color: 'from-blue-500 to-indigo-600',
+  },
+  {
+    icon: Bot,
+    title: 'Kofi AI Assistant',
+    description: 'Your intelligent research partner that helps analyze data, generate insights, and draft policy briefs.',
+    color: 'from-amber-500 to-orange-600',
+  },
+  {
+    icon: BarChart3,
+    title: 'Analytics Dashboard',
+    description: 'Track progress, team contributions, and project metrics with beautiful visualizations.',
+    color: 'from-emerald-500 to-teal-600',
+  },
+  {
+    icon: Layout,
+    title: 'Research Templates',
+    description: 'Start quickly with 12+ pre-built templates for policy analysis, case studies, and evaluations.',
+    color: 'from-purple-500 to-pink-600',
+  },
+  {
+    icon: Target,
+    title: 'Milestone Tracking',
+    description: 'Set deadlines, track deliverables, and visualize your research timeline at a glance.',
+    color: 'from-rose-500 to-red-600',
+  },
+  {
+    icon: FileDown,
+    title: 'Export & Publish',
+    description: 'Generate professional reports in Markdown, PDF, or DOCX with automatic citations.',
+    color: 'from-cyan-500 to-blue-600',
+  },
+];
+
+// Platform Features (Community, Wellness, News)
+const platformFeatures = [
+  {
+    icon: MessagesSquare,
+    title: 'Community Forums',
+    description: 'Engage in discussions, share knowledge, and learn from colleagues across MDAs.',
+    stats: '500+ Discussions',
+  },
+  {
+    icon: UsersRound,
+    title: 'Collaborative Groups',
+    description: 'Join or create groups based on departments, interests, or special projects.',
+    stats: '50+ Active Groups',
+  },
+  {
+    icon: Heart,
+    title: 'Wellness Hub',
+    description: 'Access mental health resources, stress management tools, and counseling support.',
+    stats: '24/7 Support',
+  },
+  {
+    icon: Newspaper,
+    title: 'News Aggregation',
+    description: 'Stay updated with curated news from Ghana and international governance sources.',
+    stats: 'Live Updates',
+  },
+  {
+    icon: Trophy,
+    title: 'Gamification',
+    description: 'Earn XP, badges, and climb leaderboards as you engage with the platform.',
+    stats: 'Level Up!',
+  },
+  {
+    icon: MessageSquare,
+    title: 'Real-time Chat',
+    description: 'Connect with colleagues instantly through secure messaging and group chats.',
+    stats: 'Instant Messaging',
+  },
+];
+
 const stats = [
   { value: 20000, label: 'Civil Servants', suffix: '+', icon: Users },
   { value: 2500, label: 'Documents', suffix: '+', icon: FileText },
@@ -2637,6 +2731,228 @@ export default function Landing() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map((feature, index) => (
               <FeatureCard key={feature.title} feature={feature} index={index} isDark={isDark} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Research Lab Section */}
+      <section className="relative py-24 overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0 pointer-events-none">
+          <motion.div
+            className="absolute top-20 left-10 w-72 h-72 rounded-full blur-[100px]"
+            style={{ background: isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.08)' }}
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 8, repeat: Infinity }}
+          />
+          <motion.div
+            className="absolute bottom-20 right-10 w-96 h-96 rounded-full blur-[120px]"
+            style={{ background: isDark ? 'rgba(139, 92, 246, 0.1)' : 'rgba(139, 92, 246, 0.08)' }}
+            animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 10, repeat: Infinity }}
+          />
+        </div>
+
+        <div className="max-w-6xl mx-auto px-6 lg:px-8 relative">
+          {/* Section header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-3xl mx-auto mb-16"
+          >
+            <motion.div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+              style={{
+                background: isDark
+                  ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%)'
+                  : 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%)',
+                border: `1px solid ${isDark ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.25)'}`,
+              }}
+              whileHover={{ scale: 1.05 }}
+            >
+              <FlaskConical className={cn('w-4 h-4', isDark ? 'text-indigo-400' : 'text-indigo-600')} />
+              <span className={cn('text-sm font-semibold', isDark ? 'text-indigo-300' : 'text-indigo-700')}>
+                New: Research Lab
+              </span>
+              <motion.div
+                className="w-2 h-2 rounded-full bg-green-500"
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+            </motion.div>
+
+            <h2 className={cn('font-heading text-3xl lg:text-5xl font-bold mb-5', isDark ? 'text-amber-50' : 'text-surface-900')}>
+              Your Complete{' '}
+              <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                Research Workspace
+              </span>
+            </h2>
+            <p className={cn('text-lg', theme.textMuted)}>
+              Conduct policy research with AI-powered tools, collaborate with teams, track milestones, and publish professional reports — all in one place.
+            </p>
+          </motion.div>
+
+          {/* Research Features Bento Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+            {researchFeatures.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ y: -5, scale: 1.02 }}
+                className="group relative"
+              >
+                <div
+                  className="relative p-6 rounded-2xl h-full overflow-hidden"
+                  style={{
+                    background: isDark
+                      ? 'linear-gradient(145deg, rgba(30, 27, 40, 0.8) 0%, rgba(20, 18, 30, 0.9) 100%)'
+                      : 'linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 248, 255, 0.95) 100%)',
+                    border: `1px solid ${isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.15)'}`,
+                    boxShadow: isDark
+                      ? '0 4px 30px rgba(0, 0, 0, 0.3)'
+                      : '0 4px 30px rgba(99, 102, 241, 0.1)',
+                  }}
+                >
+                  {/* Gradient overlay on hover */}
+                  <motion.div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{
+                      background: `linear-gradient(135deg, ${isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)'} 0%, transparent 50%)`,
+                    }}
+                  />
+
+                  {/* Icon */}
+                  <div className={cn('w-12 h-12 rounded-xl mb-4 flex items-center justify-center bg-gradient-to-br', feature.color)}>
+                    <feature.icon className="w-6 h-6 text-white" />
+                  </div>
+
+                  {/* Content */}
+                  <h3 className={cn(
+                    'text-lg font-bold mb-2 transition-colors',
+                    isDark ? 'text-amber-50 group-hover:text-indigo-300' : 'text-surface-900 group-hover:text-indigo-600'
+                  )}>
+                    {feature.title}
+                  </h3>
+                  <p className={cn('text-sm leading-relaxed', isDark ? 'text-amber-50/60' : 'text-surface-600')}>
+                    {feature.description}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Research Lab CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <motion.button
+              onClick={openRegister}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-3 px-8 py-4 rounded-xl font-bold text-white"
+              style={{
+                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
+                boxShadow: '0 4px 25px rgba(99, 102, 241, 0.4)',
+              }}
+            >
+              <FlaskConical className="w-5 h-5" />
+              Start Your Research Project
+              <ArrowRight className="w-5 h-5" />
+            </motion.button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Platform Features Section */}
+      <section className="relative py-24">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          {/* Section header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-2xl mx-auto mb-16"
+          >
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4"
+              style={{
+                background: isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                border: `1px solid ${isDark ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`,
+              }}
+            >
+              <Layers className={cn('w-3.5 h-3.5', isDark ? 'text-emerald-400' : 'text-emerald-600')} />
+              <span className={cn('text-xs font-medium', isDark ? 'text-emerald-300' : 'text-emerald-700')}>
+                Complete Platform
+              </span>
+            </div>
+            <h2 className={cn('font-heading text-3xl lg:text-4xl font-bold mb-4', isDark ? 'text-amber-50' : 'text-surface-900')}>
+              Everything You Need,{' '}
+              <span className={isDark ? 'text-emerald-400' : 'text-emerald-600'}>One Platform</span>
+            </h2>
+            <p className={theme.textMuted}>
+              Beyond documents — connect, collaborate, and grow with your colleagues across the civil service.
+            </p>
+          </motion.div>
+
+          {/* Platform Features Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {platformFeatures.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.08 }}
+                whileHover={{ y: -5 }}
+                className="group"
+              >
+                <div
+                  className="relative p-6 rounded-2xl h-full transition-all duration-300 group-hover:shadow-xl"
+                  style={{
+                    background: `linear-gradient(135deg, ${theme.cardBg} 0%, transparent 100%)`,
+                    border: `1px solid ${theme.cardBorder}`,
+                  }}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center"
+                      style={{
+                        background: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)',
+                        border: `1px solid ${isDark ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)'}`,
+                      }}
+                    >
+                      <feature.icon className={cn('w-6 h-6', isDark ? 'text-emerald-400' : 'text-emerald-600')} />
+                    </div>
+                    <span
+                      className="px-2.5 py-1 text-xs font-semibold rounded-full"
+                      style={{
+                        background: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)',
+                        color: isDark ? '#6ee7b7' : '#059669',
+                      }}
+                    >
+                      {feature.stats}
+                    </span>
+                  </div>
+
+                  <h3 className={cn(
+                    'text-lg font-bold mb-2 transition-colors',
+                    isDark ? 'text-amber-50 group-hover:text-emerald-300' : 'text-surface-900 group-hover:text-emerald-600'
+                  )}>
+                    {feature.title}
+                  </h3>
+                  <p className={cn('text-sm leading-relaxed', isDark ? 'text-amber-50/50' : 'text-surface-600')}>
+                    {feature.description}
+                  </p>
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
