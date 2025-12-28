@@ -83,16 +83,21 @@ const themes = {
     glowGreen: 'rgba(0, 107, 63, 0.1)',
   },
   light: {
-    bg: 'linear-gradient(180deg, #faf8f5 0%, #f5f0e8 50%, #faf8f5 100%)',
-    text: 'text-surface-900',
-    textMuted: 'text-surface-600',
-    textFaint: 'text-surface-500',
-    textGhost: 'text-surface-400',
-    cardBg: 'rgba(0, 107, 63, 0.04)',
-    cardBorder: 'rgba(0, 107, 63, 0.15)',
-    navBg: 'rgba(250, 248, 245, 0.95)',
-    glowGold: 'rgba(252, 209, 22, 0.15)',
-    glowGreen: 'rgba(0, 107, 63, 0.08)',
+    // Elegant darker cream background with subtle warmth
+    bg: 'linear-gradient(180deg, #e8e4dc 0%, #d9d3c7 35%, #e5e0d6 65%, #ebe7df 100%)',
+    // Crisp, bold text colors for maximum readability
+    text: 'text-slate-900',
+    textMuted: 'text-slate-700',
+    textFaint: 'text-slate-600',
+    textGhost: 'text-slate-500',
+    // Frosted glass card effect with better visibility
+    cardBg: 'rgba(255, 255, 255, 0.75)',
+    cardBorder: 'rgba(0, 107, 63, 0.25)',
+    // Semi-transparent nav with blur
+    navBg: 'rgba(232, 228, 220, 0.92)',
+    // Richer accent glows
+    glowGold: 'rgba(252, 209, 22, 0.25)',
+    glowGreen: 'rgba(0, 107, 63, 0.15)',
   },
 };
 
@@ -456,12 +461,27 @@ function FeatureCard({ feature, index, isDark }: { feature: typeof features[0]; 
       className="group relative"
     >
       <div
-        className="relative p-8 rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-xl"
+        className="relative p-8 rounded-2xl overflow-hidden transition-all duration-300"
         style={{
-          background: `linear-gradient(135deg, ${theme.cardBg} 0%, transparent 100%)`,
-          border: `1px solid ${theme.cardBorder}`,
+          background: isDark
+            ? `linear-gradient(135deg, ${theme.cardBg} 0%, transparent 100%)`
+            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.65) 100%)',
+          border: `1px solid ${isDark ? theme.cardBorder : 'rgba(0, 107, 63, 0.15)'}`,
+          boxShadow: isDark
+            ? 'none'
+            : '0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
         }}
       >
+        {/* Subtle inner glow for light mode */}
+        {!isDark && (
+          <div
+            className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            style={{
+              background: 'linear-gradient(135deg, rgba(0, 107, 63, 0.03) 0%, rgba(252, 209, 22, 0.03) 100%)',
+            }}
+          />
+        )}
+
         {/* AI indicator for AI features */}
         {feature.isAI && (
           <motion.div
@@ -472,8 +492,9 @@ function FeatureCard({ feature, index, isDark }: { feature: typeof features[0]; 
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center"
               style={{
-                background: isDark ? 'rgba(252, 209, 22, 0.15)' : 'rgba(0, 107, 63, 0.1)',
-                border: `1px solid ${isDark ? 'rgba(252, 209, 22, 0.3)' : 'rgba(0, 107, 63, 0.2)'}`,
+                background: isDark ? 'rgba(252, 209, 22, 0.15)' : 'rgba(0, 107, 63, 0.12)',
+                border: `1px solid ${isDark ? 'rgba(252, 209, 22, 0.3)' : 'rgba(0, 107, 63, 0.25)'}`,
+                boxShadow: isDark ? 'none' : '0 2px 8px rgba(0, 107, 63, 0.1)',
               }}
             >
               <Sparkles className={cn('w-4 h-4', isDark ? 'text-secondary-400' : 'text-primary-600')} />
@@ -484,22 +505,32 @@ function FeatureCard({ feature, index, isDark }: { feature: typeof features[0]; 
         {/* Icon */}
         <div className="relative w-14 h-14 mb-5">
           <div
-            className="absolute inset-0 rounded-xl opacity-20 group-hover:opacity-40 transition-opacity"
-            style={{ background: 'linear-gradient(135deg, #006B3F, #FCD116)' }}
+            className="absolute inset-0 rounded-xl transition-opacity"
+            style={{
+              background: 'linear-gradient(135deg, #006B3F, #FCD116)',
+              opacity: isDark ? 0.2 : 0.15,
+            }}
           />
-          <div className="relative w-full h-full rounded-xl flex items-center justify-center border border-primary-500/20">
-            <feature.icon className={cn('w-7 h-7', isDark ? 'text-secondary-400' : 'text-primary-600')} />
+          <div
+            className="relative w-full h-full rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform"
+            style={{
+              border: isDark ? '1px solid rgba(0, 107, 63, 0.2)' : '1px solid rgba(0, 107, 63, 0.2)',
+              background: isDark ? 'transparent' : 'rgba(255, 255, 255, 0.6)',
+              boxShadow: isDark ? 'none' : '0 2px 8px rgba(0, 107, 63, 0.08)',
+            }}
+          >
+            <feature.icon className={cn('w-7 h-7', isDark ? 'text-secondary-400' : 'text-primary-700')} />
           </div>
         </div>
 
         {/* Content */}
         <h3 className={cn(
           'text-lg font-bold mb-2 transition-colors font-heading',
-          isDark ? 'text-amber-50/90 group-hover:text-secondary-300' : 'text-surface-900 group-hover:text-primary-600'
+          isDark ? 'text-amber-50/90 group-hover:text-secondary-300' : 'text-slate-800 group-hover:text-primary-700'
         )}>
           {feature.title}
         </h3>
-        <p className={cn('text-sm leading-relaxed', isDark ? 'text-amber-50/50' : 'text-surface-600')}>
+        <p className={cn('text-sm leading-relaxed', isDark ? 'text-amber-50/50' : 'text-slate-600')}>
           {feature.description}
         </p>
       </div>
@@ -2617,12 +2648,13 @@ export default function Landing() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className={cn(
-                'px-8 py-4 rounded-xl font-semibold text-base transition-colors',
-                isDark ? 'text-amber-50/80 hover:text-amber-50' : 'text-surface-700 hover:text-surface-900'
+                'px-8 py-4 rounded-xl font-semibold text-base transition-all',
+                isDark ? 'text-amber-50/80 hover:text-amber-50' : 'text-slate-700 hover:text-slate-900'
               )}
               style={{
-                border: `1px solid ${isDark ? 'rgba(245, 240, 230, 0.2)' : 'rgba(0, 0, 0, 0.1)'}`,
-                background: isDark ? 'rgba(245, 240, 230, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+                border: `1px solid ${isDark ? 'rgba(245, 240, 230, 0.2)' : 'rgba(0, 107, 63, 0.2)'}`,
+                background: isDark ? 'rgba(245, 240, 230, 0.03)' : 'rgba(255, 255, 255, 0.7)',
+                boxShadow: isDark ? 'none' : '0 2px 12px rgba(0, 0, 0, 0.06)',
               }}
             >
               Sign In to Continue
@@ -2631,7 +2663,7 @@ export default function Landing() {
 
           {/* Trust indicator */}
           <p
-            className={cn('mt-8 text-sm flex items-center justify-center gap-2', theme.textGhost)}
+            className={cn('mt-8 text-sm flex items-center justify-center gap-2', isDark ? theme.textGhost : 'text-slate-500')}
           >
             <Shield className="w-4 h-4" />
             Exclusively for .gov.gh email holders
@@ -2672,7 +2704,16 @@ export default function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="text-center p-6"
+                className="text-center p-6 rounded-2xl"
+                style={{
+                  background: isDark
+                    ? 'transparent'
+                    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.4) 100%)',
+                  boxShadow: isDark
+                    ? 'none'
+                    : '0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.03)',
+                  border: isDark ? 'none' : '1px solid rgba(0, 107, 63, 0.1)',
+                }}
               >
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -2680,16 +2721,17 @@ export default function Landing() {
                   style={{
                     background: isDark
                       ? 'linear-gradient(135deg, rgba(252, 209, 22, 0.15) 0%, rgba(252, 209, 22, 0.05) 100%)'
-                      : 'linear-gradient(135deg, rgba(0, 107, 63, 0.1) 0%, rgba(0, 107, 63, 0.05) 100%)',
-                    border: `1px solid ${isDark ? 'rgba(252, 209, 22, 0.2)' : 'rgba(0, 107, 63, 0.15)'}`,
+                      : 'linear-gradient(135deg, rgba(0, 107, 63, 0.15) 0%, rgba(0, 107, 63, 0.08) 100%)',
+                    border: `1px solid ${isDark ? 'rgba(252, 209, 22, 0.2)' : 'rgba(0, 107, 63, 0.2)'}`,
+                    boxShadow: isDark ? 'none' : '0 2px 8px rgba(0, 107, 63, 0.08)',
                   }}
                 >
-                  <stat.icon className={cn('w-6 h-6', isDark ? 'text-secondary-400' : 'text-primary-600')} />
+                  <stat.icon className={cn('w-6 h-6', isDark ? 'text-secondary-400' : 'text-primary-700')} />
                 </motion.div>
-                <p className={cn('text-3xl sm:text-4xl font-bold mb-1', isDark ? 'text-amber-50' : 'text-surface-900')}>
+                <p className={cn('text-3xl sm:text-4xl font-bold mb-1', isDark ? 'text-amber-50' : 'text-slate-900')}>
                   <AnimatedCounter value={stat.value} suffix={stat.suffix} />
                 </p>
-                <p className={cn('text-sm font-medium', theme.textFaint)}>{stat.label}</p>
+                <p className={cn('text-sm font-medium', isDark ? theme.textFaint : 'text-slate-600')}>{stat.label}</p>
               </motion.div>
             ))}
           </div>
@@ -2811,11 +2853,11 @@ export default function Landing() {
                   style={{
                     background: isDark
                       ? 'linear-gradient(145deg, rgba(30, 27, 40, 0.8) 0%, rgba(20, 18, 30, 0.9) 100%)'
-                      : 'linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 248, 255, 0.95) 100%)',
-                    border: `1px solid ${isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.15)'}`,
+                      : 'linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(252, 250, 255, 0.9) 100%)',
+                    border: `1px solid ${isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.2)'}`,
                     boxShadow: isDark
                       ? '0 4px 30px rgba(0, 0, 0, 0.3)'
-                      : '0 4px 30px rgba(99, 102, 241, 0.1)',
+                      : '0 8px 32px rgba(99, 102, 241, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
                   }}
                 >
                   {/* Gradient overlay on hover */}
@@ -2834,11 +2876,11 @@ export default function Landing() {
                   {/* Content */}
                   <h3 className={cn(
                     'text-lg font-bold mb-2 transition-colors',
-                    isDark ? 'text-amber-50 group-hover:text-indigo-300' : 'text-surface-900 group-hover:text-indigo-600'
+                    isDark ? 'text-amber-50 group-hover:text-indigo-300' : 'text-slate-800 group-hover:text-indigo-700'
                   )}>
                     {feature.title}
                   </h3>
-                  <p className={cn('text-sm leading-relaxed', isDark ? 'text-amber-50/60' : 'text-surface-600')}>
+                  <p className={cn('text-sm leading-relaxed', isDark ? 'text-amber-50/60' : 'text-slate-600')}>
                     {feature.description}
                   </p>
                 </div>
@@ -2915,27 +2957,34 @@ export default function Landing() {
                 className="group"
               >
                 <div
-                  className="relative p-6 rounded-2xl h-full transition-all duration-300 group-hover:shadow-xl"
+                  className="relative p-6 rounded-2xl h-full transition-all duration-300"
                   style={{
-                    background: `linear-gradient(135deg, ${theme.cardBg} 0%, transparent 100%)`,
-                    border: `1px solid ${theme.cardBorder}`,
+                    background: isDark
+                      ? `linear-gradient(135deg, ${theme.cardBg} 0%, transparent 100%)`
+                      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
+                    border: `1px solid ${isDark ? theme.cardBorder : 'rgba(16, 185, 129, 0.15)'}`,
+                    boxShadow: isDark
+                      ? 'none'
+                      : '0 6px 24px rgba(16, 185, 129, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
                   }}
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div
                       className="w-12 h-12 rounded-xl flex items-center justify-center"
                       style={{
-                        background: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)',
-                        border: `1px solid ${isDark ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)'}`,
+                        background: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.12)',
+                        border: `1px solid ${isDark ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.25)'}`,
+                        boxShadow: isDark ? 'none' : '0 2px 8px rgba(16, 185, 129, 0.1)',
                       }}
                     >
-                      <feature.icon className={cn('w-6 h-6', isDark ? 'text-emerald-400' : 'text-emerald-600')} />
+                      <feature.icon className={cn('w-6 h-6', isDark ? 'text-emerald-400' : 'text-emerald-700')} />
                     </div>
                     <span
-                      className="px-2.5 py-1 text-xs font-semibold rounded-full"
+                      className="px-2.5 py-1 text-xs font-bold rounded-full"
                       style={{
-                        background: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)',
-                        color: isDark ? '#6ee7b7' : '#059669',
+                        background: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.12)',
+                        color: isDark ? '#6ee7b7' : '#047857',
+                        boxShadow: isDark ? 'none' : '0 1px 3px rgba(16, 185, 129, 0.1)',
                       }}
                     >
                       {feature.stats}
@@ -2944,11 +2993,11 @@ export default function Landing() {
 
                   <h3 className={cn(
                     'text-lg font-bold mb-2 transition-colors',
-                    isDark ? 'text-amber-50 group-hover:text-emerald-300' : 'text-surface-900 group-hover:text-emerald-600'
+                    isDark ? 'text-amber-50 group-hover:text-emerald-300' : 'text-slate-800 group-hover:text-emerald-700'
                   )}>
                     {feature.title}
                   </h3>
-                  <p className={cn('text-sm leading-relaxed', isDark ? 'text-amber-50/50' : 'text-surface-600')}>
+                  <p className={cn('text-sm leading-relaxed', isDark ? 'text-amber-50/50' : 'text-slate-600')}>
                     {feature.description}
                   </p>
                 </div>
@@ -2969,8 +3018,9 @@ export default function Landing() {
             style={{
               background: isDark
                 ? 'linear-gradient(135deg, rgba(0, 107, 63, 0.15) 0%, rgba(0, 77, 45, 0.1) 100%)'
-                : 'linear-gradient(135deg, rgba(0, 107, 63, 0.08) 0%, rgba(0, 77, 45, 0.05) 100%)',
+                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 253, 244, 0.8) 100%)',
               border: `1px solid ${isDark ? 'rgba(0, 107, 63, 0.3)' : 'rgba(0, 107, 63, 0.2)'}`,
+              boxShadow: isDark ? 'none' : '0 8px 40px rgba(0, 107, 63, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04)',
             }}
           >
             {/* Decorative icons */}
@@ -3005,11 +3055,11 @@ export default function Landing() {
                 <Zap className={cn('w-8 h-8', isDark ? 'text-secondary-400' : 'text-primary-600')} />
               </div>
 
-              <h2 className={cn('font-heading text-3xl lg:text-4xl font-bold mb-4', isDark ? 'text-amber-50' : 'text-surface-900')}>
+              <h2 className={cn('font-heading text-3xl lg:text-4xl font-bold mb-4', isDark ? 'text-amber-50' : 'text-slate-900')}>
                 Ready to Experience AI-Powered Research?
               </h2>
 
-              <p className={cn('text-lg max-w-xl mx-auto mb-8', theme.textMuted)}>
+              <p className={cn('text-lg max-w-xl mx-auto mb-8', isDark ? theme.textMuted : 'text-slate-600')}>
                 Join thousands of civil servants using AI to find documents, get summaries, and work smarter.
               </p>
 
