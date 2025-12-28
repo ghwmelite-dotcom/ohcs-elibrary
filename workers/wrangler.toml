@@ -5,6 +5,11 @@ compatibility_date = "2024-01-01"
 [vars]
 ENVIRONMENT = "development"
 JWT_SECRET = "ohcs-elibrary-jwt-secret-key-2024-production"
+RESEND_API_KEY = "re_KT4GJbwf_NhtRgQzS3dFQeK6r8oSGY5A3"
+# Gmail API credentials for email delivery
+GMAIL_CLIENT_ID = "393704243654-e5gjqadsn8spvc2ojdkk79h70ltcdvgm.apps.googleusercontent.com"
+GMAIL_CLIENT_SECRET = "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"
+GMAIL_REFRESH_TOKEN = "1//03j9dppcB5lIRCgYIARAAGAMSNwF-L9Ir1FHHO0D5DpYN4QqxAErekNS6kghF29ar2cVjVOkKZMIrskGehd0NfwSZ_BBoIVaYUaA"
 
 # D1 Database binding
 [[d1_databases]]

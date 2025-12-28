@@ -29,6 +29,11 @@ export interface Env {
   AI: any;
   JWT_SECRET: string;
   ENVIRONMENT: string;
+  RESEND_API_KEY?: string;
+  // Gmail API credentials
+  GMAIL_CLIENT_ID?: string;
+  GMAIL_CLIENT_SECRET?: string;
+  GMAIL_REFRESH_TOKEN?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();

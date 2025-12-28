@@ -2,8 +2,33 @@ import { Hono } from 'hono';
 import { sign, verify } from 'hono/jwt';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
+import {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+  sendWelcomeEmail,
+  sendLoginNotificationEmail,
+  sendAdminNewUserNotification,
+  type GmailCredentials,
+} from '../services/emailService';
+
+// Helper to get Gmail credentials from env
+function getGmailCredentials(env: any): GmailCredentials | undefined {
+  if (env.GMAIL_CLIENT_ID && env.GMAIL_CLIENT_SECRET && env.GMAIL_REFRESH_TOKEN) {
+    return {
+      clientId: env.GMAIL_CLIENT_ID,
+      clientSecret: env.GMAIL_CLIENT_SECRET,
+      refreshToken: env.GMAIL_REFRESH_TOKEN,
+    };
+  }
+  return undefined;
+}
 
 const authRoutes = new Hono();
+
+// Generate 6-digit verification code
+function generateVerificationCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 // Validation schemas
 const loginSchema = z.object({
@@ -256,6 +281,20 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
       console.error('Failed to log login activity:', e);
     }
 
+    // Send login notification email (async, don't wait)
+    if (c.env.RESEND_API_KEY || c.env.GMAIL_CLIENT_ID) {
+      const ipAddress = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'Unknown';
+      const userAgent = c.req.header('User-Agent') || 'Unknown';
+      const gmailCreds = getGmailCredentials(c.env);
+
+      sendLoginNotificationEmail(c.env.RESEND_API_KEY, user.email as string, user.displayName as string, {
+        ipAddress,
+        userAgent: userAgent.substring(0, 100), // Truncate long user agents
+        timestamp: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Accra' }),
+        location: 'Ghana',
+      }, gmailCreds).catch((err) => console.error('Failed to send login notification:', err));
+    }
+
     return c.json({
       user: {
         id: user.id,
@@ -436,10 +475,13 @@ authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
     // Generate user ID
     const userId = crypto.randomUUID();
 
-    // Create user - auto-verify for development (using deployed DB column names)
+    // Auto-verify .gov.gh emails (trusted government domain)
+    const isGovEmail = email.toLowerCase().endsWith('.gov.gh');
+
+    // Create user - auto-verify for .gov.gh emails
     await c.env.DB.prepare(`
       INSERT INTO users (id, email, passwordHash, displayName, firstName, lastName, role, mdaId, isActive, isVerified)
-      VALUES (?, ?, ?, ?, ?, ?, 'civil_servant', ?, 1, 1)
+      VALUES (?, ?, ?, ?, ?, ?, 'civil_servant', ?, 1, ?)
     `).bind(
       userId,
       email.toLowerCase(),
@@ -447,36 +489,63 @@ authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
       name,
       firstName,
       lastName,
-      mda || null
+      mda || null,
+      isGovEmail ? 1 : 0
     ).run();
 
-    // Auto-login after registration
-    const accessToken = await sign({
-      sub: userId,
-      email: email.toLowerCase(),
-      role: 'civil_servant',
-      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
-    }, c.env.JWT_SECRET);
+    // Notify admin of new registration (uses Gmail API for better delivery)
+    if (c.env.RESEND_API_KEY || c.env.GMAIL_CLIENT_ID) {
+      try {
+        const gmailCreds = getGmailCredentials(c.env);
+        await sendAdminNewUserNotification(c.env.RESEND_API_KEY, {
+          displayName: name,
+          email: email.toLowerCase(),
+          department: '',
+          mda: mda || 'Not specified',
+          staffId: 'Pending',
+        }, gmailCreds);
+      } catch (adminError) {
+        console.error('Failed to send admin notification:', adminError);
+      }
+    }
 
-    const refreshToken = await sign({
-      sub: userId,
-      type: 'refresh',
-      exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60),
-    }, c.env.JWT_SECRET);
-
-    return c.json({
-      message: 'Registration successful!',
-      user: {
-        id: userId,
+    // Auto-login for verified .gov.gh users
+    if (isGovEmail) {
+      const accessToken = await sign({
+        sub: userId,
         email: email.toLowerCase(),
-        name: name,
-        firstName,
-        lastName,
-        displayName: name,
         role: 'civil_servant',
-      },
-      accessToken,
-      refreshToken,
+        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
+      }, c.env.JWT_SECRET);
+
+      const refreshToken = await sign({
+        sub: userId,
+        type: 'refresh',
+        exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60),
+      }, c.env.JWT_SECRET);
+
+      return c.json({
+        message: 'Registration successful! Welcome to OHCS E-Library.',
+        user: {
+          id: userId,
+          email: email.toLowerCase(),
+          name,
+          firstName,
+          lastName,
+          displayName: name,
+          role: 'civil_servant',
+        },
+        accessToken,
+        refreshToken,
+      }, 201);
+    }
+
+    // Non .gov.gh emails would need verification (but we block them anyway)
+    return c.json({
+      message: 'Registration successful! Please check your email for a verification code.',
+      requiresVerification: true,
+      userId,
+      email: email.toLowerCase(),
     }, 201);
   } catch (error) {
     console.error('Registration error:', error);
@@ -487,31 +556,91 @@ authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
   }
 });
 
-// Verify email
-authRoutes.post('/verify-email', zValidator('json', verifyEmailSchema), async (c) => {
-  const { token } = c.req.valid('json');
+// Verify email with code
+const verifyCodeSchema = z.object({
+  email: z.string().email(),
+  code: z.string().length(6),
+});
+
+authRoutes.post('/verify-email', zValidator('json', verifyCodeSchema), async (c) => {
+  const { email, code } = c.req.valid('json');
 
   try {
     const user = await c.env.DB.prepare(`
-      SELECT id FROM users
-      WHERE email_verification_token = ? AND email_verified = 0
-    `).bind(token).first();
+      SELECT id, displayName, verificationCode, verificationExpires
+      FROM users
+      WHERE email = ? AND isVerified = 0
+    `).bind(email.toLowerCase()).first();
 
     if (!user) {
       return c.json({
-        error: 'Invalid Token',
-        message: 'The verification token is invalid or has already been used',
+        error: 'Invalid Request',
+        message: 'No pending verification found for this email',
       }, 400);
     }
 
+    // Check if code matches
+    if (user.verificationCode !== code) {
+      return c.json({
+        error: 'Invalid Code',
+        message: 'The verification code is incorrect',
+      }, 400);
+    }
+
+    // Check if code has expired
+    if (user.verificationExpires && new Date(user.verificationExpires as string) < new Date()) {
+      return c.json({
+        error: 'Code Expired',
+        message: 'The verification code has expired. Please request a new one.',
+      }, 400);
+    }
+
+    // Mark user as verified
     await c.env.DB.prepare(`
       UPDATE users
-      SET email_verified = 1, email_verification_token = NULL, status = 'active'
+      SET isVerified = 1, verificationCode = NULL, verificationExpires = NULL
       WHERE id = ?
     `).bind(user.id).run();
 
+    // Send welcome email
+    if (c.env.RESEND_API_KEY || c.env.GMAIL_CLIENT_ID) {
+      try {
+        const gmailCreds = getGmailCredentials(c.env);
+        await sendWelcomeEmail(
+          c.env.RESEND_API_KEY,
+          email.toLowerCase(),
+          user.displayName as string,
+          gmailCreds
+        );
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+      }
+    }
+
+    // Generate tokens for auto-login
+    const accessToken = await sign({
+      sub: user.id,
+      email: email.toLowerCase(),
+      role: 'civil_servant',
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
+    }, c.env.JWT_SECRET);
+
+    const refreshToken = await sign({
+      sub: user.id,
+      type: 'refresh',
+      exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60),
+    }, c.env.JWT_SECRET);
+
     return c.json({
-      message: 'Email verified successfully. You can now log in.',
+      message: 'Email verified successfully! Welcome to OHCS E-Library.',
+      user: {
+        id: user.id,
+        email: email.toLowerCase(),
+        displayName: user.displayName,
+        role: 'civil_servant',
+      },
+      accessToken,
+      refreshToken,
     });
   } catch (error) {
     console.error('Verification error:', error);
@@ -522,37 +651,190 @@ authRoutes.post('/verify-email', zValidator('json', verifyEmailSchema), async (c
   }
 });
 
+// Resend verification code
+authRoutes.post('/resend-verification', zValidator('json', forgotPasswordSchema), async (c) => {
+  const { email } = c.req.valid('json');
+
+  try {
+    const user = await c.env.DB.prepare(`
+      SELECT id, displayName FROM users WHERE email = ? AND isVerified = 0
+    `).bind(email.toLowerCase()).first();
+
+    if (!user) {
+      // Don't reveal if email exists
+      return c.json({
+        message: 'If an unverified account exists, a new code will be sent.',
+      });
+    }
+
+    // Generate new code
+    const verificationCode = generateVerificationCode();
+
+    await c.env.DB.prepare(`
+      UPDATE users
+      SET verificationCode = ?, verificationExpires = datetime('now', '+15 minutes')
+      WHERE id = ?
+    `).bind(verificationCode, user.id).run();
+
+    // Send verification email
+    if (c.env.RESEND_API_KEY || c.env.GMAIL_CLIENT_ID) {
+      try {
+        const gmailCreds = getGmailCredentials(c.env);
+        await sendVerificationEmail(
+          c.env.RESEND_API_KEY,
+          email.toLowerCase(),
+          user.displayName as string,
+          verificationCode,
+          gmailCreds
+        );
+      } catch (emailError) {
+        console.error('Failed to send verification email:', emailError);
+      }
+    }
+
+    return c.json({
+      message: 'If an unverified account exists, a new code will be sent.',
+    });
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    return c.json({
+      error: 'Server Error',
+      message: 'An error occurred',
+    }, 500);
+  }
+});
+
 // Forgot password
 authRoutes.post('/forgot-password', zValidator('json', forgotPasswordSchema), async (c) => {
   const { email } = c.req.valid('json');
 
   try {
     const user = await c.env.DB.prepare(`
-      SELECT id FROM users WHERE email = ?
-    `).bind(email).first();
+      SELECT id, displayName FROM users WHERE email = ?
+    `).bind(email.toLowerCase()).first();
 
     // Always return success to prevent email enumeration
     if (!user) {
       return c.json({
-        message: 'If an account exists with this email, you will receive a password reset link.',
+        message: 'If an account exists with this email, you will receive a password reset code.',
       });
     }
 
+    // Generate 6-digit reset code
+    const resetCode = generateVerificationCode();
     const resetToken = crypto.randomUUID();
 
     await c.env.DB.prepare(`
       UPDATE users
-      SET password_reset_token = ?, password_reset_expires = datetime('now', '+1 hour')
+      SET resetCode = ?, resetToken = ?, resetExpires = datetime('now', '+1 hour')
       WHERE id = ?
-    `).bind(resetToken, user.id).run();
+    `).bind(resetCode, resetToken, user.id).run();
 
-    // TODO: Send password reset email
+    // Try to send password reset email (uses Gmail for better delivery to gov.gh)
+    let emailSent = false;
+    if (c.env.RESEND_API_KEY || c.env.GMAIL_CLIENT_ID) {
+      try {
+        const gmailCreds = getGmailCredentials(c.env);
+        const resetUrl = `https://ohcs-elibrary.pages.dev/reset-password?token=${resetToken}`;
+        await sendPasswordResetEmail(
+          c.env.RESEND_API_KEY,
+          email.toLowerCase(),
+          user.displayName as string,
+          resetCode,
+          resetUrl,
+          gmailCreds
+        );
+        emailSent = true;
+      } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError);
+      }
+    }
 
+    // Return code on screen for .gov.gh users (email may be blocked by their servers)
     return c.json({
-      message: 'If an account exists with this email, you will receive a password reset link.',
+      message: 'Your password reset code is ready.',
+      resetCode,
+      email: email.toLowerCase(),
+      expiresIn: '1 hour',
+      emailSent,
     });
   } catch (error) {
     console.error('Forgot password error:', error);
+    return c.json({
+      error: 'Server Error',
+      message: 'An error occurred',
+    }, 500);
+  }
+});
+
+// Reset password with code
+const resetPasswordWithCodeSchema = z.object({
+  email: z.string().email(),
+  code: z.string().length(6),
+  password: z.string()
+    .min(12, 'Password must be at least 12 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+});
+
+authRoutes.post('/reset-password', zValidator('json', resetPasswordWithCodeSchema), async (c) => {
+  const { email, code, password } = c.req.valid('json');
+
+  try {
+    const user = await c.env.DB.prepare(`
+      SELECT id, resetCode, resetExpires FROM users WHERE email = ?
+    `).bind(email.toLowerCase()).first();
+
+    if (!user) {
+      return c.json({
+        error: 'Invalid Request',
+        message: 'Invalid email or reset code',
+      }, 400);
+    }
+
+    // Check if code matches
+    if (user.resetCode !== code) {
+      return c.json({
+        error: 'Invalid Code',
+        message: 'The reset code is incorrect',
+      }, 400);
+    }
+
+    // Check if code has expired
+    if (user.resetExpires && new Date(user.resetExpires as string) < new Date()) {
+      return c.json({
+        error: 'Code Expired',
+        message: 'The reset code has expired. Please request a new one.',
+      }, 400);
+    }
+
+    // Hash new password
+    const passwordHash = await hashPassword(password);
+
+    // Update password and clear reset tokens
+    await c.env.DB.prepare(`
+      UPDATE users
+      SET passwordHash = ?, resetCode = NULL, resetToken = NULL, resetExpires = NULL
+      WHERE id = ?
+    `).bind(passwordHash, user.id).run();
+
+    // Log password reset activity
+    try {
+      await c.env.DB.prepare(`
+        INSERT INTO account_activity (id, userId, action, description, status, riskLevel)
+        VALUES (?, ?, 'password_reset', 'Password was reset successfully', 'success', 'medium')
+      `).bind(crypto.randomUUID(), user.id).run();
+    } catch (e) {
+      console.error('Failed to log password reset:', e);
+    }
+
+    return c.json({
+      message: 'Password reset successfully! You can now log in with your new password.',
+    });
+  } catch (error) {
+    console.error('Password reset error:', error);
     return c.json({
       error: 'Server Error',
       message: 'An error occurred',

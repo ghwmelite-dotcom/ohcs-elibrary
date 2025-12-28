@@ -1,21 +1,31 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Mail, ArrowLeft, CheckCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/shared/Button';
-import { useToast } from '@/components/shared/Toast';
-import { cn } from '@/utils/cn';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, ArrowLeft, CheckCircle2, RefreshCw, AlertCircle, Loader2, Sparkles } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function VerifyEmail() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const toast = useToast();
-  const email = location.state?.email || 'your email';
+  const { pendingVerification, verifyEmail, resendVerification, clearPendingVerification, isAuthenticated } = useAuthStore();
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(60);
+  const [error, setError] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const email = pendingVerification.email || '';
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    } else if (!pendingVerification.email) {
+      navigate('/');
+    }
+  }, [isAuthenticated, pendingVerification.email, navigate]);
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
@@ -34,10 +44,16 @@ export default function VerifyEmail() {
     const newOtp = [...otp];
     newOtp[index] = value.slice(-1);
     setOtp(newOtp);
+    setError('');
 
     // Auto-focus next input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
+    }
+
+    // Auto-verify when all digits entered
+    if (value && index === 5 && newOtp.every((d) => d !== '')) {
+      handleVerify(newOtp.join(''));
     }
   };
 
@@ -49,142 +65,274 @@ export default function VerifyEmail() {
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').slice(0, 6);
-    if (!/^\d+$/.test(pastedData)) return;
-
-    const newOtp = [...otp];
-    pastedData.split('').forEach((char, index) => {
-      if (index < 6) newOtp[index] = char;
-    });
-    setOtp(newOtp);
-
-    const focusIndex = Math.min(pastedData.length, 5);
-    inputRefs.current[focusIndex]?.focus();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pastedData.length === 6) {
+      const newOtp = pastedData.split('');
+      setOtp(newOtp);
+      inputRefs.current[5]?.focus();
+      handleVerify(pastedData);
+    }
   };
 
-  const handleVerify = async () => {
-    const code = otp.join('');
-    if (code.length !== 6) {
-      toast.error('Invalid code', 'Please enter all 6 digits');
+  const handleVerify = async (code?: string) => {
+    const verificationCode = code || otp.join('');
+    if (verificationCode.length !== 6) {
+      setError('Please enter all 6 digits');
       return;
     }
 
-    setIsVerifying(true);
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+    if (!email) return;
 
-      // Mock: accept any code for demo
-      toast.success('Email verified!', 'Your account is now active.');
-      navigate('/login');
-    } catch (error) {
-      toast.error('Verification failed', 'The code is invalid or expired.');
+    setIsVerifying(true);
+    setError('');
+
+    try {
+      await verifyEmail(email, verificationCode);
+      setIsSuccess(true);
+      // Redirect after a short delay
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Verification failed');
+      setOtp(['', '', '', '', '', '']);
+      inputRefs.current[0]?.focus();
     } finally {
       setIsVerifying(false);
     }
   };
 
   const handleResend = async () => {
+    if (resendCooldown > 0 || !email) return;
+
     setIsResending(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success('Code sent!', 'A new verification code has been sent to your email.');
+      await resendVerification(email);
       setResendCooldown(60);
+      setError('');
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
-    } catch (error) {
-      toast.error('Failed to resend', 'Please try again later.');
+    } catch {
+      // Ignore errors for security
     } finally {
       setIsResending(false);
     }
   };
 
+  const handleBack = () => {
+    clearPendingVerification();
+    navigate('/');
+  };
+
+  if (!email) {
+    return null;
+  }
+
   return (
-    <div>
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-50 dark:bg-primary-900/30 rounded-full mb-6">
-          <Mail className="w-8 h-8 text-primary-600 dark:text-primary-400" />
-        </div>
-        <h2 className="text-2xl font-heading font-bold text-surface-900 dark:text-surface-50">
-          Verify Your Email
-        </h2>
-        <p className="mt-2 text-surface-600 dark:text-surface-400">
-          We've sent a 6-digit code to
-        </p>
-        <p className="font-medium text-surface-900 dark:text-surface-50">{email}</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-900 dark:to-green-950 flex items-center justify-center p-4">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-green-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gold-500/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="mb-8">
-        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-4 text-center">
-          Enter verification code
-        </label>
-        <div className="flex justify-center gap-2">
-          {otp.map((digit, index) => (
-            <input
-              key={index}
-              ref={(el) => (inputRefs.current[index] = el)}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handleChange(index, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              onPaste={handlePaste}
-              className={cn(
-                'w-12 h-14 text-center text-xl font-bold rounded-lg border-2 bg-white dark:bg-surface-800',
-                'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-                'transition-all duration-200',
-                digit
-                  ? 'border-primary-500 text-surface-900 dark:text-surface-50'
-                  : 'border-surface-300 dark:border-surface-600 text-surface-400'
-              )}
-            />
-          ))}
-        </div>
-      </div>
-
-      <Button
-        onClick={handleVerify}
-        fullWidth
-        isLoading={isVerifying}
-        size="lg"
-        disabled={otp.some((d) => !d)}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md relative z-10"
       >
-        Verify Email
-      </Button>
-
-      <div className="mt-6 text-center">
-        <p className="text-sm text-surface-600 dark:text-surface-400">
-          Didn't receive the code?{' '}
-          {resendCooldown > 0 ? (
-            <span className="text-surface-500">
-              Resend in {resendCooldown}s
-            </span>
-          ) : (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-green-600 to-green-700 p-6 text-white text-center relative">
             <button
-              onClick={handleResend}
-              disabled={isResending}
-              className="inline-flex items-center gap-1 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
+              onClick={handleBack}
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 hover:bg-white/20 rounded-lg transition-colors"
             >
-              {isResending ? (
-                <RefreshCw className="w-3 h-3 animate-spin" />
-              ) : null}
-              Resend code
+              <ArrowLeft className="w-5 h-5" />
             </button>
-          )}
-        </p>
-      </div>
 
-      <div className="mt-8 text-center">
-        <Link
-          to="/login"
-          className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to sign in
-        </Link>
-      </div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', delay: 0.2 }}
+              className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4"
+            >
+              <AnimatePresence mode="wait">
+                {isSuccess ? (
+                  <motion.div
+                    key="success"
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring' }}
+                  >
+                    <CheckCircle2 className="w-8 h-8" />
+                  </motion.div>
+                ) : (
+                  <motion.div key="mail">
+                    <Mail className="w-8 h-8" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+
+            <h1 className="text-xl font-bold">
+              {isSuccess ? 'Email Verified!' : 'Verify Your Email'}
+            </h1>
+            <p className="text-sm text-white/80 mt-1">
+              {isSuccess ? 'Welcome to OHCS E-Library' : 'Enter the 6-digit code we sent you'}
+            </p>
+          </div>
+
+          {/* Ghana flag stripe */}
+          <div className="h-1 bg-gradient-to-r from-[#CE1126] via-[#FCD116] to-[#006B3F]" />
+
+          {/* Content */}
+          <div className="p-6">
+            <AnimatePresence mode="wait">
+              {isSuccess ? (
+                <motion.div
+                  key="success-content"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center py-4"
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', delay: 0.3 }}
+                    className="relative inline-block"
+                  >
+                    <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle2 className="w-10 h-10 text-green-600" />
+                    </div>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.5 }}
+                      className="absolute -top-2 -right-2"
+                    >
+                      <Sparkles className="w-6 h-6 text-yellow-500" />
+                    </motion.div>
+                  </motion.div>
+
+                  <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+                    You're All Set!
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    Your email has been verified. Redirecting to your dashboard...
+                  </p>
+
+                  <div className="flex items-center justify-center gap-2 text-green-600">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span className="text-sm">Redirecting...</span>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="verify-content"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  {/* Email display */}
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-6 text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      We sent a code to
+                    </p>
+                    <p className="font-medium text-gray-800 dark:text-white">
+                      {email}
+                    </p>
+                  </div>
+
+                  {/* Error message */}
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 mb-4 flex items-center gap-2 text-red-700 dark:text-red-400"
+                    >
+                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                      <p className="text-sm">{error}</p>
+                    </motion.div>
+                  )}
+
+                  {/* OTP input */}
+                  <div className="flex justify-center gap-2 mb-6">
+                    {otp.map((digit, index) => (
+                      <motion.input
+                        key={index}
+                        ref={(el) => { inputRefs.current[index] = el; }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleChange(index, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(index, e)}
+                        onPaste={index === 0 ? handlePaste : undefined}
+                        disabled={isVerifying}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className={`w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 transition-all
+                          ${digit ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'}
+                          focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none
+                          disabled:opacity-50 disabled:cursor-not-allowed
+                          text-gray-900 dark:text-white
+                        `}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Verify button */}
+                  <button
+                    onClick={() => handleVerify()}
+                    disabled={isVerifying || otp.some((d) => d === '')}
+                    className="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg font-medium hover:from-green-700 hover:to-green-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isVerifying ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-5 h-5" />
+                        Verify Email
+                      </>
+                    )}
+                  </button>
+
+                  {/* Resend code */}
+                  <div className="mt-6 text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      Didn't receive the code?
+                    </p>
+                    <button
+                      onClick={handleResend}
+                      disabled={resendCooldown > 0 || isResending}
+                      className={`inline-flex items-center gap-2 text-sm font-medium transition-colors
+                        ${resendCooldown > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-green-600 hover:text-green-700'}
+                      `}
+                    >
+                      <RefreshCw className={`w-4 h-4 ${isResending ? 'animate-spin' : ''}`} />
+                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
+                    </button>
+                  </div>
+
+                  {/* Tips */}
+                  <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                      <strong>Don't see the email?</strong> Check your spam/junk folder. Government email servers may filter external messages.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+          © {new Date().getFullYear()} OHCS E-Library. Office of the Head of Civil Service, Ghana.
+        </p>
+      </motion.div>
     </div>
   );
 }

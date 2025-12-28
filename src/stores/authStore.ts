@@ -13,11 +13,20 @@ interface TwoFAState {
   email: string | null;
 }
 
+interface PendingVerification {
+  email: string | null;
+  userId: string | null;
+}
+
 interface AuthActions {
   login: (credentials: LoginCredentials) => Promise<{ requires2FA: boolean }>;
   verify2FA: (code: string) => Promise<void>;
   cancel2FA: () => void;
-  register: (data: RegisterData) => Promise<void>;
+  register: (data: RegisterData) => Promise<{ requiresVerification: boolean; email?: string }>;
+  verifyEmail: (email: string, code: string) => Promise<void>;
+  resendVerification: (email: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<{ resetCode: string; email: string; emailSent: boolean }>;
+  resetPassword: (email: string, code: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshTokens: () => Promise<void>;
   initializeAuth: () => void;
@@ -25,10 +34,12 @@ interface AuthActions {
   updateUser: (updates: Partial<User>) => void;
   hasPermission: (permission: string) => boolean;
   hasRole: (roles: string[]) => boolean;
+  clearPendingVerification: () => void;
 }
 
 interface AuthStoreState extends AuthState {
   twoFA: TwoFAState;
+  pendingVerification: PendingVerification;
 }
 
 type AuthStore = AuthStoreState & AuthActions;
@@ -91,6 +102,10 @@ export const useAuthStore = create<AuthStore>()(
         requires2FA: false,
         tempToken: null,
         email: null,
+      },
+      pendingVerification: {
+        email: null,
+        userId: null,
       },
 
       // Actions
@@ -275,6 +290,17 @@ export const useAuthStore = create<AuthStore>()(
             throw new Error(result.message || result.error || 'Registration failed');
           }
 
+          // If verification is required
+          if (result.requiresVerification) {
+            set({
+              pendingVerification: {
+                email: result.email || data.email.toLowerCase(),
+                userId: result.userId || null,
+              },
+            });
+            return { requiresVerification: true, email: result.email || data.email.toLowerCase() };
+          }
+
           // If auto-login is enabled (returns tokens)
           if (result.accessToken && result.user) {
             const user: User = {
@@ -299,6 +325,59 @@ export const useAuthStore = create<AuthStore>()(
               isAuthenticated: true,
               isLoading: false,
               permissions,
+              pendingVerification: { email: null, userId: null },
+            });
+
+            localStorage.setItem('auth_token', result.accessToken);
+            localStorage.setItem('refresh_token', result.refreshToken);
+            localStorage.setItem('auth_user', JSON.stringify(user));
+          }
+
+          return { requiresVerification: false };
+        } catch (error) {
+          throw error;
+        }
+      },
+
+      verifyEmail: async (email: string, code: string) => {
+        try {
+          const response = await fetch(`${API_BASE}/auth/verify-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email.toLowerCase(), code }),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.message || result.error || 'Verification failed');
+          }
+
+          // Auto-login after verification
+          if (result.accessToken && result.user) {
+            const user: User = {
+              id: result.user.id,
+              email: result.user.email,
+              firstName: result.user.firstName || '',
+              lastName: result.user.lastName || '',
+              displayName: result.user.displayName || '',
+              role: result.user.role || 'civil_servant',
+              status: 'active',
+              emailVerified: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+
+            const permissions = rolePermissions[user.role] || rolePermissions.user;
+
+            set({
+              user,
+              token: result.accessToken,
+              refreshToken: result.refreshToken,
+              isAuthenticated: true,
+              isLoading: false,
+              permissions,
+              pendingVerification: { email: null, userId: null },
             });
 
             localStorage.setItem('auth_token', result.accessToken);
@@ -308,6 +387,75 @@ export const useAuthStore = create<AuthStore>()(
         } catch (error) {
           throw error;
         }
+      },
+
+      resendVerification: async (email: string) => {
+        try {
+          const response = await fetch(`${API_BASE}/auth/resend-verification`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email.toLowerCase() }),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.message || result.error || 'Failed to resend verification');
+          }
+        } catch (error) {
+          throw error;
+        }
+      },
+
+      forgotPassword: async (email: string) => {
+        try {
+          const response = await fetch(`${API_BASE}/auth/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email.toLowerCase() }),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.message || result.error || 'Failed to send reset email');
+          }
+
+          // Return the reset code for on-screen display
+          return {
+            resetCode: result.resetCode,
+            email: result.email,
+            emailSent: result.emailSent,
+          };
+        } catch (error) {
+          throw error;
+        }
+      },
+
+      resetPassword: async (email: string, code: string, password: string) => {
+        try {
+          const response = await fetch(`${API_BASE}/auth/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: email.toLowerCase(),
+              code,
+              password,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.message || result.error || 'Password reset failed');
+          }
+        } catch (error) {
+          throw error;
+        }
+      },
+
+      clearPendingVerification: () => {
+        set({ pendingVerification: { email: null, userId: null } });
       },
 
       logout: async () => {

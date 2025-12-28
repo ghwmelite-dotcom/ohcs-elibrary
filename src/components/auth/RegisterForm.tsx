@@ -59,12 +59,19 @@ export function RegisterForm() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       setServerError(null);
-      await registerUser(data);
-      toast.success(
-        'Registration successful!',
-        'Please check your email to verify your account.'
-      );
-      navigate('/verify-email', { state: { email: data.email } });
+      const result = await registerUser(data);
+
+      if (result.requiresVerification) {
+        toast.success(
+          'Registration successful!',
+          'Please check your email for a verification code.'
+        );
+        navigate('/verify-email');
+      } else {
+        // Auto-logged in, go to dashboard
+        toast.success('Welcome!', 'Your account has been created.');
+        navigate('/dashboard');
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Registration failed';
       setServerError(message);
