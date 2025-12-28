@@ -179,74 +179,72 @@ export function SourceFilter({
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.03 }}
-              className="group relative"
+              className={cn(
+                'group relative flex items-center gap-3 px-3 py-2 rounded-lg transition-colors cursor-pointer',
+                isSelected
+                  ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                  : 'hover:bg-surface-50 dark:hover:bg-surface-700 text-surface-700 dark:text-surface-300'
+              )}
+              onClick={() => onSourceToggle(source.id)}
             >
-              <button
-                onClick={() => onSourceToggle(source.id)}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left',
-                  isSelected
-                    ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                    : 'hover:bg-surface-50 dark:hover:bg-surface-700 text-surface-700 dark:text-surface-300'
-                )}
-              >
-                {source.icon ? (
-                  <img
-                    src={source.icon}
-                    alt={source.name}
-                    className="w-5 h-5 rounded"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                ) : (
-                  <div className="w-5 h-5 bg-surface-200 dark:bg-surface-600 rounded flex items-center justify-center text-xs font-bold">
-                    {source.name.charAt(0)}
-                  </div>
-                )}
-                <span className="flex-1 font-medium truncate">{source.name}</span>
-
-                {/* Hover action buttons */}
-                <div className="hidden group-hover:flex items-center gap-1 absolute right-2">
-                  {source.url && (
-                    <button
-                      onClick={(e) => handleViewSource(e, source.url)}
-                      className="p-1.5 rounded-md bg-surface-100 dark:bg-surface-600 hover:bg-surface-200 dark:hover:bg-surface-500 text-surface-600 dark:text-surface-300 transition-colors"
-                      title={`Visit ${source.name}`}
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  {onSourceRefresh && (
-                    <button
-                      onClick={(e) => handleRefreshSource(e, source.id)}
-                      disabled={isSourceRefreshing}
-                      className={cn(
-                        'p-1.5 rounded-md bg-surface-100 dark:bg-surface-600 hover:bg-surface-200 dark:hover:bg-surface-500 text-surface-600 dark:text-surface-300 transition-colors',
-                        isSourceRefreshing && 'opacity-50 cursor-not-allowed'
-                      )}
-                      title={`Refresh ${source.name}`}
-                    >
-                      <RefreshCw className={cn('w-3.5 h-3.5', isSourceRefreshing && 'animate-spin')} />
-                    </button>
-                  )}
+              {source.icon ? (
+                <img
+                  src={source.icon}
+                  alt={source.name}
+                  className="w-5 h-5 rounded flex-shrink-0"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className="w-5 h-5 bg-surface-200 dark:bg-surface-600 rounded flex items-center justify-center text-xs font-bold flex-shrink-0">
+                  {source.name.charAt(0)}
                 </div>
+              )}
+              <span className="flex-1 font-medium truncate">{source.name}</span>
 
-                {/* Count badge - hidden on hover to make room for action buttons */}
-                {source.count !== undefined && (
-                  <span className={cn(
-                    'text-xs px-2 py-0.5 rounded-full group-hover:hidden',
-                    isSelected
-                      ? 'bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300'
-                      : 'bg-surface-100 dark:bg-surface-700 text-surface-500'
-                  )}>
-                    {source.count}
-                  </span>
+              {/* Count badge - hidden on hover to make room for action buttons */}
+              {source.count !== undefined && (
+                <span className={cn(
+                  'text-xs px-2 py-0.5 rounded-full group-hover:hidden',
+                  isSelected
+                    ? 'bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300'
+                    : 'bg-surface-100 dark:bg-surface-700 text-surface-500'
+                )}>
+                  {source.count}
+                </span>
+              )}
+              {isSelected && (
+                <CheckCircle2 className="w-4 h-4 text-primary-600 dark:text-primary-400 group-hover:hidden flex-shrink-0" />
+              )}
+
+              {/* Hover action buttons */}
+              <div className="hidden group-hover:flex items-center gap-1 flex-shrink-0">
+                {source.url && (
+                  <button
+                    type="button"
+                    onClick={(e) => handleViewSource(e, source.url)}
+                    className="p-1.5 rounded-md bg-primary-100 dark:bg-primary-800 hover:bg-primary-200 dark:hover:bg-primary-700 text-primary-700 dark:text-primary-300 transition-colors"
+                    title={`Visit ${source.name}`}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
                 )}
-                {isSelected && (
-                  <CheckCircle2 className="w-4 h-4 text-primary-600 dark:text-primary-400 group-hover:hidden" />
+                {onSourceRefresh && (
+                  <button
+                    type="button"
+                    onClick={(e) => handleRefreshSource(e, source.id)}
+                    disabled={isSourceRefreshing}
+                    className={cn(
+                      'p-1.5 rounded-md bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 text-secondary-700 dark:text-secondary-300 transition-colors',
+                      isSourceRefreshing && 'opacity-50 cursor-not-allowed'
+                    )}
+                    title={`Refresh ${source.name}`}
+                  >
+                    <RefreshCw className={cn('w-3.5 h-3.5', isSourceRefreshing && 'animate-spin')} />
+                  </button>
                 )}
-              </button>
+              </div>
             </motion.div>
           );
         })}
