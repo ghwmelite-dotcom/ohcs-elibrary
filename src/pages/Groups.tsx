@@ -1,10 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, TrendingUp, Star, UserPlus, X, ChevronRight, Sparkles, AlertCircle } from 'lucide-react';
+import {
+  Users,
+  TrendingUp,
+  Star,
+  UserPlus,
+  X,
+  ChevronRight,
+  ChevronLeft,
+  Sparkles,
+  AlertCircle,
+  PanelRightOpen,
+  Layers,
+} from 'lucide-react';
 import { useGroupsStore } from '@/stores/groupsStore';
 import { useAuthStore } from '@/stores/authStore';
 import { GroupList, GroupCardCompact, CreateGroupModal } from '@/components/groups';
 import { Tabs } from '@/components/shared/Tabs';
+import { cn } from '@/utils/cn';
 
 export default function Groups() {
   const {
@@ -27,6 +40,35 @@ export default function Groups() {
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+
+  // Collapsible sidebar state with localStorage persistence
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('groups-sidebar-collapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  // Persist collapse state
+  useEffect(() => {
+    localStorage.setItem('groups-sidebar-collapsed', JSON.stringify(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
+
+  // Toggle function with keyboard shortcut support
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((prev: boolean) => !prev);
+  }, []);
+
+  // Keyboard shortcut: Ctrl+. to toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === '.') {
+        e.preventDefault();
+        toggleSidebar();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleSidebar]);
 
   useEffect(() => {
     fetchGroups();
@@ -282,9 +324,9 @@ export default function Groups() {
       </div>
 
       {/* Main Content */}
-      <div className="grid lg:grid-cols-4 gap-6">
+      <div className="flex gap-6">
         {/* Groups List */}
-        <div className="lg:col-span-3">
+        <div className="flex-1 min-w-0">
           <GroupList
             groups={getFilteredGroups()}
             isLoading={isLoading}
@@ -294,10 +336,121 @@ export default function Groups() {
           />
         </div>
 
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block space-y-6">
-          <SidebarContent />
-        </div>
+        {/* Collapsed Sidebar Indicator */}
+        <AnimatePresence>
+          {isSidebarCollapsed && (
+            <motion.div
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 56 }}
+              exit={{ opacity: 0, width: 0 }}
+              className="hidden lg:flex flex-col items-center py-4 px-2 bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1"
+            >
+              <motion.button
+                onClick={toggleSidebar}
+                className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-400 mb-4"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                title="Show sidebar (Ctrl+.)"
+              >
+                <PanelRightOpen className="w-5 h-5" />
+              </motion.button>
+
+              {/* Mini indicators */}
+              <div className="flex-1 flex flex-col gap-3 items-center">
+                <motion.div
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.05 }}
+                  className="flex flex-col items-center gap-1"
+                  title={`${stats.totalGroups} Groups`}
+                >
+                  <div className="w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                  </div>
+                  <span className="text-xs font-bold text-surface-600 dark:text-surface-400">
+                    {stats.totalGroups}
+                  </span>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="flex flex-col items-center gap-1"
+                  title={`${categories.length} Categories`}
+                >
+                  <div className="w-10 h-10 rounded-lg bg-accent-50 dark:bg-accent-900/30 flex items-center justify-center">
+                    <Layers className="w-5 h-5 text-accent-600 dark:text-accent-400" />
+                  </div>
+                  <span className="text-xs font-bold text-surface-600 dark:text-surface-400">
+                    {categories.length}
+                  </span>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="flex flex-col items-center gap-1"
+                  title={`${stats.trending} Trending`}
+                >
+                  <div className="w-10 h-10 rounded-lg bg-success-50 dark:bg-success-900/30 flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-success-600 dark:text-success-400" />
+                  </div>
+                  <span className="text-xs font-bold text-surface-600 dark:text-surface-400">
+                    {stats.trending}
+                  </span>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Desktop Sidebar with Collapse */}
+        <motion.div
+          className="hidden lg:block relative flex-shrink-0"
+          initial={false}
+          animate={{
+            width: isSidebarCollapsed ? 0 : 280,
+            opacity: isSidebarCollapsed ? 0 : 1,
+          }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
+          {/* Collapse Toggle Button */}
+          <motion.button
+            onClick={toggleSidebar}
+            className={cn(
+              'absolute top-4 z-10 flex items-center justify-center',
+              'w-6 h-12 rounded-l-lg shadow-lg transition-all duration-200',
+              'bg-white dark:bg-surface-700 border border-r-0 border-surface-200 dark:border-surface-600',
+              'hover:bg-surface-50 dark:hover:bg-surface-600 hover:w-7',
+              'text-surface-500 hover:text-primary-600 dark:hover:text-primary-400',
+              '-left-3'
+            )}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title={isSidebarCollapsed ? 'Show sidebar (Ctrl+.)' : 'Hide sidebar (Ctrl+.)'}
+          >
+            <motion.div
+              animate={{ rotate: isSidebarCollapsed ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </motion.div>
+          </motion.button>
+
+          <motion.div
+            className="w-[280px] space-y-6 overflow-hidden"
+            initial={false}
+            animate={{
+              opacity: isSidebarCollapsed ? 0 : 1,
+              x: isSidebarCollapsed ? 20 : 0,
+            }}
+            transition={{ duration: 0.2 }}
+          >
+            <SidebarContent />
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* Create Group Modal */}
