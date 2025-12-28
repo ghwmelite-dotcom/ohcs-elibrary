@@ -2661,31 +2661,31 @@ export default function Landing() {
             </motion.button>
           </motion.div>
 
-          {/* Trust indicator */}
-          <p
-            className={cn('mt-8 text-sm flex items-center justify-center gap-2', isDark ? theme.textGhost : 'text-slate-500')}
-          >
-            <Shield className="w-4 h-4" />
-            Exclusively for .gov.gh email holders
-          </p>
-        </div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-        >
+          {/* Trust indicator & Scroll prompt */}
           <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className={cn('flex flex-col items-center gap-2', theme.textGhost)}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.7 }}
+            className="mt-16 sm:mt-20 flex flex-col items-center gap-6"
           >
-            <span className="text-xs uppercase tracking-widest">Discover AI Features</span>
-            <ChevronDown className="w-5 h-5" />
+            <p
+              className={cn('text-sm flex items-center justify-center gap-2', isDark ? theme.textGhost : 'text-slate-500')}
+            >
+              <Shield className="w-4 h-4" />
+              Exclusively for .gov.gh email holders
+            </p>
+
+            {/* Scroll indicator */}
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className={cn('flex flex-col items-center gap-2', isDark ? theme.textGhost : 'text-slate-400')}
+            >
+              <span className="text-xs uppercase tracking-widest">Discover AI Features</span>
+              <ChevronDown className="w-5 h-5" />
+            </motion.div>
           </motion.div>
-        </motion.div>
+        </div>
       </section>
 
       {/* Stats Section */}
