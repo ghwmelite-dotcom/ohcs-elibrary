@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { motion, useMotionValue, useTransform, animate, PanInfo } from 'framer-motion';
 import { Bookmark, Share2, ExternalLink, X } from 'lucide-react';
 import { cn } from '@/utils/cn';
@@ -22,6 +22,7 @@ interface SwipeableCardProps {
 
 const SWIPE_THRESHOLD = 100;
 const SWIPE_VELOCITY_THRESHOLD = 500;
+const CLICK_THRESHOLD = 5; // Pixels moved before considered a drag
 
 export function SwipeableCard({
   children,
@@ -40,8 +41,10 @@ export function SwipeableCard({
   disabled = false,
 }: SwipeableCardProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [hasDragged, setHasDragged] = useState(false);
   const x = useMotionValue(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const startPosRef = useRef({ x: 0, y: 0 });
 
   // Background opacity based on swipe distance
   const leftOpacity = useTransform(x, [-SWIPE_THRESHOLD, -20], [1, 0]);
@@ -51,10 +54,33 @@ export function SwipeableCard({
   const leftScale = useTransform(x, [-SWIPE_THRESHOLD * 1.5, -SWIPE_THRESHOLD], [1.2, 1]);
   const rightScale = useTransform(x, [SWIPE_THRESHOLD, SWIPE_THRESHOLD * 1.5], [1, 1.2]);
 
+  const handleDragStart = useCallback((_: any, info: PanInfo) => {
+    startPosRef.current = { x: info.point.x, y: info.point.y };
+    setIsDragging(true);
+    setHasDragged(false);
+  }, []);
+
+  const handleDrag = useCallback((_: any, info: PanInfo) => {
+    const deltaX = Math.abs(info.point.x - startPosRef.current.x);
+    const deltaY = Math.abs(info.point.y - startPosRef.current.y);
+
+    // Only mark as dragged if moved significantly horizontally
+    if (deltaX > CLICK_THRESHOLD && deltaX > deltaY) {
+      setHasDragged(true);
+    }
+  }, []);
+
   const handleDragEnd = async (_: any, info: PanInfo) => {
     setIsDragging(false);
     const xValue = x.get();
     const velocity = info.velocity.x;
+
+    // Only process swipe if user actually dragged
+    if (!hasDragged) {
+      animate(x, 0, { duration: 0.1 });
+      setHasDragged(false);
+      return;
+    }
 
     // Check if swipe was strong enough (either distance or velocity)
     const isLeftSwipe = xValue < -SWIPE_THRESHOLD || (xValue < -50 && velocity < -SWIPE_VELOCITY_THRESHOLD);
@@ -73,6 +99,8 @@ export function SwipeableCard({
       // Snap back
       animate(x, 0, { duration: 0.3, ease: 'easeOut' });
     }
+
+    setHasDragged(false);
   };
 
   if (disabled) {
@@ -120,12 +148,14 @@ export function SwipeableCard({
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.7}
-        onDragStart={() => setIsDragging(true)}
+        dragDirectionLock
+        onDragStart={handleDragStart}
+        onDrag={handleDrag}
         onDragEnd={handleDragEnd}
         style={{ x }}
         className={cn(
-          'relative bg-white dark:bg-surface-800 rounded-xl',
-          isDragging && 'cursor-grabbing'
+          'relative bg-white dark:bg-surface-800 rounded-xl touch-pan-y',
+          isDragging && hasDragged && 'cursor-grabbing'
         )}
       >
         {children}

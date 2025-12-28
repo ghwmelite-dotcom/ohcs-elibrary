@@ -77,16 +77,46 @@ function useLiveTimestamp(date: string) {
   return timestamp;
 }
 
+// Category-based fallback images using high-quality stock photos
+const categoryFallbackImages: Record<string, string> = {
+  // News categories
+  'Government': 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&q=80',
+  'Economy': 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80',
+  'Health': 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=800&q=80',
+  'Education': 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
+  'Technology': 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80',
+  'International': 'https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?w=800&q=80',
+  'Sports': 'https://images.unsplash.com/photo-1461896836934-28e9e0eb0a3f?w=800&q=80',
+  'Entertainment': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80',
+  // Policy categories
+  'policy': 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&q=80',
+  'training': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
+  'technology': 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80',
+  'hr': 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&q=80',
+  'announcements': 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&q=80',
+  'events': 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
+  // Default
+  'general': 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80',
+  'default': 'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=800&q=80',
+};
+
+// Get fallback image based on category
+function getFallbackImage(category?: string): string {
+  if (!category) return categoryFallbackImages['default'];
+  const normalizedCategory = category.toLowerCase();
+  return categoryFallbackImages[category] ||
+         categoryFallbackImages[normalizedCategory] ||
+         categoryFallbackImages['default'];
+}
+
 // Image with blur-up loading
-function ArticleImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
+function ArticleImage({ src, alt, className, category }: { src: string; alt: string; className?: string; category?: string }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const fallbackSrc = getFallbackImage(category);
 
-  if (error || !src) {
-    return (
-      <div className={cn('bg-gradient-to-br from-primary-600 to-secondary-600', className)} />
-    );
-  }
+  // Use fallback if no src provided
+  const imageSrc = error || !src ? fallbackSrc : src;
 
   return (
     <div className={cn('relative overflow-hidden bg-surface-100 dark:bg-surface-700', className)}>
@@ -95,17 +125,26 @@ function ArticleImage({ src, alt, className }: { src: string; alt: string; class
         <div className="absolute inset-0 bg-gradient-to-br from-surface-200 to-surface-300 dark:from-surface-600 dark:to-surface-700 animate-pulse" />
       )}
       <img
-        src={src}
+        src={imageSrc}
         alt={alt}
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}
-        onError={() => setError(true)}
+        onError={() => {
+          if (!error) {
+            setError(true);
+            setLoaded(false);
+          }
+        }}
         className={cn(
           'w-full h-full object-cover transition-all duration-500',
           loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
         )}
       />
+      {/* Subtle overlay for better text readability */}
+      {(error || !src) && (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+      )}
     </div>
   );
 }
@@ -150,6 +189,7 @@ export function NewsCard({
           src={article.imageUrl || ''}
           alt={article.title}
           className="aspect-[16/9] md:aspect-[21/9]"
+          category={article.category}
         />
 
         {/* Overlay */}
@@ -243,11 +283,12 @@ export function NewsCard({
         animate={{ opacity: 1, x: 0 }}
         className="flex gap-3 p-3 hover:bg-surface-50 dark:hover:bg-surface-700/50 rounded-lg transition-colors group"
       >
-        {article.imageUrl && (
+        {(article.imageUrl || true) && (
           <ArticleImage
-            src={article.imageUrl}
+            src={article.imageUrl || ''}
             alt={article.title}
             className="w-20 h-20 flex-shrink-0 rounded-lg"
+            category={article.category}
           />
         )}
 
@@ -289,6 +330,7 @@ export function NewsCard({
           src={article.imageUrl || ''}
           alt={article.title}
           className="w-full h-full transition-transform duration-300 group-hover:scale-105"
+          category={article.category}
         />
       </Link>
 
