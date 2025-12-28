@@ -947,41 +947,6 @@ researchRoutes.post('/projects/:id/comments', requireAuth, async (c: AppContext)
 });
 
 // ============================================================================
-// Templates
-// ============================================================================
-
-// GET /research/templates - List research templates
-researchRoutes.get('/templates', async (c: AppContext) => {
-  try {
-    const { DB } = c.env;
-
-    const { results } = await DB.prepare(`
-      SELECT * FROM research_templates
-      ORDER BY is_official DESC, usage_count DESC, name ASC
-    `).all();
-
-    const templates = results.map((row: any) => ({
-      id: row.id,
-      name: row.name,
-      description: row.description,
-      category: row.category,
-      methodology: row.methodology,
-      defaultObjectives: row.default_objectives ? JSON.parse(row.default_objectives) : [],
-      suggestedPhases: row.suggested_phases ? JSON.parse(row.suggested_phases) : [],
-      guidelineUrl: row.guideline_url,
-      isOfficial: !!row.is_official,
-      usageCount: row.usage_count,
-      createdAt: row.created_at
-    }));
-
-    return c.json({ items: templates, total: templates.length });
-  } catch (error) {
-    console.error('Error listing templates:', error);
-    return c.json({ error: 'Failed to list templates' }, 500);
-  }
-});
-
-// ============================================================================
 // Activity & Dashboard
 // ============================================================================
 
