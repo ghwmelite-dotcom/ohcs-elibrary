@@ -1,9 +1,6 @@
--- Migration 007: Add counselor role and assignments table
+-- Migration 007: Add counselor assignments table
 -- This migration adds support for counselor management in the wellness system
-
--- Add counselor role (id=9)
-INSERT OR IGNORE INTO roles (id, name, description)
-VALUES (9, 'counselor', 'Wellness counselor with patient report access');
+-- Note: The 'counselor' role is stored as TEXT in users.role column
 
 -- Counselor assignments table - links users with counselor role to wellness system
 CREATE TABLE IF NOT EXISTS counselor_assignments (
@@ -27,7 +24,3 @@ CREATE TABLE IF NOT EXISTS counselor_assignments (
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_counselor_assignments_counselorId ON counselor_assignments(counselorId);
 CREATE INDEX IF NOT EXISTS idx_counselor_assignments_status ON counselor_assignments(status);
-
--- Update counselor_escalations to support assigned counselor tracking
--- Add column for counselor notes on escalations if not exists
--- Note: SQLite doesn't support ADD COLUMN IF NOT EXISTS, so we check with a try
