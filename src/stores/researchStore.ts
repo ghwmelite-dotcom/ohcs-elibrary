@@ -164,6 +164,21 @@ interface ResearchActions {
   fetchLiterature: (projectId: string) => Promise<void>;
   addLiterature: (projectId: string, data: AddLiteratureData) => Promise<void>;
   removeLiterature: (projectId: string, literatureId: string) => Promise<void>;
+  summarizeLiterature: (literatureId: string) => Promise<string>;
+
+  // AI Insights
+  fetchInsights: (projectId: string) => Promise<void>;
+  generateInsights: (projectId: string) => Promise<ResearchInsight[]>;
+  deleteInsight: (projectId: string, insightId: string) => Promise<void>;
+
+  // AI Briefs
+  fetchBriefs: (projectId: string) => Promise<void>;
+  generateBrief: (projectId: string, briefType?: string, audience?: string) => Promise<ResearchBrief>;
+  updateBrief: (projectId: string, briefId: string, data: Partial<ResearchBrief>) => Promise<void>;
+  deleteBrief: (projectId: string, briefId: string) => Promise<void>;
+
+  // AI Analysis
+  analyzeText: (text: string, analysisType?: string) => Promise<string>;
 
   // Comments
   fetchComments: (projectId: string) => Promise<void>;
@@ -504,6 +519,178 @@ export const useResearchStore = create<ResearchStore>()(
           }));
         } catch (error) {
           console.error('Failed to remove literature:', error);
+          throw error;
+        }
+      },
+
+      summarizeLiterature: async (literatureId: string) => {
+        try {
+          const response = await authFetch(
+            `${API_BASE}/research/literature/${literatureId}/summarize`,
+            { method: 'POST' }
+          );
+
+          if (!response.ok) throw new Error('Failed to summarize literature');
+
+          const data = await response.json();
+          return data.summary;
+        } catch (error) {
+          console.error('Failed to summarize literature:', error);
+          throw error;
+        }
+      },
+
+      // AI Insights
+      fetchInsights: async (projectId: string) => {
+        set({ insightsLoading: true });
+        try {
+          const response = await authFetch(`${API_BASE}/research/projects/${projectId}/insights`);
+          if (!response.ok) throw new Error('Failed to fetch insights');
+
+          const data = await response.json();
+          set({ insights: data.items || [], insightsLoading: false });
+        } catch (error) {
+          console.error('Failed to fetch insights:', error);
+          set({ insightsLoading: false });
+        }
+      },
+
+      generateInsights: async (projectId: string) => {
+        set({ insightsLoading: true });
+        try {
+          const response = await authFetch(
+            `${API_BASE}/research/projects/${projectId}/generate-insights`,
+            { method: 'POST' }
+          );
+
+          if (!response.ok) throw new Error('Failed to generate insights');
+
+          const data = await response.json();
+
+          // Refresh insights list
+          await get().fetchInsights(projectId);
+
+          return data.insights;
+        } catch (error) {
+          console.error('Failed to generate insights:', error);
+          set({ insightsLoading: false });
+          throw error;
+        }
+      },
+
+      deleteInsight: async (projectId: string, insightId: string) => {
+        try {
+          const response = await authFetch(
+            `${API_BASE}/research/projects/${projectId}/insights/${insightId}`,
+            { method: 'DELETE' }
+          );
+
+          if (!response.ok) throw new Error('Failed to delete insight');
+
+          // Update local state
+          set((state) => ({
+            insights: state.insights.filter((i) => i.id !== insightId),
+          }));
+        } catch (error) {
+          console.error('Failed to delete insight:', error);
+          throw error;
+        }
+      },
+
+      // AI Briefs
+      fetchBriefs: async (projectId: string) => {
+        set({ briefsLoading: true });
+        try {
+          const response = await authFetch(`${API_BASE}/research/projects/${projectId}/briefs`);
+          if (!response.ok) throw new Error('Failed to fetch briefs');
+
+          const data = await response.json();
+          set({ briefs: data.items || [], briefsLoading: false });
+        } catch (error) {
+          console.error('Failed to fetch briefs:', error);
+          set({ briefsLoading: false });
+        }
+      },
+
+      generateBrief: async (projectId: string, briefType = 'policy', audience = 'policymakers') => {
+        set({ briefsLoading: true });
+        try {
+          const response = await authFetch(
+            `${API_BASE}/research/projects/${projectId}/briefs`,
+            {
+              method: 'POST',
+              body: JSON.stringify({ briefType, audience }),
+            }
+          );
+
+          if (!response.ok) throw new Error('Failed to generate brief');
+
+          const data = await response.json();
+
+          // Refresh briefs list
+          await get().fetchBriefs(projectId);
+
+          return data as ResearchBrief;
+        } catch (error) {
+          console.error('Failed to generate brief:', error);
+          set({ briefsLoading: false });
+          throw error;
+        }
+      },
+
+      updateBrief: async (projectId: string, briefId: string, data: Partial<ResearchBrief>) => {
+        try {
+          const response = await authFetch(
+            `${API_BASE}/research/projects/${projectId}/briefs/${briefId}`,
+            {
+              method: 'PUT',
+              body: JSON.stringify(data),
+            }
+          );
+
+          if (!response.ok) throw new Error('Failed to update brief');
+
+          // Refresh briefs list
+          await get().fetchBriefs(projectId);
+        } catch (error) {
+          console.error('Failed to update brief:', error);
+          throw error;
+        }
+      },
+
+      deleteBrief: async (projectId: string, briefId: string) => {
+        try {
+          const response = await authFetch(
+            `${API_BASE}/research/projects/${projectId}/briefs/${briefId}`,
+            { method: 'DELETE' }
+          );
+
+          if (!response.ok) throw new Error('Failed to delete brief');
+
+          // Update local state
+          set((state) => ({
+            briefs: state.briefs.filter((b) => b.id !== briefId),
+          }));
+        } catch (error) {
+          console.error('Failed to delete brief:', error);
+          throw error;
+        }
+      },
+
+      // AI Analysis
+      analyzeText: async (text: string, analysisType = 'general') => {
+        try {
+          const response = await authFetch(`${API_BASE}/research/analyze-text`, {
+            method: 'POST',
+            body: JSON.stringify({ text, analysisType }),
+          });
+
+          if (!response.ok) throw new Error('Failed to analyze text');
+
+          const data = await response.json();
+          return data.analysis;
+        } catch (error) {
+          console.error('Failed to analyze text:', error);
           throw error;
         }
       },

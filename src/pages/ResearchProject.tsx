@@ -25,6 +25,13 @@ import {
   Share2,
   Download,
   Sparkles,
+  Loader2,
+  Wand2,
+  Brain,
+  X,
+  Eye,
+  Copy,
+  Check,
 } from 'lucide-react';
 import {
   useResearchStore,
@@ -33,11 +40,11 @@ import {
   RESEARCH_PHASES,
   RESEARCH_METHODOLOGIES,
 } from '@/stores/researchStore';
-import { PhaseProgress } from '@/components/research';
+import { PhaseProgress, KofiChat } from '@/components/research';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
 
-type TabType = 'overview' | 'literature' | 'team' | 'activity' | 'comments';
+type TabType = 'overview' | 'literature' | 'insights' | 'briefs' | 'team' | 'activity' | 'comments';
 
 export default function ResearchProject() {
   const { id } = useParams<{ id: string }>();
@@ -52,6 +59,17 @@ export default function ResearchProject() {
     literature,
     literatureLoading,
     fetchLiterature,
+    summarizeLiterature,
+    insights,
+    insightsLoading,
+    fetchInsights,
+    generateInsights,
+    deleteInsight,
+    briefs,
+    briefsLoading,
+    fetchBriefs,
+    generateBrief,
+    deleteBrief,
     comments,
     commentsLoading,
     fetchComments,
@@ -66,6 +84,11 @@ export default function ResearchProject() {
   const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
+  const [isGeneratingBrief, setIsGeneratingBrief] = useState(false);
+  const [summarizingLitId, setSummarizingLitId] = useState<string | null>(null);
+  const [selectedBrief, setSelectedBrief] = useState<string | null>(null);
+  const [copiedBriefId, setCopiedBriefId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -77,6 +100,10 @@ export default function ResearchProject() {
     if (id && currentProject) {
       if (activeTab === 'literature') {
         fetchLiterature(id);
+      } else if (activeTab === 'insights') {
+        fetchInsights(id);
+      } else if (activeTab === 'briefs') {
+        fetchBriefs(id);
       } else if (activeTab === 'comments') {
         fetchComments(id);
       } else if (activeTab === 'activity') {
@@ -107,6 +134,53 @@ export default function ResearchProject() {
       navigate('/research-lab');
     } catch (error) {
       console.error('Failed to delete project:', error);
+    }
+  };
+
+  const handleGenerateInsights = async () => {
+    if (!id) return;
+    setIsGeneratingInsights(true);
+    try {
+      await generateInsights(id);
+    } catch (error) {
+      console.error('Failed to generate insights:', error);
+    } finally {
+      setIsGeneratingInsights(false);
+    }
+  };
+
+  const handleGenerateBrief = async (briefType = 'policy', audience = 'policymakers') => {
+    if (!id) return;
+    setIsGeneratingBrief(true);
+    try {
+      await generateBrief(id, briefType, audience);
+    } catch (error) {
+      console.error('Failed to generate brief:', error);
+    } finally {
+      setIsGeneratingBrief(false);
+    }
+  };
+
+  const handleSummarizeLiterature = async (litId: string) => {
+    setSummarizingLitId(litId);
+    try {
+      await summarizeLiterature(litId);
+      // Refresh literature to show updated notes
+      if (id) await fetchLiterature(id);
+    } catch (error) {
+      console.error('Failed to summarize literature:', error);
+    } finally {
+      setSummarizingLitId(null);
+    }
+  };
+
+  const handleCopyBrief = async (briefId: string, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedBriefId(briefId);
+      setTimeout(() => setCopiedBriefId(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy brief:', error);
     }
   };
 
@@ -150,6 +224,8 @@ export default function ResearchProject() {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Target },
     { id: 'literature', label: 'Literature', icon: BookOpen, count: currentProject.literatureCount },
+    { id: 'insights', label: 'AI Insights', icon: Brain, count: currentProject.insightCount, isAI: true },
+    { id: 'briefs', label: 'Briefs', icon: FileText, count: currentProject.briefCount, isAI: true },
     { id: 'team', label: 'Team', icon: Users, count: currentProject.teamMemberCount },
     { id: 'activity', label: 'Activity', icon: Activity },
     { id: 'comments', label: 'Comments', icon: MessageSquare },
@@ -408,18 +484,31 @@ export default function ResearchProject() {
                   </div>
                 )}
 
-                {/* AI Assistant CTA */}
+                {/* AI Quick Actions */}
                 <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl p-6 text-white">
                   <div className="flex items-center gap-2 mb-3">
                     <Sparkles className="w-5 h-5" />
-                    <h3 className="font-semibold">AI Research Assistant</h3>
+                    <h3 className="font-semibold">AI Research Tools</h3>
                   </div>
                   <p className="text-primary-100 text-sm mb-4">
                     Get AI-powered insights, literature synthesis, and research brief generation.
                   </p>
-                  <button className="w-full px-4 py-2 bg-white text-primary-700 rounded-lg font-medium hover:bg-primary-50 transition-colors">
-                    Coming Soon
-                  </button>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => setActiveTab('insights')}
+                      className="w-full px-4 py-2 bg-white/10 text-white rounded-lg font-medium hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Brain className="w-4 h-4" />
+                      View AI Insights
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('briefs')}
+                      className="w-full px-4 py-2 bg-white text-primary-700 rounded-lg font-medium hover:bg-primary-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Generate Brief
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -481,7 +570,7 @@ export default function ResearchProject() {
                             </p>
                           )}
                           {lit.notes && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 whitespace-pre-wrap">
                               {lit.notes}
                             </p>
                           )}
@@ -494,17 +583,336 @@ export default function ResearchProject() {
                             )}
                           </div>
                         </div>
-                        {lit.externalUrl && (
-                          <a
-                            href={lit.externalUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 text-gray-400 hover:text-primary-500 transition-colors"
+                        <div className="flex items-center gap-1">
+                          {canEdit && (
+                            <button
+                              onClick={() => handleSummarizeLiterature(lit.id)}
+                              disabled={summarizingLitId === lit.id}
+                              className="p-2 text-gray-400 hover:text-primary-500 transition-colors disabled:opacity-50"
+                              title="AI Summarize"
+                            >
+                              {summarizingLitId === lit.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Wand2 className="w-4 h-4" />
+                              )}
+                            </button>
+                          )}
+                          {lit.externalUrl && (
+                            <a
+                              href={lit.externalUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 text-gray-400 hover:text-primary-500 transition-colors"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {activeTab === 'insights' && (
+            <motion.div
+              key="insights"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-primary-500" />
+                    AI Insights ({insights.length})
+                  </h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    AI-generated research insights and recommendations
+                  </p>
+                </div>
+                {canEdit && (
+                  <button
+                    onClick={handleGenerateInsights}
+                    disabled={isGeneratingInsights}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                  >
+                    {isGeneratingInsights ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="w-4 h-4" />
+                        Generate Insights
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {insightsLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
+                  ))}
+                </div>
+              ) : insights.length === 0 ? (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
+                  <Brain className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    No insights yet
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400 mb-4">
+                    Generate AI-powered insights to help guide your research.
+                  </p>
+                  {canEdit && (
+                    <button
+                      onClick={handleGenerateInsights}
+                      disabled={isGeneratingInsights}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                    >
+                      {isGeneratingInsights ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="w-4 h-4" />
+                          Generate First Insights
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {insights.map((insight) => (
+                    <div
+                      key={insight.id}
+                      className={cn(
+                        'bg-white dark:bg-gray-800 rounded-xl p-5 border-l-4',
+                        insight.priority === 'high' && 'border-l-red-500',
+                        insight.priority === 'medium' && 'border-l-yellow-500',
+                        insight.priority === 'low' && 'border-l-green-500',
+                        'border border-gray-200 dark:border-gray-700'
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className={cn(
+                              'px-2 py-0.5 text-xs rounded-full capitalize',
+                              insight.type === 'recommendation' && 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300',
+                              insight.type === 'finding' && 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300',
+                              insight.type === 'gap' && 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300',
+                              insight.type === 'risk' && 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300',
+                              insight.type === 'methodology' && 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300',
+                              insight.type === 'opportunity' && 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300'
+                            )}>
+                              {insight.type}
+                            </span>
+                            {insight.isAiGenerated && (
+                              <span className="text-xs text-gray-400 flex items-center gap-1">
+                                <Sparkles className="w-3 h-3" /> AI
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="font-medium text-gray-900 dark:text-white">
+                            {insight.title}
+                          </h4>
+                        </div>
+                        {canEdit && (
+                          <button
+                            onClick={() => id && deleteInsight(id, insight.id)}
+                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
                           >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
+                            <X className="w-4 h-4" />
+                          </button>
                         )}
                       </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                        {insight.content}
+                      </p>
+                      <div className="flex items-center gap-2 mt-3">
+                        <span className={cn(
+                          'text-xs px-2 py-0.5 rounded',
+                          insight.priority === 'high' && 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400',
+                          insight.priority === 'medium' && 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400',
+                          insight.priority === 'low' && 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                        )}>
+                          {insight.priority} priority
+                        </span>
+                        {insight.confidence && (
+                          <span className="text-xs text-gray-400">
+                            {Math.round(insight.confidence * 100)}% confidence
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {activeTab === 'briefs' && (
+            <motion.div
+              key="briefs"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-primary-500" />
+                    Policy Briefs ({briefs.length})
+                  </h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    AI-generated policy briefs and executive summaries
+                  </p>
+                </div>
+                {canEdit && (
+                  <button
+                    onClick={() => handleGenerateBrief('policy', 'policymakers')}
+                    disabled={isGeneratingBrief}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                  >
+                    {isGeneratingBrief ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="w-4 h-4" />
+                        Generate Brief
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {briefsLoading ? (
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
+                  ))}
+                </div>
+              ) : briefs.length === 0 ? (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
+                  <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    No briefs yet
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400 mb-4">
+                    Generate AI-powered policy briefs from your research insights.
+                  </p>
+                  {canEdit && (
+                    <button
+                      onClick={() => handleGenerateBrief('policy', 'policymakers')}
+                      disabled={isGeneratingBrief}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                    >
+                      {isGeneratingBrief ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="w-4 h-4" />
+                          Generate First Brief
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {briefs.map((brief) => (
+                    <div
+                      key={brief.id}
+                      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+                    >
+                      <div className="p-5">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-full capitalize">
+                                {brief.briefType}
+                              </span>
+                              <span className={cn(
+                                'px-2 py-0.5 text-xs rounded-full',
+                                brief.status === 'published' && 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300',
+                                brief.status === 'draft' && 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                              )}>
+                                {brief.status}
+                              </span>
+                            </div>
+                            <h4 className="font-medium text-gray-900 dark:text-white">
+                              {brief.title}
+                            </h4>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              For: {brief.audience} • Created: {new Date(brief.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setSelectedBrief(selectedBrief === brief.id ? null : brief.id)}
+                              className="p-2 text-gray-400 hover:text-primary-500 transition-colors"
+                              title="View Brief"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleCopyBrief(brief.id, brief.content)}
+                              className="p-2 text-gray-400 hover:text-primary-500 transition-colors"
+                              title="Copy to Clipboard"
+                            >
+                              {copiedBriefId === brief.id ? (
+                                <Check className="w-4 h-4 text-green-500" />
+                              ) : (
+                                <Copy className="w-4 h-4" />
+                              )}
+                            </button>
+                            {canEdit && (
+                              <button
+                                onClick={() => id && deleteBrief(id, brief.id)}
+                                className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                title="Delete Brief"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <AnimatePresence>
+                        {selectedBrief === brief.id && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-5 pt-0 border-t border-gray-100 dark:border-gray-700 mt-4">
+                              <div className="prose prose-sm dark:prose-invert max-w-none">
+                                <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-auto max-h-96">
+                                  {brief.content}
+                                </pre>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   ))}
                 </div>
@@ -863,6 +1271,19 @@ export default function ResearchProject() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Kofi AI Chat */}
+      <KofiChat
+        projectContext={{
+          id: currentProject.id,
+          title: currentProject.title,
+          researchQuestion: currentProject.researchQuestion,
+          methodology: currentProject.methodology,
+          category: currentProject.category,
+          phase: currentProject.phase,
+          objectives: currentProject.objectives,
+        }}
+      />
     </div>
   );
 }
