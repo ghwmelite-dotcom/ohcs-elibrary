@@ -55,6 +55,11 @@ const WellnessChat = lazy(() => import('@/pages/WellnessChat'));
 const WellnessResources = lazy(() => import('@/pages/WellnessResources'));
 const WellnessResource = lazy(() => import('@/pages/WellnessResource'));
 
+// Research Lab pages
+const ResearchLab = lazy(() => import('@/pages/ResearchLab'));
+const ResearchProjects = lazy(() => import('@/pages/ResearchProjects'));
+const ResearchProject = lazy(() => import('@/pages/ResearchProject'));
+
 // Admin pages
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
@@ -70,6 +75,7 @@ const AdminWellness = lazy(() => import('@/pages/admin/AdminWellness'));
 const AdminCounselors = lazy(() => import('@/pages/admin/AdminCounselors'));
 const CounselorReports = lazy(() => import('@/pages/admin/CounselorReports'));
 const AdminBroadcasts = lazy(() => import('@/pages/admin/AdminBroadcasts'));
+const AdminResearch = lazy(() => import('@/pages/admin/AdminResearch'));
 
 // Loading fallback component
 function PageLoader() {
@@ -291,6 +297,11 @@ export default function App() {
             <Route path="/wellness/resources" element={<WellnessResources />} />
             <Route path="/wellness/resources/:id" element={<WellnessResource />} />
 
+            {/* Research Lab routes */}
+            <Route path="/research-lab" element={<ResearchLab />} />
+            <Route path="/research-lab/projects" element={<ResearchProjects />} />
+            <Route path="/research-lab/projects/:id" element={<ResearchProject />} />
+
             {/* Profile routes */}
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
@@ -326,6 +337,7 @@ export default function App() {
             <Route path="/admin/wellness/reports" element={<CounselorReports />} />
             <Route path="/admin/counselors" element={<AdminCounselors />} />
             <Route path="/admin/broadcasts" element={<AdminBroadcasts />} />
+            <Route path="/admin/research" element={<AdminResearch />} />
           </Route>
 
           {/* 404 route */}

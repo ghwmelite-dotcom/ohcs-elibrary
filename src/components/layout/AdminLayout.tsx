@@ -16,6 +16,7 @@ import {
   Star,
   UserCog,
   Megaphone,
+  FlaskConical,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
@@ -28,6 +29,7 @@ const adminNavItems = [
   { path: '/admin/broadcasts', label: 'Broadcasts', icon: Megaphone },
   { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/documents', label: 'Documents', icon: FileText },
+  { path: '/admin/research', label: 'Research Lab', icon: FlaskConical },
   { path: '/admin/forum', label: 'Forum', icon: MessageSquare },
   { path: '/admin/chat', label: 'Chat', icon: MessagesSquare },
   { path: '/admin/groups', label: 'Groups', icon: Users2 },

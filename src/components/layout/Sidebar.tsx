@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  FlaskConical,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useUIStore } from '@/stores/uiStore';
@@ -36,6 +37,7 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
   { path: '/library', label: 'Library', icon: <Library className="w-5 h-5" /> },
+  { path: '/research-lab', label: 'Research Lab', icon: <FlaskConical className="w-5 h-5 text-primary-500" /> },
   { path: '/wellness', label: 'Wellness', icon: <Heart className="w-5 h-5 text-pink-500" /> },
   { path: '/forum', label: 'Forum', icon: <MessageSquare className="w-5 h-5" /> },
   { path: '/chat', label: 'Chat', icon: <MessagesSquare className="w-5 h-5" /> },

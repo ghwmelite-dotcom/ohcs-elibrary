@@ -1217,3 +1217,351 @@ export interface CounselorDashboardStats {
   resolvedThisWeek: number;
   averageCaseload: number;
 }
+
+// ============================================================================
+// Research Lab Types
+// ============================================================================
+
+export type ResearchProjectStatus = 'draft' | 'planning' | 'active' | 'review' | 'completed' | 'archived';
+
+export type ResearchPhase =
+  | 'ideation'
+  | 'literature_review'
+  | 'methodology'
+  | 'data_collection'
+  | 'analysis'
+  | 'writing'
+  | 'peer_review'
+  | 'publication';
+
+export type ResearchMethodology =
+  | 'qualitative'
+  | 'quantitative'
+  | 'mixed_methods'
+  | 'case_study'
+  | 'survey'
+  | 'experimental'
+  | 'policy_analysis'
+  | 'comparative';
+
+export type ResearchCategory =
+  | 'policy_impact'
+  | 'performance_audit'
+  | 'capacity_assessment'
+  | 'citizen_feedback'
+  | 'budget_analysis'
+  | 'digital_transformation'
+  | 'hr_management'
+  | 'service_delivery'
+  | 'governance'
+  | 'other';
+
+export type ResearchTeamRole = 'lead' | 'researcher' | 'reviewer' | 'advisor' | 'contributor';
+
+export interface ResearchProject {
+  id: UUID;
+  title: string;
+  description: string;
+  researchQuestion: string;
+  hypothesis?: string;
+  objectives: string[];
+  methodology: ResearchMethodology;
+  category: ResearchCategory;
+  status: ResearchProjectStatus;
+  phase: ResearchPhase;
+  tags: string[];
+
+  // Team
+  createdById: UUID;
+  createdBy?: User;
+  teamLeadId: UUID;
+  teamLead?: User;
+  teamMembers?: ResearchTeamMember[];
+  teamMemberCount: number;
+
+  // Progress & Dates
+  progress: number; // 0-100 percentage
+  startDate?: Timestamp;
+  targetEndDate?: Timestamp;
+  completedAt?: Timestamp;
+
+  // Literature
+  literatureCount: number;
+
+  // Insights & Briefs
+  insightCount: number;
+  briefCount: number;
+
+  // Metadata
+  isPublic: boolean;
+  mdaId?: UUID;
+  mda?: MDA;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface ResearchTeamMember {
+  id: UUID;
+  projectId: UUID;
+  userId: UUID;
+  user?: User;
+  role: ResearchTeamRole;
+  permissions: ResearchPermission[];
+  contribution?: string;
+  joinedAt: Timestamp;
+}
+
+export type ResearchPermission =
+  | 'view'
+  | 'edit'
+  | 'manage_team'
+  | 'manage_literature'
+  | 'generate_insights'
+  | 'publish';
+
+export interface ResearchLiterature {
+  id: UUID;
+  projectId: UUID;
+  documentId?: UUID;
+  document?: Document;
+
+  // External source (if not from library)
+  externalTitle?: string;
+  externalUrl?: string;
+  externalAuthors?: string;
+  externalYear?: number;
+  externalSource?: string;
+
+  // Research-specific fields
+  citationKey: string;
+  relevanceScore: number; // 0-1 AI-computed
+  notes?: string;
+  annotations?: ResearchAnnotation[];
+  tags: string[];
+
+  // User tracking
+  addedById: UUID;
+  addedBy?: User;
+  addedAt: Timestamp;
+  lastAccessedAt?: Timestamp;
+}
+
+export interface ResearchAnnotation {
+  id: UUID;
+  literatureId: UUID;
+  userId: UUID;
+  user?: User;
+  content: string;
+  pageNumber?: number;
+  highlight?: string;
+  color?: string;
+  createdAt: Timestamp;
+}
+
+export type ResearchInsightType =
+  | 'gap'
+  | 'trend'
+  | 'recommendation'
+  | 'synthesis'
+  | 'key_finding'
+  | 'contradiction'
+  | 'opportunity';
+
+export interface ResearchInsight {
+  id: UUID;
+  projectId: UUID;
+  type: ResearchInsightType;
+  title: string;
+  content: string;
+  confidence: number; // 0-1
+  sources: UUID[]; // Document/Literature IDs
+  sourceDetails?: Array<{
+    id: UUID;
+    title: string;
+    type: 'document' | 'literature';
+  }>;
+  isAIGenerated: boolean;
+  isVerified: boolean;
+  verifiedById?: UUID;
+  verifiedBy?: User;
+  verifiedAt?: Timestamp;
+  createdAt: Timestamp;
+}
+
+export type ResearchBriefStatus = 'draft' | 'review' | 'approved' | 'published';
+
+export interface ResearchBrief {
+  id: UUID;
+  projectId: UUID;
+  project?: ResearchProject;
+  title: string;
+  executiveSummary: string;
+  background?: string;
+  methodology?: string;
+  keyFindings: ResearchKeyFinding[];
+  recommendations: ResearchRecommendation[];
+  conclusion?: string;
+  limitations?: string;
+
+  // Status & Review
+  status: ResearchBriefStatus;
+  version: number;
+
+  // Generation
+  isAIGenerated: boolean;
+  generatedById?: UUID;
+  generatedBy?: User;
+
+  // Review
+  reviewedById?: UUID;
+  reviewedBy?: User;
+  reviewedAt?: Timestamp;
+  reviewNotes?: string;
+
+  // Publication
+  publishedAt?: Timestamp;
+  publishedById?: UUID;
+
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface ResearchKeyFinding {
+  id: UUID;
+  order: number;
+  title: string;
+  description: string;
+  evidence: string[];
+  impact: 'high' | 'medium' | 'low';
+}
+
+export interface ResearchRecommendation {
+  id: UUID;
+  order: number;
+  title: string;
+  description: string;
+  rationale: string;
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  targetAudience?: string;
+  implementationSteps?: string[];
+}
+
+export interface ResearchTemplate {
+  id: UUID;
+  name: string;
+  description: string;
+  category: ResearchCategory;
+  methodology: ResearchMethodology;
+  defaultObjectives: string[];
+  suggestedPhases: ResearchPhase[];
+  guidelineUrl?: string;
+  isOfficial: boolean;
+  usageCount: number;
+  createdAt: Timestamp;
+}
+
+export interface ResearchActivity {
+  id: UUID;
+  projectId: UUID;
+  userId: UUID;
+  user?: User;
+  action: ResearchActivityAction;
+  details?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: Timestamp;
+}
+
+export type ResearchActivityAction =
+  | 'project_created'
+  | 'project_updated'
+  | 'status_changed'
+  | 'phase_changed'
+  | 'member_added'
+  | 'member_removed'
+  | 'literature_added'
+  | 'literature_removed'
+  | 'insight_generated'
+  | 'insight_verified'
+  | 'brief_created'
+  | 'brief_updated'
+  | 'brief_published'
+  | 'comment_added';
+
+export interface ResearchComment {
+  id: UUID;
+  projectId: UUID;
+  userId: UUID;
+  user?: User;
+  content: string;
+  parentId?: UUID;
+  replies?: ResearchComment[];
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface ResearchFilter {
+  status?: ResearchProjectStatus;
+  phase?: ResearchPhase;
+  category?: ResearchCategory;
+  methodology?: ResearchMethodology;
+  mdaId?: UUID;
+  teamLeadId?: UUID;
+  memberId?: UUID;
+  search?: string;
+  tags?: string[];
+  isPublic?: boolean;
+  fromDate?: Timestamp;
+  toDate?: Timestamp;
+  sortBy?: 'title' | 'createdAt' | 'updatedAt' | 'progress' | 'status';
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
+
+export interface ResearchStats {
+  projects: {
+    total: number;
+    active: number;
+    completed: number;
+    byStatus: Record<ResearchProjectStatus, number>;
+    byCategory: Record<ResearchCategory, number>;
+  };
+  literature: {
+    total: number;
+    fromLibrary: number;
+    external: number;
+  };
+  insights: {
+    total: number;
+    aiGenerated: number;
+    verified: number;
+    byType: Record<ResearchInsightType, number>;
+  };
+  briefs: {
+    total: number;
+    published: number;
+    inReview: number;
+  };
+  engagement: {
+    totalResearchers: number;
+    activeResearchers: number;
+    avgTeamSize: number;
+  };
+}
+
+export interface ResearchDashboardData {
+  myProjects: ResearchProject[];
+  recentActivity: ResearchActivity[];
+  trendingTopics: Array<{ topic: string; count: number }>;
+  stats: {
+    myActiveProjects: number;
+    myCompletedProjects: number;
+    totalLiterature: number;
+    totalInsights: number;
+    pendingReviews: number;
+  };
+  recommendations: {
+    suggestedDocuments: Document[];
+    relatedProjects: ResearchProject[];
+  };
+}
