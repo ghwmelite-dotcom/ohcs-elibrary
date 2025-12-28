@@ -32,6 +32,13 @@ import {
   Eye,
   Copy,
   Check,
+  StickyNote,
+  Quote,
+  ClipboardCheck,
+  MessagesSquare,
+  Flag,
+  BarChart3,
+  FileDown,
 } from 'lucide-react';
 import {
   useResearchStore,
@@ -40,11 +47,11 @@ import {
   RESEARCH_PHASES,
   RESEARCH_METHODOLOGIES,
 } from '@/stores/researchStore';
-import { PhaseProgress, KofiChat } from '@/components/research';
+import { PhaseProgress, KofiChat, CollaborationPanel, AnalyticsPanel, MilestonesPanel, ExportPanel } from '@/components/research';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
 
-type TabType = 'overview' | 'literature' | 'insights' | 'briefs' | 'team' | 'activity' | 'comments';
+type TabType = 'overview' | 'literature' | 'notes' | 'citations' | 'reviews' | 'discussions' | 'milestones' | 'analytics' | 'export' | 'insights' | 'briefs' | 'team' | 'activity' | 'comments';
 
 export default function ResearchProject() {
   const { id } = useParams<{ id: string }>();
@@ -224,6 +231,13 @@ export default function ResearchProject() {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Target },
     { id: 'literature', label: 'Literature', icon: BookOpen, count: currentProject.literatureCount },
+    { id: 'notes', label: 'Notes', icon: StickyNote },
+    { id: 'citations', label: 'Citations', icon: Quote },
+    { id: 'reviews', label: 'Reviews', icon: ClipboardCheck },
+    { id: 'discussions', label: 'Discussions', icon: MessagesSquare },
+    { id: 'milestones', label: 'Milestones', icon: Flag },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'export', label: 'Export', icon: FileDown },
     { id: 'insights', label: 'AI Insights', icon: Brain, count: currentProject.insightCount, isAI: true },
     { id: 'briefs', label: 'Briefs', icon: FileText, count: currentProject.briefCount, isAI: true },
     { id: 'team', label: 'Team', icon: Users, count: currentProject.teamMemberCount },
@@ -614,6 +628,58 @@ export default function ResearchProject() {
                   ))}
                 </div>
               )}
+            </motion.div>
+          )}
+
+          {/* Collaboration Tabs */}
+          {(activeTab === 'notes' || activeTab === 'citations' || activeTab === 'reviews' || activeTab === 'discussions') && (
+            <motion.div
+              key="collaboration"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <CollaborationPanel
+                projectId={id!}
+                activeTab={activeTab}
+                canEdit={canEdit}
+              />
+            </motion.div>
+          )}
+
+          {/* Phase 4: Milestones Tab */}
+          {activeTab === 'milestones' && (
+            <motion.div
+              key="milestones"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <MilestonesPanel projectId={id!} canEdit={canEdit} />
+            </motion.div>
+          )}
+
+          {/* Phase 4: Analytics Tab */}
+          {activeTab === 'analytics' && (
+            <motion.div
+              key="analytics"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <AnalyticsPanel projectId={id!} />
+            </motion.div>
+          )}
+
+          {/* Phase 4: Export Tab */}
+          {activeTab === 'export' && (
+            <motion.div
+              key="export"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <ExportPanel projectId={id!} projectTitle={currentProject.title} />
             </motion.div>
           )}
 

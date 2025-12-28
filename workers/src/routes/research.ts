@@ -3062,3 +3062,788 @@ researchRoutes.get('/projects/:id/team-activity', async (c: AppContext) => {
     return c.json({ error: 'Failed to get team activity' }, 500);
   }
 });
+
+// ============================================
+// PHASE 4: Advanced Analytics & Publishing
+// ============================================
+
+// GET /research/templates - Get research templates
+researchRoutes.get('/templates', async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const category = c.req.query('category');
+    const methodology = c.req.query('methodology');
+    const featured = c.req.query('featured');
+
+    let query = `
+      SELECT t.*, u.displayName as creatorName
+      FROM research_templates t
+      LEFT JOIN users u ON t.created_by_id = u.id
+      WHERE t.is_public = 1
+    `;
+    const params: any[] = [];
+
+    if (category) {
+      query += ' AND t.category = ?';
+      params.push(category);
+    }
+    if (methodology) {
+      query += ' AND t.methodology = ?';
+      params.push(methodology);
+    }
+    if (featured === 'true') {
+      query += ' AND t.is_featured = 1';
+    }
+
+    query += ' ORDER BY t.is_featured DESC, t.usage_count DESC';
+
+    const { results } = await DB.prepare(query).bind(...params).all();
+
+    const templates = results.map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      category: row.category,
+      methodology: row.methodology,
+      structure: JSON.parse(row.structure || '{}'),
+      defaultObjectives: JSON.parse(row.default_objectives || '[]'),
+      suggestedLiterature: JSON.parse(row.suggested_literature || '[]'),
+      estimatedDurationDays: row.estimated_duration_days,
+      difficultyLevel: row.difficulty_level,
+      usageCount: row.usage_count,
+      isFeatured: !!row.is_featured,
+      createdBy: row.creatorName,
+      createdAt: row.created_at
+    }));
+
+    return c.json({ items: templates });
+  } catch (error) {
+    console.error('Error getting templates:', error);
+    return c.json({ error: 'Failed to get templates' }, 500);
+  }
+});
+
+// GET /research/templates/:id - Get template details
+researchRoutes.get('/templates/:id', async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const templateId = c.req.param('id');
+
+    const template = await DB.prepare(`
+      SELECT t.*, u.displayName as creatorName
+      FROM research_templates t
+      LEFT JOIN users u ON t.created_by_id = u.id
+      WHERE t.id = ?
+    `).bind(templateId).first<any>();
+
+    if (!template) {
+      return c.json({ error: 'Template not found' }, 404);
+    }
+
+    return c.json({
+      id: template.id,
+      name: template.name,
+      description: template.description,
+      category: template.category,
+      methodology: template.methodology,
+      structure: JSON.parse(template.structure || '{}'),
+      defaultObjectives: JSON.parse(template.default_objectives || '[]'),
+      suggestedLiterature: JSON.parse(template.suggested_literature || '[]'),
+      estimatedDurationDays: template.estimated_duration_days,
+      difficultyLevel: template.difficulty_level,
+      usageCount: template.usage_count,
+      isFeatured: !!template.is_featured,
+      createdBy: template.creatorName,
+      createdAt: template.created_at
+    });
+  } catch (error) {
+    console.error('Error getting template:', error);
+    return c.json({ error: 'Failed to get template' }, 500);
+  }
+});
+
+// POST /research/templates/:id/use - Create project from template
+researchRoutes.post('/templates/:id/use', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId')!;
+    const templateId = c.req.param('id');
+    const { title, researchQuestion, description } = await c.req.json();
+
+    const template = await DB.prepare(`
+      SELECT * FROM research_templates WHERE id = ?
+    `).bind(templateId).first<any>();
+
+    if (!template) {
+      return c.json({ error: 'Template not found' }, 404);
+    }
+
+    const structure = JSON.parse(template.structure || '{}');
+    const defaultObjectives = JSON.parse(template.default_objectives || '[]');
+
+    // Create project
+    const projectId = generateId();
+    await DB.prepare(`
+      INSERT INTO research_projects (
+        id, title, research_question, description, category, methodology,
+        objectives, status, phase, progress, is_public,
+        created_by_id, team_lead_id, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', 'planning', 0, 0, ?, ?, datetime('now'), datetime('now'))
+    `).bind(
+      projectId,
+      title,
+      researchQuestion,
+      description || template.description,
+      template.category,
+      template.methodology,
+      JSON.stringify(defaultObjectives),
+      userId,
+      userId
+    ).run();
+
+    // Create default milestones from template
+    if (structure.milestones && Array.isArray(structure.milestones)) {
+      const baseDuration = template.estimated_duration_days || 90;
+      const milestoneInterval = Math.floor(baseDuration / structure.milestones.length);
+
+      for (let i = 0; i < structure.milestones.length; i++) {
+        const milestoneId = generateId();
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() + (milestoneInterval * (i + 1)));
+
+        await DB.prepare(`
+          INSERT INTO research_milestones (
+            id, project_id, title, milestone_type, target_date, status, priority, created_by_id
+          ) VALUES (?, ?, ?, 'custom', ?, 'pending', ?, ?)
+        `).bind(
+          milestoneId,
+          projectId,
+          structure.milestones[i],
+          targetDate.toISOString().split('T')[0],
+          i,
+          userId
+        ).run();
+      }
+    }
+
+    // Increment template usage
+    await DB.prepare(`
+      UPDATE research_templates SET usage_count = usage_count + 1 WHERE id = ?
+    `).bind(templateId).run();
+
+    return c.json({ id: projectId, message: 'Project created from template' }, 201);
+  } catch (error) {
+    console.error('Error creating from template:', error);
+    return c.json({ error: 'Failed to create project from template' }, 500);
+  }
+});
+
+// GET /research/projects/:id/milestones - Get project milestones
+researchRoutes.get('/projects/:id/milestones', async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const projectId = c.req.param('id');
+
+    const { results } = await DB.prepare(`
+      SELECT m.*,
+             u.displayName as assigneeName, u.avatar as assigneeAvatar,
+             c.displayName as creatorName
+      FROM research_milestones m
+      LEFT JOIN users u ON m.assigned_to_id = u.id
+      LEFT JOIN users c ON m.created_by_id = c.id
+      WHERE m.project_id = ?
+      ORDER BY m.priority ASC, m.target_date ASC
+    `).bind(projectId).all();
+
+    const milestones = results.map((row: any) => ({
+      id: row.id,
+      projectId: row.project_id,
+      title: row.title,
+      description: row.description,
+      milestoneType: row.milestone_type,
+      targetDate: row.target_date,
+      completedDate: row.completed_date,
+      status: row.status,
+      priority: row.priority,
+      assignedTo: row.assigned_to_id ? {
+        id: row.assigned_to_id,
+        displayName: row.assigneeName,
+        avatar: row.assigneeAvatar
+      } : null,
+      dependencies: JSON.parse(row.dependencies || '[]'),
+      deliverables: JSON.parse(row.deliverables || '[]'),
+      notes: row.notes,
+      createdBy: row.creatorName,
+      createdAt: row.created_at
+    }));
+
+    return c.json({ items: milestones });
+  } catch (error) {
+    console.error('Error getting milestones:', error);
+    return c.json({ error: 'Failed to get milestones' }, 500);
+  }
+});
+
+// POST /research/projects/:id/milestones - Create milestone
+researchRoutes.post('/projects/:id/milestones', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const { title, description, milestoneType, targetDate, assignedToId, deliverables, dependencies } = await c.req.json();
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    // Get max priority
+    const maxPriority = await DB.prepare(`
+      SELECT MAX(priority) as max FROM research_milestones WHERE project_id = ?
+    `).bind(projectId).first<{ max: number }>();
+
+    const milestoneId = generateId();
+    await DB.prepare(`
+      INSERT INTO research_milestones (
+        id, project_id, title, description, milestone_type, target_date,
+        status, priority, assigned_to_id, deliverables, dependencies, created_by_id
+      ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
+    `).bind(
+      milestoneId,
+      projectId,
+      title,
+      description || null,
+      milestoneType || 'custom',
+      targetDate || null,
+      (maxPriority?.max || 0) + 1,
+      assignedToId || null,
+      JSON.stringify(deliverables || []),
+      JSON.stringify(dependencies || []),
+      userId
+    ).run();
+
+    return c.json({ id: milestoneId, message: 'Milestone created successfully' }, 201);
+  } catch (error) {
+    console.error('Error creating milestone:', error);
+    return c.json({ error: 'Failed to create milestone' }, 500);
+  }
+});
+
+// PUT /research/projects/:id/milestones/:milestoneId - Update milestone
+researchRoutes.put('/projects/:id/milestones/:milestoneId', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const milestoneId = c.req.param('milestoneId');
+    const updates = await c.req.json();
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (updates.title !== undefined) {
+      fields.push('title = ?');
+      values.push(updates.title);
+    }
+    if (updates.description !== undefined) {
+      fields.push('description = ?');
+      values.push(updates.description);
+    }
+    if (updates.status !== undefined) {
+      fields.push('status = ?');
+      values.push(updates.status);
+      if (updates.status === 'completed') {
+        fields.push('completed_date = datetime("now")');
+        // Log team activity
+        await logTeamActivity(DB, projectId, userId, 'milestone_completed', 'milestone', milestoneId, updates.title);
+      }
+    }
+    if (updates.targetDate !== undefined) {
+      fields.push('target_date = ?');
+      values.push(updates.targetDate);
+    }
+    if (updates.assignedToId !== undefined) {
+      fields.push('assigned_to_id = ?');
+      values.push(updates.assignedToId);
+    }
+    if (updates.deliverables !== undefined) {
+      fields.push('deliverables = ?');
+      values.push(JSON.stringify(updates.deliverables));
+    }
+    if (updates.notes !== undefined) {
+      fields.push('notes = ?');
+      values.push(updates.notes);
+    }
+    if (updates.priority !== undefined) {
+      fields.push('priority = ?');
+      values.push(updates.priority);
+    }
+
+    fields.push('updated_at = datetime("now")');
+    values.push(milestoneId);
+
+    await DB.prepare(`
+      UPDATE research_milestones SET ${fields.join(', ')} WHERE id = ?
+    `).bind(...values).run();
+
+    return c.json({ message: 'Milestone updated successfully' });
+  } catch (error) {
+    console.error('Error updating milestone:', error);
+    return c.json({ error: 'Failed to update milestone' }, 500);
+  }
+});
+
+// DELETE /research/projects/:id/milestones/:milestoneId - Delete milestone
+researchRoutes.delete('/projects/:id/milestones/:milestoneId', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const milestoneId = c.req.param('milestoneId');
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    await DB.prepare(`DELETE FROM research_milestones WHERE id = ? AND project_id = ?`)
+      .bind(milestoneId, projectId).run();
+
+    return c.json({ message: 'Milestone deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting milestone:', error);
+    return c.json({ error: 'Failed to delete milestone' }, 500);
+  }
+});
+
+// GET /research/projects/:id/analytics - Get project analytics
+researchRoutes.get('/projects/:id/analytics', async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const projectId = c.req.param('id');
+
+    // Get project details
+    const project = await DB.prepare(`
+      SELECT * FROM research_projects WHERE id = ?
+    `).bind(projectId).first<any>();
+
+    if (!project) {
+      return c.json({ error: 'Project not found' }, 404);
+    }
+
+    // Get various counts
+    const [notes, citations, discussions, reviews, literature, insights, briefs, milestones, activities] = await Promise.all([
+      DB.prepare(`SELECT COUNT(*) as count FROM research_notes WHERE project_id = ?`).bind(projectId).first<{ count: number }>(),
+      DB.prepare(`SELECT COUNT(*) as count FROM research_citations WHERE project_id = ?`).bind(projectId).first<{ count: number }>(),
+      DB.prepare(`SELECT COUNT(*) as count FROM research_discussions WHERE project_id = ?`).bind(projectId).first<{ count: number }>(),
+      DB.prepare(`SELECT COUNT(*) as count FROM research_reviews WHERE project_id = ?`).bind(projectId).first<{ count: number }>(),
+      DB.prepare(`SELECT COUNT(*) as count FROM research_literature WHERE project_id = ?`).bind(projectId).first<{ count: number }>(),
+      DB.prepare(`SELECT COUNT(*) as count FROM research_insights WHERE project_id = ?`).bind(projectId).first<{ count: number }>(),
+      DB.prepare(`SELECT COUNT(*) as count FROM research_briefs WHERE project_id = ?`).bind(projectId).first<{ count: number }>(),
+      DB.prepare(`SELECT COUNT(*) as total, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed FROM research_milestones WHERE project_id = ?`).bind(projectId).first<{ total: number; completed: number }>(),
+      DB.prepare(`SELECT COUNT(*) as count FROM research_team_activities WHERE project_id = ? AND created_at >= datetime('now', '-7 days')`).bind(projectId).first<{ count: number }>()
+    ]);
+
+    // Get contribution breakdown by user
+    const { results: contributors } = await DB.prepare(`
+      SELECT ta.user_id, u.displayName, u.avatar, COUNT(*) as contributions
+      FROM research_team_activities ta
+      JOIN users u ON ta.user_id = u.id
+      WHERE ta.project_id = ?
+      GROUP BY ta.user_id
+      ORDER BY contributions DESC
+      LIMIT 10
+    `).bind(projectId).all();
+
+    // Get activity over time (last 30 days)
+    const { results: activityTimeline } = await DB.prepare(`
+      SELECT DATE(created_at) as date, COUNT(*) as count
+      FROM research_team_activities
+      WHERE project_id = ? AND created_at >= datetime('now', '-30 days')
+      GROUP BY DATE(created_at)
+      ORDER BY date ASC
+    `).bind(projectId).all();
+
+    // Calculate days since creation
+    const createdDate = new Date(project.created_at);
+    const daysActive = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Calculate milestone progress
+    const milestoneProgress = milestones?.total ? Math.round((milestones.completed / milestones.total) * 100) : 0;
+
+    return c.json({
+      projectId,
+      metrics: {
+        notes: notes?.count || 0,
+        citations: citations?.count || 0,
+        discussions: discussions?.count || 0,
+        reviews: reviews?.count || 0,
+        literature: literature?.count || 0,
+        insights: insights?.count || 0,
+        briefs: briefs?.count || 0,
+        milestones: {
+          total: milestones?.total || 0,
+          completed: milestones?.completed || 0,
+          progress: milestoneProgress
+        },
+        recentActivity: activities?.count || 0,
+        daysActive,
+        completionPercentage: project.progress || 0
+      },
+      contributors: contributors.map((c: any) => ({
+        userId: c.user_id,
+        displayName: c.displayName,
+        avatar: c.avatar,
+        contributions: c.contributions
+      })),
+      activityTimeline: activityTimeline.map((a: any) => ({
+        date: a.date,
+        count: a.count
+      }))
+    });
+  } catch (error) {
+    console.error('Error getting analytics:', error);
+    return c.json({ error: 'Failed to get analytics' }, 500);
+  }
+});
+
+// POST /research/projects/:id/export - Generate export
+researchRoutes.post('/projects/:id/export', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB, AI } = c.env;
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const { exportType, formatStyle, title, contentSections, includeCitations, includeAppendices } = await c.req.json();
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    // Get project details
+    const project = await DB.prepare(`
+      SELECT p.*, u.displayName as teamLeadName
+      FROM research_projects p
+      LEFT JOIN users u ON p.team_lead_id = u.id
+      WHERE p.id = ?
+    `).bind(projectId).first<any>();
+
+    if (!project) {
+      return c.json({ error: 'Project not found' }, 404);
+    }
+
+    // Gather content based on sections
+    const sections = contentSections || ['overview', 'methodology', 'findings', 'conclusions'];
+    let content = '';
+
+    // Get notes by type
+    const { results: notes } = await DB.prepare(`
+      SELECT * FROM research_notes WHERE project_id = ? ORDER BY note_type, created_at
+    `).bind(projectId).all();
+
+    // Get insights
+    const { results: insights } = await DB.prepare(`
+      SELECT * FROM research_insights WHERE project_id = ? ORDER BY priority DESC
+    `).bind(projectId).all();
+
+    // Get citations if requested
+    let citations: any[] = [];
+    if (includeCitations) {
+      const citationResults = await DB.prepare(`
+        SELECT * FROM research_citations WHERE project_id = ? ORDER BY citation_key
+      `).bind(projectId).all();
+      citations = citationResults.results;
+    }
+
+    // Build document content
+    content = `# ${project.title}\n\n`;
+    content += `**Research Question:** ${project.research_question}\n\n`;
+    content += `**Team Lead:** ${project.teamLeadName}\n`;
+    content += `**Status:** ${project.status}\n`;
+    content += `**Phase:** ${project.phase}\n\n`;
+
+    if (project.description) {
+      content += `## Abstract\n\n${project.description}\n\n`;
+    }
+
+    if (project.objectives) {
+      const objectives = JSON.parse(project.objectives || '[]');
+      if (objectives.length > 0) {
+        content += `## Objectives\n\n`;
+        objectives.forEach((obj: string, i: number) => {
+          content += `${i + 1}. ${obj}\n`;
+        });
+        content += '\n';
+      }
+    }
+
+    // Add notes by section
+    const notesByType: Record<string, any[]> = {};
+    notes.forEach((note: any) => {
+      const type = note.note_type || 'general';
+      if (!notesByType[type]) notesByType[type] = [];
+      notesByType[type].push(note);
+    });
+
+    if (sections.includes('methodology') && notesByType['methodology']) {
+      content += `## Methodology\n\n`;
+      notesByType['methodology'].forEach((note: any) => {
+        content += `### ${note.title}\n\n${note.content}\n\n`;
+      });
+    }
+
+    if (sections.includes('findings') && notesByType['findings']) {
+      content += `## Findings\n\n`;
+      notesByType['findings'].forEach((note: any) => {
+        content += `### ${note.title}\n\n${note.content}\n\n`;
+      });
+    }
+
+    if (sections.includes('discussion') && notesByType['discussion']) {
+      content += `## Discussion\n\n`;
+      notesByType['discussion'].forEach((note: any) => {
+        content += `### ${note.title}\n\n${note.content}\n\n`;
+      });
+    }
+
+    if (sections.includes('conclusions') && notesByType['conclusion']) {
+      content += `## Conclusions\n\n`;
+      notesByType['conclusion'].forEach((note: any) => {
+        content += `${note.content}\n\n`;
+      });
+    }
+
+    // Add AI insights
+    if (insights.length > 0) {
+      content += `## Key Insights\n\n`;
+      insights.forEach((insight: any) => {
+        content += `- **${insight.title}** (${insight.type}): ${insight.content}\n`;
+      });
+      content += '\n';
+    }
+
+    // Add references
+    if (includeCitations && citations.length > 0) {
+      content += `## References\n\n`;
+      citations.forEach((citation: any) => {
+        const format = formatStyle || 'apa';
+        const formatted = citation[`${format}_format`] || `${citation.authors} (${citation.year}). ${citation.title}.`;
+        content += `- ${formatted}\n`;
+      });
+    }
+
+    // Create export record
+    const exportId = generateId();
+    await DB.prepare(`
+      INSERT INTO research_exports (
+        id, project_id, export_type, format_style, title, content_sections,
+        include_citations, include_appendices, status, generated_by_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'completed', ?)
+    `).bind(
+      exportId,
+      projectId,
+      exportType || 'markdown',
+      formatStyle || 'apa',
+      title || project.title,
+      JSON.stringify(sections),
+      includeCitations ? 1 : 0,
+      includeAppendices ? 1 : 0,
+      userId
+    ).run();
+
+    // Update with generated timestamp
+    await DB.prepare(`
+      UPDATE research_exports SET generated_at = datetime('now') WHERE id = ?
+    `).bind(exportId).run();
+
+    return c.json({
+      id: exportId,
+      content,
+      format: exportType || 'markdown',
+      message: 'Export generated successfully'
+    }, 201);
+  } catch (error) {
+    console.error('Error generating export:', error);
+    return c.json({ error: 'Failed to generate export' }, 500);
+  }
+});
+
+// GET /research/projects/:id/exports - Get project exports
+researchRoutes.get('/projects/:id/exports', async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const projectId = c.req.param('id');
+
+    const { results } = await DB.prepare(`
+      SELECT e.*, u.displayName as generatedByName
+      FROM research_exports e
+      LEFT JOIN users u ON e.generated_by_id = u.id
+      WHERE e.project_id = ?
+      ORDER BY e.created_at DESC
+    `).bind(projectId).all();
+
+    const exports = results.map((row: any) => ({
+      id: row.id,
+      projectId: row.project_id,
+      exportType: row.export_type,
+      formatStyle: row.format_style,
+      title: row.title,
+      contentSections: JSON.parse(row.content_sections || '[]'),
+      includeCitations: !!row.include_citations,
+      includeAppendices: !!row.include_appendices,
+      fileUrl: row.file_url,
+      fileSize: row.file_size,
+      status: row.status,
+      generatedBy: row.generatedByName,
+      generatedAt: row.generated_at,
+      createdAt: row.created_at
+    }));
+
+    return c.json({ items: exports });
+  } catch (error) {
+    console.error('Error getting exports:', error);
+    return c.json({ error: 'Failed to get exports' }, 500);
+  }
+});
+
+// GET /research/tags - Get popular research tags
+researchRoutes.get('/tags', async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const limit = parseInt(c.req.query('limit') || '50');
+
+    const { results } = await DB.prepare(`
+      SELECT * FROM research_tags ORDER BY usage_count DESC LIMIT ?
+    `).bind(limit).all();
+
+    const tags = results.map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      description: row.description,
+      color: row.color,
+      usageCount: row.usage_count
+    }));
+
+    return c.json({ items: tags });
+  } catch (error) {
+    console.error('Error getting tags:', error);
+    return c.json({ error: 'Failed to get tags' }, 500);
+  }
+});
+
+// POST /research/projects/:id/tags - Add tag to project
+researchRoutes.post('/projects/:id/tags', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const { tagName, tagId } = await c.req.json();
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    let finalTagId = tagId;
+
+    // Create tag if it doesn't exist
+    if (!tagId && tagName) {
+      const slug = tagName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+      const existingTag = await DB.prepare(`
+        SELECT id FROM research_tags WHERE slug = ?
+      `).bind(slug).first<{ id: string }>();
+
+      if (existingTag) {
+        finalTagId = existingTag.id;
+      } else {
+        finalTagId = generateId();
+        await DB.prepare(`
+          INSERT INTO research_tags (id, name, slug) VALUES (?, ?, ?)
+        `).bind(finalTagId, tagName, slug).run();
+      }
+    }
+
+    // Add tag to project
+    try {
+      await DB.prepare(`
+        INSERT INTO research_project_tags (project_id, tag_id) VALUES (?, ?)
+      `).bind(projectId, finalTagId).run();
+
+      // Increment usage count
+      await DB.prepare(`
+        UPDATE research_tags SET usage_count = usage_count + 1 WHERE id = ?
+      `).bind(finalTagId).run();
+    } catch (e) {
+      // Already exists, ignore
+    }
+
+    return c.json({ tagId: finalTagId, message: 'Tag added successfully' }, 201);
+  } catch (error) {
+    console.error('Error adding tag:', error);
+    return c.json({ error: 'Failed to add tag' }, 500);
+  }
+});
+
+// DELETE /research/projects/:id/tags/:tagId - Remove tag from project
+researchRoutes.delete('/projects/:id/tags/:tagId', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const tagId = c.req.param('tagId');
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    await DB.prepare(`
+      DELETE FROM research_project_tags WHERE project_id = ? AND tag_id = ?
+    `).bind(projectId, tagId).run();
+
+    // Decrement usage count
+    await DB.prepare(`
+      UPDATE research_tags SET usage_count = MAX(0, usage_count - 1) WHERE id = ?
+    `).bind(tagId).run();
+
+    return c.json({ message: 'Tag removed successfully' });
+  } catch (error) {
+    console.error('Error removing tag:', error);
+    return c.json({ error: 'Failed to remove tag' }, 500);
+  }
+});
+
+// GET /research/projects/:id/tags - Get project tags
+researchRoutes.get('/projects/:id/tags', async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const projectId = c.req.param('id');
+
+    const { results } = await DB.prepare(`
+      SELECT t.*
+      FROM research_tags t
+      JOIN research_project_tags pt ON t.id = pt.tag_id
+      WHERE pt.project_id = ?
+      ORDER BY t.name
+    `).bind(projectId).all();
+
+    const tags = results.map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      color: row.color
+    }));
+
+    return c.json({ items: tags });
+  } catch (error) {
+    console.error('Error getting project tags:', error);
+    return c.json({ error: 'Failed to get project tags' }, 500);
+  }
+});

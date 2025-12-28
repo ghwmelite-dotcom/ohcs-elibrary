@@ -1732,3 +1732,122 @@ export interface ResearchTeamActivity {
   isRead: boolean;
   createdAt: Timestamp;
 }
+
+// Phase 4: Advanced Analytics & Publishing Types
+
+export type MilestoneType =
+  | 'kickoff' | 'literature_review' | 'data_collection' | 'analysis'
+  | 'draft_complete' | 'peer_review' | 'revision' | 'final_submission'
+  | 'publication' | 'presentation' | 'custom';
+
+export type MilestoneStatus = 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled';
+
+export interface ResearchMilestone {
+  id: UUID;
+  projectId: UUID;
+  title: string;
+  description?: string;
+  milestoneType: MilestoneType;
+  targetDate?: string;
+  completedDate?: string;
+  status: MilestoneStatus;
+  priority: number;
+  assignedTo?: User;
+  dependencies: UUID[];
+  deliverables: string[];
+  notes?: string;
+  createdBy: string;
+  createdAt: Timestamp;
+}
+
+export type TemplateDifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
+
+export interface ResearchTemplateStructure {
+  phases: string[];
+  milestones: string[];
+  noteTypes: string[];
+}
+
+export interface ResearchTemplate {
+  id: UUID;
+  name: string;
+  description?: string;
+  category: ResearchCategory;
+  methodology: ResearchMethodology;
+  structure: ResearchTemplateStructure;
+  defaultObjectives: string[];
+  suggestedLiterature: string[];
+  estimatedDurationDays: number;
+  difficultyLevel: TemplateDifficultyLevel;
+  usageCount: number;
+  isFeatured: boolean;
+  createdBy?: string;
+  createdAt: Timestamp;
+}
+
+export type ExportType = 'pdf' | 'docx' | 'latex' | 'html' | 'markdown' | 'bibtex';
+export type FormatStyle = 'apa' | 'mla' | 'chicago' | 'harvard' | 'ieee' | 'custom';
+export type ExportStatus = 'pending' | 'generating' | 'completed' | 'failed';
+
+export interface ResearchExport {
+  id: UUID;
+  projectId: UUID;
+  exportType: ExportType;
+  formatStyle: FormatStyle;
+  title: string;
+  contentSections: string[];
+  includeCitations: boolean;
+  includeAppendices: boolean;
+  fileUrl?: string;
+  fileSize?: number;
+  status: ExportStatus;
+  generatedBy: string;
+  generatedAt?: Timestamp;
+  createdAt: Timestamp;
+}
+
+export interface ResearchAnalyticsMetrics {
+  notes: number;
+  citations: number;
+  discussions: number;
+  reviews: number;
+  literature: number;
+  insights: number;
+  briefs: number;
+  milestones: {
+    total: number;
+    completed: number;
+    progress: number;
+  };
+  recentActivity: number;
+  daysActive: number;
+  completionPercentage: number;
+}
+
+export interface ResearchContributor {
+  userId: UUID;
+  displayName: string;
+  avatar?: string;
+  contributions: number;
+}
+
+export interface ResearchActivityPoint {
+  date: string;
+  count: number;
+}
+
+export interface ResearchProjectAnalytics {
+  projectId: UUID;
+  metrics: ResearchAnalyticsMetrics;
+  contributors: ResearchContributor[];
+  activityTimeline: ResearchActivityPoint[];
+}
+
+export interface ResearchTag {
+  id: UUID;
+  name: string;
+  slug: string;
+  description?: string;
+  color: string;
+  usageCount: number;
+}

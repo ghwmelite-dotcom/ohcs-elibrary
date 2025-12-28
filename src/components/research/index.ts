@@ -2,3 +2,8 @@ export { ProjectCard } from './ProjectCard';
 export { CreateProjectModal } from './CreateProjectModal';
 export { PhaseProgress } from './PhaseProgress';
 export { KofiChat } from './KofiChat';
+export { CollaborationPanel } from './CollaborationPanel';
+export { AnalyticsPanel } from './AnalyticsPanel';
+export { MilestonesPanel } from './MilestonesPanel';
+export { ExportPanel } from './ExportPanel';
+export { TemplatesGallery } from './TemplatesGallery';
