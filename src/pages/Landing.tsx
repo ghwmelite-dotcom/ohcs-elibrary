@@ -2131,9 +2131,9 @@ const platformFeatures = [
 
 const stats = [
   { value: 20000, label: 'Civil Servants', suffix: '+', icon: Users },
-  { value: 2500, label: 'Documents', suffix: '+', icon: FileText },
-  { value: 150, label: 'Training Resources', suffix: '+', icon: GraduationCap },
-  { value: 45, label: 'MDAs Connected', suffix: '', icon: Building2 },
+  { value: 50, label: 'MDAs Targeted', suffix: '+', icon: Building2 },
+  { value: 24, label: 'AI Assistance', suffix: '/7', icon: Bot },
+  { value: 100, label: 'Secured & Encrypted', suffix: '%', icon: Shield },
 ];
 
 // ============================================================================
