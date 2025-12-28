@@ -14,6 +14,7 @@ export default function News() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [showBreakingNews, setShowBreakingNews] = useState(true);
+  const [refreshingSourceId, setRefreshingSourceId] = useState<string | null>(null);
 
   const {
     articles,
@@ -110,6 +111,16 @@ export default function News() {
     }
   };
 
+  const handleSourceRefresh = async (sourceId: string) => {
+    setRefreshingSourceId(sourceId);
+    try {
+      // Refresh articles filtered by this source
+      await fetchArticles({ sourceId });
+    } finally {
+      setRefreshingSourceId(null);
+    }
+  };
+
   // Transform articles for NewsFeed component
   const transformedArticles = articles.map((article) => ({
     id: article.id,
@@ -151,6 +162,7 @@ export default function News() {
     id: source.id,
     name: source.name,
     icon: source.logoUrl,
+    url: source.url,
     count: (source as any).articleCount,
   }));
 
@@ -387,7 +399,9 @@ export default function News() {
               sources={transformedSources}
               selectedSources={selectedSources}
               onSourceToggle={handleSourceToggle}
+              onSourceRefresh={handleSourceRefresh}
               onClearAll={() => setSelectedSources([])}
+              isRefreshing={refreshingSourceId}
             />
 
             {/* Trending Topics */}
