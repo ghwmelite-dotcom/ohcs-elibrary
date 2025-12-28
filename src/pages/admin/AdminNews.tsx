@@ -40,6 +40,33 @@ import {
 import { cn } from '@/utils/cn';
 import { formatDistanceToNow, format } from 'date-fns';
 
+// Category-based fallback images using high-quality stock photos
+const categoryFallbackImages: Record<string, string> = {
+  // News categories
+  'Government': 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&q=80',
+  'Economy': 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=80',
+  'Health': 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=600&q=80',
+  'Education': 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80',
+  'Technology': 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80',
+  'International': 'https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?w=600&q=80',
+  'Sports': 'https://images.unsplash.com/photo-1461896836934-28e9e0eb0a3f?w=600&q=80',
+  'Entertainment': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&q=80',
+  'Business': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80',
+  'Politics': 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=600&q=80',
+  // Default
+  'general': 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80',
+  'default': 'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=600&q=80',
+};
+
+// Get fallback image based on category
+function getFallbackImage(category?: string): string {
+  if (!category) return categoryFallbackImages['default'];
+  // Try exact match first, then case-insensitive
+  return categoryFallbackImages[category] ||
+         categoryFallbackImages[category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()] ||
+         categoryFallbackImages['default'];
+}
+
 // Animated background component
 function AnimatedBackground() {
   return (
@@ -603,6 +630,11 @@ function SourceRow({
 
 // Article Card Component
 function ArticleCard({ article }: { article: Article }) {
+  const [imageError, setImageError] = useState(false);
+  const imageSrc = imageError || !article.thumbnail
+    ? getFallbackImage(article.category)
+    : article.thumbnail;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -611,12 +643,15 @@ function ArticleCard({ article }: { article: Article }) {
     >
       {/* Thumbnail */}
       <div className="relative h-40 overflow-hidden bg-surface-100 dark:bg-surface-700">
-        {article.thumbnail ? (
-          <img src={article.thumbnail} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Image className="w-12 h-12 text-surface-400" />
-          </div>
+        <img
+          src={imageSrc}
+          alt={article.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          onError={() => setImageError(true)}
+        />
+        {/* Subtle overlay for fallback images */}
+        {(imageError || !article.thumbnail) && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         )}
         {article.isFeatured && (
           <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full bg-secondary-500 text-surface-900 text-[10px] font-bold">
@@ -627,6 +662,12 @@ function ArticleCard({ article }: { article: Article }) {
         <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-black/50 text-white text-xs">
           {article.relevanceScore}% relevant
         </div>
+        {/* Category badge on fallback images */}
+        {(imageError || !article.thumbnail) && (
+          <div className="absolute bottom-3 left-3 px-2 py-1 rounded bg-black/60 text-white text-xs font-medium backdrop-blur-sm">
+            {article.category}
+          </div>
+        )}
       </div>
 
       {/* Content */}
