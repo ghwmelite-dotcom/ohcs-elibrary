@@ -49,6 +49,8 @@ app.use('*', cors({
     const allowedOrigins = [
       'https://ohcs-elibrary.gov.gh',
       'https://ohcs-elibrary.pages.dev',
+      'https://ohcselibrary.xyz',
+      'https://www.ohcselibrary.xyz',
       'http://localhost:5173',
       'http://localhost:3000',
     ];
