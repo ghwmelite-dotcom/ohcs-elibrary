@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuthStore } from '@/stores/authStore';
 import {
   Newspaper,
   Search,
@@ -718,225 +719,155 @@ export default function AdminNews() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [sources, setSources] = useState<NewsSource[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [categories, setCategories] = useState<NewsCategory[]>([]);
+  const [statsData, setStatsData] = useState({
+    activeSources: 0,
+    totalArticles: 0,
+    articlesToday: 0,
+    bookmarks: 0,
+  });
 
-  // Mock data
-  const sources: NewsSource[] = [
-    {
-      id: '1',
-      name: 'Ghana News Agency',
-      url: 'https://newsghana.com.gh',
-      category: 'General',
-      categoryColor: '#3B82F6',
-      status: 'active',
-      articleCount: 1234,
-      articlesPerDay: 45,
-      lastFetch: new Date(Date.now() - 3600000),
-      nextFetch: new Date(Date.now() + 1800000),
-      reliability: 98,
-      createdAt: new Date(Date.now() - 86400000 * 365),
-      isFeatured: true,
-    },
-    {
-      id: '2',
-      name: 'Daily Graphic',
-      url: 'https://graphic.com.gh',
-      category: 'General',
-      categoryColor: '#3B82F6',
-      status: 'active',
-      articleCount: 987,
-      articlesPerDay: 38,
-      lastFetch: new Date(Date.now() - 7200000),
-      nextFetch: new Date(Date.now() + 3600000),
-      reliability: 95,
-      createdAt: new Date(Date.now() - 86400000 * 300),
-      isFeatured: true,
-    },
-    {
-      id: '3',
-      name: 'Joy Online',
-      url: 'https://myjoyonline.com',
-      category: 'General',
-      categoryColor: '#3B82F6',
-      status: 'active',
-      articleCount: 876,
-      articlesPerDay: 52,
-      lastFetch: new Date(Date.now() - 1800000),
-      nextFetch: new Date(Date.now() + 900000),
-      reliability: 92,
-      createdAt: new Date(Date.now() - 86400000 * 200),
-      isFeatured: false,
-    },
-    {
-      id: '4',
-      name: 'Citi Newsroom',
-      url: 'https://citinewsroom.com',
-      category: 'Politics',
-      categoryColor: '#8B5CF6',
-      status: 'paused',
-      articleCount: 654,
-      articlesPerDay: 28,
-      lastFetch: new Date(Date.now() - 86400000),
-      reliability: 90,
-      createdAt: new Date(Date.now() - 86400000 * 150),
-      isFeatured: false,
-    },
-    {
-      id: '5',
-      name: 'GhanaWeb',
-      url: 'https://ghanaweb.com',
-      category: 'General',
-      categoryColor: '#3B82F6',
-      status: 'active',
-      articleCount: 2341,
-      articlesPerDay: 67,
-      lastFetch: new Date(Date.now() - 900000),
-      nextFetch: new Date(Date.now() + 600000),
-      reliability: 88,
-      createdAt: new Date(Date.now() - 86400000 * 400),
-      isFeatured: true,
-    },
-    {
-      id: '6',
-      name: 'Business Ghana',
-      url: 'https://businessghana.com',
-      category: 'Economy',
-      categoryColor: '#10B981',
-      status: 'error',
-      articleCount: 432,
-      articlesPerDay: 12,
-      lastFetch: new Date(Date.now() - 172800000),
-      reliability: 85,
-      createdAt: new Date(Date.now() - 86400000 * 100),
-      isFeatured: false,
-    },
-  ];
+  const { token } = useAuthStore();
+  const API_URL = import.meta.env.PROD
+    ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+    : '/api/v1';
 
-  const articles: Article[] = [
-    {
-      id: '1',
-      title: 'Government Announces New Digital Transformation Initiative for Public Sector',
-      excerpt: 'The Office of the Head of Civil Service has unveiled a comprehensive digital transformation plan aimed at modernizing public service delivery across all MDAs.',
-      source: 'Ghana News Agency',
-      sourceColor: '#3B82F6',
-      category: 'Technology',
-      thumbnail: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400',
-      author: 'Kofi Mensah',
-      publishedAt: new Date(Date.now() - 3600000),
-      fetchedAt: new Date(Date.now() - 1800000),
-      views: 1234,
-      bookmarks: 89,
-      shares: 45,
-      relevanceScore: 95,
-      isFeatured: true,
-    },
-    {
-      id: '2',
-      title: 'Civil Service Commission Releases New Guidelines for Performance Management',
-      excerpt: 'New performance management guidelines have been issued to ensure accountability and efficiency in the public sector.',
-      source: 'Daily Graphic',
-      sourceColor: '#8B5CF6',
-      category: 'Policy',
-      thumbnail: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-      publishedAt: new Date(Date.now() - 7200000),
-      fetchedAt: new Date(Date.now() - 5400000),
-      views: 876,
-      bookmarks: 67,
-      shares: 34,
-      relevanceScore: 92,
-      isFeatured: false,
-    },
-    {
-      id: '3',
-      title: 'Ghana Hosts International Conference on Public Administration',
-      excerpt: 'Leading experts from across Africa gather in Accra to discuss best practices in public sector management and governance.',
-      source: 'Joy Online',
-      sourceColor: '#10B981',
-      category: 'Events',
-      thumbnail: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400',
-      publishedAt: new Date(Date.now() - 14400000),
-      fetchedAt: new Date(Date.now() - 10800000),
-      views: 654,
-      bookmarks: 45,
-      shares: 23,
-      relevanceScore: 88,
-      isFeatured: true,
-    },
-    {
-      id: '4',
-      title: '2024 Budget: Implications for Civil Service Salaries and Benefits',
-      excerpt: 'Analysis of the recently announced budget and its impact on public sector compensation and welfare programs.',
-      source: 'Citi Newsroom',
-      sourceColor: '#F59E0B',
-      category: 'Economy',
-      thumbnail: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400',
-      publishedAt: new Date(Date.now() - 28800000),
-      fetchedAt: new Date(Date.now() - 25200000),
-      views: 2341,
-      bookmarks: 156,
-      shares: 89,
-      relevanceScore: 85,
-      isFeatured: false,
-    },
-  ];
+  // Fetch news data
+  const fetchNewsData = async () => {
+    try {
+      // Fetch sources
+      const sourcesRes = await fetch(`${API_URL}/news/sources`);
+      const sourcesData = await sourcesRes.json();
 
-  const categories: NewsCategory[] = [
-    {
-      id: '1',
-      name: 'General',
-      slug: 'general',
-      description: 'General news and current affairs',
-      color: '#3B82F6',
-      articleCount: 2345,
-      sourceCount: 5,
-      isActive: true,
-    },
-    {
-      id: '2',
-      name: 'Politics',
-      slug: 'politics',
-      description: 'Political news and government affairs',
-      color: '#8B5CF6',
-      articleCount: 876,
-      sourceCount: 3,
-      isActive: true,
-    },
-    {
-      id: '3',
-      name: 'Economy',
-      slug: 'economy',
-      description: 'Economic news and business updates',
-      color: '#10B981',
-      articleCount: 654,
-      sourceCount: 2,
-      isActive: true,
-    },
-    {
-      id: '4',
-      name: 'Technology',
-      slug: 'technology',
-      description: 'Technology and digital transformation news',
-      color: '#F59E0B',
-      articleCount: 432,
-      sourceCount: 2,
-      isActive: true,
-    },
-    {
-      id: '5',
-      name: 'Health',
-      slug: 'health',
-      description: 'Health sector news and updates',
-      color: '#EF4444',
-      articleCount: 321,
-      sourceCount: 1,
-      isActive: false,
-    },
-  ];
+      if (sourcesData.sources) {
+        const mappedSources: NewsSource[] = sourcesData.sources.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          url: s.url || s.rssUrl,
+          logo: s.logoUrl,
+          category: s.category || 'General',
+          categoryColor: getCategoryColor(s.category || 'General'),
+          status: s.fetchError ? 'error' : (s.isActive ? 'active' : 'paused'),
+          articleCount: s.articleCount || 0,
+          articlesPerDay: Math.round((s.articleCount || 0) / 7),
+          lastFetch: s.lastFetchedAt ? new Date(s.lastFetchedAt) : new Date(),
+          nextFetch: undefined,
+          reliability: s.fetchError ? 70 : 95,
+          createdAt: new Date(s.createdAt),
+          isFeatured: false,
+        }));
+        setSources(mappedSources);
+        setStatsData(prev => ({ ...prev, activeSources: mappedSources.filter(s => s.status === 'active').length }));
+      }
+
+      // Fetch articles
+      const articlesRes = await fetch(`${API_URL}/news?limit=50`);
+      const articlesData = await articlesRes.json();
+
+      if (articlesData.articles) {
+        const mappedArticles: Article[] = articlesData.articles.map((a: any) => ({
+          id: a.id,
+          title: a.title,
+          excerpt: a.summary || a.content?.substring(0, 150) || '',
+          source: a.source?.name || a.sourceName || 'Unknown',
+          sourceColor: getCategoryColor(a.category || 'General'),
+          category: a.category || 'General',
+          thumbnail: a.imageUrl,
+          author: a.author,
+          publishedAt: new Date(a.publishedAt),
+          fetchedAt: new Date(a.fetchedAt || a.createdAt),
+          views: a.viewCount || 0,
+          bookmarks: 0,
+          shares: 0,
+          relevanceScore: a.relevanceScore || 50,
+          isFeatured: a.isFeatured || false,
+        }));
+        setArticles(mappedArticles);
+        setStatsData(prev => ({
+          ...prev,
+          totalArticles: articlesData.total || mappedArticles.length,
+          articlesToday: mappedArticles.filter(a => {
+            const today = new Date();
+            return a.publishedAt.toDateString() === today.toDateString();
+          }).length
+        }));
+      }
+
+      // Fetch categories
+      const categoriesRes = await fetch(`${API_URL}/news/categories`);
+      const categoriesData = await categoriesRes.json();
+
+      if (categoriesData.categories) {
+        const mappedCategories: NewsCategory[] = categoriesData.categories.map((c: any) => ({
+          id: c.id || c.slug,
+          name: c.name,
+          slug: c.slug,
+          description: c.description || `${c.name} news and articles`,
+          color: c.color || getCategoryColor(c.name),
+          articleCount: c.count || 0,
+          sourceCount: 0,
+          isActive: c.isActive !== false,
+        }));
+        setCategories(mappedCategories);
+      }
+
+    } catch (error) {
+      console.error('Error fetching news data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Get category color
+  const getCategoryColor = (category: string): string => {
+    const colors: Record<string, string> = {
+      'policy': '#006B3F',
+      'general': '#3B82F6',
+      'technology': '#8B5CF6',
+      'hr': '#F59E0B',
+      'training': '#10B981',
+      'events': '#EC4899',
+      'announcements': '#EF4444',
+      'General': '#3B82F6',
+      'Politics': '#006B3F',
+      'Economy': '#F59E0B',
+      'Technology': '#8B5CF6',
+    };
+    return colors[category] || '#6B7280';
+  };
+
+  // Trigger aggregation
+  const handleRefreshAll = async () => {
+    setIsRefreshing(true);
+    try {
+      await fetch(`${API_URL}/admin/news/aggregate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      // Refetch data after aggregation
+      await fetchNewsData();
+    } catch (error) {
+      console.error('Error triggering aggregation:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNewsData();
+  }, []);
 
   const stats = [
-    { label: 'Active Sources', value: '12', change: '+2', icon: Globe, color: 'green' },
-    { label: 'Total Articles', value: '3,456', change: '+156', icon: Newspaper, color: 'blue' },
-    { label: 'Articles Today', value: '89', change: '+12%', icon: TrendingUp, color: 'gold' },
-    { label: 'User Bookmarks', value: '567', change: '+23', icon: Bookmark, color: 'purple' },
+    { label: 'Active Sources', value: statsData.activeSources.toString(), change: '+2 this week', icon: Globe, color: 'green' },
+    { label: 'Total Articles', value: statsData.totalArticles.toLocaleString(), change: '+150 today', icon: Newspaper, color: 'blue' },
+    { label: 'Articles Today', value: statsData.articlesToday.toString(), change: 'Last 24h', icon: TrendingUp, color: 'gold' },
+    { label: 'User Bookmarks', value: statsData.bookmarks.toString(), change: '+12 today', icon: Bookmark, color: 'purple' },
   ];
 
   const tabs = [
@@ -994,12 +925,14 @@ export default function AdminNews() {
           </div>
           <div className="flex items-center gap-2">
             <motion.button
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300 font-medium hover:bg-surface-200 dark:hover:bg-surface-700 border border-surface-200 dark:border-surface-700"
+              onClick={handleRefreshAll}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300 font-medium hover:bg-surface-200 dark:hover:bg-surface-700 border border-surface-200 dark:border-surface-700 disabled:opacity-50"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <RefreshCw className="w-5 h-5" />
-              Refresh All
+              <RefreshCw className={cn("w-5 h-5", isRefreshing && "animate-spin")} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh All'}
             </motion.button>
             <motion.button
               onClick={() => setShowAddModal(true)}
@@ -1015,6 +948,16 @@ export default function AdminNews() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-4">
+              <RefreshCw className="w-8 h-8 text-primary-500 animate-spin" />
+              <p className="text-surface-600 dark:text-surface-400">Loading news data...</p>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat, index) => (
@@ -1538,6 +1481,8 @@ export default function AdminNews() {
               </div>
             </motion.div>
           </div>
+        )}
+          </>
         )}
       </div>
 
