@@ -346,7 +346,7 @@ export default function GroupDetail() {
                         comments={postComments}
                         isOwnPost={post.authorId === currentUserId}
                         isPinned={post.isPinned}
-                        onLike={() => handleLike(post.id, post.isLiked)}
+                        onLike={() => handleLike(post.id, post.isLiked ?? false)}
                         onReact={(emoji) => handleReaction(post.id, emoji)}
                         onComment={(content) => handleCreateComment(post.id, content)}
                         onCommentReact={(commentId, emoji) => handleCommentReaction(commentId, emoji)}

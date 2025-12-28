@@ -528,7 +528,7 @@ export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
             <Input
               label="Tags"
               placeholder="Enter tags separated by commas"
-              helperText="E.g., policy, HR, training, 2024"
+              hint="E.g., policy, HR, training, 2024"
               {...register('tags')}
             />
           </motion.div>

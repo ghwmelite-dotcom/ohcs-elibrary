@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Award, Zap, FileText, MessageSquare, Users } from 'lucide-react';
-import { MainLayout } from '@/components/layout/MainLayout';
+import { Award, Zap, FileText, Users } from 'lucide-react';
 import {
   ProfileHeader,
   ProfileStats,
@@ -115,146 +114,142 @@ export default function Profile() {
 
   if (isEditing && isOwnProfile) {
     return (
-      <MainLayout>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50 mb-6">
-            Edit Profile
-          </h1>
-          <ProfileEdit
-            initialData={profile}
-            onSave={handleSaveProfile}
-            onCancel={() => setIsEditing(false)}
-          />
-        </div>
-      </MainLayout>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50 mb-6">
+          Edit Profile
+        </h1>
+        <ProfileEdit
+          initialData={profile}
+          onSave={handleSaveProfile}
+          onCancel={() => setIsEditing(false)}
+        />
+      </div>
     );
   }
 
   return (
-    <MainLayout>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Profile Header */}
-        <ProfileHeader
-          profile={profile}
-          isOwnProfile={isOwnProfile}
-          isFollowing={false}
-          onEditProfile={() => setIsEditing(true)}
-          onMessage={() => console.log('Message')}
-          onFollow={() => console.log('Follow')}
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Profile Header */}
+      <ProfileHeader
+        profile={profile}
+        isOwnProfile={isOwnProfile}
+        isFollowing={false}
+        onEditProfile={() => setIsEditing(true)}
+        onMessage={() => console.log('Message')}
+        onFollow={() => console.log('Follow')}
+      />
+
+      {/* Stats */}
+      <div className="mt-6">
+        <ProfileStats stats={stats} layout="horizontal" />
+      </div>
+
+      {/* Level Progress */}
+      <div className="mt-6">
+        <LevelProgress
+          level={profile.level}
+          levelName={profile.levelName}
+          currentXP={2200}
+          requiredXP={3000}
+          totalXP={profile.totalXP}
+          showDetails
         />
+      </div>
 
-        {/* Stats */}
-        <div className="mt-6">
-          <ProfileStats stats={stats} layout="horizontal" />
+      {/* Tabs */}
+      <div className="mt-8 border-b border-surface-200 dark:border-surface-700">
+        <div className="flex gap-2">
+          {[
+            { id: 'activity', label: 'Activity', icon: Zap },
+            { id: 'badges', label: 'Badges', icon: Award },
+            { id: 'documents', label: 'Documents', icon: FileText },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as typeof activeTab)}
+              className={cn(
+                'flex items-center gap-2 px-4 py-3 font-medium border-b-2 -mb-px transition-colors',
+                activeTab === tab.id
+                  ? 'border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400'
+                  : 'border-transparent text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-200'
+              )}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* Level Progress */}
-        <div className="mt-6">
-          <LevelProgress
-            level={profile.level}
-            levelName={profile.levelName}
-            currentXP={2200}
-            requiredXP={3000}
-            totalXP={profile.totalXP}
-            showDetails
-          />
-        </div>
+      {/* Tab Content */}
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2">
+          {activeTab === 'activity' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <ActivityFeed activities={mockActivities} />
+            </motion.div>
+          )}
 
-        {/* Tabs */}
-        <div className="mt-8 border-b border-surface-200 dark:border-surface-700">
-          <div className="flex gap-2">
-            {[
-              { id: 'activity', label: 'Activity', icon: Zap },
-              { id: 'badges', label: 'Badges', icon: Award },
-              { id: 'documents', label: 'Documents', icon: FileText },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={cn(
-                  'flex items-center gap-2 px-4 py-3 font-medium border-b-2 -mb-px transition-colors',
-                  activeTab === tab.id
-                    ? 'border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400'
-                    : 'border-transparent text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-200'
-                )}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+          {activeTab === 'badges' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <BadgeDisplay badges={mockBadges} showLocked />
+            </motion.div>
+          )}
 
-        {/* Tab Content */}
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            {activeTab === 'activity' && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <ActivityFeed activities={mockActivities} />
-              </motion.div>
-            )}
-
-            {activeTab === 'badges' && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <BadgeDisplay badges={mockBadges} showLocked />
-              </motion.div>
-            )}
-
-            {activeTab === 'documents' && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6"
-              >
-                <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-primary-600" />
-                  Uploaded Documents
-                </h3>
-                <div className="text-center py-8 text-surface-500">
-                  <FileText className="w-12 h-12 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
-                  <p>Document list coming soon</p>
-                </div>
-              </motion.div>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Stats */}
-            <ProfileStats stats={stats} layout="grid" />
-
-            {/* Groups */}
-            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
+          {activeTab === 'documents' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6"
+            >
               <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5 text-secondary-500" />
-                Groups ({stats.groups})
+                <FileText className="w-5 h-5 text-primary-600" />
+                Uploaded Documents
               </h3>
-              <div className="space-y-3">
-                {['Digital Transformation', 'Finance Policy', 'HR Network'].map((group) => (
-                  <div
-                    key={group}
-                    className="flex items-center gap-3 p-2 hover:bg-surface-50 dark:hover:bg-surface-700/50 rounded-lg transition-colors cursor-pointer"
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center text-white text-sm font-medium">
-                      {group.charAt(0)}
-                    </div>
-                    <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
-                      {group}
-                    </span>
-                  </div>
-                ))}
+              <div className="text-center py-8 text-surface-500">
+                <FileText className="w-12 h-12 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
+                <p>Document list coming soon</p>
               </div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Quick Stats */}
+          <ProfileStats stats={stats} layout="grid" />
+
+          {/* Groups */}
+          <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
+            <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-4 flex items-center gap-2">
+              <Users className="w-5 h-5 text-secondary-500" />
+              Groups ({stats.groups})
+            </h3>
+            <div className="space-y-3">
+              {['Digital Transformation', 'Finance Policy', 'HR Network'].map((group) => (
+                <div
+                  key={group}
+                  className="flex items-center gap-3 p-2 hover:bg-surface-50 dark:hover:bg-surface-700/50 rounded-lg transition-colors cursor-pointer"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center text-white text-sm font-medium">
+                    {group.charAt(0)}
+                  </div>
+                  <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
+                    {group}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }

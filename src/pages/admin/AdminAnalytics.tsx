@@ -514,12 +514,12 @@ export default function AdminAnalytics() {
 
   // Analytics data - to be populated from API
   const stats: StatCardProps[] = [
-    { label: 'Total Users', value: '0', icon: Users, color: '#006B3F' },
-    { label: 'Documents', value: '0', icon: FileText, color: '#3B82F6' },
-    { label: 'Forum Posts', value: '0', icon: MessageSquare, color: '#8B5CF6' },
-    { label: 'Page Views', value: '0', icon: Eye, color: '#FCD116' },
-    { label: 'Avg Session', value: '0', icon: Clock, color: '#10B981' },
-    { label: 'Engagement Rate', value: '0', icon: Activity, color: '#CE1126' },
+    { label: 'Total Users', value: '0', change: '0%', trend: 'up', icon: Users, color: '#006B3F' },
+    { label: 'Documents', value: '0', change: '0%', trend: 'up', icon: FileText, color: '#3B82F6' },
+    { label: 'Forum Posts', value: '0', change: '0%', trend: 'up', icon: MessageSquare, color: '#8B5CF6' },
+    { label: 'Page Views', value: '0', change: '0%', trend: 'up', icon: Eye, color: '#FCD116' },
+    { label: 'Avg Session', value: '0', change: '0%', trend: 'up', icon: Clock, color: '#10B981' },
+    { label: 'Engagement Rate', value: '0', change: '0%', trend: 'up', icon: Activity, color: '#CE1126' },
   ];
 
   const userGrowthData: { month: string; users: number }[] = [];

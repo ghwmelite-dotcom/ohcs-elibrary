@@ -183,7 +183,7 @@ export default function DocumentView() {
   const ratingBreakdown = { 5: 45, 4: 32, 3: 12, 2: 5, 1: 2 };
 
   // Get author name
-  const authorName = document.author?.displayName || document.authorName || 'Unknown Author';
+  const authorName = document.author?.displayName || (document as any).authorName || 'Unknown Author';
 
   return (
     <div className="space-y-6">
@@ -280,7 +280,7 @@ export default function DocumentView() {
             {/* Tags */}
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {category && (
-                <Badge variant="category" style={{ backgroundColor: `${category.color}20`, color: category.color }}>
+                <Badge variant="info" style={{ backgroundColor: `${category.color}20`, color: category.color }}>
                   {category.name}
                 </Badge>
               )}

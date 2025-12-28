@@ -220,7 +220,7 @@ export function GroupList({
       {/* Groups Grid/List */}
       {paginatedGroups.length === 0 ? (
         <EmptyState
-          type="groups"
+          icon={<Users className="w-full h-full" />}
           title="No groups found"
           description={
             searchQuery

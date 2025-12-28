@@ -53,7 +53,7 @@ interface CategoryCardProps {
 }
 
 function CategoryCard({ category, index }: CategoryCardProps) {
-  const IconComponent = getIconComponent(category.icon);
+  const IconComponent = getIconComponent(category.icon || 'MessageSquare');
 
   return (
     <motion.div
@@ -155,7 +155,7 @@ export function CompactCategoryList({
         </button>
 
         {categories.map((category) => {
-          const IconComponent = getIconComponent(category.icon);
+          const IconComponent = getIconComponent(category.icon || 'MessageSquare');
           return (
             <button
               key={category.id}

@@ -144,7 +144,7 @@ export const useNewsStore = create<NewsStore>()(
       if (lastViewedAt && !append) {
         const lastViewedDate = new Date(lastViewedAt);
         newCount = articlesWithBookmarks.filter((article: NewsArticle) => {
-          const articleDate = new Date(article.publishedAt || article.createdAt);
+          const articleDate = new Date(article.publishedAt);
           return articleDate > lastViewedDate;
         }).length;
       }
@@ -369,7 +369,7 @@ export const useNewsStore = create<NewsStore>()(
 
       const lastViewedDate = new Date(lastViewedAt);
       const newCount = articles.filter((article: NewsArticle) => {
-        const articleDate = new Date(article.publishedAt || article.createdAt);
+        const articleDate = new Date(article.publishedAt);
         return articleDate > lastViewedDate;
       }).length;
 

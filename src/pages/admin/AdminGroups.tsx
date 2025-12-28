@@ -745,10 +745,10 @@ export default function AdminGroups() {
   const flaggedGroups: FlaggedGroup[] = [];
 
   const stats = [
-    { label: 'Total Groups', value: '0', icon: Users, color: 'green' },
-    { label: 'Active Members', value: '0', icon: UserPlus, color: 'blue' },
-    { label: 'Posts This Week', value: '0', icon: MessageSquare, color: 'gold' },
-    { label: 'Official Groups', value: '0', icon: Shield, color: 'purple' },
+    { label: 'Total Groups', value: '0', icon: Users, color: 'green', change: '+0%' },
+    { label: 'Active Members', value: '0', icon: UserPlus, color: 'blue', change: '+0%' },
+    { label: 'Posts This Week', value: '0', icon: MessageSquare, color: 'gold', change: '+0%' },
+    { label: 'Official Groups', value: '0', icon: Shield, color: 'purple', change: '+0%' },
   ];
 
   const tabs = [

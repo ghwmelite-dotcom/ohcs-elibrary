@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -17,6 +17,7 @@ import { Avatar } from '@/components/shared/Avatar';
 import { Button } from '@/components/shared/Button';
 import { Dropdown } from '@/components/shared/Dropdown';
 import { cn } from '@/utils/cn';
+import type { DirectMessage } from '@/types';
 
 export default function Messages() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -34,6 +35,30 @@ export default function Messages() {
   const [replyTo, setReplyTo] = useState<any>(null);
 
   const currentConversation = conversations.find((c) => c.id === conversationId);
+
+  // Get the first participant (for DMs, there's typically one other participant)
+  const currentParticipant = currentConversation?.participants?.[0];
+
+  // Transform conversations to DirectMessage format for DMList component
+  const dmConversations: DirectMessage[] = useMemo(() => {
+    return conversations.map((conv) => ({
+      id: conv.id,
+      conversationId: conv.id,
+      senderId: conv.participants?.[0]?.id ?? '',
+      receiverId: '',
+      content: conv.lastMessage?.content ?? '',
+      type: 'text' as const,
+      attachments: [],
+      isRead: conv.unreadCount === 0,
+      createdAt: conv.updatedAt,
+      participant: conv.participants?.[0],
+      lastMessage: conv.lastMessage?.content,
+      lastMessageAt: conv.updatedAt,
+      unreadCount: conv.unreadCount,
+      isPinned: false,
+      isTyping: false,
+    }));
+  }, [conversations]);
 
   useEffect(() => {
     fetchConversations();
@@ -78,7 +103,7 @@ export default function Messages() {
       {/* Conversation List Sidebar */}
       <div className="w-80 flex-shrink-0 hidden lg:block">
         <DMList
-          conversations={conversations}
+          conversations={dmConversations}
           currentConversationId={conversationId}
           onNewMessage={() => setShowNewMessage(true)}
         />
@@ -92,21 +117,21 @@ export default function Messages() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-surface-200 dark:border-surface-700">
               <div className="flex items-center gap-3">
                 <Avatar
-                  src={currentConversation.participant.avatar}
-                  name={currentConversation.participant.name}
+                  src={currentParticipant?.avatar}
+                  name={currentParticipant?.name ?? 'Unknown'}
                   size="md"
                   showStatus
-                  status={currentConversation.participant.status as 'online' | 'away' | 'offline'}
+                  status={(currentParticipant?.status as 'online' | 'away' | 'offline') ?? 'offline'}
                 />
                 <div>
                   <h2 className="font-semibold text-surface-900 dark:text-surface-50">
-                    {currentConversation.participant.name}
+                    {currentParticipant?.name ?? 'Unknown'}
                   </h2>
                   <p className="text-sm text-surface-500">
-                    {currentConversation.participant.status === 'online' ? (
-                      <span className="text-success-500">Online</span>
+                    {currentParticipant?.status === 'active' ? (
+                      <span className="text-success-500">Active</span>
                     ) : (
-                      `Last seen ${currentConversation.participant.lastSeen || 'recently'}`
+                      `Last seen ${currentParticipant?.lastLoginAt || 'recently'}`
                     )}
                   </p>
                 </div>
@@ -135,11 +160,7 @@ export default function Messages() {
               <MessageList
                 messages={messages}
                 currentUserId="current-user"
-                typingUsers={
-                  currentConversation.isTyping
-                    ? [{ id: currentConversation.participant.id, name: currentConversation.participant.name }]
-                    : []
-                }
+                typingUsers={[]}
                 isLoading={isLoading}
                 onReply={(message) => setReplyTo(message)}
                 onEdit={(messageId, content) => console.log('Edit:', messageId, content)}
@@ -154,7 +175,7 @@ export default function Messages() {
               onTyping={() => {}}
               replyTo={replyTo}
               onCancelReply={() => setReplyTo(null)}
-              placeholder={`Message ${currentConversation.participant.name}`}
+              placeholder={`Message ${currentParticipant?.name ?? 'User'}`}
             />
           </>
         ) : (
@@ -182,19 +203,19 @@ export default function Messages() {
         <div className="w-72 flex-shrink-0 hidden xl:block border-l border-surface-200 dark:border-surface-700 p-6 overflow-y-auto">
           <div className="text-center mb-6">
             <Avatar
-              src={currentConversation.participant.avatar}
-              name={currentConversation.participant.name}
+              src={currentParticipant?.avatar}
+              name={currentParticipant?.name ?? 'Unknown'}
               size="xl"
               className="mx-auto mb-4"
             />
             <h3 className="font-semibold text-surface-900 dark:text-surface-50">
-              {currentConversation.participant.name}
+              {currentParticipant?.name ?? 'Unknown'}
             </h3>
             <p className="text-sm text-surface-500">
-              {currentConversation.participant.title || 'Civil Servant'}
+              {currentParticipant?.title || 'Civil Servant'}
             </p>
             <p className="text-xs text-surface-400 mt-1">
-              {currentConversation.participant.mda || 'OHCS'}
+              {currentParticipant?.mda?.name || 'OHCS'}
             </p>
           </div>
 

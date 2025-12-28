@@ -738,10 +738,10 @@ export default function AdminChat() {
   const userReports: UserReport[] = [];
 
   const stats = [
-    { label: 'Active Rooms', value: '0', icon: Hash, color: 'green' },
-    { label: 'Online Users', value: '0', icon: Users, color: 'blue' },
-    { label: 'Messages Today', value: '0', icon: MessageCircle, color: 'gold' },
-    { label: 'Flagged Content', value: '0', icon: AlertTriangle, color: 'red' },
+    { label: 'Active Rooms', value: '0', icon: Hash, color: 'green', change: '+0%' },
+    { label: 'Online Users', value: '0', icon: Users, color: 'blue', change: '+0%' },
+    { label: 'Messages Today', value: '0', icon: MessageCircle, color: 'gold', change: '+0%' },
+    { label: 'Flagged Content', value: '0', icon: AlertTriangle, color: 'red', change: '+0%' },
   ];
 
   const tabs = [

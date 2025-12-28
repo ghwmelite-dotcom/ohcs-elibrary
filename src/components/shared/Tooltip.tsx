@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { cn } from '@/utils/cn';
 
 type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -26,7 +26,7 @@ const arrowStyles: Record<TooltipPosition, string> = {
   right: 'right-full top-1/2 -translate-y-1/2 border-r-surface-900 dark:border-r-surface-700 border-y-transparent border-l-transparent',
 };
 
-const animationVariants: Record<TooltipPosition, { initial: object; animate: object; exit: object }> = {
+const animationVariants: Record<TooltipPosition, Variants> = {
   top: {
     initial: { opacity: 0, y: 5 },
     animate: { opacity: 1, y: 0 },
@@ -72,7 +72,7 @@ export function Tooltip({
     setIsVisible(false);
   };
 
-  const animation = animationVariants[position];
+  const variants = animationVariants[position];
 
   return (
     <div
@@ -86,9 +86,10 @@ export function Tooltip({
       <AnimatePresence>
         {isVisible && (
           <motion.div
-            initial={animation.initial}
-            animate={animation.animate}
-            exit={animation.exit}
+            variants={variants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
             transition={{ duration: 0.15 }}
             className={cn(
               'absolute z-50 px-2 py-1 text-xs font-medium text-white bg-surface-900 dark:bg-surface-700 rounded shadow-lg whitespace-nowrap pointer-events-none',
@@ -140,7 +141,7 @@ export function Popover({
     if (trigger === 'click') setIsOpen(!isOpen);
   };
 
-  const animation = animationVariants[position];
+  const variants = animationVariants[position];
 
   return (
     <div
@@ -152,9 +153,10 @@ export function Popover({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={animation.initial}
-            animate={animation.animate}
-            exit={animation.exit}
+            variants={variants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
             transition={{ duration: 0.15 }}
             className={cn(
               'absolute z-50 bg-white dark:bg-surface-800 rounded-lg shadow-elevation-4 border border-surface-200 dark:border-surface-700',

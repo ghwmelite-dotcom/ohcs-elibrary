@@ -167,7 +167,7 @@ export function DocumentGrid({
           )}
         >
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} variant="card" className="h-64" />
+            <Skeleton key={i} variant="rounded" className="h-64" />
           ))}
         </div>
       </div>

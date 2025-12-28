@@ -30,13 +30,13 @@ export function DMList({
   if (searchQuery) {
     const query = searchQuery.toLowerCase();
     filteredConversations = filteredConversations.filter((conv) =>
-      conv.participant.name.toLowerCase().includes(query)
+      conv.participant?.name?.toLowerCase().includes(query)
     );
   }
 
   // Sort by last message time
   filteredConversations.sort(
-    (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+    (a, b) => new Date(b.lastMessageAt ?? 0).getTime() - new Date(a.lastMessageAt ?? 0).getTime()
   );
 
   return (
@@ -93,7 +93,11 @@ interface ConversationItemProps {
 }
 
 function ConversationItem({ conversation, isActive }: ConversationItemProps) {
-  const { participant, lastMessage, unreadCount, isPinned, isTyping } = conversation;
+  const participant = conversation.participant;
+  const lastMessage = conversation.lastMessage;
+  const unreadCount = conversation.unreadCount ?? 0;
+  const isPinned = conversation.isPinned ?? false;
+  const isTyping = conversation.isTyping ?? false;
 
   const menuItems = [
     { label: isPinned ? 'Unpin' : 'Pin', icon: Pin, onClick: () => {} },
@@ -116,11 +120,11 @@ function ConversationItem({ conversation, isActive }: ConversationItemProps) {
       >
         {/* Avatar */}
         <Avatar
-          src={participant.avatar}
-          name={participant.name}
+          src={participant?.avatar}
+          name={participant?.name ?? 'Unknown'}
           size="md"
           showStatus
-          status={participant.status as 'online' | 'away' | 'offline'}
+          status={(participant?.status as 'online' | 'away' | 'offline') ?? 'offline'}
         />
 
         {/* Content */}
@@ -134,7 +138,7 @@ function ConversationItem({ conversation, isActive }: ConversationItemProps) {
                   : 'text-surface-900 dark:text-surface-50'
               )}
             >
-              {participant.name}
+              {participant?.name ?? 'Unknown'}
             </span>
             {isPinned && <Pin className="w-3 h-3 text-surface-400" />}
           </div>
@@ -146,8 +150,7 @@ function ConversationItem({ conversation, isActive }: ConversationItemProps) {
               </span>
             ) : lastMessage ? (
               <span className={cn(unreadCount > 0 && 'font-medium text-surface-700 dark:text-surface-300')}>
-                {lastMessage.isOwn && 'You: '}
-                {lastMessage.content}
+                {lastMessage}
               </span>
             ) : (
               'Start a conversation'
@@ -157,9 +160,9 @@ function ConversationItem({ conversation, isActive }: ConversationItemProps) {
 
         {/* Right Side */}
         <div className="flex flex-col items-end gap-1">
-          {lastMessage && (
+          {conversation.lastMessageAt && (
             <span className="text-xs text-surface-400">
-              {formatRelativeTime(lastMessage.timestamp)}
+              {formatRelativeTime(conversation.lastMessageAt)}
             </span>
           )}
           {unreadCount > 0 && (

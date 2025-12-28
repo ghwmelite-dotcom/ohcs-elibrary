@@ -193,9 +193,9 @@ function RoomItem({ room, isActive, onSelect }: RoomItemProps) {
           <span className="text-xs text-surface-400">
             {room.lastMessageAt ? formatRelativeTime(room.lastMessageAt) : ''}
           </span>
-          {room.unreadCount > 0 && (
+          {(room.unreadCount ?? 0) > 0 && (
             <span className="min-w-[20px] h-5 px-1.5 bg-primary-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-              {room.unreadCount > 99 ? '99+' : room.unreadCount}
+              {(room.unreadCount ?? 0) > 99 ? '99+' : room.unreadCount}
             </span>
           )}
         </div>

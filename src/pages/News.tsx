@@ -134,10 +134,10 @@ export default function News() {
     url: article.url,
     relevanceScore: article.relevanceScore,
     isBookmarked: article.isBookmarked,
-    isTrending: article.isBreaking || (article.relevanceScore && article.relevanceScore > 90),
+    isTrending: Boolean(article.isBreaking || (article.relevanceScore && article.relevanceScore > 90)),
     readingTimeMinutes: (article as any).readingTimeMinutes || 1,
-    sentiment: (article as any).sentiment || 'neutral',
-    aiSummary: (article as any).aiSummary || null,
+    sentiment: ((article as any).sentiment || 'neutral') as 'positive' | 'neutral' | 'negative',
+    aiSummary: ((article as any).aiSummary as string | null | undefined) ?? null,
   }));
 
   // Transform breaking news for BreakingNews component

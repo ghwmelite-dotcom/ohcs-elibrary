@@ -35,6 +35,7 @@ export interface User {
   firstName: string;
   lastName: string;
   displayName: string;
+  name?: string; // Computed or flattened from API
   avatar?: string;
   coverPhoto?: string;
   role: UserRole;
@@ -45,6 +46,9 @@ export interface User {
   title?: string;
   gradeLevel?: string;
   bio?: string;
+  location?: string;
+  phone?: string;
+  website?: string;
   skills: string[];
   interests: string[];
   socialLinks?: SocialLinks;
@@ -52,11 +56,17 @@ export interface User {
   lastLoginAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  // Gamification fields
+  xp?: number;
+  level?: number;
+  levelName?: string;
+  badgeCount?: number;
 }
 
 export interface SocialLinks {
   linkedin?: string;
   twitter?: string;
+  github?: string;
   website?: string;
 }
 
@@ -175,6 +185,11 @@ export interface Document {
   status: DocumentStatus;
   authorId: UUID;
   author?: User;
+  uploadedBy?: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
   mdaId?: UUID;
   mda?: MDA;
   version: number;
@@ -334,12 +349,17 @@ export interface ForumPost {
   replies?: ForumPost[];
   likes: number;
   dislikes: number;
+  likeCount?: number;
+  dislikeCount?: number;
   isLiked?: boolean;
   isDisliked?: boolean;
+  userVote?: 'up' | 'down' | null;
   isBestAnswer: boolean;
   isEdited: boolean;
   attachments: Attachment[];
   mentions: string[];
+  quotedPost?: ForumPost;
+  quotedPostId?: UUID;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -428,6 +448,13 @@ export interface DirectMessage {
   attachments: Attachment[];
   isRead: boolean;
   createdAt: Timestamp;
+  // Conversation-level fields (when used as conversation object)
+  participant?: User;
+  lastMessage?: string;
+  lastMessageAt?: Timestamp;
+  unreadCount?: number;
+  isPinned?: boolean;
+  isTyping?: boolean;
 }
 
 export interface Conversation {
@@ -627,6 +654,12 @@ export interface LeaderboardEntry {
   level: number;
   badgeCount: number;
   change?: number; // position change from previous period
+  // Flattened user fields from API
+  name?: string;
+  displayName?: string;
+  avatar?: string;
+  mda?: string;
+  mdaName?: string;
 }
 
 export interface GamificationStats {
@@ -1448,20 +1481,6 @@ export interface ResearchRecommendation {
   implementationSteps?: string[];
 }
 
-export interface ResearchTemplate {
-  id: UUID;
-  name: string;
-  description: string;
-  category: ResearchCategory;
-  methodology: ResearchMethodology;
-  defaultObjectives: string[];
-  suggestedPhases: ResearchPhase[];
-  guidelineUrl?: string;
-  isOfficial: boolean;
-  usageCount: number;
-  createdAt: Timestamp;
-}
-
 export interface ResearchActivity {
   id: UUID;
   projectId: UUID;
@@ -1783,6 +1802,7 @@ export interface ResearchTemplate {
   difficultyLevel: TemplateDifficultyLevel;
   usageCount: number;
   isFeatured: boolean;
+  isOfficial?: boolean;
   createdBy?: string;
   createdAt: Timestamp;
 }

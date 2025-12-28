@@ -48,7 +48,7 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
   // Check if user can delete - admin roles or document owner
   const canDelete = user && (
     ['super_admin', 'admin', 'librarian'].includes(user.role || '') ||
-    document.uploadedBy?.id === user.id ||
+    document.author?.id === user.id ||
     isLocalDocument
   );
 

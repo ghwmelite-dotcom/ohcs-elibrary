@@ -307,12 +307,12 @@ function SystemStatusCard({ label, status, value, icon: Icon }: SystemStatusProp
 // API Key Row
 interface APIKeyProps {
   name: string;
-  key: string;
+  apiKey: string;
   lastUsed: string;
   onRevoke: () => void;
 }
 
-function APIKeyRow({ name, key: apiKey, lastUsed, onRevoke }: APIKeyProps) {
+function APIKeyRow({ name, apiKey, lastUsed, onRevoke }: APIKeyProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -1209,11 +1209,13 @@ export default function AdminSettings() {
                     iconColor="#10B981"
                   >
                     <div className="space-y-3">
-                      {apiKeys.map((key) => (
+                      {apiKeys.map((apiKeyItem) => (
                         <APIKeyRow
-                          key={key.name}
-                          {...key}
-                          onRevoke={() => console.log('Revoke', key.name)}
+                          key={apiKeyItem.name}
+                          name={apiKeyItem.name}
+                          apiKey={apiKeyItem.key}
+                          lastUsed={apiKeyItem.lastUsed}
+                          onRevoke={() => console.log('Revoke', apiKeyItem.name)}
                         />
                       ))}
                     </div>

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Level, Badge, UserBadge, XPTransaction, Achievement, Streak, LeaderboardEntry, GamificationStats } from '@/types';
+import type { Level, Badge, UserBadge, XPTransaction, Achievement as AchievementType, Streak, LeaderboardEntry, GamificationStats } from '@/types';
 
 // API base URL
 const API_BASE = import.meta.env.PROD

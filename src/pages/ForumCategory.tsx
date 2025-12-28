@@ -16,7 +16,7 @@ export default function ForumCategory() {
     categories,
     topics,
     fetchCategories,
-    fetchTopicsByCategory,
+    fetchTopics,
     isLoading,
   } = useForumStore();
   const [showNewTopic, setShowNewTopic] = useState(false);
@@ -27,9 +27,9 @@ export default function ForumCategory() {
   useEffect(() => {
     fetchCategories();
     if (id) {
-      fetchTopicsByCategory(id);
+      fetchTopics(id);
     }
-  }, [fetchCategories, fetchTopicsByCategory, id]);
+  }, [fetchCategories, fetchTopics, id]);
 
   if (isLoading && !category) {
     return (
@@ -121,11 +121,15 @@ export default function ForumCategory() {
           <CategoryStats
             category={{
               name: category.name,
-              icon: category.icon,
-              color: category.color,
+              icon: category.icon || '',
+              color: category.color || '#6B7280',
               topicCount: category.topicCount,
               postCount: category.postCount,
-              lastActivity: category.lastActivity,
+              lastActivity: category.lastActivityAt ? {
+                topicTitle: 'Recent activity',
+                userName: 'User',
+                timestamp: category.lastActivityAt,
+              } : undefined,
             }}
           />
 

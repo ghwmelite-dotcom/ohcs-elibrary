@@ -93,6 +93,11 @@ export default function Leaderboard() {
     { value: 'allTime', label: 'All Time' },
   ];
 
+  // Convert period format for LeaderboardTable component
+  const getPeriodForTable = (p: Period): 'daily' | 'weekly' | 'monthly' | 'all-time' => {
+    return p === 'allTime' ? 'all-time' : p;
+  };
+
   const tabs = [
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
     { id: 'achievements', label: 'Achievements', icon: Medal },
@@ -120,6 +125,7 @@ export default function Leaderboard() {
     rank: entry.rank,
     change: 0,
     mda: '',
+    badgeCount: entry.badgeCount || 0,
   }));
 
   // Show skeleton while loading
@@ -388,7 +394,7 @@ export default function Leaderboard() {
                 <LeaderboardTable
                   entries={tableEntries}
                   currentUserId={user?.id}
-                  period={period}
+                  period={getPeriodForTable(period)}
                   showPodium={false}
                 />
               </>
@@ -487,16 +493,8 @@ export default function Leaderboard() {
             exit={{ opacity: 0, y: -20 }}
           >
             <BadgeGrid
-              badges={allBadges.map((b) => ({
-                id: b.id,
-                name: b.name,
-                description: b.description || '',
-                icon: b.icon,
-                rarity: (b.rarity as 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary') || 'common',
-                earnedAt: b.earnedAt,
-                category: b.category,
-                isNew: false,
-              }))}
+              badges={allBadges}
+              earnedBadgeIds={allBadges.filter((b: any) => b.earnedAt).map((b) => b.id)}
               columns={4}
             />
           </motion.div>

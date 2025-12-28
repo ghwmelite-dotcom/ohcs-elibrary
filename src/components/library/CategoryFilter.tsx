@@ -20,7 +20,7 @@ import {
 import type { DocumentCategory } from '@/types';
 
 // Map category IDs to icons
-const categoryIcons: Record<DocumentCategory, React.ComponentType<{ className?: string }>> = {
+const categoryIcons: Record<DocumentCategory, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   circulars: FileText,
   policies: FileCheck,
   training: GraduationCap,

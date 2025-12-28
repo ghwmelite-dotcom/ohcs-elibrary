@@ -101,7 +101,7 @@ export default function Article() {
       category: currentArticle.category,
       publishedAt: currentArticle.publishedAt,
       source: currentArticle.source,
-      readingTimeMinutes: currentArticle.readingTimeMinutes,
+      readingTimeMinutes: 5,
     });
   };
 

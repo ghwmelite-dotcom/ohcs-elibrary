@@ -31,7 +31,7 @@ import { formatRelativeTime, formatDate } from '@/utils/formatters';
 export default function ForumTopic() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { topics, categories, posts, fetchTopicById, fetchPosts, isLoading } = useForumStore();
+  const { topics, categories, posts, fetchTopic, fetchPosts, isLoading } = useForumStore();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,10 +43,10 @@ export default function ForumTopic() {
 
   useEffect(() => {
     if (id) {
-      fetchTopicById(id);
+      fetchTopic(id);
       fetchPosts(id);
     }
-  }, [id, fetchTopicById, fetchPosts]);
+  }, [id, fetchTopic, fetchPosts]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -103,7 +103,7 @@ export default function ForumTopic() {
   const menuItems = [
     { label: 'Share', icon: Share2, onClick: () => {} },
     { label: 'Report', icon: Flag, onClick: () => {} },
-    ...(topic.author.id === 'current-user'
+    ...(topic.author?.id === 'current-user'
       ? [
           { label: 'Edit', icon: Edit2, onClick: () => {} },
           { label: 'Delete', icon: Trash2, onClick: () => {}, className: 'text-error-600' },
@@ -115,13 +115,16 @@ export default function ForumTopic() {
   const topicPost = {
     id: 'topic-post',
     topicId: topic.id,
+    authorId: topic.authorId,
     author: topic.author,
-    content: `${topic.preview}\n\nThis is the full content of the topic post. It contains detailed information about the subject matter being discussed.\n\nKey points to consider:\n1. First important point\n2. Second important point\n3. Third important point\n\nI would appreciate any insights or feedback from the community on this matter.`,
+    content: `${topic.content}\n\nThis is the full content of the topic post. It contains detailed information about the subject matter being discussed.\n\nKey points to consider:\n1. First important point\n2. Second important point\n3. Third important point\n\nI would appreciate any insights or feedback from the community on this matter.`,
     createdAt: topic.createdAt,
-    likeCount: topic.likeCount,
-    dislikeCount: 0,
+    likes: 0,
+    dislikes: 0,
     isBestAnswer: false,
     isEdited: false,
+    attachments: [],
+    mentions: [],
   };
 
   const allPosts = [topicPost, ...topicPosts];
@@ -158,8 +161,8 @@ export default function ForumTopic() {
       <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
         <div className="flex items-start gap-4">
           <Avatar
-            src={topic.author.avatar}
-            name={topic.author.name}
+            src={topic.author?.avatar}
+            name={topic.author?.name || topic.author?.displayName || 'Unknown'}
             size="lg"
             className="hidden sm:block"
           />
@@ -167,18 +170,18 @@ export default function ForumTopic() {
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap mb-2">
               {topic.isPinned && (
-                <Badge variant="status" className="bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
+                <Badge variant="primary" className="bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
                   <Pin className="w-3 h-3 mr-1" />
                   Pinned
                 </Badge>
               )}
               {topic.isLocked && (
-                <Badge variant="status" className="bg-surface-200 text-surface-600 dark:bg-surface-700 dark:text-surface-400">
+                <Badge variant="secondary" className="bg-surface-200 text-surface-600 dark:bg-surface-700 dark:text-surface-400">
                   <Lock className="w-3 h-3 mr-1" />
                   Locked
                 </Badge>
               )}
-              {topic.hasBestAnswer && (
+              {topic.isAnswered && (
                 <Badge variant="success">Solved</Badge>
               )}
               {category && (
@@ -200,19 +203,19 @@ export default function ForumTopic() {
             <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-surface-500">
               <span className="flex items-center gap-2 sm:hidden">
                 <Avatar
-                  src={topic.author.avatar}
-                  name={topic.author.name}
+                  src={topic.author?.avatar}
+                  name={topic.author?.name || topic.author?.displayName || 'Unknown'}
                   size="xs"
                 />
-                {topic.author.name}
+                {topic.author?.name || topic.author?.displayName || 'Unknown'}
               </span>
               <span className="hidden sm:inline">
                 by{' '}
                 <Link
-                  to={`/profile/${topic.author.id}`}
+                  to={`/profile/${topic.author?.id}`}
                   className="font-medium text-surface-700 dark:text-surface-300 hover:text-primary-600"
                 >
-                  {topic.author.name}
+                  {topic.author?.name || topic.author?.displayName || 'Unknown'}
                 </Link>
               </span>
               <span className="flex items-center gap-1">
@@ -221,11 +224,11 @@ export default function ForumTopic() {
               </span>
               <span className="flex items-center gap-1">
                 <Eye className="w-4 h-4" />
-                {topic.viewCount} views
+                {topic.views} views
               </span>
               <span className="flex items-center gap-1">
                 <MessageSquare className="w-4 h-4" />
-                {topic.replyCount} replies
+                {topic.postCount} replies
               </span>
             </div>
 
@@ -271,8 +274,8 @@ export default function ForumTopic() {
         {/* Posts */}
         <div className="lg:col-span-3 space-y-6">
           <PostThread
-            posts={allPosts}
-            topicAuthorId={topic.author.id}
+            posts={allPosts as import('@/types').ForumPost[]}
+            topicAuthorId={topic.author?.id || topic.authorId}
             currentUserId="current-user"
             onLike={(postId) => console.log('Like:', postId)}
             onDislike={(postId) => console.log('Dislike:', postId)}
@@ -338,7 +341,7 @@ export default function ForumTopic() {
                     {t.title}
                   </Link>
                   <p className="text-xs text-surface-400 mt-1">
-                    {t.replyCount} replies &bull; {formatRelativeTime(t.createdAt)}
+                    {t.postCount} replies &bull; {formatRelativeTime(t.createdAt)}
                   </p>
                 </li>
               ))}

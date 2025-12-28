@@ -158,7 +158,7 @@ export function CreateGroupModal({
               placeholder="Enter group name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              helperText="Minimum 3 characters"
+              hint="Minimum 3 characters"
             />
 
             {/* Description */}

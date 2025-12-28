@@ -30,7 +30,7 @@ const moodEmojis: Record<number, string> = {
 export function WellnessDashboardCard() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
-  const { moodStats, todayMood, fetchMoodHistory, moodHistory } = useWellnessStore();
+  const { todayMood, fetchMoodHistory, moodHistory } = useWellnessStore();
 
   // Fetch mood history on mount if authenticated
   useEffect(() => {
@@ -47,6 +47,24 @@ export function WellnessDashboardCard() {
   }, []);
 
   const displayName = user?.firstName || user?.displayName?.split(' ')[0] || 'there';
+
+  // Calculate mood stats from history
+  const moodStats = useMemo(() => {
+    if (moodHistory.length < 2) return null;
+
+    const moods = moodHistory.slice(0, 7).map(m => m.mood);
+    const average = moods.reduce((a, b) => a + b, 0) / moods.length;
+
+    // Simple trend calculation: compare recent average to older average
+    const recentAvg = moods.slice(0, Math.ceil(moods.length / 2)).reduce((a, b) => a + b, 0) / Math.ceil(moods.length / 2);
+    const olderAvg = moods.slice(Math.ceil(moods.length / 2)).reduce((a, b) => a + b, 0) / Math.floor(moods.length / 2);
+
+    let trend: 'improving' | 'declining' | 'stable' = 'stable';
+    if (recentAvg - olderAvg > 0.5) trend = 'improving';
+    else if (olderAvg - recentAvg > 0.5) trend = 'declining';
+
+    return { average, count: moodHistory.length, trend };
+  }, [moodHistory]);
 
   // Calculate mood trend
   const moodTrend = useMemo(() => {

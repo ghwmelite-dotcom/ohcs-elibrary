@@ -724,6 +724,8 @@ export const useLibraryStore = create<LibraryStore>()(
           description: data.description,
           category: data.category,
           accessLevel: data.accessLevel,
+          status: 'published',
+          authorId: 'local-user',
           tags: data.tags || [],
           fileName: data.fileName,
           fileSize: data.fileSize,
@@ -745,7 +747,9 @@ export const useLibraryStore = create<LibraryStore>()(
           mda: {
             id: 'local-mda',
             name: 'OHCS',
-            acronym: 'OHCS',
+            abbreviation: 'OHCS',
+            type: 'agency' as const,
+            createdAt: new Date().toISOString(),
           },
         };
 

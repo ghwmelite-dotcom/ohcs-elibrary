@@ -90,7 +90,7 @@ export function AIAnalysisPanel({
     }
   }, [chatOpen]);
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem('auth_token') ||
       JSON.parse(localStorage.getItem('ohcs-auth-storage') || '{}')?.state?.token;
     return token ? { 'Authorization': `Bearer ${token}` } : {};

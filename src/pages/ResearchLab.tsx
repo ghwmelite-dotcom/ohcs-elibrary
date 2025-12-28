@@ -165,7 +165,7 @@ export default function ResearchLab() {
               },
               {
                 label: 'Total Projects',
-                value: dashboard?.stats?.totalProjects || 0,
+                value: (dashboard?.stats?.myActiveProjects || 0) + (dashboard?.stats?.myCompletedProjects || 0),
                 icon: FlaskConical,
                 color: 'from-purple-500 to-purple-600',
               },
@@ -375,7 +375,7 @@ export default function ResearchLab() {
                           </span>
                           {' '}
                           <span className="font-medium text-primary-600 dark:text-primary-400">
-                            {activity.projectTitle}
+                            {(activity.metadata as { projectTitle?: string })?.projectTitle || 'a project'}
                           </span>
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">

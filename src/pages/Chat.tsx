@@ -101,11 +101,11 @@ export default function Chat() {
 
   // Toggle functions with keyboard shortcut support
   const toggleRoomList = useCallback(() => {
-    setIsRoomListCollapsed(prev => !prev);
+    setIsRoomListCollapsed((prev: boolean) => !prev);
   }, []);
 
   const toggleMembers = useCallback(() => {
-    setIsMembersCollapsed(prev => !prev);
+    setIsMembersCollapsed((prev: boolean) => !prev);
   }, []);
 
   const toggleFocusMode = useCallback(() => {

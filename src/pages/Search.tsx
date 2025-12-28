@@ -239,7 +239,7 @@ export default function Search() {
             </div>
           ) : filteredResults.length === 0 ? (
             <EmptyState
-              icon={SearchIcon}
+              icon={<SearchIcon className="w-full h-full" />}
               title="No results found"
               description={`We couldn't find anything matching "${query}" in ${category === 'all' ? 'any category' : category}`}
               action={{
@@ -315,7 +315,7 @@ export default function Search() {
         </>
       ) : (
         <EmptyState
-          icon={SearchIcon}
+          icon={<SearchIcon className="w-full h-full" />}
           title="Search the platform"
           description="Find documents, forum discussions, groups, news articles, and colleagues"
         />

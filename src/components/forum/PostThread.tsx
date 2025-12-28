@@ -64,8 +64,8 @@ export function PostThread({
           key={post.id}
           post={post}
           index={index}
-          isTopicAuthor={post.author.id === topicAuthorId}
-          isOwnPost={post.author.id === currentUserId}
+          isTopicAuthor={post.author?.id === topicAuthorId}
+          isOwnPost={post.author?.id === currentUserId}
           canMarkBestAnswer={currentUserId === topicAuthorId}
           replyingTo={replyingTo}
           replyContent={replyContent}
@@ -189,24 +189,24 @@ function PostItem({
           {/* Author Sidebar */}
           <div className="hidden sm:block text-center">
             <Avatar
-              src={post.author.avatar}
-              name={post.author.name}
+              src={post.author?.avatar}
+              name={post.author?.name || post.author?.displayName}
               size="lg"
               className="mx-auto"
             />
             <p className="mt-2 font-medium text-surface-900 dark:text-surface-50 text-sm">
-              {post.author.name}
+              {post.author?.name || post.author?.displayName}
             </p>
-            {post.author.title && (
+            {post.author?.title && (
               <p className="text-xs text-surface-500">{post.author.title}</p>
             )}
             <div className="mt-2 flex flex-col gap-1">
               {isTopicAuthor && (
-                <Badge variant="status" className="mx-auto">
+                <Badge variant="info" className="mx-auto">
                   OP
                 </Badge>
               )}
-              {post.author.level && (
+              {post.author?.level && (
                 <span className="text-xs px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
                   Lvl {post.author.level}
                 </span>
@@ -219,9 +219,9 @@ function PostItem({
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 sm:hidden">
-                <Avatar src={post.author.avatar} name={post.author.name} size="sm" />
+                <Avatar src={post.author?.avatar} name={post.author?.name || post.author?.displayName} size="sm" />
                 <span className="font-medium text-surface-900 dark:text-surface-50">
-                  {post.author.name}
+                  {post.author?.name || post.author?.displayName}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-surface-500">
@@ -242,7 +242,7 @@ function PostItem({
             {post.quotedPost && (
               <div className="mb-4 p-3 bg-surface-100 dark:bg-surface-700 rounded-lg border-l-4 border-primary-500">
                 <p className="text-xs text-surface-500 mb-1">
-                  Replying to {post.quotedPost.author}:
+                  Replying to {post.quotedPost.author?.name || post.quotedPost.author?.displayName || 'Unknown'}:
                 </p>
                 <p className="text-sm text-surface-600 dark:text-surface-400 line-clamp-2">
                   {post.quotedPost.content}
@@ -303,14 +303,14 @@ function PostItem({
                   <span
                     className={cn(
                       'font-medium min-w-[2rem] text-center',
-                      post.likeCount - post.dislikeCount > 0
+                      (post.likeCount ?? post.likes ?? 0) - (post.dislikeCount ?? post.dislikes ?? 0) > 0
                         ? 'text-success-600'
-                        : post.likeCount - post.dislikeCount < 0
+                        : (post.likeCount ?? post.likes ?? 0) - (post.dislikeCount ?? post.dislikes ?? 0) < 0
                         ? 'text-error-600'
                         : 'text-surface-500'
                     )}
                   >
-                    {post.likeCount - post.dislikeCount}
+                    {(post.likeCount ?? post.likes ?? 0) - (post.dislikeCount ?? post.dislikes ?? 0)}
                   </span>
                   <button
                     onClick={onDislike}
@@ -352,7 +352,7 @@ function PostItem({
                   <textarea
                     value={replyContent}
                     onChange={(e) => onReplyContentChange(e.target.value)}
-                    placeholder={`Reply to ${post.author.name}...`}
+                    placeholder={`Reply to ${post.author?.name || post.author?.displayName || 'user'}...`}
                     className={cn(
                       'w-full px-4 py-3 bg-surface-50 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-lg',
                       'text-surface-900 dark:text-surface-50 placeholder:text-surface-400',

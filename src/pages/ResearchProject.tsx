@@ -226,9 +226,10 @@ export default function ResearchProject() {
   const phase = RESEARCH_PHASES[currentProject.phase];
   const isOwner = currentProject.createdById === user?.id;
   const isLead = currentProject.teamLeadId === user?.id;
-  const canEdit = isOwner || isLead || currentProject.isMember;
+  const isMember = currentProject.teamMembers?.some(member => member.userId === user?.id) ?? false;
+  const canEdit = isOwner || isLead || isMember;
 
-  const tabs = [
+  const tabs: Array<{ id: TabType; label: string; icon: typeof Target; count?: number; isAI?: boolean }> = [
     { id: 'overview', label: 'Overview', icon: Target },
     { id: 'literature', label: 'Literature', icon: BookOpen, count: currentProject.literatureCount },
     { id: 'notes', label: 'Notes', icon: StickyNote },
@@ -243,7 +244,7 @@ export default function ResearchProject() {
     { id: 'team', label: 'Team', icon: Users, count: currentProject.teamMemberCount },
     { id: 'activity', label: 'Activity', icon: Activity },
     { id: 'comments', label: 'Comments', icon: MessageSquare },
-  ] as const;
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -763,9 +764,9 @@ export default function ResearchProject() {
                       key={insight.id}
                       className={cn(
                         'bg-white dark:bg-gray-800 rounded-xl p-5 border-l-4',
-                        insight.priority === 'high' && 'border-l-red-500',
-                        insight.priority === 'medium' && 'border-l-yellow-500',
-                        insight.priority === 'low' && 'border-l-green-500',
+                        insight.confidence >= 0.7 && 'border-l-green-500',
+                        insight.confidence >= 0.4 && insight.confidence < 0.7 && 'border-l-yellow-500',
+                        insight.confidence < 0.4 && 'border-l-red-500',
                         'border border-gray-200 dark:border-gray-700'
                       )}
                     >
@@ -775,15 +776,16 @@ export default function ResearchProject() {
                             <span className={cn(
                               'px-2 py-0.5 text-xs rounded-full capitalize',
                               insight.type === 'recommendation' && 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300',
-                              insight.type === 'finding' && 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300',
+                              insight.type === 'key_finding' && 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300',
                               insight.type === 'gap' && 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300',
-                              insight.type === 'risk' && 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300',
-                              insight.type === 'methodology' && 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300',
-                              insight.type === 'opportunity' && 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300'
+                              insight.type === 'contradiction' && 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300',
+                              insight.type === 'synthesis' && 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300',
+                              insight.type === 'opportunity' && 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300',
+                              insight.type === 'trend' && 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
                             )}>
-                              {insight.type}
+                              {insight.type.replace('_', ' ')}
                             </span>
-                            {insight.isAiGenerated && (
+                            {insight.isAIGenerated && (
                               <span className="text-xs text-gray-400 flex items-center gap-1">
                                 <Sparkles className="w-3 h-3" /> AI
                               </span>
@@ -806,16 +808,13 @@ export default function ResearchProject() {
                         {insight.content}
                       </p>
                       <div className="flex items-center gap-2 mt-3">
-                        <span className={cn(
-                          'text-xs px-2 py-0.5 rounded',
-                          insight.priority === 'high' && 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400',
-                          insight.priority === 'medium' && 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400',
-                          insight.priority === 'low' && 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                        )}>
-                          {insight.priority} priority
-                        </span>
-                        {insight.confidence && (
-                          <span className="text-xs text-gray-400">
+                        {insight.confidence !== undefined && (
+                          <span className={cn(
+                            'text-xs px-2 py-0.5 rounded',
+                            insight.confidence >= 0.7 && 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400',
+                            insight.confidence >= 0.4 && insight.confidence < 0.7 && 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400',
+                            insight.confidence < 0.4 && 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                          )}>
                             {Math.round(insight.confidence * 100)}% confidence
                           </span>
                         )}
@@ -912,12 +911,14 @@ export default function ResearchProject() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-full capitalize">
-                                {brief.briefType}
+                                Policy Brief
                               </span>
                               <span className={cn(
                                 'px-2 py-0.5 text-xs rounded-full',
                                 brief.status === 'published' && 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300',
-                                brief.status === 'draft' && 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                                brief.status === 'draft' && 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
+                                brief.status === 'review' && 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300',
+                                brief.status === 'approved' && 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
                               )}>
                                 {brief.status}
                               </span>
@@ -926,7 +927,7 @@ export default function ResearchProject() {
                               {brief.title}
                             </h4>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              For: {brief.audience} • Created: {new Date(brief.createdAt).toLocaleDateString()}
+                              Version {brief.version} • Created: {new Date(brief.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                           <div className="flex items-center gap-1">
@@ -938,7 +939,7 @@ export default function ResearchProject() {
                               <Eye className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleCopyBrief(brief.id, brief.content)}
+                              onClick={() => handleCopyBrief(brief.id, brief.executiveSummary)}
                               className="p-2 text-gray-400 hover:text-primary-500 transition-colors"
                               title="Copy to Clipboard"
                             >
@@ -972,7 +973,7 @@ export default function ResearchProject() {
                             <div className="p-5 pt-0 border-t border-gray-100 dark:border-gray-700 mt-4">
                               <div className="prose prose-sm dark:prose-invert max-w-none">
                                 <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-auto max-h-96">
-                                  {brief.content}
+                                  {brief.executiveSummary}
                                 </pre>
                               </div>
                             </div>
@@ -1158,7 +1159,7 @@ export default function ResearchProject() {
               </h2>
 
               {/* Comment Form */}
-              {currentProject.isMember && (
+              {isMember && (
                 <form onSubmit={handleCommentSubmit} className="mb-6">
                   <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
                     <textarea

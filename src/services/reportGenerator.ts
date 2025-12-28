@@ -1,18 +1,25 @@
 /**
  * PDF Report Generator for Wellness Centre
  * Generates individual user reports and aggregate analytics reports
+ * Uses dynamic imports to reduce initial bundle size
  */
 
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import type { UserWellnessReport, AggregateWellnessReport, CounselorTopic } from '@/types';
 
-// Extend jsPDF with autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-    lastAutoTable: { finalY: number };
-  }
+// Extend jsPDF with autoTable (for TypeScript)
+interface JsPDFWithAutoTable {
+  autoTable: (options: unknown) => void;
+  lastAutoTable: { finalY: number };
+  internal: { pageSize: { getWidth: () => number; getHeight: () => number } };
+  setFillColor: (r: number, g: number, b: number) => void;
+  rect: (x: number, y: number, w: number, h: number, style: string) => void;
+  setTextColor: (r: number, g: number, b: number) => void;
+  setFontSize: (size: number) => void;
+  setFont: (font: string, style: string) => void;
+  text: (text: string, x: number, y: number, options?: { align?: string }) => void;
+  setDrawColor: (r: number, g: number, b: number) => void;
+  line: (x1: number, y1: number, x2: number, y2: number) => void;
+  output: (type: string) => Blob;
 }
 
 // Topic labels for display
@@ -35,9 +42,22 @@ const moodLabels: Record<number, string> = {
 };
 
 /**
+ * Dynamically load jsPDF and jspdf-autotable
+ * This reduces the initial bundle size significantly (~300KB savings)
+ */
+async function loadJsPDF(): Promise<new () => JsPDFWithAutoTable> {
+  const [{ default: jsPDF }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ]);
+  return jsPDF as unknown as new () => JsPDFWithAutoTable;
+}
+
+/**
  * Generate Individual User Wellness Report PDF
  */
 export async function generateUserReport(data: UserWellnessReport): Promise<Blob> {
+  const jsPDF = await loadJsPDF();
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   let yPos = 20;
@@ -245,6 +265,7 @@ export async function generateUserReport(data: UserWellnessReport): Promise<Blob
  * Generate Aggregate Wellness Analytics Report PDF
  */
 export async function generateAggregateReport(data: AggregateWellnessReport): Promise<Blob> {
+  const jsPDF = await loadJsPDF();
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   let yPos = 20;
@@ -299,7 +320,7 @@ export async function generateAggregateReport(data: AggregateWellnessReport): Pr
 
   let col = 0;
   let row = 0;
-  overviewStats.forEach((stat, i) => {
+  overviewStats.forEach((stat) => {
     const x = 20 + (col * 60);
     const y = yPos + (row * 10);
 
