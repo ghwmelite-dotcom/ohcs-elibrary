@@ -9,6 +9,7 @@ import {
   Users,
   Newspaper,
   Trophy,
+  Heart,
   Bell,
   Settings,
   HelpCircle,
@@ -39,6 +40,7 @@ const mainNavItems: NavItem[] = [
   { path: '/chat', label: 'Chat', icon: <MessagesSquare className="w-5 h-5" /> },
   { path: '/groups', label: 'Groups', icon: <Users className="w-5 h-5" /> },
   { path: '/news', label: 'News', icon: <Newspaper className="w-5 h-5" /> },
+  { path: '/wellness', label: 'Wellness', icon: <Heart className="w-5 h-5" /> },
   { path: '/leaderboard', label: 'Leaderboard', icon: <Trophy className="w-5 h-5" /> },
 ];
 

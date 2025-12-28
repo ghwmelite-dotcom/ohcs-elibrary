@@ -11,6 +11,7 @@ import {
   BarChart3,
   Settings,
   Shield,
+  Heart,
   ChevronLeft,
   Star,
 } from 'lucide-react';
@@ -28,6 +29,7 @@ const adminNavItems = [
   { path: '/admin/chat', label: 'Chat', icon: MessagesSquare },
   { path: '/admin/groups', label: 'Groups', icon: Users2 },
   { path: '/admin/news', label: 'News', icon: Newspaper },
+  { path: '/admin/wellness', label: 'Wellness', icon: Heart },
   { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
   { path: '/admin/audit', label: 'Audit Logs', icon: Shield },

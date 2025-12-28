@@ -968,3 +968,141 @@ export interface UseMutationOptions<TData, TVariables> {
   onError?: (error: Error) => void;
   onSettled?: () => void;
 }
+
+// ============================================================================
+// Wellness & Counselor Types (AI Counselor "Ayo")
+// ============================================================================
+
+export type CounselorTopic =
+  | 'work_stress'
+  | 'career'
+  | 'personal'
+  | 'relationships'
+  | 'financial'
+  | 'general';
+
+export type CounselorSessionStatus = 'active' | 'completed' | 'escalated';
+
+export interface CounselorSession {
+  id: UUID;
+  userId?: UUID;
+  anonymousId?: string;
+  title?: string;
+  topic?: CounselorTopic;
+  status: CounselorSessionStatus;
+  messageCount: number;
+  mood?: number;
+  isAnonymous: boolean;
+  lastMessageAt?: Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface CounselorMessage {
+  id: UUID;
+  sessionId: UUID;
+  role: 'user' | 'assistant';
+  content: string;
+  helpful?: boolean | null;
+  createdAt: Timestamp;
+}
+
+export type MoodLevel = 1 | 2 | 3 | 4 | 5;
+
+export type MoodFactor =
+  | 'work'
+  | 'family'
+  | 'health'
+  | 'sleep'
+  | 'finances'
+  | 'relationships'
+  | 'personal';
+
+export interface MoodEntry {
+  id: UUID;
+  userId: UUID;
+  mood: MoodLevel;
+  factors?: MoodFactor[];
+  notes?: string;
+  createdAt: Timestamp;
+}
+
+export interface MoodStats {
+  average: number | null;
+  count: number;
+  trend: 'improving' | 'declining' | 'stable' | null;
+}
+
+export type WellnessResourceType = 'article' | 'video' | 'audio' | 'exercise';
+
+export type WellnessCategory =
+  | 'stress'
+  | 'career'
+  | 'relationships'
+  | 'mindfulness'
+  | 'sleep';
+
+export type WellnessDifficulty = 'beginner' | 'intermediate' | 'advanced';
+
+export interface WellnessResource {
+  id: UUID;
+  title: string;
+  description?: string;
+  content?: string;
+  type: WellnessResourceType;
+  category: WellnessCategory;
+  thumbnailUrl?: string;
+  mediaUrl?: string;
+  duration?: number;
+  difficulty: WellnessDifficulty;
+  views: number;
+  likes: number;
+  isBookmarked?: boolean;
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+}
+
+export type EscalationUrgency = 'low' | 'normal' | 'high' | 'crisis';
+
+export type EscalationStatus = 'pending' | 'acknowledged' | 'scheduled' | 'resolved';
+
+export interface CounselorEscalation {
+  id: UUID;
+  sessionId: UUID;
+  userId?: UUID;
+  reason?: string;
+  urgency: EscalationUrgency;
+  status: EscalationStatus;
+  assignedCounselorId?: UUID;
+  assignedCounselorName?: string;
+  notes?: string;
+  scheduledAt?: Timestamp;
+  resolvedAt?: Timestamp;
+  createdAt: Timestamp;
+  // Session info
+  sessionTopic?: CounselorTopic;
+  sessionMessages?: number;
+  // User info
+  userName?: string;
+  userEmail?: string;
+}
+
+export interface WellnessStats {
+  sessions: {
+    totalSessions: number;
+    activeSessions: number;
+    escalatedSessions: number;
+    weeklyNew: number;
+  };
+  escalations: {
+    total: number;
+    pending: number;
+    urgent: number;
+  };
+  avgMood: number | null;
+  topTopics: Array<{ topic: string; count: number }>;
+  resources: {
+    total: number;
+    totalViews: number;
+  };
+}

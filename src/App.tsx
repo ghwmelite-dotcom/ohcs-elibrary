@@ -48,6 +48,12 @@ const Search = lazy(() => import('@/pages/Search'));
 const Help = lazy(() => import('@/pages/Help'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
+// Wellness pages
+const Wellness = lazy(() => import('@/pages/Wellness'));
+const WellnessChat = lazy(() => import('@/pages/WellnessChat'));
+const WellnessResources = lazy(() => import('@/pages/WellnessResources'));
+const WellnessResource = lazy(() => import('@/pages/WellnessResource'));
+
 // Admin pages
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
@@ -59,6 +65,7 @@ const AdminNews = lazy(() => import('@/pages/admin/AdminNews'));
 const AdminAnalytics = lazy(() => import('@/pages/admin/AdminAnalytics'));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
 const AdminAudit = lazy(() => import('@/pages/admin/AdminAudit'));
+const AdminWellness = lazy(() => import('@/pages/admin/AdminWellness'));
 
 // Loading fallback component
 function PageLoader() {
@@ -273,6 +280,13 @@ export default function App() {
             <Route path="/news" element={<News />} />
             <Route path="/news/:articleId" element={<Article />} />
 
+            {/* Wellness routes */}
+            <Route path="/wellness" element={<Wellness />} />
+            <Route path="/wellness/chat" element={<WellnessChat />} />
+            <Route path="/wellness/chat/:sessionId" element={<WellnessChat />} />
+            <Route path="/wellness/resources" element={<WellnessResources />} />
+            <Route path="/wellness/resources/:id" element={<WellnessResource />} />
+
             {/* Profile routes */}
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
@@ -304,6 +318,7 @@ export default function App() {
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/audit" element={<AdminAudit />} />
+            <Route path="/admin/wellness" element={<AdminWellness />} />
           </Route>
 
           {/* 404 route */}

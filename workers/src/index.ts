@@ -20,6 +20,7 @@ import {
   gamificationRoutes,
   settingsRoutes,
   adminRoutes,
+  counselorRoutes,
 } from './routes';
 
 export interface Env {
@@ -131,6 +132,7 @@ app.route('/api/v1/notifications', notificationsRoutes);
 app.route('/api/v1/settings', settingsRoutes);
 app.route('/api/v1/gamification', gamificationRoutes);
 app.route('/api/v1/admin', adminRoutes);
+app.route('/api/v1/counselor', counselorRoutes);
 
 // News aggregation admin endpoints
 app.post('/api/v1/admin/news/aggregate', authMiddleware, async (c) => {
