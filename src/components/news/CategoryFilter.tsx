@@ -140,18 +140,6 @@ export function SourceFilter({
   onClearAll,
   isRefreshing,
 }: SourceFilterProps) {
-  const handleViewSource = (e: React.MouseEvent, url?: string) => {
-    e.stopPropagation();
-    if (url) {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
-  };
-
-  const handleRefreshSource = (e: React.MouseEvent, sourceId: string) => {
-    e.stopPropagation();
-    onSourceRefresh?.(sourceId);
-  };
-
   return (
     <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-4">
       <div className="flex items-center justify-between mb-4">
@@ -180,33 +168,38 @@ export function SourceFilter({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.03 }}
               className={cn(
-                'group relative flex items-center gap-3 px-3 py-2 rounded-lg transition-colors cursor-pointer',
+                'group relative flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
                 isSelected
                   ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
                   : 'hover:bg-surface-50 dark:hover:bg-surface-700 text-surface-700 dark:text-surface-300'
               )}
-              onClick={() => onSourceToggle(source.id)}
             >
-              {source.icon ? (
-                <img
-                  src={source.icon}
-                  alt={source.name}
-                  className="w-5 h-5 rounded flex-shrink-0"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              ) : (
-                <div className="w-5 h-5 bg-surface-200 dark:bg-surface-600 rounded flex items-center justify-center text-xs font-bold flex-shrink-0">
-                  {source.name.charAt(0)}
-                </div>
-              )}
-              <span className="flex-1 font-medium truncate">{source.name}</span>
+              {/* Clickable area for source selection */}
+              <div
+                className="flex items-center gap-3 flex-1 cursor-pointer min-w-0"
+                onClick={() => onSourceToggle(source.id)}
+              >
+                {source.icon ? (
+                  <img
+                    src={source.icon}
+                    alt={source.name}
+                    className="w-5 h-5 rounded flex-shrink-0"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="w-5 h-5 bg-surface-200 dark:bg-surface-600 rounded flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {source.name.charAt(0)}
+                  </div>
+                )}
+                <span className="flex-1 font-medium truncate">{source.name}</span>
+              </div>
 
               {/* Count badge - hidden on hover to make room for action buttons */}
               {source.count !== undefined && (
                 <span className={cn(
-                  'text-xs px-2 py-0.5 rounded-full group-hover:hidden',
+                  'text-xs px-2 py-0.5 rounded-full group-hover:hidden flex-shrink-0',
                   isSelected
                     ? 'bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300'
                     : 'bg-surface-100 dark:bg-surface-700 text-surface-500'
@@ -218,13 +211,13 @@ export function SourceFilter({
                 <CheckCircle2 className="w-4 h-4 text-primary-600 dark:text-primary-400 group-hover:hidden flex-shrink-0" />
               )}
 
-              {/* Hover action buttons */}
+              {/* Hover action buttons - separate from clickable area */}
               <div className="hidden group-hover:flex items-center gap-1 flex-shrink-0">
                 {source.url && (
                   <button
                     type="button"
-                    onClick={(e) => handleViewSource(e, source.url)}
-                    className="p-1.5 rounded-md bg-primary-100 dark:bg-primary-800 hover:bg-primary-200 dark:hover:bg-primary-700 text-primary-700 dark:text-primary-300 transition-colors"
+                    onClick={() => window.open(source.url, '_blank', 'noopener,noreferrer')}
+                    className="p-1.5 rounded-md bg-green-100 hover:bg-green-200 text-green-700 dark:bg-green-900/50 dark:hover:bg-green-800/50 dark:text-green-300 transition-colors"
                     title={`Visit ${source.name}`}
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -233,10 +226,10 @@ export function SourceFilter({
                 {onSourceRefresh && (
                   <button
                     type="button"
-                    onClick={(e) => handleRefreshSource(e, source.id)}
+                    onClick={() => onSourceRefresh(source.id)}
                     disabled={isSourceRefreshing}
                     className={cn(
-                      'p-1.5 rounded-md bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 text-secondary-700 dark:text-secondary-300 transition-colors',
+                      'p-1.5 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900/50 dark:hover:bg-amber-800/50 dark:text-amber-300 transition-colors',
                       isSourceRefreshing && 'opacity-50 cursor-not-allowed'
                     )}
                     title={`Refresh ${source.name}`}
