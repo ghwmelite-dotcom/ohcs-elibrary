@@ -272,20 +272,32 @@ app.delete('/:id', requireAdmin, async (c) => {
 });
 
 // POST /broadcasts/:id/acknowledge - Acknowledge a broadcast
+// Supports both authenticated users and anonymous acknowledgment via session ID
 app.post('/:id/acknowledge', async (c) => {
   const userId = c.get('userId');
   const { id } = c.req.param();
 
-  if (!userId) {
-    return c.json({ error: 'Unauthorized' }, 401);
+  // Get anonymous session ID from header if not authenticated
+  const anonymousId = c.req.header('X-Anonymous-Id');
+
+  // Require either userId or anonymousId
+  const identifier = userId || anonymousId;
+  const identifierType = userId ? 'user' : 'anonymous';
+
+  if (!identifier) {
+    return c.json({ error: 'Authentication or anonymous ID required' }, 401);
   }
+
+  // For anonymous users, use the anonymous ID as the user_id with a special prefix
+  // This works because user_id column is NOT NULL
+  const effectiveUserId = userId || `anon:${anonymousId}`;
 
   try {
     // Check if already acknowledged
     const existing = await c.env.DB.prepare(`
       SELECT id FROM broadcast_acknowledgments
       WHERE broadcast_id = ? AND user_id = ?
-    `).bind(id, userId).first();
+    `).bind(id, effectiveUserId).first();
 
     if (existing) {
       return c.json({ success: true, message: 'Already acknowledged' });
@@ -294,11 +306,11 @@ app.post('/:id/acknowledge', async (c) => {
     const ackId = `ack_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     await c.env.DB.prepare(`
-      INSERT INTO broadcast_acknowledgments (id, broadcast_id, user_id)
-      VALUES (?, ?, ?)
-    `).bind(ackId, id, userId).run();
+      INSERT INTO broadcast_acknowledgments (id, broadcast_id, user_id, anonymous_id)
+      VALUES (?, ?, ?, ?)
+    `).bind(ackId, id, effectiveUserId, anonymousId || null).run();
 
-    return c.json({ success: true });
+    return c.json({ success: true, identifierType });
   } catch (error) {
     console.error('Error acknowledging broadcast:', error);
     return c.json({ error: 'Failed to acknowledge broadcast' }, 500);

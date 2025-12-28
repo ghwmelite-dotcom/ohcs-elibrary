@@ -16,6 +16,20 @@ const getAuthToken = (): string | null => {
   }
 };
 
+// Helper to get or generate anonymous ID for broadcast acknowledgment
+const getAnonymousId = (): string => {
+  const STORAGE_KEY = 'ohcs-anonymous-id';
+  let anonymousId = localStorage.getItem(STORAGE_KEY);
+
+  if (!anonymousId) {
+    // Generate a unique anonymous ID
+    anonymousId = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem(STORAGE_KEY, anonymousId);
+  }
+
+  return anonymousId;
+};
+
 // Helper for authenticated fetch
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = getAuthToken();
@@ -27,6 +41,24 @@ const authFetch = async (url: string, options: RequestInit = {}) => {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
+
+  return fetch(url, { ...options, headers });
+};
+
+// Helper for broadcast fetch (includes anonymous ID fallback)
+const broadcastFetch = async (url: string, options: RequestInit = {}) => {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Always include anonymous ID for broadcast operations
+  headers['X-Anonymous-Id'] = getAnonymousId();
 
   return fetch(url, { ...options, headers });
 };
@@ -137,9 +169,9 @@ export const useBroadcastStore = create<BroadcastState>()(
           const data = await response.json();
           const { dismissedBroadcastIds } = get();
 
-          // Filter out dismissed broadcasts (unless they require acknowledgment)
+          // Filter out dismissed broadcasts - once dismissed/acknowledged, don't show again
           const filteredBroadcasts = data.broadcasts.filter((b: Broadcast) =>
-            !dismissedBroadcastIds.includes(b.id) || b.requires_acknowledgment
+            !dismissedBroadcastIds.includes(b.id)
           );
 
           set({ activeBroadcasts: filteredBroadcasts, isLoading: false });
@@ -265,27 +297,44 @@ export const useBroadcastStore = create<BroadcastState>()(
       },
 
       acknowledgeBroadcast: async (id: string) => {
-        try {
-          const response = await authFetch(`${API_BASE}/broadcasts/${id}/acknowledge`, {
-            method: 'POST',
-          });
+        const token = getAuthToken();
 
-          if (!response.ok) {
-            throw new Error('Failed to acknowledge broadcast');
+        // If user is logged in, try to save acknowledgment to backend
+        if (token) {
+          try {
+            const response = await broadcastFetch(`${API_BASE}/broadcasts/${id}/acknowledge`, {
+              method: 'POST',
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: 'Failed to acknowledge broadcast' }));
+              console.warn('Backend acknowledgment failed:', errorData.error);
+              // Continue anyway - we'll dismiss locally
+            }
+          } catch (error) {
+            console.warn('Backend acknowledgment error:', error);
+            // Continue anyway - we'll dismiss locally
           }
-
-          // Update local state
-          set((state) => ({
-            activeBroadcasts: state.activeBroadcasts.map((b) =>
-              b.id === id ? { ...b, acknowledged: true } : b
-            ),
-          }));
-
-          return true;
-        } catch (error) {
-          set({ error: (error as Error).message });
-          return false;
         }
+
+        // Always update local state - mark as acknowledged and add to dismissed
+        // This ensures the broadcast goes away even if backend call fails
+        set((state) => ({
+          activeBroadcasts: state.activeBroadcasts.map((b) =>
+            b.id === id ? { ...b, acknowledged: true } : b
+          ),
+          // Add to dismissed so it doesn't reappear
+          dismissedBroadcastIds: [...state.dismissedBroadcastIds, id],
+        }));
+
+        // Remove from active broadcasts after a short delay (let animation complete)
+        setTimeout(() => {
+          set((state) => ({
+            activeBroadcasts: state.activeBroadcasts.filter((b) => b.id !== id),
+          }));
+        }, 300);
+
+        return true;
       },
 
       dismissBroadcast: (id: string) => {

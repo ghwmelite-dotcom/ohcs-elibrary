@@ -11,7 +11,8 @@ import {
   Archive,
   Inbox,
   AlertCircle,
-  ChevronDown
+  ChevronDown,
+  Megaphone
 } from 'lucide-react';
 import {
   NotificationCenter,
@@ -20,10 +21,12 @@ import {
   NotificationSettings,
   PushNotificationManager
 } from '@/components/notifications';
+import { BroadcastsSection } from '@/components/broadcasts';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useBroadcastStore } from '@/stores/broadcastStore';
 import { cn } from '@/utils/cn';
 
-type TabType = 'inbox' | 'archived' | 'settings' | 'push';
+type TabType = 'inbox' | 'broadcasts' | 'archived' | 'settings' | 'push';
 
 export default function Notifications() {
   const [activeTab, setActiveTab] = useState<TabType>('inbox');
@@ -96,8 +99,13 @@ export default function Notifications() {
     { id: 'security', label: 'Security' }
   ];
 
+  // Get active broadcasts count
+  const { activeBroadcasts } = useBroadcastStore();
+  const activeBroadcastsCount = activeBroadcasts.length;
+
   const tabs = [
     { id: 'inbox' as TabType, label: 'Inbox', icon: Inbox, count: unreadCount },
+    { id: 'broadcasts' as TabType, label: 'Broadcasts', icon: Megaphone, count: activeBroadcastsCount, highlight: activeBroadcastsCount > 0 },
     { id: 'archived' as TabType, label: 'Archived', icon: Archive },
     { id: 'settings' as TabType, label: 'Settings', icon: Settings },
     { id: 'push' as TabType, label: 'Push', icon: Bell }
@@ -135,14 +143,25 @@ export default function Notifications() {
             className={cn(
               'flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all',
               activeTab === tab.id
-                ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700'
+                ? tab.id === 'broadcasts' && tab.highlight
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25'
+                  : 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                : tab.id === 'broadcasts' && tab.highlight
+                  ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30'
+                  : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700'
             )}
           >
-            <tab.icon className="w-4 h-4" />
+            <tab.icon className={cn('w-4 h-4', tab.id === 'broadcasts' && tab.highlight && activeTab !== tab.id && 'animate-pulse')} />
             {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
-              <span className="px-2 py-0.5 bg-primary-600 text-white text-xs font-medium rounded-full">
+              <span className={cn(
+                'px-2 py-0.5 text-xs font-medium rounded-full',
+                tab.id === 'broadcasts'
+                  ? activeTab === tab.id
+                    ? 'bg-white/20 text-white'
+                    : 'bg-amber-500 text-white'
+                  : 'bg-primary-600 text-white'
+              )}>
                 {tab.count}
               </span>
             )}
@@ -345,6 +364,15 @@ export default function Notifications() {
                 });
               }}
             />
+          </motion.div>
+        ) : activeTab === 'broadcasts' ? (
+          <motion.div
+            key="broadcasts"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            <BroadcastsSection />
           </motion.div>
         ) : activeTab === 'push' ? (
           <motion.div
