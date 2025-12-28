@@ -173,7 +173,201 @@ usersRoutes.get('/:id/activity', (c) => c.json({ message: 'User activity' }));
 usersRoutes.get('/:id/badges', (c) => c.json({ message: 'User badges' }));
 
 // Admin routes
-export const adminRoutes = new Hono();
+export const adminRoutes = new Hono<{ Bindings: any }>();
+
+// GET /admin/stats - Get dashboard statistics
+adminRoutes.get('/stats', async (c) => {
+  try {
+    // Get total users count
+    const usersResult = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM users WHERE isActive = 1
+    `).first();
+    const totalUsers = (usersResult as any)?.count || 0;
+
+    // Get users registered this month
+    const usersThisMonth = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM users
+      WHERE isActive = 1 AND createdAt >= date('now', 'start of month')
+    `).first();
+
+    // Get users registered last month
+    const usersLastMonth = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM users
+      WHERE isActive = 1
+      AND createdAt >= date('now', 'start of month', '-1 month')
+      AND createdAt < date('now', 'start of month')
+    `).first();
+
+    // Calculate users change percentage
+    const thisMonthUsers = (usersThisMonth as any)?.count || 0;
+    const lastMonthUsers = (usersLastMonth as any)?.count || 1;
+    const usersChange = Math.round(((thisMonthUsers - lastMonthUsers) / lastMonthUsers) * 100);
+
+    // Get total documents count
+    const docsResult = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM documents WHERE status = 'published'
+    `).first();
+    const totalDocuments = (docsResult as any)?.count || 0;
+
+    // Get documents this month
+    const docsThisMonth = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM documents
+      WHERE status = 'published' AND createdAt >= date('now', 'start of month')
+    `).first();
+
+    // Get documents last month
+    const docsLastMonth = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM documents
+      WHERE status = 'published'
+      AND createdAt >= date('now', 'start of month', '-1 month')
+      AND createdAt < date('now', 'start of month')
+    `).first();
+
+    const thisMonthDocs = (docsThisMonth as any)?.count || 0;
+    const lastMonthDocs = (docsLastMonth as any)?.count || 1;
+    const documentsChange = Math.round(((thisMonthDocs - lastMonthDocs) / lastMonthDocs) * 100);
+
+    // Get total forum posts count
+    const postsResult = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM forum_posts
+    `).first();
+    const forumPosts = (postsResult as any)?.count || 0;
+
+    // Get forum posts this month
+    const postsThisMonth = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM forum_posts
+      WHERE createdAt >= date('now', 'start of month')
+    `).first();
+
+    // Get forum posts last month
+    const postsLastMonth = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM forum_posts
+      WHERE createdAt >= date('now', 'start of month', '-1 month')
+      AND createdAt < date('now', 'start of month')
+    `).first();
+
+    const thisMonthPosts = (postsThisMonth as any)?.count || 0;
+    const lastMonthPosts = (postsLastMonth as any)?.count || 1;
+    const postsChange = Math.round(((thisMonthPosts - lastMonthPosts) / lastMonthPosts) * 100);
+
+    // Get active users today (users who logged in today)
+    const activeResult = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM users
+      WHERE isActive = 1 AND lastLoginAt >= date('now')
+    `).first();
+    const activeUsers = (activeResult as any)?.count || 0;
+
+    // Get active users yesterday
+    const activeYesterday = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM users
+      WHERE isActive = 1
+      AND lastLoginAt >= date('now', '-1 day')
+      AND lastLoginAt < date('now')
+    `).first();
+
+    const yesterdayActive = (activeYesterday as any)?.count || 1;
+    const activeChange = Math.round(((activeUsers - yesterdayActive) / yesterdayActive) * 100);
+
+    // Get monthly user growth data (last 12 months)
+    const monthlyGrowth = await c.env.DB.prepare(`
+      SELECT
+        strftime('%Y-%m', createdAt) as month,
+        COUNT(*) as count
+      FROM users
+      WHERE isActive = 1 AND createdAt >= date('now', '-12 months')
+      GROUP BY strftime('%Y-%m', createdAt)
+      ORDER BY month ASC
+    `).all();
+
+    // Get users by role
+    const usersByRole = await c.env.DB.prepare(`
+      SELECT role, COUNT(*) as count FROM users
+      WHERE isActive = 1
+      GROUP BY role
+    `).all();
+
+    // Get recent activity
+    const recentActivity = await c.env.DB.prepare(`
+      SELECT
+        aa.action,
+        aa.description,
+        aa.createdAt,
+        u.displayName
+      FROM account_activity aa
+      LEFT JOIN users u ON aa.userId = u.id
+      ORDER BY aa.createdAt DESC
+      LIMIT 10
+    `).all();
+
+    // Get top MDAs
+    const topMDAs = await c.env.DB.prepare(`
+      SELECT
+        m.name,
+        COUNT(DISTINCT u.id) as users,
+        COUNT(DISTINCT d.id) as documents
+      FROM mdas m
+      LEFT JOIN users u ON u.mdaId = m.id AND u.isActive = 1
+      LEFT JOIN documents d ON d.uploadedBy = u.id AND d.status = 'published'
+      GROUP BY m.id, m.name
+      ORDER BY users DESC
+      LIMIT 5
+    `).all();
+
+    return c.json({
+      stats: {
+        totalUsers,
+        usersChange: isNaN(usersChange) ? 0 : usersChange,
+        totalDocuments,
+        documentsChange: isNaN(documentsChange) ? 0 : documentsChange,
+        forumPosts,
+        postsChange: isNaN(postsChange) ? 0 : postsChange,
+        activeUsers,
+        activeChange: isNaN(activeChange) ? 0 : activeChange,
+      },
+      monthlyGrowth: monthlyGrowth.results || [],
+      usersByRole: (usersByRole.results || []).map((r: any) => ({
+        label: r.role || 'User',
+        value: r.count,
+        color: r.role === 'admin' ? '#006B3F' :
+               r.role === 'director' ? '#FCD116' :
+               r.role === 'staff' ? '#3B82F6' : '#10B981'
+      })),
+      recentActivity: (recentActivity.results || []).map((a: any) => ({
+        type: a.action?.includes('user') ? 'user' :
+              a.action?.includes('document') ? 'document' :
+              a.action?.includes('forum') ? 'forum' :
+              a.action?.includes('badge') ? 'badge' : 'alert',
+        message: `${a.displayName || 'User'} ${a.description || a.action}`,
+        time: a.createdAt ? new Date(a.createdAt).toLocaleString() : 'Recently'
+      })),
+      topMDAs: (topMDAs.results || []).map((m: any) => ({
+        name: m.name || 'Unknown MDA',
+        users: m.users || 0,
+        documents: m.documents || 0
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching admin stats:', error);
+    return c.json({
+      error: 'Failed to fetch statistics',
+      stats: {
+        totalUsers: 0,
+        usersChange: 0,
+        totalDocuments: 0,
+        documentsChange: 0,
+        forumPosts: 0,
+        postsChange: 0,
+        activeUsers: 0,
+        activeChange: 0,
+      },
+      monthlyGrowth: [],
+      usersByRole: [],
+      recentActivity: [],
+      topMDAs: []
+    }, 500);
+  }
+});
+
 adminRoutes.get('/dashboard', (c) => c.json({ message: 'Admin dashboard' }));
 adminRoutes.get('/users', (c) => c.json({ message: 'Manage users' }));
 adminRoutes.get('/documents', (c) => c.json({ message: 'Manage documents' }));

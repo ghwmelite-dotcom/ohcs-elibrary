@@ -574,54 +574,158 @@ function QuickActions() {
 }
 
 // ============================================================================
+// TYPES
+// ============================================================================
+interface DashboardStats {
+  totalUsers: number;
+  usersChange: number;
+  totalDocuments: number;
+  documentsChange: number;
+  forumPosts: number;
+  postsChange: number;
+  activeUsers: number;
+  activeChange: number;
+}
+
+interface UserByRole {
+  label: string;
+  value: number;
+  color: string;
+}
+
+interface RecentActivityItem {
+  type: string;
+  message: string;
+  time: string;
+}
+
+interface TopMDA {
+  name: string;
+  users: number;
+  documents: number;
+}
+
+interface MonthlyGrowth {
+  month: string;
+  count: number;
+}
+
+interface DashboardData {
+  stats: DashboardStats;
+  monthlyGrowth: MonthlyGrowth[];
+  usersByRole: UserByRole[];
+  recentActivity: RecentActivityItem[];
+  topMDAs: TopMDA[];
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 export default function AdminDashboard() {
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+
+  // Fetch dashboard stats from API
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const API_URL = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
+        const response = await fetch(`${API_URL}/api/v1/admin/stats`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard statistics');
+        }
+
+        const data = await response.json();
+        setDashboardData(data);
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (token) {
+      fetchDashboardStats();
+    }
+  }, [token]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Mock data
-  const stats = {
-    totalUsers: 2847,
-    usersChange: 12.5,
-    totalDocuments: 1523,
-    documentsChange: 8.3,
-    forumPosts: 4892,
-    postsChange: -2.1,
-    activeUsers: 892,
-    activeChange: 15.7,
+  // Default stats when data is loading or not available
+  const stats: DashboardStats = dashboardData?.stats || {
+    totalUsers: 0,
+    usersChange: 0,
+    totalDocuments: 0,
+    documentsChange: 0,
+    forumPosts: 0,
+    postsChange: 0,
+    activeUsers: 0,
+    activeChange: 0,
   };
 
-  const userGrowthData = [150, 180, 220, 195, 250, 310, 285, 340, 380, 420, 395, 450];
-  const userGrowthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  // Process monthly growth data for chart
+  const processedGrowthData = (): { data: number[]; labels: string[] } => {
+    if (!dashboardData?.monthlyGrowth || dashboardData.monthlyGrowth.length === 0) {
+      return {
+        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      };
+    }
 
-  const usersByRole = [
-    { label: 'Civil Servants', value: 2100, color: '#006B3F' },
-    { label: 'Admins', value: 45, color: '#FCD116' },
-    { label: 'Moderators', value: 120, color: '#CE1126' },
-    { label: 'Guests', value: 582, color: '#6B7280' },
-  ];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const data: number[] = [];
+    const labels: string[] = [];
 
-  const recentActivity = [
-    { type: 'user', message: 'New user registered: Kwame Asante', time: '5 min ago' },
-    { type: 'document', message: 'Document uploaded: Annual Report 2024', time: '12 min ago' },
-    { type: 'forum', message: 'New forum topic: Policy Discussion', time: '25 min ago' },
-    { type: 'alert', message: 'Login attempt failed: suspicious activity', time: '1 hour ago' },
-    { type: 'badge', message: 'Badge earned by Ama Serwaa: Contributor', time: '2 hours ago' },
-  ];
+    dashboardData.monthlyGrowth.forEach((item) => {
+      const [year, month] = item.month.split('-');
+      const monthIndex = parseInt(month, 10) - 1;
+      labels.push(`${monthNames[monthIndex]} '${year.slice(2)}`);
+      data.push(item.count);
+    });
 
-  const topMDAs = [
-    { name: 'Ministry of Finance', users: 245, documents: 89 },
-    { name: 'Ministry of Health', users: 198, documents: 76 },
-    { name: 'Public Services Commission', users: 156, documents: 54 },
-    { name: 'Ministry of Education', users: 134, documents: 48 },
-    { name: 'OHCS', users: 128, documents: 45 },
-  ];
+    // Ensure at least 2 data points for the chart
+    if (data.length < 2) {
+      return {
+        data: [...data, 0],
+        labels: [...labels, 'Next'],
+      };
+    }
+
+    return { data, labels };
+  };
+
+  const { data: userGrowthData, labels: userGrowthLabels } = processedGrowthData();
+
+  const usersByRole: UserByRole[] = dashboardData?.usersByRole || [];
+  const recentActivity: RecentActivityItem[] = dashboardData?.recentActivity || [];
+  const topMDAs: TopMDA[] = dashboardData?.topMDAs || [];
+
+  // Calculate growth percentage for the chart header
+  const calculateGrowthPercentage = (): number => {
+    if (userGrowthData.length < 2) return 0;
+    const current = userGrowthData[userGrowthData.length - 1];
+    const previous = userGrowthData[userGrowthData.length - 2];
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return Math.round(((current - previous) / previous) * 100);
+  };
+
+  const growthPercentage = calculateGrowthPercentage();
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-900 relative">
@@ -664,6 +768,45 @@ export default function AdminDashboard() {
             </div>
           </div>
         </motion.div>
+
+        {/* Error Banner */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 rounded-xl bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 flex items-center gap-3"
+          >
+            <AlertCircle className="w-5 h-5 text-error-500 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-error-700 dark:text-error-300">
+                Failed to load dashboard data
+              </p>
+              <p className="text-xs text-error-600 dark:text-error-400">{error}</p>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-error-100 dark:bg-error-800 text-error-700 dark:text-error-300 hover:bg-error-200 dark:hover:bg-error-700 transition-colors"
+            >
+              Retry
+            </button>
+          </motion.div>
+        )}
+
+        {/* Loading Overlay */}
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-6 flex items-center justify-center gap-3 p-4"
+          >
+            <motion.div
+              className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            />
+            <span className="text-surface-500 text-sm">Loading dashboard statistics...</span>
+          </motion.div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -718,9 +861,18 @@ export default function AdminDashboard() {
                 </h3>
                 <p className="text-sm text-surface-500">Monthly new registrations</p>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-success-100 dark:bg-success-900/30 text-success-600 text-sm font-medium">
-                <ArrowUpRight className="w-4 h-4" />
-                +24%
+              <div className={cn(
+                'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium',
+                growthPercentage >= 0
+                  ? 'bg-success-100 dark:bg-success-900/30 text-success-600'
+                  : 'bg-error-100 dark:bg-error-900/30 text-error-600'
+              )}>
+                {growthPercentage >= 0 ? (
+                  <ArrowUpRight className="w-4 h-4" />
+                ) : (
+                  <ArrowDownRight className="w-4 h-4" />
+                )}
+                {growthPercentage >= 0 ? '+' : ''}{growthPercentage}%
               </div>
             </div>
             <AnimatedLineChart data={userGrowthData} labels={userGrowthLabels} />
@@ -742,7 +894,16 @@ export default function AdminDashboard() {
                 <p className="text-sm text-surface-500">Distribution across roles</p>
               </div>
             </div>
-            <AnimatedDonutChart data={usersByRole} />
+            {usersByRole.length > 0 ? (
+              <AnimatedDonutChart data={usersByRole} />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-12 h-12 rounded-xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-3">
+                  <PieChart className="w-6 h-6 text-surface-400" />
+                </div>
+                <p className="text-surface-500 text-sm">No user data available</p>
+              </div>
+            )}
           </motion.div>
         </div>
 
@@ -767,7 +928,16 @@ export default function AdminDashboard() {
                 View all <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
-            <ActivityFeed activities={recentActivity} />
+            {recentActivity.length > 0 ? (
+              <ActivityFeed activities={recentActivity} />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-12 h-12 rounded-xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-3">
+                  <Zap className="w-6 h-6 text-surface-400" />
+                </div>
+                <p className="text-surface-500 text-sm">No recent activity</p>
+              </div>
+            )}
           </motion.div>
 
           {/* Top MDAs */}
@@ -789,7 +959,16 @@ export default function AdminDashboard() {
                 Details <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
-            <TopMDAsLeaderboard mdas={topMDAs} />
+            {topMDAs.length > 0 ? (
+              <TopMDAsLeaderboard mdas={topMDAs} />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-12 h-12 rounded-xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-3">
+                  <Building2 className="w-6 h-6 text-surface-400" />
+                </div>
+                <p className="text-surface-500 text-sm">No MDA data available</p>
+              </div>
+            )}
           </motion.div>
         </div>
 
