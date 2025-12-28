@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
@@ -19,12 +19,17 @@ import {
   Award,
   Sparkles,
   ChevronRight,
+  ChevronLeft,
   Play,
   Bookmark,
   Brain,
   GraduationCap,
   Calendar,
   CheckCircle2,
+  PanelRightOpen,
+  PanelRightClose,
+  LayoutGrid,
+  Activity,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
@@ -541,6 +546,35 @@ export default function Dashboard() {
   const { stats: forumStats, fetchStats: fetchForumStats } = useForumStore();
   const [greeting, setGreeting] = useState('');
 
+  // Collapsible sidebar state with localStorage persistence
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('dashboard-sidebar-collapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  // Persist collapse state
+  useEffect(() => {
+    localStorage.setItem('dashboard-sidebar-collapsed', JSON.stringify(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
+
+  // Toggle function
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((prev: boolean) => !prev);
+  }, []);
+
+  // Keyboard shortcut: Ctrl+. to toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === '.') {
+        e.preventDefault();
+        toggleSidebar();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleSidebar]);
+
   // Fetch data on mount
   useEffect(() => {
     const hour = new Date().getHours();
@@ -746,9 +780,14 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="flex gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <motion.div
+            className="flex-1 min-w-0 space-y-6"
+            initial={false}
+            animate={{ marginRight: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          >
             {/* Continue Reading */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -800,10 +839,158 @@ export default function Dashboard() {
                 />
               ))}
             </motion.div>
-          </div>
+          </motion.div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
+          {/* Collapsed Sidebar - Sleek Glass Panel */}
+          <AnimatePresence>
+            {isSidebarCollapsed && (
+              <motion.div
+                initial={{ opacity: 0, width: 0, scale: 0.8 }}
+                animate={{ opacity: 1, width: 72, scale: 1 }}
+                exit={{ opacity: 0, width: 0, scale: 0.8 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                className="hidden lg:flex flex-col items-center py-6 px-3 bg-white/80 dark:bg-surface-800/80 backdrop-blur-xl rounded-2xl border border-surface-200/50 dark:border-surface-700/50 shadow-xl"
+              >
+                {/* Expand Button with Glow */}
+                <motion.button
+                  onClick={toggleSidebar}
+                  className="relative p-3 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg mb-6 group"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Expand sidebar (Ctrl+.)"
+                >
+                  {/* Glow effect */}
+                  <motion.div
+                    className="absolute inset-0 rounded-xl bg-primary-400 blur-lg opacity-0 group-hover:opacity-50 transition-opacity"
+                  />
+                  <PanelRightOpen className="w-5 h-5 relative z-10" />
+                </motion.button>
+
+                {/* Mini Indicators with beautiful styling */}
+                <div className="flex-1 flex flex-col gap-4 items-center">
+                  {/* Activity Indicator */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="flex flex-col items-center gap-2"
+                    title="Recent Activity"
+                  >
+                    <motion.div
+                      className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary-400/20 to-secondary-600/20 border border-secondary-500/30 flex items-center justify-center"
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                    >
+                      <motion.div
+                        animate={{ rotate: [0, 360] }}
+                        transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                      >
+                        <Zap className="w-5 h-5 text-secondary-500" />
+                      </motion.div>
+                    </motion.div>
+                    <span className="text-[10px] font-medium text-surface-500">Activity</span>
+                  </motion.div>
+
+                  {/* Events Indicator */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex flex-col items-center gap-2"
+                    title="Upcoming Events"
+                  >
+                    <motion.div
+                      className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-400/20 to-primary-600/20 border border-primary-500/30 flex items-center justify-center"
+                      whileHover={{ scale: 1.1, rotate: -5 }}
+                    >
+                      <Calendar className="w-5 h-5 text-primary-500" />
+                    </motion.div>
+                    <span className="text-[10px] font-medium text-surface-500">Events</span>
+                  </motion.div>
+
+                  {/* AI Indicator */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex flex-col items-center gap-2"
+                    title="AI Assistant"
+                  >
+                    <motion.div
+                      className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400/20 to-amber-600/20 border border-amber-500/30 flex items-center justify-center"
+                      whileHover={{ scale: 1.1 }}
+                    >
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Brain className="w-5 h-5 text-amber-500" />
+                      </motion.div>
+                    </motion.div>
+                    <span className="text-[10px] font-medium text-surface-500">AI</span>
+                  </motion.div>
+                </div>
+
+                {/* Bottom decoration */}
+                <motion.div
+                  className="w-8 h-1 rounded-full bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400 mt-4"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Sidebar with Collapse */}
+          <motion.div
+            className="hidden lg:block relative flex-shrink-0"
+            initial={false}
+            animate={{
+              width: isSidebarCollapsed ? 0 : 340,
+              opacity: isSidebarCollapsed ? 0 : 1,
+            }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          >
+            {/* Sleek Collapse Toggle Handle */}
+            <motion.button
+              onClick={toggleSidebar}
+              className={cn(
+                'absolute top-6 z-20 flex items-center justify-center',
+                'w-8 h-14 rounded-l-2xl shadow-xl transition-all duration-300',
+                'bg-gradient-to-b from-white to-surface-50 dark:from-surface-700 dark:to-surface-800',
+                'border border-r-0 border-surface-200/50 dark:border-surface-600/50',
+                'hover:from-primary-50 hover:to-primary-100 dark:hover:from-primary-900/30 dark:hover:to-primary-800/30',
+                'text-surface-400 hover:text-primary-600 dark:hover:text-primary-400',
+                'group',
+                '-left-4'
+              )}
+              whileHover={{ scale: 1.05, x: -2 }}
+              whileTap={{ scale: 0.95 }}
+              title={isSidebarCollapsed ? 'Expand sidebar (Ctrl+.)' : 'Collapse sidebar (Ctrl+.)'}
+            >
+              {/* Glow on hover */}
+              <motion.div
+                className="absolute inset-0 rounded-l-2xl bg-primary-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"
+              />
+              <motion.div
+                className="relative z-10"
+                animate={{ rotate: isSidebarCollapsed ? 180 : 0 }}
+                transition={{ duration: 0.3, type: 'spring' }}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </motion.div>
+            </motion.button>
+
+            <motion.div
+              className="w-[340px] space-y-6 overflow-hidden"
+              initial={false}
+              animate={{
+                opacity: isSidebarCollapsed ? 0 : 1,
+                x: isSidebarCollapsed ? 30 : 0,
+              }}
+              transition={{ duration: 0.25 }}
+            >
+              {/* Sidebar content wrapper */}
+              <div className="space-y-6">
             {/* Recent Activity */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -918,7 +1105,9 @@ export default function Dashboard() {
                 </Link>
               </div>
             </motion.div>
-          </div>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
     </div>
