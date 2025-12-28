@@ -291,14 +291,27 @@ function SourceCard({
       <div className="p-6">
         <div className="flex items-start gap-4">
           <div
-            className="w-14 h-14 rounded-xl flex items-center justify-center"
+            className="w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden"
             style={{ backgroundColor: `${source.categoryColor}20` }}
           >
             {source.logo ? (
-              <img src={source.logo} alt={source.name} className="w-10 h-10 rounded-lg object-contain" />
-            ) : (
-              <Newspaper className="w-7 h-7" style={{ color: source.categoryColor }} />
-            )}
+              <img
+                src={source.logo}
+                alt={source.name}
+                className="w-10 h-10 rounded-lg object-contain"
+                onError={(e) => {
+                  // Replace with fallback icon on error
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <div className={cn(
+              "w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-primary-500 to-secondary-500 text-white font-bold text-lg",
+              source.logo ? "hidden" : ""
+            )}>
+              {source.name.charAt(0)}
+            </div>
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-surface-900 dark:text-surface-50 truncate">
@@ -482,10 +495,26 @@ function SourceRow({
       <td className="py-4 px-4">
         <div className="flex items-center gap-3">
           <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
             style={{ backgroundColor: `${source.categoryColor}20` }}
           >
-            <Newspaper className="w-5 h-5" style={{ color: source.categoryColor }} />
+            {source.logo ? (
+              <img
+                src={source.logo}
+                alt={source.name}
+                className="w-8 h-8 rounded object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <div className={cn(
+              "w-8 h-8 rounded flex items-center justify-center bg-gradient-to-br from-primary-500 to-secondary-500 text-white font-bold",
+              source.logo ? "hidden" : ""
+            )}>
+              {source.name.charAt(0)}
+            </div>
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -876,11 +905,10 @@ export default function AdminNews() {
     }
   };
 
-  // View source website
+  // View source articles - switch to articles tab filtered by this source
   const handleViewSource = (source: NewsSource) => {
-    if (source.url) {
-      window.open(source.url, '_blank', 'noopener,noreferrer');
-    }
+    setSelectedTab('articles');
+    setSearchQuery(source.name);
   };
 
   // Refresh a specific source
