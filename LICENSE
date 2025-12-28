@@ -1,0 +1,159 @@
+PROPRIETARY SOFTWARE LICENSE
+
+Copyright (c) 2025 Office of the Head of Civil Service, Ghana
+All Rights Reserved.
+
+================================================================================
+
+IMPORTANT: READ THIS LICENSE AGREEMENT CAREFULLY BEFORE USING THIS SOFTWARE
+
+================================================================================
+
+1. DEFINITIONS
+
+"Software" refers to the OHCS E-Library platform, including all source code,
+object code, documentation, data, and associated materials.
+
+"Licensor" refers to the Office of the Head of Civil Service (OHCS), Ghana.
+
+"Authorized User" refers to employees, contractors, and authorized personnel
+of the Government of Ghana who have been granted access to use the Software.
+
+2. LICENSE GRANT
+
+Subject to the terms and conditions of this License, the Licensor grants
+Authorized Users a limited, non-exclusive, non-transferable license to:
+
+   a) Access and use the Software for official government purposes only
+   b) View and interact with the Software's user interface
+   c) Upload, download, and manage authorized content within the Software
+
+3. RESTRICTIONS
+
+Authorized Users and any other parties SHALL NOT:
+
+   a) Copy, reproduce, or duplicate the Software or any part thereof
+   b) Modify, adapt, translate, reverse engineer, decompile, or disassemble
+      the Software
+   c) Create derivative works based on the Software
+   d) Distribute, sublicense, lease, rent, or lend the Software to any
+      third party
+   e) Remove, alter, or obscure any proprietary notices on the Software
+   f) Use the Software for any commercial purpose outside of official
+      government functions
+   g) Share access credentials or allow unauthorized access to the Software
+   h) Attempt to gain unauthorized access to any systems or data
+   i) Use the Software to store or transmit malicious code
+   j) Use the Software in violation of any applicable laws or regulations
+
+4. OWNERSHIP
+
+The Software and all copies thereof are proprietary to the Licensor. The
+Licensor retains all right, title, and interest in and to the Software,
+including all intellectual property rights therein. This License does not
+grant any rights to trademarks, service marks, or trade names of the Licensor.
+
+5. DATA OWNERSHIP
+
+   a) User-generated content uploaded to the Software remains the property
+      of the respective users or the Government of Ghana, as applicable
+   b) The Licensor may use aggregated, anonymized data for improving the
+      Software and generating reports
+   c) Personal data is handled in accordance with Ghana's Data Protection
+      Act and applicable regulations
+
+6. CONFIDENTIALITY
+
+The Software contains confidential and proprietary information of the
+Licensor. Authorized Users agree to:
+
+   a) Maintain the confidentiality of the Software and its documentation
+   b) Not disclose any confidential information to unauthorized parties
+   c) Take reasonable measures to protect the Software from unauthorized
+      access or disclosure
+   d) Report any security breaches or vulnerabilities immediately
+
+7. WARRANTY DISCLAIMER
+
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. THE LICENSOR DOES
+NOT WARRANT THAT THE SOFTWARE WILL BE UNINTERRUPTED, ERROR-FREE, OR FREE
+OF HARMFUL COMPONENTS.
+
+8. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
+SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO
+LOSS OF PROFITS, DATA, OR USE, ARISING OUT OF OR IN CONNECTION WITH THE
+USE OR INABILITY TO USE THE SOFTWARE, EVEN IF THE LICENSOR HAS BEEN
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+9. INDEMNIFICATION
+
+Authorized Users agree to indemnify, defend, and hold harmless the Licensor
+and its officers, directors, employees, and agents from and against any
+claims, damages, losses, costs, and expenses (including reasonable legal
+fees) arising out of or relating to the User's use of the Software or
+violation of this License.
+
+10. TERMINATION
+
+   a) This License is effective until terminated
+   b) The Licensor may terminate this License at any time without notice
+      if the User breaches any term of this License
+   c) Upon termination, the User must cease all use of the Software and
+      destroy any copies in their possession
+   d) Sections 4-9 and 11-13 shall survive termination
+
+11. GOVERNMENT USE
+
+This Software was developed for use by the Government of Ghana. Government
+use, duplication, or disclosure is subject to restrictions as set forth
+in applicable government regulations and this License.
+
+12. EXPORT COMPLIANCE
+
+The User agrees to comply with all applicable export laws and regulations.
+The Software may not be exported or re-exported to any country or entity
+subject to export restrictions.
+
+13. GENERAL PROVISIONS
+
+   a) GOVERNING LAW: This License shall be governed by and construed in
+      accordance with the laws of the Republic of Ghana, without regard
+      to conflicts of law principles.
+
+   b) DISPUTE RESOLUTION: Any disputes arising under this License shall
+      be resolved through arbitration in Accra, Ghana, in accordance with
+      the rules of the Ghana Arbitration Centre.
+
+   c) ENTIRE AGREEMENT: This License constitutes the entire agreement
+      between the parties concerning the Software and supersedes all prior
+      or contemporaneous agreements, representations, and understandings.
+
+   d) SEVERABILITY: If any provision of this License is held to be invalid
+      or unenforceable, the remaining provisions shall remain in full
+      force and effect.
+
+   e) WAIVER: The failure of either party to enforce any right or provision
+      of this License shall not constitute a waiver of such right or
+      provision.
+
+   f) AMENDMENTS: This License may only be amended by a written instrument
+      signed by authorized representatives of the Licensor.
+
+================================================================================
+
+CONTACT INFORMATION
+
+Office of the Head of Civil Service
+Accra, Ghana
+
+Technical Contact: davies.hodges@ohcs.gov.gh
+Website: https://ohcs-elibrary.pages.dev
+
+================================================================================
+
+Last Updated: December 28, 2025
+Version: 1.0.0
