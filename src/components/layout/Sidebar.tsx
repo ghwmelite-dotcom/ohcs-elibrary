@@ -36,11 +36,11 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
   { path: '/library', label: 'Library', icon: <Library className="w-5 h-5" /> },
+  { path: '/wellness', label: 'Wellness', icon: <Heart className="w-5 h-5 text-pink-500" /> },
   { path: '/forum', label: 'Forum', icon: <MessageSquare className="w-5 h-5" /> },
   { path: '/chat', label: 'Chat', icon: <MessagesSquare className="w-5 h-5" /> },
   { path: '/groups', label: 'Groups', icon: <Users className="w-5 h-5" /> },
   { path: '/news', label: 'News', icon: <Newspaper className="w-5 h-5" /> },
-  { path: '/wellness', label: 'Wellness', icon: <Heart className="w-5 h-5" /> },
   { path: '/leaderboard', label: 'Leaderboard', icon: <Trophy className="w-5 h-5" /> },
 ];
 
@@ -143,6 +143,7 @@ export function Sidebar() {
           {mainNavItems.map((item) => {
             // Add news badge count
             const badgeCount = item.path === '/news' ? newArticlesCount : item.badge;
+            const isWellness = item.path === '/wellness';
 
             return (
               <li key={item.path}>
@@ -152,8 +153,12 @@ export function Sidebar() {
                     cn(
                       'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
                       isActive
-                        ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium'
-                        : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 hover:text-surface-900 dark:hover:text-surface-50',
+                        ? isWellness
+                          ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 font-medium'
+                          : 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium'
+                        : isWellness
+                          ? 'text-surface-600 dark:text-surface-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-700 dark:hover:text-teal-300'
+                          : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 hover:text-surface-900 dark:hover:text-surface-50',
                       isCollapsed && 'justify-center px-2'
                     )
                   }
@@ -175,9 +180,27 @@ export function Sidebar() {
                         />
                       </motion.span>
                     )}
+                    {/* Wellness pulsing heart indicator */}
+                    {isCollapsed && isWellness && (
+                      <motion.span
+                        className="absolute -top-1 -right-1 w-2 h-2 bg-pink-500 rounded-full"
+                        animate={{ scale: [1, 1.3, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      />
+                    )}
                   </span>
                   {!isCollapsed && (
                     <span className="flex-1">{item.label}</span>
+                  )}
+                  {/* Wellness "New" badge */}
+                  {!isCollapsed && isWellness && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-full"
+                    >
+                      NEW
+                    </motion.span>
                   )}
                   {!isCollapsed && badgeCount && badgeCount > 0 && (
                     <motion.div

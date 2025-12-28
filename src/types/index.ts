@@ -21,6 +21,7 @@ export type UserRole =
   | 'contributor'
   | 'moderator'
   | 'librarian'
+  | 'counselor'
   | 'admin'
   | 'director'
   | 'super_admin';
@@ -1105,4 +1106,114 @@ export interface WellnessStats {
     total: number;
     totalViews: number;
   };
+}
+
+// ============================================================================
+// Counselor Management & Reporting Types
+// ============================================================================
+
+export type CounselorStatus = 'active' | 'inactive' | 'on_leave';
+
+export interface CounselorAssignment {
+  id: UUID;
+  counselorId: UUID;
+  counselor?: User;
+  assignedById: UUID;
+  assignedBy?: User;
+  specializations?: CounselorTopic[];
+  status: CounselorStatus;
+  maxCaseload: number;
+  currentCaseload: number;
+  bio?: string;
+  qualifications?: string;
+  availableHours?: Record<string, string>;
+  notes?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface UserWellnessReport {
+  user: {
+    id: UUID;
+    name: string;
+    email: string;
+    department?: string;
+    mda?: string;
+  };
+  summary: {
+    totalSessions: number;
+    totalMessages: number;
+    averageMood: number | null;
+    moodTrend: 'improving' | 'stable' | 'declining' | null;
+    mostCommonTopic: string | null;
+    escalationCount: number;
+    firstSessionAt: Timestamp | null;
+    lastSessionAt: Timestamp | null;
+  };
+  sessions: Array<{
+    id: UUID;
+    date: Timestamp;
+    topic: CounselorTopic | null;
+    messageCount: number;
+    mood: number | null;
+    status: CounselorSessionStatus;
+    duration?: number;
+  }>;
+  moodHistory: Array<{
+    date: Timestamp;
+    mood: MoodLevel;
+    factors?: MoodFactor[];
+  }>;
+  generatedAt: Timestamp;
+  generatedBy: string;
+}
+
+export interface AggregateWellnessReport {
+  period: {
+    from: Timestamp;
+    to: Timestamp;
+  };
+  overview: {
+    totalUsers: number;
+    totalSessions: number;
+    totalMessages: number;
+    averageSessionLength: number;
+    escalationRate: number;
+    anonymousSessionRate: number;
+  };
+  topicBreakdown: Array<{
+    topic: CounselorTopic;
+    count: number;
+    percentage: number;
+  }>;
+  moodAnalytics: {
+    averageMood: number | null;
+    moodDistribution: Record<MoodLevel, number>;
+    trendOverTime: Array<{
+      date: Timestamp;
+      average: number;
+      count: number;
+    }>;
+  };
+  escalationAnalytics: {
+    total: number;
+    byUrgency: Record<EscalationUrgency, number>;
+    byStatus: Record<EscalationStatus, number>;
+    averageResolutionTime: number | null;
+  };
+  peakUsageTimes: {
+    busiestDays: string[];
+    busiestHours: number[];
+  };
+  generatedAt: Timestamp;
+  generatedBy: string;
+}
+
+export interface CounselorDashboardStats {
+  totalCounselors: number;
+  activeCounselors: number;
+  totalAssignedCases: number;
+  pendingEscalations: number;
+  resolvedThisWeek: number;
+  averageCaseload: number;
 }

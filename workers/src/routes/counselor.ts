@@ -1061,6 +1061,588 @@ counselorRoutes.delete('/admin/resources/:id', requireAuth, requireAdmin, async 
   }
 });
 
+// ============================================
+// COUNSELOR MANAGEMENT ROUTES (Super Admin)
+// ============================================
+
+// Super admin middleware
+async function requireSuperAdmin(c: AppContext, next: Next) {
+  const role = c.get('userRole');
+  if (role !== 'super_admin') {
+    return c.json({ error: 'Super admin access required' }, 403);
+  }
+  await next();
+}
+
+// Counselor middleware (counselor, admin, or super_admin)
+async function requireCounselor(c: AppContext, next: Next) {
+  const role = c.get('userRole');
+  if (!['super_admin', 'admin', 'director', 'counselor'].includes(role || '')) {
+    return c.json({ error: 'Counselor access required' }, 403);
+  }
+  await next();
+}
+
+/**
+ * List all counselors
+ * GET /counselor/admin/counselors
+ */
+counselorRoutes.get('/admin/counselors', requireAuth, requireSuperAdmin, async (c: AppContext) => {
+  const { DB } = c.env;
+  const url = new URL(c.req.url);
+  const status = url.searchParams.get('status');
+
+  try {
+    let whereClause = '1=1';
+    const params: any[] = [];
+
+    if (status) {
+      whereClause += ' AND ca.status = ?';
+      params.push(status);
+    }
+
+    const { results } = await DB.prepare(`
+      SELECT
+        ca.*,
+        u.displayName as counselorName,
+        u.email as counselorEmail,
+        u.avatar as counselorAvatar,
+        u.title as counselorTitle,
+        ab.displayName as assignedByName
+      FROM counselor_assignments ca
+      INNER JOIN users u ON ca.counselorId = u.id
+      LEFT JOIN users ab ON ca.assignedById = ab.id
+      WHERE ${whereClause}
+      ORDER BY ca.createdAt DESC
+    `).bind(...params).all();
+
+    return c.json({ counselors: results || [] });
+  } catch (error) {
+    console.error('List counselors error:', error);
+    return c.json({ error: 'Failed to fetch counselors' }, 500);
+  }
+});
+
+/**
+ * Get counselor dashboard stats
+ * GET /counselor/admin/counselors/stats
+ */
+counselorRoutes.get('/admin/counselors/stats', requireAuth, requireSuperAdmin, async (c: AppContext) => {
+  const { DB } = c.env;
+
+  try {
+    const stats = await DB.prepare(`
+      SELECT
+        COUNT(*) as totalCounselors,
+        SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as activeCounselors,
+        SUM(currentCaseload) as totalAssignedCases,
+        AVG(currentCaseload) as averageCaseload
+      FROM counselor_assignments
+    `).first();
+
+    const pendingEscalations = await DB.prepare(`
+      SELECT COUNT(*) as count FROM counselor_escalations WHERE status = 'pending'
+    `).first<{ count: number }>();
+
+    const resolvedThisWeek = await DB.prepare(`
+      SELECT COUNT(*) as count FROM counselor_escalations
+      WHERE status = 'resolved' AND resolvedAt >= datetime('now', '-7 days')
+    `).first<{ count: number }>();
+
+    return c.json({
+      totalCounselors: stats?.totalCounselors || 0,
+      activeCounselors: stats?.activeCounselors || 0,
+      totalAssignedCases: stats?.totalAssignedCases || 0,
+      averageCaseload: stats?.averageCaseload ? Math.round(stats.averageCaseload * 10) / 10 : 0,
+      pendingEscalations: pendingEscalations?.count || 0,
+      resolvedThisWeek: resolvedThisWeek?.count || 0
+    });
+  } catch (error) {
+    console.error('Counselor stats error:', error);
+    return c.json({ error: 'Failed to fetch stats' }, 500);
+  }
+});
+
+/**
+ * Assign user as counselor
+ * POST /counselor/admin/counselors
+ */
+counselorRoutes.post('/admin/counselors', requireAuth, requireSuperAdmin, async (c: AppContext) => {
+  const { DB } = c.env;
+  const adminId = c.get('userId')!;
+
+  try {
+    const body = await c.req.json();
+    const { userId, specializations, maxCaseload, bio, qualifications, notes } = body;
+
+    if (!userId) {
+      return c.json({ error: 'userId is required' }, 400);
+    }
+
+    // Check if user exists
+    const user = await DB.prepare(`
+      SELECT id, displayName, email, role_id FROM users WHERE id = ?
+    `).bind(userId).first();
+
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    // Check if already a counselor
+    const existing = await DB.prepare(`
+      SELECT id FROM counselor_assignments WHERE counselorId = ?
+    `).bind(userId).first();
+
+    if (existing) {
+      return c.json({ error: 'User is already a counselor' }, 409);
+    }
+
+    // Update user role to counselor (role_id = 9)
+    await DB.prepare(`
+      UPDATE users SET role_id = 9 WHERE id = ?
+    `).bind(userId).run();
+
+    // Create counselor assignment
+    const assignmentId = crypto.randomUUID();
+    await DB.prepare(`
+      INSERT INTO counselor_assignments (
+        id, counselorId, assignedById, specializations, status,
+        maxCaseload, bio, qualifications, notes, createdAt, updatedAt
+      )
+      VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(
+      assignmentId,
+      userId,
+      adminId,
+      specializations ? JSON.stringify(specializations) : null,
+      maxCaseload || 50,
+      bio || null,
+      qualifications || null,
+      notes || null
+    ).run();
+
+    return c.json({
+      id: assignmentId,
+      counselorId: userId,
+      status: 'active',
+      message: 'Counselor assigned successfully'
+    });
+  } catch (error) {
+    console.error('Assign counselor error:', error);
+    return c.json({ error: 'Failed to assign counselor' }, 500);
+  }
+});
+
+/**
+ * Update counselor
+ * PUT /counselor/admin/counselors/:id
+ */
+counselorRoutes.put('/admin/counselors/:id', requireAuth, requireSuperAdmin, async (c: AppContext) => {
+  const { DB } = c.env;
+  const assignmentId = c.req.param('id');
+
+  try {
+    const body = await c.req.json();
+    const { specializations, status, maxCaseload, bio, qualifications, notes } = body;
+
+    const updates: string[] = [];
+    const params: any[] = [];
+
+    if (specializations !== undefined) {
+      updates.push('specializations = ?');
+      params.push(JSON.stringify(specializations));
+    }
+
+    if (status) {
+      updates.push('status = ?');
+      params.push(status);
+    }
+
+    if (maxCaseload !== undefined) {
+      updates.push('maxCaseload = ?');
+      params.push(maxCaseload);
+    }
+
+    if (bio !== undefined) {
+      updates.push('bio = ?');
+      params.push(bio);
+    }
+
+    if (qualifications !== undefined) {
+      updates.push('qualifications = ?');
+      params.push(qualifications);
+    }
+
+    if (notes !== undefined) {
+      updates.push('notes = ?');
+      params.push(notes);
+    }
+
+    if (updates.length === 0) {
+      return c.json({ error: 'No updates provided' }, 400);
+    }
+
+    updates.push('updatedAt = datetime(\'now\')');
+    params.push(assignmentId);
+
+    await DB.prepare(`
+      UPDATE counselor_assignments
+      SET ${updates.join(', ')}
+      WHERE id = ?
+    `).bind(...params).run();
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('Update counselor error:', error);
+    return c.json({ error: 'Failed to update counselor' }, 500);
+  }
+});
+
+/**
+ * Remove counselor assignment
+ * DELETE /counselor/admin/counselors/:id
+ */
+counselorRoutes.delete('/admin/counselors/:id', requireAuth, requireSuperAdmin, async (c: AppContext) => {
+  const { DB } = c.env;
+  const assignmentId = c.req.param('id');
+
+  try {
+    // Get counselor info first
+    const assignment = await DB.prepare(`
+      SELECT counselorId FROM counselor_assignments WHERE id = ?
+    `).bind(assignmentId).first<{ counselorId: string }>();
+
+    if (!assignment) {
+      return c.json({ error: 'Counselor assignment not found' }, 404);
+    }
+
+    // Remove assignment
+    await DB.prepare(`
+      DELETE FROM counselor_assignments WHERE id = ?
+    `).bind(assignmentId).run();
+
+    // Reset user role to regular user (role_id = 2 for civil_servant)
+    await DB.prepare(`
+      UPDATE users SET role_id = 2 WHERE id = ?
+    `).bind(assignment.counselorId).run();
+
+    return c.json({ success: true, message: 'Counselor removed' });
+  } catch (error) {
+    console.error('Remove counselor error:', error);
+    return c.json({ error: 'Failed to remove counselor' }, 500);
+  }
+});
+
+// ============================================
+// REPORT DATA ROUTES (Counselor Access)
+// ============================================
+
+/**
+ * Search users for reporting
+ * GET /counselor/reports/users
+ */
+counselorRoutes.get('/reports/users', requireAuth, requireCounselor, async (c: AppContext) => {
+  const { DB } = c.env;
+  const url = new URL(c.req.url);
+  const search = url.searchParams.get('search') || '';
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 50);
+  const offset = (page - 1) * limit;
+
+  try {
+    // Get users who have wellness sessions
+    const { results } = await DB.prepare(`
+      SELECT DISTINCT
+        u.id,
+        u.displayName,
+        u.email,
+        u.title,
+        u.department,
+        (SELECT COUNT(*) FROM counselor_sessions WHERE userId = u.id) as sessionCount,
+        (SELECT AVG(mood) FROM mood_entries WHERE userId = u.id) as avgMood
+      FROM users u
+      INNER JOIN counselor_sessions cs ON cs.userId = u.id
+      WHERE (u.displayName LIKE ? OR u.email LIKE ?)
+      ORDER BY sessionCount DESC
+      LIMIT ? OFFSET ?
+    `).bind(`%${search}%`, `%${search}%`, limit, offset).all();
+
+    const countResult = await DB.prepare(`
+      SELECT COUNT(DISTINCT u.id) as count
+      FROM users u
+      INNER JOIN counselor_sessions cs ON cs.userId = u.id
+      WHERE (u.displayName LIKE ? OR u.email LIKE ?)
+    `).bind(`%${search}%`, `%${search}%`).first<{ count: number }>();
+
+    return c.json({
+      users: results || [],
+      total: countResult?.count || 0,
+      page,
+      totalPages: Math.ceil((countResult?.count || 0) / limit)
+    });
+  } catch (error) {
+    console.error('Search users error:', error);
+    return c.json({ error: 'Failed to search users' }, 500);
+  }
+});
+
+/**
+ * Get individual user wellness report data
+ * GET /counselor/reports/user/:userId
+ */
+counselorRoutes.get('/reports/user/:userId', requireAuth, requireCounselor, async (c: AppContext) => {
+  const { DB } = c.env;
+  const userId = c.req.param('userId');
+  const counselorName = c.get('userName') || 'Counselor';
+
+  try {
+    // Get user info
+    const user = await DB.prepare(`
+      SELECT id, displayName as name, email, department, title FROM users WHERE id = ?
+    `).bind(userId).first();
+
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    // Get session summary
+    const sessionSummary = await DB.prepare(`
+      SELECT
+        COUNT(*) as totalSessions,
+        SUM(messageCount) as totalMessages,
+        MIN(createdAt) as firstSessionAt,
+        MAX(createdAt) as lastSessionAt,
+        SUM(CASE WHEN status = 'escalated' THEN 1 ELSE 0 END) as escalationCount
+      FROM counselor_sessions
+      WHERE userId = ?
+    `).bind(userId).first();
+
+    // Get mood stats
+    const moodStats = await DB.prepare(`
+      SELECT
+        AVG(mood) as averageMood,
+        COUNT(*) as moodCount
+      FROM mood_entries
+      WHERE userId = ?
+    `).bind(userId).first();
+
+    // Get most common topic
+    const topTopic = await DB.prepare(`
+      SELECT topic, COUNT(*) as count
+      FROM counselor_sessions
+      WHERE userId = ? AND topic IS NOT NULL
+      GROUP BY topic
+      ORDER BY count DESC
+      LIMIT 1
+    `).bind(userId).first<{ topic: string; count: number }>();
+
+    // Get sessions list
+    const { results: sessions } = await DB.prepare(`
+      SELECT id, topic, messageCount, mood, status, createdAt
+      FROM counselor_sessions
+      WHERE userId = ?
+      ORDER BY createdAt DESC
+      LIMIT 50
+    `).bind(userId).all();
+
+    // Get mood history
+    const { results: moodHistory } = await DB.prepare(`
+      SELECT mood, factors, createdAt as date
+      FROM mood_entries
+      WHERE userId = ?
+      ORDER BY createdAt DESC
+      LIMIT 30
+    `).bind(userId).all();
+
+    // Calculate trend
+    const moods = (moodHistory || []).map((m: any) => m.mood);
+    const moodTrend = calculateTrend(moods);
+
+    return c.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        department: user.department,
+        mda: user.title
+      },
+      summary: {
+        totalSessions: sessionSummary?.totalSessions || 0,
+        totalMessages: sessionSummary?.totalMessages || 0,
+        averageMood: moodStats?.averageMood ? Math.round(moodStats.averageMood * 10) / 10 : null,
+        moodTrend,
+        mostCommonTopic: topTopic?.topic || null,
+        escalationCount: sessionSummary?.escalationCount || 0,
+        firstSessionAt: sessionSummary?.firstSessionAt || null,
+        lastSessionAt: sessionSummary?.lastSessionAt || null
+      },
+      sessions: (sessions || []).map((s: any) => ({
+        id: s.id,
+        date: s.createdAt,
+        topic: s.topic,
+        messageCount: s.messageCount,
+        mood: s.mood,
+        status: s.status
+      })),
+      moodHistory: (moodHistory || []).map((m: any) => ({
+        date: m.date,
+        mood: m.mood,
+        factors: m.factors ? JSON.parse(m.factors) : []
+      })),
+      generatedAt: new Date().toISOString(),
+      generatedBy: counselorName
+    });
+  } catch (error) {
+    console.error('Get user report error:', error);
+    return c.json({ error: 'Failed to generate report' }, 500);
+  }
+});
+
+/**
+ * Get aggregate wellness report data
+ * GET /counselor/reports/aggregate
+ */
+counselorRoutes.get('/reports/aggregate', requireAuth, requireCounselor, async (c: AppContext) => {
+  const { DB } = c.env;
+  const url = new URL(c.req.url);
+  const counselorName = c.get('userName') || 'Counselor';
+
+  const fromDate = url.searchParams.get('from') || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const toDate = url.searchParams.get('to') || new Date().toISOString();
+
+  try {
+    // Overview stats
+    const overview = await DB.prepare(`
+      SELECT
+        COUNT(DISTINCT userId) as totalUsers,
+        COUNT(*) as totalSessions,
+        SUM(messageCount) as totalMessages,
+        AVG(messageCount) as averageSessionLength,
+        SUM(CASE WHEN status = 'escalated' THEN 1.0 ELSE 0 END) / NULLIF(COUNT(*), 0) * 100 as escalationRate,
+        SUM(CASE WHEN isAnonymous = 1 THEN 1.0 ELSE 0 END) / NULLIF(COUNT(*), 0) * 100 as anonymousSessionRate
+      FROM counselor_sessions
+      WHERE createdAt BETWEEN ? AND ?
+    `).bind(fromDate, toDate).first();
+
+    // Topic breakdown
+    const { results: topicBreakdown } = await DB.prepare(`
+      SELECT
+        topic,
+        COUNT(*) as count,
+        COUNT(*) * 100.0 / (SELECT COUNT(*) FROM counselor_sessions WHERE createdAt BETWEEN ? AND ?) as percentage
+      FROM counselor_sessions
+      WHERE createdAt BETWEEN ? AND ? AND topic IS NOT NULL
+      GROUP BY topic
+      ORDER BY count DESC
+    `).bind(fromDate, toDate, fromDate, toDate).all();
+
+    // Mood analytics
+    const moodStats = await DB.prepare(`
+      SELECT AVG(mood) as averageMood
+      FROM mood_entries
+      WHERE createdAt BETWEEN ? AND ?
+    `).bind(fromDate, toDate).first<{ averageMood: number }>();
+
+    const { results: moodDistribution } = await DB.prepare(`
+      SELECT mood, COUNT(*) as count
+      FROM mood_entries
+      WHERE createdAt BETWEEN ? AND ?
+      GROUP BY mood
+      ORDER BY mood
+    `).bind(fromDate, toDate).all();
+
+    const { results: moodTrend } = await DB.prepare(`
+      SELECT
+        date(createdAt) as date,
+        AVG(mood) as average,
+        COUNT(*) as count
+      FROM mood_entries
+      WHERE createdAt BETWEEN ? AND ?
+      GROUP BY date(createdAt)
+      ORDER BY date
+    `).bind(fromDate, toDate).all();
+
+    // Escalation analytics
+    const escalationStats = await DB.prepare(`
+      SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN urgency = 'low' THEN 1 ELSE 0 END) as urgencyLow,
+        SUM(CASE WHEN urgency = 'normal' THEN 1 ELSE 0 END) as urgencyNormal,
+        SUM(CASE WHEN urgency = 'high' THEN 1 ELSE 0 END) as urgencyHigh,
+        SUM(CASE WHEN urgency = 'crisis' THEN 1 ELSE 0 END) as urgencyCrisis,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as statusPending,
+        SUM(CASE WHEN status = 'acknowledged' THEN 1 ELSE 0 END) as statusAcknowledged,
+        SUM(CASE WHEN status = 'scheduled' THEN 1 ELSE 0 END) as statusScheduled,
+        SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as statusResolved
+      FROM counselor_escalations
+      WHERE createdAt BETWEEN ? AND ?
+    `).bind(fromDate, toDate).first();
+
+    // Peak usage
+    const { results: busiestDays } = await DB.prepare(`
+      SELECT strftime('%w', createdAt) as day, COUNT(*) as count
+      FROM counselor_sessions
+      WHERE createdAt BETWEEN ? AND ?
+      GROUP BY day
+      ORDER BY count DESC
+      LIMIT 3
+    `).bind(fromDate, toDate).all();
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    return c.json({
+      period: { from: fromDate, to: toDate },
+      overview: {
+        totalUsers: overview?.totalUsers || 0,
+        totalSessions: overview?.totalSessions || 0,
+        totalMessages: overview?.totalMessages || 0,
+        averageSessionLength: overview?.averageSessionLength ? Math.round(overview.averageSessionLength * 10) / 10 : 0,
+        escalationRate: overview?.escalationRate ? Math.round(overview.escalationRate * 10) / 10 : 0,
+        anonymousSessionRate: overview?.anonymousSessionRate ? Math.round(overview.anonymousSessionRate * 10) / 10 : 0
+      },
+      topicBreakdown: (topicBreakdown || []).map((t: any) => ({
+        topic: t.topic,
+        count: t.count,
+        percentage: Math.round(t.percentage * 10) / 10
+      })),
+      moodAnalytics: {
+        averageMood: moodStats?.averageMood ? Math.round(moodStats.averageMood * 10) / 10 : null,
+        moodDistribution: Object.fromEntries((moodDistribution || []).map((m: any) => [m.mood, m.count])),
+        trendOverTime: (moodTrend || []).map((m: any) => ({
+          date: m.date,
+          average: Math.round(m.average * 10) / 10,
+          count: m.count
+        }))
+      },
+      escalationAnalytics: {
+        total: escalationStats?.total || 0,
+        byUrgency: {
+          low: escalationStats?.urgencyLow || 0,
+          normal: escalationStats?.urgencyNormal || 0,
+          high: escalationStats?.urgencyHigh || 0,
+          crisis: escalationStats?.urgencyCrisis || 0
+        },
+        byStatus: {
+          pending: escalationStats?.statusPending || 0,
+          acknowledged: escalationStats?.statusAcknowledged || 0,
+          scheduled: escalationStats?.statusScheduled || 0,
+          resolved: escalationStats?.statusResolved || 0
+        },
+        averageResolutionTime: null // Would need more complex calculation
+      },
+      peakUsageTimes: {
+        busiestDays: (busiestDays || []).map((d: any) => dayNames[parseInt(d.day)]),
+        busiestHours: [9, 10, 14, 15] // Typical office hours - would need real data
+      },
+      generatedAt: new Date().toISOString(),
+      generatedBy: counselorName
+    });
+  } catch (error) {
+    console.error('Get aggregate report error:', error);
+    return c.json({ error: 'Failed to generate report' }, 500);
+  }
+});
+
 // Helper functions
 
 function calculateTrend(moods: number[]): 'improving' | 'declining' | 'stable' | null {

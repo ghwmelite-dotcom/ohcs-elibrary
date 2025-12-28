@@ -70,6 +70,14 @@ const rolePermissions: Record<string, Permission[]> = {
     { id: '1', name: 'moderate_forum', description: 'Moderate forum', resource: 'forum', action: 'update' },
     { id: '2', name: 'moderate_chat', description: 'Moderate chat', resource: 'chat', action: 'update' },
   ],
+  counselor: [
+    { id: '1', name: 'view_wellness_dashboard', description: 'View wellness dashboard', resource: 'wellness', action: 'read' },
+    { id: '2', name: 'view_patient_sessions', description: 'View patient counseling sessions', resource: 'sessions', action: 'read' },
+    { id: '3', name: 'generate_reports', description: 'Generate wellness reports', resource: 'reports', action: 'create' },
+    { id: '4', name: 'handle_escalations', description: 'Handle escalation requests', resource: 'escalations', action: 'manage' },
+    { id: '5', name: 'view_mood_analytics', description: 'View mood analytics', resource: 'analytics', action: 'read' },
+    { id: '6', name: 'manage_resources', description: 'Manage wellness resources', resource: 'resources', action: 'manage' },
+  ],
   contributor: [
     { id: '1', name: 'create_documents', description: 'Upload documents', resource: 'documents', action: 'create' },
     { id: '2', name: 'create_forum_posts', description: 'Create forum posts', resource: 'forum', action: 'create' },

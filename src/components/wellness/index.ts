@@ -7,3 +7,4 @@ export { ResourceCard } from './ResourceCard';
 export { SessionCard } from './SessionCard';
 export { ChatMessage } from './ChatMessage';
 export { MoodChart } from './MoodChart';
+export { WellnessDashboardCard } from './WellnessDashboardCard';

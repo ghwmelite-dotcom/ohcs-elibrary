@@ -30,6 +30,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
 import { useLibraryStore } from '@/stores/libraryStore';
 import { useForumStore } from '@/stores/forumStore';
+import { WellnessDashboardCard } from '@/components/wellness';
 import { cn } from '@/utils/cn';
 
 // ============================================================================
@@ -722,6 +723,16 @@ export default function Dashboard() {
             requiredXP={xpProgress + xpToNextLevel}
             totalXP={totalXP}
           />
+        </motion.div>
+
+        {/* Wellness Centre Highlight */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-8"
+        >
+          <WellnessDashboardCard />
         </motion.div>
 
         {/* Quick Stats */}

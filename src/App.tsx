@@ -66,6 +66,8 @@ const AdminAnalytics = lazy(() => import('@/pages/admin/AdminAnalytics'));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
 const AdminAudit = lazy(() => import('@/pages/admin/AdminAudit'));
 const AdminWellness = lazy(() => import('@/pages/admin/AdminWellness'));
+const AdminCounselors = lazy(() => import('@/pages/admin/AdminCounselors'));
+const CounselorReports = lazy(() => import('@/pages/admin/CounselorReports'));
 
 // Loading fallback component
 function PageLoader() {
@@ -319,6 +321,8 @@ export default function App() {
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/audit" element={<AdminAudit />} />
             <Route path="/admin/wellness" element={<AdminWellness />} />
+            <Route path="/admin/wellness/reports" element={<CounselorReports />} />
+            <Route path="/admin/counselors" element={<AdminCounselors />} />
           </Route>
 
           {/* 404 route */}
