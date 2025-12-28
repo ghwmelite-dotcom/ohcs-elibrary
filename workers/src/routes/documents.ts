@@ -1,5 +1,15 @@
 import { Hono } from 'hono';
 import type { Context, Next } from 'hono';
+import {
+  extractTextFromDocument,
+  generateDocumentAnalysis,
+  answerDocumentQuestion,
+  getCachedAnalysis,
+  cacheAnalysis,
+  getCachedText,
+  saveChatMessage,
+  getChatHistory,
+} from '../services/documentAI';
 
 interface Env {
   DB: D1Database;
@@ -574,13 +584,13 @@ documentsRoutes.post('/:id/rate', requireAuth, async (c: AppContext) => {
   }
 });
 
-// POST /documents/:id/analyze - AI analysis
+// POST /documents/:id/analyze - AI analysis (production-ready)
 documentsRoutes.post('/:id/analyze', async (c: AppContext) => {
   try {
-    const { DB, AI, DOCUMENTS } = c.env;
     const documentId = c.req.param('id');
+    const { refresh } = await c.req.json().catch(() => ({ refresh: false }));
 
-    const document = await DB.prepare(`
+    const document = await c.env.DB.prepare(`
       SELECT * FROM documents WHERE id = ?
     `).bind(documentId).first();
 
@@ -588,26 +598,212 @@ documentsRoutes.post('/:id/analyze', async (c: AppContext) => {
       return c.json({ error: 'Document not found' }, 404);
     }
 
-    // For now, return a placeholder analysis
-    // In production, this would use Workers AI to analyze the document
-    const analysis = {
-      summary: `This document "${document.title}" contains important information related to ${document.category}. A detailed AI-powered summary will be available once the document analysis service is fully configured.`,
-      keyPoints: [
-        'Document analysis is being processed',
-        'Key points will be extracted from the content',
-        'Related topics and themes will be identified',
-        'Suggested actions and next steps will be provided',
-      ],
-      topics: document.tags ? JSON.parse(document.tags as string) : [],
-      suggestedTags: ['civil service', 'governance', 'policy'],
-      relatedDocuments: [],
-      readingTime: Math.ceil((document.fileSize as number) / 100000) * 5,
-    };
+    // Check for cached analysis (unless refresh requested)
+    if (!refresh) {
+      const cached = await getCachedAnalysis(c.env, documentId);
+      if (cached) {
+        return c.json({
+          ...cached,
+          cached: true,
+        });
+      }
+    }
 
-    return c.json(analysis);
+    // Extract text from document
+    let extractedText = await getCachedText(c.env, documentId);
+    if (!extractedText) {
+      extractedText = await extractTextFromDocument(
+        c.env,
+        document.fileUrl as string,
+        document.fileType as string
+      );
+    }
+
+    // Generate AI analysis
+    const analysis = await generateDocumentAnalysis(
+      c.env,
+      documentId,
+      document.title as string,
+      document.description as string || '',
+      document.category as string,
+      extractedText
+    );
+
+    // Cache the analysis
+    await cacheAnalysis(c.env, documentId, analysis, extractedText);
+
+    return c.json({
+      ...analysis,
+      cached: false,
+    });
   } catch (error) {
     console.error('Error analyzing document:', error);
     return c.json({ error: 'Failed to analyze document' }, 500);
+  }
+});
+
+// GET /documents/:id/analysis - Get cached analysis (quick endpoint)
+documentsRoutes.get('/:id/analysis', async (c: AppContext) => {
+  try {
+    const documentId = c.req.param('id');
+
+    // Check for cached analysis first
+    const cached = await getCachedAnalysis(c.env, documentId);
+    if (cached) {
+      return c.json({
+        ...cached,
+        cached: true,
+        available: true,
+      });
+    }
+
+    // No cached analysis - return indicator that analysis is needed
+    const document = await c.env.DB.prepare(`
+      SELECT title, description, category FROM documents WHERE id = ?
+    `).bind(documentId).first();
+
+    if (!document) {
+      return c.json({ error: 'Document not found' }, 404);
+    }
+
+    return c.json({
+      available: false,
+      message: 'AI analysis not yet generated. Use POST /analyze to generate.',
+    });
+  } catch (error) {
+    console.error('Error fetching analysis:', error);
+    return c.json({ error: 'Failed to fetch analysis' }, 500);
+  }
+});
+
+// POST /documents/:id/chat - Ask questions about the document
+documentsRoutes.post('/:id/chat', async (c: AppContext) => {
+  try {
+    const documentId = c.req.param('id');
+    const userId = c.get('userId') || 'guest';
+    const { question } = await c.req.json();
+
+    if (!question || question.trim().length < 3) {
+      return c.json({ error: 'Question is required and must be at least 3 characters' }, 400);
+    }
+
+    const document = await c.env.DB.prepare(`
+      SELECT id, title, description, category, fileUrl, fileType FROM documents WHERE id = ?
+    `).bind(documentId).first();
+
+    if (!document) {
+      return c.json({ error: 'Document not found' }, 404);
+    }
+
+    // Get or extract document text
+    let extractedText = await getCachedText(c.env, documentId);
+    if (!extractedText) {
+      extractedText = await extractTextFromDocument(
+        c.env,
+        document.fileUrl as string,
+        document.fileType as string
+      );
+
+      // Cache the extracted text if we had to extract it
+      if (extractedText) {
+        try {
+          await c.env.DB.prepare(`
+            INSERT INTO document_ai_analysis (id, documentId, extractedText, createdAt, updatedAt)
+            VALUES (?, ?, ?, datetime('now'), datetime('now'))
+            ON CONFLICT(documentId) DO UPDATE SET extractedText = ?, updatedAt = datetime('now')
+          `).bind(crypto.randomUUID(), documentId, extractedText, extractedText).run();
+        } catch (e) {
+          console.log('Could not cache extracted text:', e);
+        }
+      }
+    }
+
+    // Get chat history for context
+    let chatHistory: any[] = [];
+    try {
+      chatHistory = await getChatHistory(c.env, documentId, userId, 5);
+    } catch (e) {
+      console.log('Could not fetch chat history:', e);
+    }
+
+    // Generate answer using AI
+    const answer = await answerDocumentQuestion(
+      c.env,
+      documentId,
+      document.title as string,
+      extractedText || document.description as string || '',
+      question,
+      chatHistory
+    );
+
+    // Save chat message
+    let messageId = '';
+    try {
+      messageId = await saveChatMessage(c.env, documentId, userId, question, answer);
+    } catch (e) {
+      console.log('Could not save chat message:', e);
+      messageId = crypto.randomUUID();
+    }
+
+    return c.json({
+      id: messageId,
+      question,
+      answer,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error in document chat:', error);
+    return c.json({ error: 'Failed to process question' }, 500);
+  }
+});
+
+// GET /documents/:id/chat - Get chat history for a document
+documentsRoutes.get('/:id/chat', async (c: AppContext) => {
+  try {
+    const documentId = c.req.param('id');
+    const userId = c.get('userId') || 'guest';
+    const limit = parseInt(c.req.query('limit') || '20');
+
+    const document = await c.env.DB.prepare(`
+      SELECT id FROM documents WHERE id = ?
+    `).bind(documentId).first();
+
+    if (!document) {
+      return c.json({ error: 'Document not found' }, 404);
+    }
+
+    let messages: any[] = [];
+    try {
+      messages = await getChatHistory(c.env, documentId, userId, limit);
+    } catch (e) {
+      console.log('Could not fetch chat history:', e);
+    }
+
+    return c.json({ messages });
+  } catch (error) {
+    console.error('Error fetching chat history:', error);
+    return c.json({ error: 'Failed to fetch chat history' }, 500);
+  }
+});
+
+// POST /documents/:id/chat/:messageId/feedback - Rate a chat answer
+documentsRoutes.post('/:id/chat/:messageId/feedback', async (c: AppContext) => {
+  try {
+    const messageId = c.req.param('messageId');
+    const { helpful } = await c.req.json();
+
+    if (typeof helpful !== 'boolean') {
+      return c.json({ error: 'Helpful must be a boolean' }, 400);
+    }
+
+    await c.env.DB.prepare(`
+      UPDATE document_chat_history SET helpful = ? WHERE id = ?
+    `).bind(helpful ? 1 : 0, messageId).run();
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('Error saving feedback:', error);
+    return c.json({ error: 'Failed to save feedback' }, 500);
   }
 });
 

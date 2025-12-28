@@ -24,7 +24,9 @@ import {
   BookOpen,
   Image as ImageIcon,
   FileWarning,
+  Sparkles,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { Document } from '@/types';
 import { Badge } from '@/components/shared/Badge';
 import { cn } from '@/utils/cn';
@@ -52,6 +54,7 @@ export function DocumentViewerModal({
   onDownload,
   isBookmarked = false,
 }: DocumentViewerModalProps) {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -297,10 +300,22 @@ export function DocumentViewerModal({
                 </Badge>
               </div>
 
+              {/* AI Analysis Button */}
+              <button
+                onClick={() => {
+                  onClose();
+                  navigate(`/library/${document.id}?tab=ai`);
+                }}
+                className="ml-4 px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>AI Analysis</span>
+              </button>
+
               {/* Close Button */}
               <button
                 onClick={onClose}
-                className="ml-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                className="ml-2 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>

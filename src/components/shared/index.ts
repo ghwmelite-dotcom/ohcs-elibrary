@@ -59,3 +59,5 @@ export { DevTools } from './DevTools';
 export { PullToRefresh, RefreshableContainer } from './PullToRefresh';
 
 export { OfflineIndicator, OfflineStatusBadge } from './OfflineIndicator';
+
+export { AnimatedLogo } from './AnimatedLogo';

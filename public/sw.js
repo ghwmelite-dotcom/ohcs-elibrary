@@ -1,6 +1,6 @@
 // OHCS E-Library Service Worker
-const CACHE_NAME = 'ohcs-elibrary-v2';
-const RUNTIME_CACHE = 'ohcs-runtime-v2';
+const CACHE_NAME = 'ohcs-elibrary-v4';
+const RUNTIME_CACHE = 'ohcs-runtime-v4';
 const ARTICLES_CACHE = 'ohcs-articles-v1';
 const API_CACHE = 'ohcs-api-v1';
 

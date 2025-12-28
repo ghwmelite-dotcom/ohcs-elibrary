@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -13,15 +14,16 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
-  Star,
   LogOut,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useUIStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationsStore } from '@/stores/notificationsStore';
+import { useNewsStore } from '@/stores/newsStore';
 import { Avatar } from '@/components/shared/Avatar';
 import { Badge } from '@/components/shared/Badge';
+import { AnimatedLogo } from '@/components/shared/AnimatedLogo';
 
 interface NavItem {
   path: string;
@@ -50,9 +52,29 @@ export function Sidebar() {
   const { sidebar, setSidebarCollapsed } = useUIStore();
   const { user, logout } = useAuthStore();
   const { unreadCount } = useNotificationsStore();
+  const { newArticlesCount, checkForNewArticles, markNewsAsViewed } = useNewsStore();
   const location = useLocation();
 
   const isCollapsed = sidebar.isCollapsed;
+
+  // Check for new articles on mount and periodically
+  useEffect(() => {
+    checkForNewArticles();
+
+    // Check every 5 minutes for new articles
+    const interval = setInterval(() => {
+      checkForNewArticles();
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [checkForNewArticles]);
+
+  // Mark news as viewed when navigating to news page
+  useEffect(() => {
+    if (location.pathname === '/news' || location.pathname.startsWith('/news/')) {
+      markNewsAsViewed();
+    }
+  }, [location.pathname, markNewsAsViewed]);
 
   return (
     <aside
@@ -64,47 +86,51 @@ export function Sidebar() {
       {/* Logo and Toggle */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-surface-200 dark:border-surface-700">
         <AnimatePresence mode="wait">
-          {!isCollapsed && (
+          {!isCollapsed ? (
             <motion.div
+              key="expanded"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex items-center gap-2"
             >
-              <div className="w-8 h-8 rounded-lg bg-ghana-gradient flex items-center justify-center">
-                <Star className="w-5 h-5 text-secondary-500" />
-              </div>
-              <div>
-                <h1 className="font-heading font-bold text-primary-600 dark:text-primary-400 text-sm">
-                  OHCS E-Library
-                </h1>
-                <p className="text-[10px] text-surface-500">Ghana Civil Service</p>
-              </div>
+              <AnimatedLogo size="sm" showText showAIBadge isCollapsed={false} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="collapsed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="mx-auto"
+            >
+              <AnimatedLogo size="md" showText={false} showAIBadge={false} isCollapsed />
             </motion.div>
           )}
         </AnimatePresence>
 
-        {isCollapsed && (
-          <div className="w-10 h-10 rounded-lg bg-ghana-gradient flex items-center justify-center mx-auto">
-            <Star className="w-6 h-6 text-secondary-500" />
-          </div>
-        )}
-
-        <button
-          onClick={() => setSidebarCollapsed(!isCollapsed)}
-          className={cn(
-            'p-1.5 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors',
-            isCollapsed && 'mx-auto mt-2'
-          )}
-          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="w-5 h-5" />
-          ) : (
+        {!isCollapsed && (
+          <button
+            onClick={() => setSidebarCollapsed(!isCollapsed)}
+            className="p-1.5 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+            title="Collapse sidebar"
+          >
             <ChevronLeft className="w-5 h-5" />
-          )}
-        </button>
+          </button>
+        )}
       </div>
+
+      {/* Expand button when collapsed */}
+      {isCollapsed && (
+        <div className="px-3 py-2">
+          <button
+            onClick={() => setSidebarCollapsed(false)}
+            className="w-full p-2 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors flex items-center justify-center"
+            title="Expand sidebar"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
       {/* Ghana flag stripe */}
       <div className="ghana-flag-stripe" />
@@ -112,33 +138,60 @@ export function Sidebar() {
       {/* Main Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
         <ul className="space-y-1">
-          {mainNavItems.map((item) => (
-            <li key={item.path}>
-              <NavLink
-                to={item.path}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
-                    isActive
-                      ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 hover:text-surface-900 dark:hover:text-surface-50',
-                    isCollapsed && 'justify-center px-2'
-                  )
-                }
-                title={isCollapsed ? item.label : undefined}
-              >
-                <span className="flex-shrink-0">{item.icon}</span>
-                {!isCollapsed && (
-                  <span className="flex-1">{item.label}</span>
-                )}
-                {!isCollapsed && item.badge && item.badge > 0 && (
-                  <Badge variant="error" size="sm">
-                    {item.badge}
-                  </Badge>
-                )}
-              </NavLink>
-            </li>
-          ))}
+          {mainNavItems.map((item) => {
+            // Add news badge count
+            const badgeCount = item.path === '/news' ? newArticlesCount : item.badge;
+
+            return (
+              <li key={item.path}>
+                <NavLink
+                  to={item.path}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
+                      isActive
+                        ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium'
+                        : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 hover:text-surface-900 dark:hover:text-surface-50',
+                      isCollapsed && 'justify-center px-2'
+                    )
+                  }
+                  title={isCollapsed ? item.label : undefined}
+                >
+                  <span className="flex-shrink-0 relative">
+                    {item.icon}
+                    {/* Animated badge dot for collapsed state */}
+                    {isCollapsed && badgeCount && badgeCount > 0 && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-error-500 rounded-full"
+                      >
+                        <motion.span
+                          className="absolute inset-0 bg-error-500 rounded-full"
+                          animate={{ scale: [1, 1.5, 1], opacity: [1, 0, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
+                      </motion.span>
+                    )}
+                  </span>
+                  {!isCollapsed && (
+                    <span className="flex-1">{item.label}</span>
+                  )}
+                  {!isCollapsed && badgeCount && badgeCount > 0 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                    >
+                      <Badge variant="error" size="sm" className="animate-pulse">
+                        {badgeCount > 99 ? '99+' : badgeCount}
+                      </Badge>
+                    </motion.div>
+                  )}
+                </NavLink>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 
@@ -165,7 +218,11 @@ export function Sidebar() {
                   <span className="flex-shrink-0 relative">
                     {item.icon}
                     {isCollapsed && badgeCount && badgeCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-error-500 rounded-full" />
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1 -right-1 w-2 h-2 bg-error-500 rounded-full"
+                      />
                     )}
                   </span>
                   {!isCollapsed && (

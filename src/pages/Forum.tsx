@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MessageSquare, TrendingUp, Flame, Clock, Users } from 'lucide-react';
+import { MessageSquare, TrendingUp, Flame, Clock, Users, Plus } from 'lucide-react';
 import { useForumStore } from '@/stores/forumStore';
 import {
   CategoryList,
   TopicList,
   ForumStats,
-  NewTopicModal,
+  CreateTopicModal,
 } from '@/components/forum';
 import { Tabs } from '@/components/shared/Tabs';
+import { Button } from '@/components/shared/Button';
 
 export default function Forum() {
+  const navigate = useNavigate();
   const {
     categories,
     topics,
@@ -18,10 +21,26 @@ export default function Forum() {
     fetchCategories,
     fetchTopics,
     fetchStats,
+    createTopic,
     isLoading,
   } = useForumStore();
   const [activeTab, setActiveTab] = useState('categories');
   const [showNewTopic, setShowNewTopic] = useState(false);
+
+  const handleCreateTopic = async (data: {
+    title: string;
+    content: string;
+    categoryId: string;
+    tags: string[];
+  }) => {
+    const topic = await createTopic(data);
+    if (topic) {
+      // Navigate to the new topic
+      navigate(`/forum/topic/${topic.id}`);
+      return true;
+    }
+    return false;
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -60,13 +79,22 @@ export default function Forum() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-heading font-bold text-surface-900 dark:text-surface-50">
-          Discussion Forum
-        </h1>
-        <p className="mt-1 text-surface-600 dark:text-surface-400">
-          Connect with colleagues, share knowledge, and discuss topics
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-heading font-bold text-surface-900 dark:text-surface-50">
+            Discussion Forum
+          </h1>
+          <p className="mt-1 text-surface-600 dark:text-surface-400">
+            Connect with colleagues, share knowledge, and discuss topics
+          </p>
+        </div>
+        <Button
+          onClick={() => setShowNewTopic(true)}
+          leftIcon={<Plus className="w-5 h-5" />}
+          className="whitespace-nowrap"
+        >
+          Start Discussion
+        </Button>
       </div>
 
       {/* Quick Stats Bar */}
@@ -136,14 +164,11 @@ export default function Forum() {
       </div>
 
       {/* New Topic Modal */}
-      <NewTopicModal
+      <CreateTopicModal
         isOpen={showNewTopic}
         onClose={() => setShowNewTopic(false)}
-        categories={categories.map((c) => ({ id: c.id, name: c.name }))}
-        onSubmit={(data) => {
-          console.log('Create topic:', data);
-          setShowNewTopic(false);
-        }}
+        categories={categories}
+        onSubmit={handleCreateTopic}
       />
     </div>
   );

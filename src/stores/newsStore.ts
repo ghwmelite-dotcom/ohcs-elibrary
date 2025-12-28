@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { NewsSource, NewsArticle, NewsFilter, NewsCategory } from '@/types';
 import { useAuthStore } from './authStore';
 
@@ -19,6 +20,8 @@ interface NewsState {
   hasMore: boolean;
   total: number;
   lastFetchedAt: string | null;
+  lastViewedAt: string | null;
+  newArticlesCount: number;
   error: string | null;
 }
 
@@ -37,6 +40,8 @@ interface NewsActions {
   dismissBreakingNews: (id: string) => void;
   clearError: () => void;
   clearCurrentArticle: () => void;
+  markNewsAsViewed: () => void;
+  checkForNewArticles: () => Promise<void>;
 }
 
 type NewsStore = NewsState & NewsActions;
@@ -51,7 +56,9 @@ const getAuthHeaders = (): HeadersInit => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-export const useNewsStore = create<NewsStore>((set, get) => ({
+export const useNewsStore = create<NewsStore>()(
+  persist(
+    (set, get) => ({
   // Initial state
   sources: [],
   articles: [],
@@ -64,6 +71,8 @@ export const useNewsStore = create<NewsStore>((set, get) => ({
   hasMore: true,
   total: 0,
   lastFetchedAt: null,
+  lastViewedAt: null,
+  newArticlesCount: 0,
   error: null,
 
   // Actions
@@ -129,12 +138,24 @@ export const useNewsStore = create<NewsStore>((set, get) => ({
         isBookmarked: bookmarkedIds.has(article.id)
       }));
 
+      // Count new articles since last viewed
+      const lastViewedAt = get().lastViewedAt;
+      let newCount = 0;
+      if (lastViewedAt && !append) {
+        const lastViewedDate = new Date(lastViewedAt);
+        newCount = articlesWithBookmarks.filter((article: NewsArticle) => {
+          const articleDate = new Date(article.publishedAt || article.createdAt);
+          return articleDate > lastViewedDate;
+        }).length;
+      }
+
       set({
         articles: append ? [...get().articles, ...articlesWithBookmarks] : articlesWithBookmarks,
         total: data.total || articles.length,
         hasMore: data.hasMore || false,
         isLoading: false,
         lastFetchedAt: new Date().toISOString(),
+        newArticlesCount: append ? get().newArticlesCount : newCount,
       });
     } catch (error) {
       console.error('Error fetching articles:', error);
@@ -323,4 +344,46 @@ export const useNewsStore = create<NewsStore>((set, get) => ({
   clearCurrentArticle: () => {
     set({ currentArticle: null, error: null });
   },
-}));
+
+  markNewsAsViewed: () => {
+    set({
+      lastViewedAt: new Date().toISOString(),
+      newArticlesCount: 0,
+    });
+  },
+
+  checkForNewArticles: async () => {
+    try {
+      const response = await fetch(`${API_BASE}/news?limit=5&offset=0`);
+      if (!response.ok) return;
+
+      const data = await response.json();
+      const articles = data.articles || [];
+
+      const lastViewedAt = get().lastViewedAt;
+      if (!lastViewedAt) {
+        // First time - set lastViewedAt but don't show badge
+        set({ lastViewedAt: new Date().toISOString() });
+        return;
+      }
+
+      const lastViewedDate = new Date(lastViewedAt);
+      const newCount = articles.filter((article: NewsArticle) => {
+        const articleDate = new Date(article.publishedAt || article.createdAt);
+        return articleDate > lastViewedDate;
+      }).length;
+
+      set({ newArticlesCount: newCount });
+    } catch (error) {
+      console.error('Error checking for new articles:', error);
+    }
+  },
+}),
+    {
+      name: 'ohcs-news-storage',
+      partialize: (state) => ({
+        lastViewedAt: state.lastViewedAt,
+      }),
+    }
+  )
+);

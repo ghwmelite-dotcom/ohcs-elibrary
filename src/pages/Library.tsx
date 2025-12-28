@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, BookOpen, Bookmark, Clock, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react';
 import { useLibraryStore } from '@/stores/libraryStore';
+import { useAuthStore } from '@/stores/authStore';
 import { CategoryFilter, DocumentGrid, DocumentUpload, DocumentViewerModal } from '@/components/library';
 import { Button } from '@/components/shared/Button';
 import { Tabs } from '@/components/shared/Tabs';
@@ -22,6 +23,9 @@ export default function Library() {
     isLoading,
     error,
   } = useLibraryStore();
+
+  const { hasRole } = useAuthStore();
+  const isAdmin = hasRole(['admin', 'super_admin']);
 
   const [showUpload, setShowUpload] = useState(false);
   const [activeTab, setActiveTab] = useState<LibraryTab>('all');
@@ -108,12 +112,14 @@ export default function Library() {
             Access official documents, policies, and training materials
           </p>
         </div>
-        <Button
-          onClick={() => setShowUpload(true)}
-          leftIcon={<Upload className="w-5 h-5" />}
-        >
-          Upload Document
-        </Button>
+        {isAdmin && (
+          <Button
+            onClick={() => setShowUpload(true)}
+            leftIcon={<Upload className="w-5 h-5" />}
+          >
+            Upload Document
+          </Button>
+        )}
       </div>
 
       {/* Error State */}
@@ -195,14 +201,19 @@ export default function Library() {
           {/* AI Assistant Promo */}
           <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl p-4 text-white">
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3">
-              <span className="text-xl">&#10024;</span>
+              <span className="text-xl">✨</span>
             </div>
             <h4 className="font-semibold mb-2">AI Document Analysis</h4>
             <p className="text-sm text-primary-100 mb-4">
               Get instant summaries, key points, and insights from any document using
               our AI assistant.
             </p>
-            <Button variant="secondary" size="sm" className="w-full">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="w-full"
+              onClick={() => window.location.href = '/help#ai-features'}
+            >
               Learn More
             </Button>
           </div>
