@@ -153,6 +153,31 @@ const API_BASE = import.meta.env.PROD
 // Local storage key for documents (used when API is not available)
 const LOCAL_DOCUMENTS_KEY = 'ohcs-library-documents';
 
+// Helper to get auth token from storage
+const getAuthToken = (): string | null => {
+  try {
+    // First check zustand persisted auth store
+    const authState = JSON.parse(localStorage.getItem('ohcs-auth-storage') || '{}');
+    const token = authState?.state?.token;
+    if (token) return token;
+
+    // Fallback to direct token storage
+    return localStorage.getItem('auth_token');
+  } catch {
+    return null;
+  }
+};
+
+// Helper to create headers with auth
+const getAuthHeaders = (additionalHeaders: Record<string, string> = {}): Record<string, string> => {
+  const headers: Record<string, string> = { ...additionalHeaders };
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 // Helper to get local documents
 const getLocalDocuments = (): Document[] => {
   try {
@@ -213,7 +238,9 @@ export const useLibraryStore = create<LibraryStore>()(
           if (currentFilter.limit) params.append('limit', currentFilter.limit.toString());
           if (currentFilter.tags?.length) params.append('tags', currentFilter.tags.join(','));
 
-          const response = await fetch(`${API_BASE}/documents?${params}`);
+          const response = await fetch(`${API_BASE}/documents?${params}`, {
+            headers: getAuthHeaders(),
+          });
 
           // Check if response is JSON
           const contentType = response.headers.get('content-type');
@@ -301,7 +328,9 @@ export const useLibraryStore = create<LibraryStore>()(
         set({ isLoading: true, error: null, currentDocument: null });
 
         try {
-          const response = await fetch(`${API_BASE}/documents/${id}`);
+          const response = await fetch(`${API_BASE}/documents/${id}`, {
+            headers: getAuthHeaders(),
+          });
 
           if (!response.ok) {
             throw new Error('Document not found');
@@ -330,6 +359,7 @@ export const useLibraryStore = create<LibraryStore>()(
         try {
           const response = await fetch(`${API_BASE}/documents`, {
             method: 'POST',
+            headers: getAuthHeaders(),
             body: formData,
           });
 
@@ -360,7 +390,7 @@ export const useLibraryStore = create<LibraryStore>()(
         try {
           const response = await fetch(`${API_BASE}/documents/${id}`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify(data),
           });
 
@@ -391,15 +421,9 @@ export const useLibraryStore = create<LibraryStore>()(
         set({ isLoading: true, error: null });
 
         try {
-          // Get auth token from authStore (key is 'ohcs-auth-storage', and also check direct 'auth_token')
-          const authState = JSON.parse(localStorage.getItem('ohcs-auth-storage') || '{}');
-          const token = authState?.state?.token || localStorage.getItem('auth_token');
-
           const response = await fetch(`${API_BASE}/documents/${id}`, {
             method: 'DELETE',
-            headers: {
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            },
+            headers: getAuthHeaders(),
           });
 
           if (!response.ok) {
@@ -434,7 +458,9 @@ export const useLibraryStore = create<LibraryStore>()(
         });
 
         try {
-          const response = await fetch(`${API_BASE}/documents/categories`);
+          const response = await fetch(`${API_BASE}/documents/categories`, {
+            headers: getAuthHeaders(),
+          });
 
           // Check if response is JSON
           const contentType = response.headers.get('content-type');
@@ -496,7 +522,9 @@ export const useLibraryStore = create<LibraryStore>()(
       // Bookmark operations
       fetchBookmarks: async () => {
         try {
-          const response = await fetch(`${API_BASE}/bookmarks`);
+          const response = await fetch(`${API_BASE}/bookmarks`, {
+            headers: getAuthHeaders(),
+          });
 
           // Check if response is JSON
           const contentType = response.headers.get('content-type');
@@ -521,7 +549,7 @@ export const useLibraryStore = create<LibraryStore>()(
         try {
           const response = await fetch(`${API_BASE}/bookmarks`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ documentId }),
           });
 
@@ -550,6 +578,7 @@ export const useLibraryStore = create<LibraryStore>()(
         try {
           const response = await fetch(`${API_BASE}/bookmarks/${documentId}`, {
             method: 'DELETE',
+            headers: getAuthHeaders(),
           });
 
           if (!response.ok) {
@@ -580,7 +609,7 @@ export const useLibraryStore = create<LibraryStore>()(
         try {
           const response = await fetch(`${API_BASE}/documents/${documentId}/rate`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ rating, review }),
           });
 
@@ -647,7 +676,9 @@ export const useLibraryStore = create<LibraryStore>()(
 
       fetchRecentlyViewed: async () => {
         try {
-          const response = await fetch(`${API_BASE}/documents/recently-viewed`);
+          const response = await fetch(`${API_BASE}/documents/recently-viewed`, {
+            headers: getAuthHeaders(),
+          });
 
           if (!response.ok) {
             return; // Keep locally cached recently viewed
@@ -667,6 +698,7 @@ export const useLibraryStore = create<LibraryStore>()(
         try {
           const response = await fetch(`${API_BASE}/documents/${documentId}/analyze`, {
             method: 'POST',
+            headers: getAuthHeaders(),
           });
 
           if (!response.ok) {
@@ -695,7 +727,8 @@ export const useLibraryStore = create<LibraryStore>()(
 
         try {
           const response = await fetch(
-            `${API_BASE}/documents/search?q=${encodeURIComponent(query)}`
+            `${API_BASE}/documents/search?q=${encodeURIComponent(query)}`,
+            { headers: getAuthHeaders() }
           );
 
           if (!response.ok) {
@@ -800,7 +833,9 @@ export const useLibraryStore = create<LibraryStore>()(
         ).length;
 
         try {
-          const response = await fetch(`${API_BASE}/documents/stats`);
+          const response = await fetch(`${API_BASE}/documents/stats`, {
+            headers: getAuthHeaders(),
+          });
 
           // Check if response is JSON
           const contentType = response.headers.get('content-type');

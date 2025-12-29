@@ -37,6 +37,18 @@ const API_BASE = import.meta.env.PROD
   ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
   : '/api/v1';
 
+// Helper to get auth token from storage
+const getAuthToken = (): string | null => {
+  try {
+    const authState = JSON.parse(localStorage.getItem('ohcs-auth-storage') || '{}');
+    const token = authState?.state?.token;
+    if (token) return token;
+    return localStorage.getItem('auth_token');
+  } catch {
+    return null;
+  }
+};
+
 interface DocumentViewerModalProps {
   document: Document | null;
   isOpen: boolean;
@@ -62,6 +74,7 @@ export function DocumentViewerModal({
   const [viewMode, setViewMode] = useState<'single' | 'continuous'>('single');
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [authenticatedBlobUrl, setAuthenticatedBlobUrl] = useState<string | null>(null);
   const totalPages = 10; // Would come from actual PDF metadata
 
   // Get the document URL - handle local vs API documents
@@ -81,10 +94,15 @@ export function DocumentViewerModal({
       return '';
     }
 
-    // For API documents, use the API view endpoint
-    // This ensures proper authentication and file streaming from R2
+    // For API documents, prefer the authenticated blob URL if available
+    // This is fetched via authenticated fetch and converted to blob URL
+    if (authenticatedBlobUrl) {
+      return authenticatedBlobUrl;
+    }
+
+    // Fallback to direct API URL (won't work for authenticated endpoints)
     return `${API_BASE}/documents/${document.id}/view`;
-  }, [document]);
+  }, [document, authenticatedBlobUrl]);
 
   // Check if document can be viewed
   const canViewDocument = useCallback(() => {
@@ -120,36 +138,84 @@ export function DocumentViewerModal({
       setRotation(0);
       setIsLoading(true);
       setLoadError(null);
+      setAuthenticatedBlobUrl(null);
     }
   }, [document?.id]);
 
-  // Verify document exists before loading (for API documents)
+  // Fetch document with authentication and create blob URL
   useEffect(() => {
     if (!document || !isOpen) return;
 
-    // Skip verification for local documents or blob URLs
-    if (document.id.startsWith('local-') ||
-        document.fileUrl?.startsWith('blob:') ||
-        document.fileUrl?.startsWith('data:')) {
+    // Skip for local documents with valid blob URLs
+    if (document.fileUrl?.startsWith('blob:') || document.fileUrl?.startsWith('data:')) {
+      setIsLoading(false);
       return;
     }
 
-    // Verify the document exists via API
-    const verifyDocument = async () => {
+    // Skip for local documents without valid URLs (show expiration message)
+    if (document.id.startsWith('local-')) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Fetch the document with authentication
+    const fetchDocumentWithAuth = async () => {
       try {
-        const response = await fetch(`${API_BASE}/documents/${document.id}`);
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          setLoadError(errorData.error || 'Document not found. It may have been moved or deleted.');
-          setIsLoading(false);
+        setIsLoading(true);
+        setLoadError(null);
+
+        const token = getAuthToken();
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
-      } catch {
-        // Network error - let the iframe try to load anyway
+
+        const response = await fetch(`${API_BASE}/documents/${document.id}/view`, {
+          headers,
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            setLoadError('Document not found. It may have been moved or deleted.');
+          } else if (response.status === 401 || response.status === 403) {
+            setLoadError('You do not have permission to view this document. Please log in or request access.');
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            setLoadError(errorData.error || 'Failed to load document. Please try again.');
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        // Get the blob and create a URL
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        setAuthenticatedBlobUrl(blobUrl);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Failed to fetch document:', error);
+        setLoadError('Failed to load document. Please check your connection and try again.');
+        setIsLoading(false);
       }
     };
 
-    verifyDocument();
+    fetchDocumentWithAuth();
+
+    // Cleanup: revoke the blob URL when component unmounts or document changes
+    return () => {
+      if (authenticatedBlobUrl) {
+        URL.revokeObjectURL(authenticatedBlobUrl);
+      }
+    };
   }, [document?.id, isOpen]);
+
+  // Cleanup blob URL when modal closes
+  useEffect(() => {
+    if (!isOpen && authenticatedBlobUrl) {
+      URL.revokeObjectURL(authenticatedBlobUrl);
+      setAuthenticatedBlobUrl(null);
+    }
+  }, [isOpen, authenticatedBlobUrl]);
 
   // Handle iframe load events
   const handleIframeLoad = useCallback(() => {
