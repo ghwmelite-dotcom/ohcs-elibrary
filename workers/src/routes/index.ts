@@ -23,6 +23,12 @@ export { default as wallRoutes } from './wall';
 export { default as dmRoutes } from './dm';
 export { default as presenceRoutes } from './presence';
 
+// Peer Recognition System
+export { default as recognitionRoutes } from './recognition';
+
+// AI Knowledge Assistant "Kwame"
+export { default as kwameRoutes } from './kwame';
+
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
 

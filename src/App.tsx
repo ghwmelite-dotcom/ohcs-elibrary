@@ -48,6 +48,7 @@ const ProfileEdit = lazy(() => import('@/pages/ProfileEdit'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const Leaderboard = lazy(() => import('@/pages/Leaderboard'));
+const Recognition = lazy(() => import('@/pages/Recognition'));
 const Search = lazy(() => import('@/pages/Search'));
 const Help = lazy(() => import('@/pages/Help'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
@@ -57,6 +58,9 @@ const Wellness = lazy(() => import('@/pages/Wellness'));
 const WellnessChat = lazy(() => import('@/pages/WellnessChat'));
 const WellnessResources = lazy(() => import('@/pages/WellnessResources'));
 const WellnessResource = lazy(() => import('@/pages/WellnessResource'));
+
+// AI Knowledge Assistant
+const Kwame = lazy(() => import('@/pages/Kwame'));
 
 // Research Hub pages
 const ResearchLab = lazy(() => import('@/pages/ResearchLab'));
@@ -312,6 +316,9 @@ export default function App() {
             <Route path="/wellness/resources" element={<WellnessResources />} />
             <Route path="/wellness/resources/:id" element={<WellnessResource />} />
 
+            {/* AI Knowledge Assistant */}
+            <Route path="/kwame" element={<Kwame />} />
+
             {/* Research Hub routes */}
             <Route path="/research-hub" element={<ResearchLab />} />
             <Route path="/research-hub/projects" element={<ResearchProjects />} />
@@ -326,6 +333,7 @@ export default function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/recognition" element={<Recognition />} />
             <Route path="/search" element={<Search />} />
             <Route path="/help" element={<Help />} />
           </Route>

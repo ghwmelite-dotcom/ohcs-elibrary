@@ -21,6 +21,8 @@ import {
   Mail,
   UserPlus,
   BarChart3,
+  Award,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useUIStore } from '@/stores/uiStore';
@@ -45,6 +47,7 @@ const mainNavItems: NavItem[] = [
   { path: '/dm', label: 'Messages', icon: <Mail className="w-5 h-5 text-blue-500" /> },
   { path: '/network', label: 'Network', icon: <UserPlus className="w-5 h-5 text-emerald-500" /> },
   { path: '/library', label: 'Library', icon: <Library className="w-5 h-5 text-amber-500" /> },
+  { path: '/kwame', label: 'Ask Kwame', icon: <Sparkles className="w-5 h-5 text-gold-500" /> },
   { path: '/research-hub', label: 'Research Hub', icon: <Network className="w-5 h-5 text-violet-500" /> },
   { path: '/wellness', label: 'Wellness', icon: <Heart className="w-5 h-5 text-pink-500" /> },
   { path: '/forum', label: 'Forum', icon: <MessageSquare className="w-5 h-5" /> },
@@ -52,6 +55,7 @@ const mainNavItems: NavItem[] = [
   { path: '/groups', label: 'Groups', icon: <Users className="w-5 h-5" /> },
   { path: '/news', label: 'News', icon: <Newspaper className="w-5 h-5" /> },
   { path: '/leaderboard', label: 'Leaderboard', icon: <Trophy className="w-5 h-5" /> },
+  { path: '/recognition', label: 'Recognition', icon: <Award className="w-5 h-5 text-rose-500" /> },
 ];
 
 const bottomNavItems: NavItem[] = [
@@ -180,10 +184,11 @@ export function Sidebar() {
             const isWellness = item.path === '/wellness';
             const isLibrary = item.path === '/library';
             const isResearchHub = item.path === '/research-hub';
+            const isKwame = item.path === '/kwame';
             const isFeed = item.path === '/feed';
             const isMessages = item.path === '/dm';
             const isNetwork = item.path === '/network';
-            const isHighlighted = isWellness || isLibrary || isResearchHub || isFeed;
+            const isHighlighted = isWellness || isLibrary || isResearchHub || isKwame || isFeed;
 
             // Get theme colors for highlighted items
             const getActiveClasses = () => {
@@ -191,6 +196,7 @@ export function Sidebar() {
               if (isMessages) return 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium';
               if (isNetwork) return 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-medium';
               if (isLibrary) return 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 font-medium';
+              if (isKwame) return 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 font-medium';
               if (isResearchHub) return 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 font-medium';
               if (isWellness) return 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 font-medium';
               return 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium';
@@ -201,6 +207,7 @@ export function Sidebar() {
               if (isMessages) return 'text-surface-600 dark:text-amber-50/60 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300';
               if (isNetwork) return 'text-surface-600 dark:text-amber-50/60 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-300';
               if (isLibrary) return 'text-surface-600 dark:text-amber-50/60 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300';
+              if (isKwame) return 'text-surface-600 dark:text-amber-50/60 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 hover:text-yellow-700 dark:hover:text-yellow-300';
               if (isResearchHub) return 'text-surface-600 dark:text-amber-50/60 hover:bg-violet-50 dark:hover:bg-violet-900/30 hover:text-violet-700 dark:hover:text-violet-300';
               if (isWellness) return 'text-surface-600 dark:text-amber-50/60 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300';
               return 'text-surface-600 dark:text-amber-50/60 hover:bg-surface-100 dark:hover:bg-amber-900/20 hover:text-surface-900 dark:hover:text-amber-50';
@@ -259,6 +266,14 @@ export function Sidebar() {
                         transition={{ duration: 1.5, repeat: Infinity }}
                       />
                     )}
+                    {/* Kwame pulsing wisdom indicator */}
+                    {isCollapsed && isKwame && (
+                      <motion.span
+                        className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full"
+                        animate={{ scale: [1, 1.4, 1], opacity: [0.8, 1, 0.8] }}
+                        transition={{ duration: 1.8, repeat: Infinity }}
+                      />
+                    )}
                   </span>
                   {!isCollapsed && (
                     <span className="flex-1">{item.label}</span>
@@ -281,6 +296,23 @@ export function Sidebar() {
                       className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full shadow-sm"
                     >
                       HOT
+                    </motion.span>
+                  )}
+                  {/* Kwame "ASK AI" badge */}
+                  {!isCollapsed && isKwame && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-yellow-500 to-amber-500 text-white rounded-full shadow-sm flex items-center gap-0.5"
+                    >
+                      <motion.span
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="inline-block"
+                      >
+                        ✨
+                      </motion.span>
+                      AI
                     </motion.span>
                   )}
                   {/* Research Hub "AI" badge */}

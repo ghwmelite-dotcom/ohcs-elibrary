@@ -491,6 +491,17 @@ documentsRoutes.post('/', requireAuth, async (c: AppContext) => {
       isDownloadable ? 1 : 0
     ).run();
 
+    // Add to Kwame embedding queue for RAG processing
+    try {
+      await DB.prepare(`
+        INSERT INTO embedding_queue (id, documentId, status, priority, createdAt)
+        VALUES (?, ?, 'pending', 0, datetime('now'))
+      `).bind(crypto.randomUUID(), documentId).run();
+    } catch (e) {
+      // Queue insertion is non-critical, log but don't fail upload
+      console.log('Could not add document to embedding queue:', e);
+    }
+
     const document = await DB.prepare(`
       SELECT * FROM documents WHERE id = ?
     `).bind(documentId).first();

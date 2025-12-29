@@ -17,6 +17,7 @@ import {
   useSmartWellnessNotifications,
   WellnessPulse,
 } from '@/components/wellness';
+import { KwameWidget } from '@/components/kwame';
 import {
   Sparkles,
   Trophy,
@@ -203,6 +204,9 @@ export function MainLayout() {
 
       {/* Floating Wellness Pulse (subtle ambient reminder) */}
       <WellnessPulse onClick={() => window.location.href = '/wellness'} />
+
+      {/* Kwame AI Knowledge Assistant Widget */}
+      <KwameWidget />
     </div>
   );
 }

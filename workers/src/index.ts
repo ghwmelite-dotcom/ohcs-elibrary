@@ -31,6 +31,10 @@ import {
   wallRoutes,
   dmRoutes,
   presenceRoutes,
+  // Peer Recognition System
+  recognitionRoutes,
+  // AI Knowledge Assistant "Kwame"
+  kwameRoutes,
 } from './routes';
 
 export interface Env {
@@ -156,6 +160,14 @@ app.route('/api/v1/wall', wallRoutes);
 app.route('/api/v1/dm', dmRoutes);
 app.route('/api/v1/presence', presenceRoutes);
 
+// Peer Recognition System
+// Recognition routes handle their own auth (some endpoints are public)
+app.route('/api/v1/recognition', recognitionRoutes);
+
+// AI Knowledge Assistant "Kwame"
+// Kwame routes handle their own auth
+app.route('/api/v1/kwame', kwameRoutes);
+
 // News aggregation admin endpoints
 app.post('/api/v1/admin/news/aggregate', authMiddleware, async (c) => {
   try {
@@ -266,6 +278,17 @@ export default {
             console.log('Running scheduled daily backup...');
             const backupResult = await createScheduledBackup(env);
             console.log('Scheduled backup completed:', backupResult);
+          }
+
+          // Process Kwame embedding queue (every 15 min cron)
+          try {
+            const { processEmbeddingQueue } = await import('./services/aiKwame');
+            const embeddingResult = await processEmbeddingQueue(env, 10);
+            if (embeddingResult.processed > 0) {
+              console.log('Embedding queue processed:', embeddingResult);
+            }
+          } catch (embError) {
+            console.error('Embedding queue processing failed:', embError);
           }
         } catch (error) {
           console.error('Scheduled task failed:', error);

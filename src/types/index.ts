@@ -2022,7 +2022,8 @@ export type WallPostType =
   | 'share'
   | 'achievement'
   | 'document_share'
-  | 'poll';
+  | 'poll'
+  | 'recognition';
 
 export interface AudienceList {
   id: UUID;
@@ -2232,3 +2233,9 @@ export interface SocialActivity {
   metadata?: Record<string, unknown>;
   createdAt: Timestamp;
 }
+
+// Re-export Recognition Types
+export * from './recognition';
+
+// Re-export Kwame AI Assistant Types
+export * from './kwame';
