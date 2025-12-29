@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   TrendingUp,
   Users,
   ChevronRight,
+  ChevronLeft,
   Flame,
   Hash,
   BookOpen,
@@ -14,6 +15,9 @@ import {
   Sparkles,
   Eye,
   EyeOff,
+  PanelLeftOpen,
+  PanelRightOpen,
+  User,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
@@ -289,10 +293,54 @@ function SuggestedUsersWrapper() {
 
 export default function Wall() {
   const { user } = useAuthStore();
-  const { fetchFollowing, fetchFollowers, fetchConnections, fetchPendingRequests } = useSocialStore();
+  const { fetchFollowing, fetchFollowers, fetchConnections, fetchPendingRequests, following, followers, connections } = useSocialStore();
   const { startHeartbeatPolling, stopHeartbeatPolling } = usePresenceStore();
-  const [showLeftSidebar, setShowLeftSidebar] = useState(true);
-  const [showRightSidebar, setShowRightSidebar] = useState(true);
+
+  // Collapsible sidebars with localStorage persistence
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState(() => {
+    const saved = localStorage.getItem('wall-left-sidebar-collapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  const [isRightCollapsed, setIsRightCollapsed] = useState(() => {
+    const saved = localStorage.getItem('wall-right-sidebar-collapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  // Persist collapse states
+  useEffect(() => {
+    localStorage.setItem('wall-left-sidebar-collapsed', JSON.stringify(isLeftCollapsed));
+  }, [isLeftCollapsed]);
+
+  useEffect(() => {
+    localStorage.setItem('wall-right-sidebar-collapsed', JSON.stringify(isRightCollapsed));
+  }, [isRightCollapsed]);
+
+  // Toggle functions
+  const toggleLeftSidebar = useCallback(() => {
+    setIsLeftCollapsed((prev: boolean) => !prev);
+  }, []);
+
+  const toggleRightSidebar = useCallback(() => {
+    setIsRightCollapsed((prev: boolean) => !prev);
+  }, []);
+
+  // Keyboard shortcuts: Ctrl+[ for left, Ctrl+] for right
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === '[') {
+        e.preventDefault();
+        toggleLeftSidebar();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === ']') {
+        e.preventDefault();
+        toggleRightSidebar();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleLeftSidebar, toggleRightSidebar]);
 
   useEffect(() => {
     fetchFollowing();
@@ -336,61 +384,166 @@ export default function Wall() {
               </p>
             </div>
 
-            {/* Sidebar toggles for tablet */}
-            <div className="hidden md:flex lg:hidden items-center gap-2">
-              <button
-                onClick={() => setShowLeftSidebar(!showLeftSidebar)}
+            {/* Sidebar toggles for desktop */}
+            <div className="hidden lg:flex items-center gap-2">
+              <motion.button
+                onClick={toggleLeftSidebar}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-                  showLeftSidebar
+                  'p-2 rounded-lg transition-colors',
+                  !isLeftCollapsed
                     ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-                    : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-400'
+                    : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-700'
                 )}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title={isLeftCollapsed ? 'Show profile (Ctrl+[)' : 'Hide profile (Ctrl+[)'}
               >
-                Profile
-              </button>
-              <button
-                onClick={() => setShowRightSidebar(!showRightSidebar)}
+                <PanelLeftOpen className="w-4 h-4" />
+              </motion.button>
+              <motion.button
+                onClick={toggleRightSidebar}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-                  showRightSidebar
+                  'p-2 rounded-lg transition-colors',
+                  !isRightCollapsed
                     ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-                    : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-400'
+                    : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-700'
                 )}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title={isRightCollapsed ? 'Show discover (Ctrl+])' : 'Hide discover (Ctrl+])'}
               >
-                Discover
-              </button>
+                <PanelRightOpen className="w-4 h-4" />
+              </motion.button>
             </div>
           </div>
         </motion.header>
 
         {/* Main Grid */}
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left Sidebar - Hidden on mobile, toggleable on tablet, always visible on desktop */}
+        <div className="flex gap-6">
+          {/* Left Sidebar Collapsed Indicator */}
           <AnimatePresence>
-            {(showLeftSidebar || window.innerWidth >= 1024) && (
-              <motion.aside
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="hidden md:block w-full lg:w-[280px] xl:w-[300px] flex-shrink-0 space-y-4 lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto scrollbar-thin"
+            {isLeftCollapsed && (
+              <motion.div
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 56 }}
+                exit={{ opacity: 0, width: 0 }}
+                className="hidden lg:flex flex-col items-center py-4 px-2 bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 sticky top-20 self-start"
               >
-                <ProfileCard />
-
-                <CollapsibleSection
-                  title="Quick Access"
-                  icon={<Sparkles className="w-4 h-4" />}
-                  accentColor="bg-gradient-to-r from-emerald-400 to-teal-500"
-                  defaultExpanded={true}
+                <motion.button
+                  onClick={toggleLeftSidebar}
+                  className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-400 mb-4"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  title="Show profile (Ctrl+[)"
                 >
-                  <QuickLinks />
-                </CollapsibleSection>
-              </motion.aside>
+                  <PanelLeftOpen className="w-5 h-5" />
+                </motion.button>
+
+                {/* Mini profile indicators */}
+                <div className="flex-1 flex flex-col gap-3 items-center">
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.05 }}
+                    className="flex flex-col items-center gap-1"
+                    title="Your Profile"
+                  >
+                    <Link to="/profile" className="w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center hover:scale-105 transition-transform">
+                      <User className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                    </Link>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="flex flex-col items-center gap-1"
+                    title={`${following.length} Following`}
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <span className="text-xs font-bold text-surface-600 dark:text-surface-400">
+                      {following.length}
+                    </span>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="flex flex-col items-center gap-1"
+                    title={`${connections.length} Connections`}
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center">
+                      <Network className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                    </div>
+                    <span className="text-xs font-bold text-surface-600 dark:text-surface-400">
+                      {connections.length}
+                    </span>
+                  </motion.div>
+                </div>
+              </motion.div>
             )}
           </AnimatePresence>
 
+          {/* Left Sidebar - Full */}
+          <motion.aside
+            className="hidden lg:block relative flex-shrink-0"
+            initial={false}
+            animate={{
+              width: isLeftCollapsed ? 0 : 280,
+              opacity: isLeftCollapsed ? 0 : 1,
+            }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          >
+            {/* Collapse Toggle Button */}
+            <motion.button
+              onClick={toggleLeftSidebar}
+              className={cn(
+                'absolute top-4 z-10 flex items-center justify-center',
+                'w-6 h-12 rounded-r-lg shadow-lg transition-all duration-200',
+                'bg-white dark:bg-surface-700 border border-l-0 border-surface-200 dark:border-surface-600',
+                'hover:bg-surface-50 dark:hover:bg-surface-600 hover:w-7',
+                'text-surface-500 hover:text-primary-600 dark:hover:text-primary-400',
+                '-right-3'
+              )}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title={isLeftCollapsed ? 'Show profile (Ctrl+[)' : 'Hide profile (Ctrl+[)'}
+            >
+              <motion.div
+                animate={{ rotate: isLeftCollapsed ? 0 : 180 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </motion.div>
+            </motion.button>
+
+            <motion.div
+              className="w-[280px] space-y-4 sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-thin"
+              initial={false}
+              animate={{
+                opacity: isLeftCollapsed ? 0 : 1,
+                x: isLeftCollapsed ? -20 : 0,
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              <ProfileCard />
+
+              <CollapsibleSection
+                title="Quick Access"
+                icon={<Sparkles className="w-4 h-4" />}
+                accentColor="bg-gradient-to-r from-emerald-400 to-teal-500"
+                defaultExpanded={true}
+              >
+                <QuickLinks />
+              </CollapsibleSection>
+            </motion.div>
+          </motion.aside>
+
           {/* Main Feed */}
-          <main className="flex-1 min-w-0 order-first lg:order-none">
+          <main className="flex-1 min-w-0 order-first lg:order-none relative z-0">
             {/* Mobile Profile Summary */}
             <div className="md:hidden mb-4">
               <Link
@@ -417,49 +570,148 @@ export default function Wall() {
             <WallFeed showComposer />
           </main>
 
-          {/* Right Sidebar - Hidden on mobile/tablet, visible on desktop */}
-          <AnimatePresence>
-            {(showRightSidebar || window.innerWidth >= 1024) && (
-              <motion.aside
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="hidden lg:block w-full lg:w-[280px] xl:w-[300px] flex-shrink-0 space-y-4 lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto scrollbar-thin"
+          {/* Right Sidebar - Full */}
+          <motion.aside
+            className="hidden lg:block relative flex-shrink-0"
+            initial={false}
+            animate={{
+              width: isRightCollapsed ? 0 : 280,
+              opacity: isRightCollapsed ? 0 : 1,
+            }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          >
+            {/* Collapse Toggle Button */}
+            <motion.button
+              onClick={toggleRightSidebar}
+              className={cn(
+                'absolute top-4 z-10 flex items-center justify-center',
+                'w-6 h-12 rounded-l-lg shadow-lg transition-all duration-200',
+                'bg-white dark:bg-surface-700 border border-r-0 border-surface-200 dark:border-surface-600',
+                'hover:bg-surface-50 dark:hover:bg-surface-600 hover:w-7',
+                'text-surface-500 hover:text-primary-600 dark:hover:text-primary-400',
+                '-left-3'
+              )}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title={isRightCollapsed ? 'Show discover (Ctrl+])' : 'Hide discover (Ctrl+])'}
+            >
+              <motion.div
+                animate={{ rotate: isRightCollapsed ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
               >
-                <CollapsibleSection
-                  title="People You May Know"
-                  icon={<Users className="w-4 h-4" />}
-                  accentColor="bg-gradient-to-r from-violet-400 to-purple-500"
-                  defaultExpanded={true}
-                  count={5}
-                >
-                  <SuggestedUsersWrapper />
-                </CollapsibleSection>
+                <ChevronRight className="w-4 h-4" />
+              </motion.div>
+            </motion.button>
 
-                <CollapsibleSection
-                  title="Trending Now"
-                  icon={<TrendingUp className="w-4 h-4" />}
-                  accentColor="bg-gradient-to-r from-amber-400 to-orange-500"
-                  defaultExpanded={true}
-                >
-                  <TrendingTopics />
-                </CollapsibleSection>
+            <motion.div
+              className="w-[280px] space-y-4 sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-thin"
+              initial={false}
+              animate={{
+                opacity: isRightCollapsed ? 0 : 1,
+                x: isRightCollapsed ? 20 : 0,
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              <CollapsibleSection
+                title="People You May Know"
+                icon={<Users className="w-4 h-4" />}
+                accentColor="bg-gradient-to-r from-violet-400 to-purple-500"
+                defaultExpanded={true}
+                count={5}
+              >
+                <SuggestedUsersWrapper />
+              </CollapsibleSection>
 
-                {/* Footer Links */}
-                <div className="px-2 py-3 text-xs text-surface-400 space-y-2">
-                  <div className="flex flex-wrap gap-x-3 gap-y-1">
-                    <Link to="/help" className="hover:text-surface-600 dark:hover:text-surface-300 transition-colors">Help</Link>
-                    <Link to="/settings" className="hover:text-surface-600 dark:hover:text-surface-300 transition-colors">Settings</Link>
-                    <Link to="/about" className="hover:text-surface-600 dark:hover:text-surface-300 transition-colors">About</Link>
-                    <span>Privacy</span>
-                    <span>Terms</span>
-                  </div>
-                  <p className="flex items-center gap-1">
-                    <Star className="w-3 h-3" />
-                    OHCS E-Library © 2024
-                  </p>
+              <CollapsibleSection
+                title="Trending Now"
+                icon={<TrendingUp className="w-4 h-4" />}
+                accentColor="bg-gradient-to-r from-amber-400 to-orange-500"
+                defaultExpanded={true}
+              >
+                <TrendingTopics />
+              </CollapsibleSection>
+
+              {/* Footer Links */}
+              <div className="px-2 py-3 text-xs text-surface-400 space-y-2">
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                  <Link to="/help" className="hover:text-surface-600 dark:hover:text-surface-300 transition-colors">Help</Link>
+                  <Link to="/settings" className="hover:text-surface-600 dark:hover:text-surface-300 transition-colors">Settings</Link>
+                  <Link to="/about" className="hover:text-surface-600 dark:hover:text-surface-300 transition-colors">About</Link>
+                  <span>Privacy</span>
+                  <span>Terms</span>
                 </div>
-              </motion.aside>
+                <p className="flex items-center gap-1">
+                  <Star className="w-3 h-3" />
+                  OHCS E-Library © 2024
+                </p>
+              </div>
+            </motion.div>
+          </motion.aside>
+
+          {/* Right Sidebar Collapsed Indicator */}
+          <AnimatePresence>
+            {isRightCollapsed && (
+              <motion.div
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 56 }}
+                exit={{ opacity: 0, width: 0 }}
+                className="hidden lg:flex flex-col items-center py-4 px-2 bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 sticky top-20 self-start"
+              >
+                <motion.button
+                  onClick={toggleRightSidebar}
+                  className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-400 mb-4"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  title="Show discover (Ctrl+])"
+                >
+                  <PanelRightOpen className="w-5 h-5" />
+                </motion.button>
+
+                {/* Mini discover indicators */}
+                <div className="flex-1 flex flex-col gap-3 items-center">
+                  <motion.div
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.05 }}
+                    className="flex flex-col items-center gap-1"
+                    title="People You May Know"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                    </div>
+                    <span className="text-xs font-bold text-surface-600 dark:text-surface-400">
+                      5
+                    </span>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="flex flex-col items-center gap-1"
+                    title="Trending Topics"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <span className="text-xs font-bold text-surface-600 dark:text-surface-400">
+                      4
+                    </span>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="flex flex-col items-center gap-1"
+                    title="Hot Topics"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center">
+                      <Flame className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>

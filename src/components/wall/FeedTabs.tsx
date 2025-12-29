@@ -20,7 +20,7 @@ const tabs: { id: FeedType; label: string; icon: React.ElementType }[] = [
 export function FeedTabs({ activeTab, onTabChange, className }: FeedTabsProps) {
   return (
     <div className={cn('relative', className)}>
-      <div className="flex gap-1 p-1 bg-surface-100 dark:bg-surface-800 rounded-xl">
+      <div className="flex gap-1 p-1 bg-surface-100 dark:bg-surface-800 rounded-xl overflow-x-auto scrollbar-none">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -30,7 +30,7 @@ export function FeedTabs({ activeTab, onTabChange, className }: FeedTabsProps) {
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={cn(
-                'relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                'relative flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap flex-shrink-0',
                 isActive
                   ? 'text-primary-700 dark:text-primary-300'
                   : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-200'
@@ -43,9 +43,9 @@ export function FeedTabs({ activeTab, onTabChange, className }: FeedTabsProps) {
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
                 />
               )}
-              <span className="relative z-10 flex items-center gap-2">
-                <Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
+              <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden xs:inline sm:inline">{tab.label}</span>
               </span>
             </button>
           );

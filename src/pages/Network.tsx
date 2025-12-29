@@ -78,24 +78,24 @@ function NetworkStats() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+      className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6"
     >
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
           <div
             key={stat.label}
-            className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 border border-surface-200 dark:border-surface-700 p-4"
+            className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 border border-surface-200 dark:border-surface-700 p-3 sm:p-4"
           >
-            <div className="flex items-center gap-3">
-              <div className={cn('p-2 rounded-lg bg-surface-100 dark:bg-surface-700', stat.color)}>
-                <Icon className="w-5 h-5" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className={cn('p-1.5 sm:p-2 rounded-lg bg-surface-100 dark:bg-surface-700 flex-shrink-0', stat.color)}>
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-surface-900 dark:text-surface-100">
+              <div className="min-w-0">
+                <p className="text-lg sm:text-2xl font-bold text-surface-900 dark:text-surface-100">
                   {stat.value}
                 </p>
-                <p className="text-sm text-surface-500">{stat.label}</p>
+                <p className="text-xs sm:text-sm text-surface-500 truncate">{stat.label}</p>
               </div>
             </div>
           </div>
@@ -176,7 +176,7 @@ export default function Network() {
           className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 border border-surface-200 dark:border-surface-700 overflow-hidden"
         >
           {/* Tab Navigation */}
-          <div className="flex border-b border-surface-200 dark:border-surface-700">
+          <div className="flex border-b border-surface-200 dark:border-surface-700 overflow-x-auto scrollbar-none">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -186,14 +186,14 @@ export default function Network() {
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
                   className={cn(
-                    'flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative',
+                    'flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition-colors relative whitespace-nowrap min-w-0',
                     isActive
                       ? 'text-primary-600 dark:text-primary-400'
                       : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100'
                   )}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="hidden xs:inline sm:inline truncate">{tab.label}</span>
 
                   {isActive && (
                     <motion.div
@@ -208,7 +208,7 @@ export default function Network() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-4 lg:p-6">
+          <div className="p-3 sm:p-4 md:p-5 lg:p-6">
             {renderContent()}
           </div>
         </motion.div>

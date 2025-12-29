@@ -55,32 +55,29 @@ export default function DirectMessages() {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex bg-surface-50 dark:bg-surface-900">
+    <div className="h-[calc(100vh-4rem)] flex bg-surface-50 dark:bg-surface-900 overflow-hidden">
       {/* Conversation List Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{
-          width: showSidebar || !userId ? (window.innerWidth < 1024 ? '100%' : '350px') : '0px',
-          opacity: showSidebar || !userId ? 1 : 0
-        }}
+      <aside
         className={cn(
           'h-full bg-white dark:bg-surface-800 border-r border-surface-200 dark:border-surface-700',
-          'flex-shrink-0 overflow-hidden',
-          // On mobile, take full width when shown
-          !userId && 'w-full lg:w-[350px]',
-          userId && !showSidebar && 'hidden lg:block lg:w-[350px]'
+          'flex-shrink-0 overflow-hidden transition-all duration-300',
+          // On mobile/tablet: full width when no user selected, hidden when user selected
+          // On desktop: always 350px width
+          !userId ? 'w-full lg:w-[350px]' : 'hidden lg:block lg:w-[350px]'
         )}
       >
         <ConversationList
           activeConversationId={currentConversation?.id}
           onSelectConversation={handleSelectConversation}
         />
-      </motion.aside>
+      </aside>
 
       {/* Main Chat Area */}
       <main className={cn(
-        'flex-1 h-full overflow-hidden',
-        !userId && 'hidden lg:flex'
+        'flex-1 h-full overflow-hidden min-w-0',
+        // On mobile/tablet: hidden when no user selected, full width when user selected
+        // On desktop: always visible
+        !userId ? 'hidden lg:flex' : 'flex'
       )}>
         {userId ? (
           <DMThread

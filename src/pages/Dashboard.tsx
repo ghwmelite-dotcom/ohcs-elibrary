@@ -151,17 +151,17 @@ function PremiumLevelProgress({ level, levelName, currentXP, requiredXP, totalXP
         />
       ))}
 
-      <div className="relative p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
+      <div className="relative p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+          <div className="flex items-center gap-3 sm:gap-4">
             {/* Level badge */}
             <motion.div
               className="relative"
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 4, repeat: Infinity }}
             >
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-secondary-400 to-secondary-600 flex items-center justify-center shadow-lg">
-                <span className="text-2xl font-bold text-surface-900">{level}</span>
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-secondary-400 to-secondary-600 flex items-center justify-center shadow-lg">
+                <span className="text-xl sm:text-2xl font-bold text-surface-900">{level}</span>
               </div>
               {/* Glow ring */}
               <motion.div
@@ -171,18 +171,18 @@ function PremiumLevelProgress({ level, levelName, currentXP, requiredXP, totalXP
               />
             </motion.div>
 
-            <div>
-              <h3 className="text-xl font-bold text-white">{levelName}</h3>
-              <p className="text-primary-200 text-sm">
-                {totalXP.toLocaleString()} Total XP Earned
+            <div className="min-w-0 flex-1">
+              <h3 className="text-lg sm:text-xl font-bold text-white truncate">{levelName}</h3>
+              <p className="text-primary-200 text-xs sm:text-sm">
+                {totalXP.toLocaleString()} Total XP
               </p>
             </div>
           </div>
 
           {/* Next level info */}
-          <div className="text-right">
-            <p className="text-primary-200 text-sm">Next Level</p>
-            <p className="text-2xl font-bold text-white">
+          <div className="text-left sm:text-right">
+            <p className="text-primary-200 text-xs sm:text-sm">Next Level</p>
+            <p className="text-xl sm:text-2xl font-bold text-white">
               {(requiredXP - currentXP).toLocaleString()} XP
             </p>
           </div>
@@ -253,7 +253,7 @@ function StatCard({ label, value, icon: Icon, color, link, delay = 0 }: StatCard
       <Link
         ref={ref}
         to={link}
-        className="group block relative overflow-hidden rounded-2xl bg-white dark:bg-surface-800/90 backdrop-blur-xl border border-surface-200/50 dark:border-surface-700/50 p-5 transition-all duration-300"
+        className="group block relative overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-surface-800/90 backdrop-blur-xl border border-surface-200/50 dark:border-surface-700/50 p-3 sm:p-4 md:p-5 transition-all duration-300"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{
@@ -271,36 +271,36 @@ function StatCard({ label, value, icon: Icon, color, link, delay = 0 }: StatCard
           }}
         />
 
-        <div className="relative flex items-center gap-4">
+        <div className="relative flex items-center gap-2 sm:gap-3 md:gap-4">
           {/* Icon */}
           <motion.div
-            className="w-12 h-12 rounded-xl flex items-center justify-center"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: `${color}15` }}
             animate={{ rotate: isHovered ? 360 : 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Icon className="w-6 h-6" style={{ color }} />
+            <Icon className="w-5 h-5 sm:w-6 sm:h-6" style={{ color }} />
           </motion.div>
 
           {/* Content */}
-          <div>
+          <div className="min-w-0 flex-1">
             <motion.p
-              className="text-2xl font-bold text-surface-900 dark:text-surface-50"
+              className="text-lg sm:text-xl md:text-2xl font-bold text-surface-900 dark:text-surface-50 truncate"
               initial={{ scale: 0.8 }}
               animate={isInView ? { scale: 1 } : {}}
               transition={{ delay: delay + 0.2, type: 'spring' }}
             >
               {typeof value === 'number' ? value.toLocaleString() : value}
             </motion.p>
-            <p className="text-sm text-surface-500">{label}</p>
+            <p className="text-xs sm:text-sm text-surface-500 truncate">{label}</p>
           </div>
 
-          {/* Arrow */}
+          {/* Arrow - hidden on mobile */}
           <motion.div
-            className="absolute right-4 top-1/2 -translate-y-1/2"
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 hidden sm:block"
             animate={{ x: isHovered ? 0 : -5, opacity: isHovered ? 1 : 0 }}
           >
-            <ChevronRight className="w-5 h-5" style={{ color }} />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" style={{ color }} />
           </motion.div>
         </div>
       </Link>
@@ -485,16 +485,16 @@ function QuickAction({ label, icon: Icon, link, color, delay = 0 }: QuickActionP
     >
       <Link
         to={link}
-        className="group flex flex-col items-center gap-3 p-5 rounded-2xl bg-white dark:bg-surface-800/90 backdrop-blur-xl border border-surface-200/50 dark:border-surface-700/50 hover:shadow-lg transition-all"
+        className="group flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-white dark:bg-surface-800/90 backdrop-blur-xl border border-surface-200/50 dark:border-surface-700/50 hover:shadow-lg transition-all"
       >
         <motion.div
-          className="w-14 h-14 rounded-xl flex items-center justify-center"
+          className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg sm:rounded-xl flex items-center justify-center"
           style={{ backgroundColor: `${color}15` }}
           whileHover={{ scale: 1.1, rotate: 5 }}
         >
-          <Icon className="w-7 h-7" style={{ color }} />
+          <Icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" style={{ color }} />
         </motion.div>
-        <span className="text-sm font-medium text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-100 transition-colors">
+        <span className="text-xs sm:text-sm font-medium text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-100 transition-colors text-center truncate w-full">
           {label}
         </span>
       </Link>
@@ -770,7 +770,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8">
           {quickStats.map((stat, index) => (
             <StatCard
               key={stat.label}
@@ -780,7 +780,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
           {/* Main Content */}
           <motion.div
             className="flex-1 min-w-0 space-y-6"
@@ -829,7 +829,7 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="grid grid-cols-2 md:grid-cols-4 gap-4"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4"
             >
               {quickActions.map((action, index) => (
                 <QuickAction

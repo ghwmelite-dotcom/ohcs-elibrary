@@ -157,8 +157,8 @@ export default function Profile() {
       </div>
 
       {/* Tabs */}
-      <div className="mt-8 border-b border-surface-200 dark:border-surface-700">
-        <div className="flex gap-2">
+      <div className="mt-6 sm:mt-8 border-b border-surface-200 dark:border-surface-700 overflow-x-auto scrollbar-none">
+        <div className="flex gap-1 sm:gap-2">
           {[
             { id: 'activity', label: 'Activity', icon: Zap },
             { id: 'badges', label: 'Badges', icon: Award },
@@ -168,23 +168,23 @@ export default function Profile() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={cn(
-                'flex items-center gap-2 px-4 py-3 font-medium border-b-2 -mb-px transition-colors',
+                'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base font-medium border-b-2 -mb-px transition-colors whitespace-nowrap',
                 activeTab === tab.id
                   ? 'border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400'
                   : 'border-transparent text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-200'
               )}
             >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
+              <tab.icon className="w-4 h-4 flex-shrink-0" />
+              <span className="hidden xs:inline sm:inline">{tab.label}</span>
             </button>
           ))}
         </div>
       </div>
 
       {/* Tab Content */}
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="mt-4 sm:mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {/* Main Content */}
-        <div className="lg:col-span-2">
+        <div className="md:col-span-2">
           {activeTab === 'activity' && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -232,16 +232,16 @@ export default function Profile() {
               <Users className="w-5 h-5 text-secondary-500" />
               Groups ({stats.groups})
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {['Digital Transformation', 'Finance Policy', 'HR Network'].map((group) => (
                 <div
                   key={group}
-                  className="flex items-center gap-3 p-2 hover:bg-surface-50 dark:hover:bg-surface-700/50 rounded-lg transition-colors cursor-pointer"
+                  className="flex items-center gap-2 sm:gap-3 p-2 hover:bg-surface-50 dark:hover:bg-surface-700/50 rounded-lg transition-colors cursor-pointer"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center text-white text-sm font-medium">
+                  <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
                     {group.charAt(0)}
                   </div>
-                  <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
+                  <span className="text-sm font-medium text-surface-700 dark:text-surface-300 truncate">
                     {group}
                   </span>
                 </div>

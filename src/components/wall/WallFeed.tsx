@@ -75,21 +75,21 @@ export function WallFeed({ className, showComposer = true, userId }: WallFeedPro
     <div className={cn('space-y-4', className)}>
       {/* Feed Tabs - only show on main feed */}
       {!userId && (
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <FeedTabs activeTab={feedType} onTabChange={setFeedType} />
+        <div className="flex items-center justify-between gap-2 sm:gap-4 overflow-hidden">
+          <FeedTabs activeTab={feedType} onTabChange={setFeedType} className="min-w-0 flex-1" />
 
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
             className={cn(
-              'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+              'p-2.5 rounded-lg transition-colors flex-shrink-0',
               'bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700',
               'text-surface-600 dark:text-surface-400',
               isRefreshing && 'opacity-50'
             )}
+            title="Refresh feed"
           >
             <RefreshCw className={cn('w-4 h-4', isRefreshing && 'animate-spin')} />
-            <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
       )}

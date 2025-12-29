@@ -144,7 +144,7 @@ export default function Library() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4"
       >
         <StatCard
           label="Total Documents"
@@ -193,7 +193,7 @@ export default function Library() {
       </div>
 
       {/* Main Content */}
-      <div className="grid lg:grid-cols-4 gap-6">
+      <div className="grid lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Sidebar - Desktop Only */}
         <div className="hidden lg:block lg:col-span-1 space-y-6">
           <CategoryFilter />
