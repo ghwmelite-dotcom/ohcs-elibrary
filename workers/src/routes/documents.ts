@@ -375,6 +375,53 @@ documentsRoutes.get('/:id', async (c: AppContext) => {
   }
 });
 
+// Allowed file types for upload (MIME types and extensions)
+const ALLOWED_FILE_TYPES: Record<string, string[]> = {
+  'application/pdf': ['pdf'],
+  'application/msword': ['doc'],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['docx'],
+  'application/vnd.ms-excel': ['xls'],
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['xlsx'],
+  'application/vnd.ms-powerpoint': ['ppt'],
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['pptx'],
+};
+
+// Max file size: 500MB
+const MAX_FILE_SIZE = 500 * 1024 * 1024;
+
+// Validate file type by checking both MIME type and extension
+function validateFileType(file: File): { valid: boolean; error?: string } {
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  const mimeType = file.type.toLowerCase();
+
+  // Check if MIME type is allowed
+  if (!ALLOWED_FILE_TYPES[mimeType]) {
+    return {
+      valid: false,
+      error: `File type "${mimeType}" is not allowed. Allowed types: PDF, Word, Excel, PowerPoint.`
+    };
+  }
+
+  // Check if extension matches the MIME type
+  const allowedExtensions = ALLOWED_FILE_TYPES[mimeType];
+  if (!ext || !allowedExtensions.includes(ext)) {
+    return {
+      valid: false,
+      error: `File extension ".${ext}" does not match the file type "${mimeType}".`
+    };
+  }
+
+  // Check file size
+  if (file.size > MAX_FILE_SIZE) {
+    return {
+      valid: false,
+      error: `File size (${Math.round(file.size / 1024 / 1024)}MB) exceeds the maximum allowed size (500MB).`
+    };
+  }
+
+  return { valid: true };
+}
+
 // POST /documents - Upload new document (requires auth)
 documentsRoutes.post('/', requireAuth, async (c: AppContext) => {
   try {
@@ -395,8 +442,14 @@ documentsRoutes.post('/', requireAuth, async (c: AppContext) => {
       return c.json({ error: 'Missing required fields' }, 400);
     }
 
-    // Generate unique filename
-    const ext = file.name.split('.').pop();
+    // Server-side file type validation
+    const fileValidation = validateFileType(file);
+    if (!fileValidation.valid) {
+      return c.json({ error: 'Invalid file', message: fileValidation.error }, 400);
+    }
+
+    // Generate unique filename with validated extension
+    const ext = file.name.split('.').pop()?.toLowerCase();
     const fileName = `${crypto.randomUUID()}.${ext}`;
     const fileKey = `documents/${fileName}`;
 
@@ -807,18 +860,67 @@ documentsRoutes.post('/:id/chat/:messageId/feedback', async (c: AppContext) => {
   }
 });
 
+// Allowed origins for CORS (document viewing)
+const ALLOWED_ORIGINS = [
+  'https://ohcs-elibrary.pages.dev',
+  'https://ohcs-elibrary.gov.gh',
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
+
+// Check if origin is allowed (including Cloudflare Pages preview deployments)
+function isAllowedOrigin(origin: string): boolean {
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  // Allow Cloudflare Pages preview deployments
+  if (origin.match(/^https:\/\/[a-z0-9]+\.ohcs-elibrary\.pages\.dev$/)) return true;
+  return false;
+}
+
+// Check if user can access document based on access level
+function canAccessDocument(accessLevel: string, userId: string, userRole: string): boolean {
+  // Public documents are accessible to everyone
+  if (accessLevel === 'public') return true;
+
+  // All other access levels require authentication
+  if (!userId || userId === 'guest') return false;
+
+  // Internal documents are accessible to any authenticated user
+  if (accessLevel === 'internal') return true;
+
+  // Restricted, confidential, secret require higher roles
+  if (accessLevel === 'restricted') {
+    return ['admin', 'moderator', 'staff'].includes(userRole);
+  }
+
+  if (accessLevel === 'confidential' || accessLevel === 'secret') {
+    return ['admin', 'superadmin'].includes(userRole);
+  }
+
+  return false;
+}
+
 // GET /documents/:id/view - View document (returns file for in-browser viewing)
 documentsRoutes.get('/:id/view', async (c: AppContext) => {
   try {
     const { DB, DOCUMENTS } = c.env;
     const documentId = c.req.param('id');
+    const userId = c.get('userId') || 'guest';
+    const userRole = c.get('userRole') || 'guest';
 
     const document = await DB.prepare(`
       SELECT * FROM documents WHERE id = ?
-    `).bind(documentId).first<{ fileUrl: string; fileName: string; fileType: string }>();
+    `).bind(documentId).first<{ fileUrl: string; fileName: string; fileType: string; accessLevel: string }>();
 
     if (!document) {
       return c.json({ error: 'Document not found' }, 404);
+    }
+
+    // Check access level permissions
+    if (!canAccessDocument(document.accessLevel, userId, userRole)) {
+      return c.json({
+        error: 'Access denied',
+        message: 'You do not have permission to view this document. Please log in or request access.'
+      }, 403);
     }
 
     // Get file from R2
@@ -831,23 +933,22 @@ documentsRoutes.get('/:id/view', async (c: AppContext) => {
     const headers = new Headers();
     headers.set('Content-Type', document.fileType);
     headers.set('Content-Disposition', `inline; filename="${document.fileName}"`);
-    headers.set('Cache-Control', 'public, max-age=3600');
+    headers.set('Cache-Control', 'private, max-age=3600'); // Private cache for authenticated content
 
     // Allow embedding in iframes from our frontend domains
-    // Include wildcard for Cloudflare Pages preview deployments
     headers.set('Content-Security-Policy', "frame-ancestors 'self' https://ohcs-elibrary.pages.dev https://*.ohcs-elibrary.pages.dev https://ohcs-elibrary.gov.gh http://localhost:5173 http://localhost:3000");
-    headers.set('X-Frame-Options', 'ALLOWALL'); // Deprecated but some browsers still check it
+    headers.set('X-Frame-Options', 'ALLOWALL');
 
-    // CORS headers for cross-origin access - be permissive for document viewing
+    // CORS headers - restrict to allowed origins only
     const origin = c.req.header('Origin') || '';
-    if (origin) {
-      // Allow any origin that requested the document - PDFs need this for cross-origin viewing
+    if (origin && isAllowedOrigin(origin)) {
       headers.set('Access-Control-Allow-Origin', origin);
       headers.set('Access-Control-Allow-Credentials', 'true');
-    } else {
-      // No origin header - allow all (for direct browser access)
-      headers.set('Access-Control-Allow-Origin', '*');
+    } else if (!origin) {
+      // Direct browser access (no Origin header) - use primary domain
+      headers.set('Access-Control-Allow-Origin', 'https://ohcs-elibrary.pages.dev');
     }
+    // Note: If origin is not allowed, we don't set CORS headers (browser will block)
 
     return new Response(object.body, { headers });
   } catch (error) {
@@ -860,15 +961,24 @@ documentsRoutes.get('/:id/view', async (c: AppContext) => {
 documentsRoutes.get('/:id/download', async (c: AppContext) => {
   try {
     const { DB, DOCUMENTS } = c.env;
-    const userId = c.get('userId');
+    const userId = c.get('userId') || 'guest';
+    const userRole = c.get('userRole') || 'guest';
     const documentId = c.req.param('id');
 
     const document = await DB.prepare(`
       SELECT * FROM documents WHERE id = ?
-    `).bind(documentId).first<{ fileUrl: string; fileName: string; fileType: string; isDownloadable: number }>();
+    `).bind(documentId).first<{ fileUrl: string; fileName: string; fileType: string; isDownloadable: number; accessLevel: string }>();
 
     if (!document) {
       return c.json({ error: 'Document not found' }, 404);
+    }
+
+    // Check access level permissions first
+    if (!canAccessDocument(document.accessLevel, userId, userRole)) {
+      return c.json({
+        error: 'Access denied',
+        message: 'You do not have permission to download this document. Please log in or request access.'
+      }, 403);
     }
 
     // Check if document is downloadable
@@ -890,10 +1000,17 @@ documentsRoutes.get('/:id/download', async (c: AppContext) => {
       UPDATE documents SET downloads = downloads + 1 WHERE id = ?
     `).bind(documentId).run();
 
-    // Return file
+    // Return file with proper CORS headers
     const headers = new Headers();
     headers.set('Content-Type', document.fileType);
     headers.set('Content-Disposition', `attachment; filename="${document.fileName}"`);
+
+    // CORS headers for download
+    const origin = c.req.header('Origin') || '';
+    if (origin && isAllowedOrigin(origin)) {
+      headers.set('Access-Control-Allow-Origin', origin);
+      headers.set('Access-Control-Allow-Credentials', 'true');
+    }
 
     return new Response(object.body, { headers });
   } catch (error) {
