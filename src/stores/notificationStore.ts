@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { playNotificationSound, playSuccessSound, playAlertSound } from '@/utils/notificationSound';
 
 // API base URL
 const API_BASE = import.meta.env.PROD
@@ -431,12 +432,27 @@ export const useNotificationStore = create<NotificationState>()(
           const permission = await Notification.requestPermission();
           if (permission !== 'granted') return false;
 
-          // Get VAPID public key from server (you'd need to set this up)
-          const vapidPublicKey = 'YOUR_VAPID_PUBLIC_KEY'; // TODO: Get from environment
+          // Get VAPID public key from environment
+          const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+
+          if (!vapidPublicKey) {
+            console.error('VAPID public key not configured');
+            return false;
+          }
+
+          // Convert base64 URL-safe to Uint8Array for applicationServerKey
+          const urlBase64ToUint8Array = (base64String: string) => {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+              .replace(/-/g, '+')
+              .replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+          };
 
           const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: vapidPublicKey
+            applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
           });
 
           // Send subscription to server
@@ -515,9 +531,14 @@ export const useNotificationStore = create<NotificationState>()(
         // Play sound if enabled
         if (preferences?.soundEnabled) {
           try {
-            const audio = new Audio('/sounds/notification.mp3');
-            audio.volume = 0.5;
-            audio.play().catch(() => {}); // Ignore autoplay errors
+            // Use different sounds based on notification priority/type
+            if (notification.priority === 'urgent' || notification.type === 'security') {
+              playAlertSound(0.4);
+            } else if (['badge_earned', 'level_up', 'xp_earned', 'challenge_complete'].includes(notification.type)) {
+              playSuccessSound(0.3);
+            } else {
+              playNotificationSound(0.3);
+            }
           } catch {}
         }
 

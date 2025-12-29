@@ -743,25 +743,46 @@ export interface NewsCategory {
 // ============================================================================
 
 export type NotificationType =
+  // Document notifications
+  | 'document'
   | 'document_new'
   | 'document_update'
   | 'document_comment'
   | 'document_mention'
+  | 'document_approved'
+  | 'document_rejected'
+  // Forum notifications
   | 'forum_reply'
   | 'forum_mention'
   | 'forum_subscription'
+  // Chat notifications
+  | 'message'
   | 'chat_message'
   | 'chat_mention'
   | 'chat_reaction'
+  // Group notifications
+  | 'group_invite'
   | 'group_invitation'
   | 'group_post'
   | 'group_member'
-  | 'system_announcement'
-  | 'system_maintenance'
+  // Achievement notifications
   | 'xp_earned'
   | 'level_up'
   | 'badge_earned'
   | 'leaderboard_change'
+  | 'challenge_complete'
+  | 'streak'
+  // Social notifications
+  | 'like'
+  | 'follow'
+  // System notifications
+  | 'system'
+  | 'announcement'
+  | 'system_announcement'
+  | 'system_maintenance'
+  | 'security'
+  | 'welcome'
+  // News notifications
   | 'news_breaking';
 
 export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
@@ -774,31 +795,68 @@ export interface Notification {
   message: string;
   priority: NotificationPriority;
   isRead: boolean;
+  isArchived?: boolean;
+  link?: string;
   actionUrl?: string;
+  actorId?: string;
+  actorName?: string;
+  actorAvatar?: string;
+  resourceId?: string;
+  resourceType?: string;
   metadata?: Record<string, unknown>;
+  expiresAt?: Timestamp;
+  readAt?: Timestamp;
   createdAt: Timestamp;
 }
 
 export interface NotificationPreferences {
-  userId: UUID;
-  email: {
+  userId?: UUID;
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+  inAppEnabled: boolean;
+  soundEnabled: boolean;
+  quietHoursEnabled: boolean;
+  quietHoursStart: string;
+  quietHoursEnd: string;
+  emailDigestEnabled: boolean;
+  emailDigestFrequency: 'instant' | 'daily' | 'weekly' | 'never';
+  emailDigestTime: string;
+  categoryPreferences: {
+    messages: { email: boolean; push: boolean; inApp: boolean };
+    documents: { email: boolean; push: boolean; inApp: boolean };
+    forum: { email: boolean; push: boolean; inApp: boolean };
+    groups: { email: boolean; push: boolean; inApp: boolean };
+    achievements: { email: boolean; push: boolean; inApp: boolean };
+    system: { email: boolean; push: boolean; inApp: boolean };
+  };
+  // Legacy format support
+  email?: {
     enabled: boolean;
     frequency: 'immediate' | 'daily' | 'weekly';
     categories: NotificationType[];
   };
-  push: {
+  push?: {
     enabled: boolean;
     categories: NotificationType[];
   };
-  inApp: {
+  inApp?: {
     enabled: boolean;
     categories: NotificationType[];
   };
-  quietHours: {
+  quietHours?: {
     enabled: boolean;
-    start: string; // HH:mm format
+    start: string;
     end: string;
   };
+}
+
+export interface NotificationSummary {
+  unreadTotal: number;
+  unreadByType: Record<string, number>;
+  unreadByPriority: Record<string, number>;
+  recentActivity: Array<{ date: string; count: number }>;
+  todayCount: number;
+  weekCount: number;
 }
 
 // ============================================================================

@@ -21,7 +21,7 @@ import {
 import { cn } from '@/utils/cn';
 import { useUIStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
-import { useNotificationsStore } from '@/stores/notificationsStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { useNewsStore } from '@/stores/newsStore';
 import { Avatar } from '@/components/shared/Avatar';
 import { Badge } from '@/components/shared/Badge';
@@ -55,7 +55,8 @@ const bottomNavItems: NavItem[] = [
 export function Sidebar() {
   const { sidebar, setSidebarCollapsed } = useUIStore();
   const { user, logout } = useAuthStore();
-  const { unreadCount } = useNotificationsStore();
+  const { summary } = useNotificationStore();
+  const unreadCount = summary?.unreadTotal || 0;
   const { newArticlesCount, checkForNewArticles, markNewsAsViewed } = useNewsStore();
   const location = useLocation();
 

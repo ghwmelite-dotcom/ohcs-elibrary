@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/utils/cn';
 import { useUIStore } from '@/stores/uiStore';
-import { useNotificationsStore } from '@/stores/notificationsStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -49,7 +49,7 @@ const mobileNavItems = [
 
 export function MainLayout() {
   const { sidebar, isMobileMenuOpen, setMobileMenuOpen } = useUIStore();
-  const { fetchNotifications, startPolling, stopPolling } = useNotificationsStore();
+  const { fetchNotifications, fetchSummary } = useNotificationStore();
   const { fetchStats, fetchLeaderboard } = useGamificationStore();
   const { showNudge, dismissNudge, acceptNudge } = useWellnessNudge();
   const {
@@ -58,17 +58,23 @@ export function MainLayout() {
     acceptNotification: acceptSmartNotification,
   } = useSmartWellnessNotifications();
 
-  // Fetch initial data
+  // Fetch initial data and set up polling
   useEffect(() => {
     fetchNotifications();
+    fetchSummary();
     fetchStats();
     fetchLeaderboard();
-    startPolling();
+
+    // Poll for new notifications every 30 seconds
+    const pollInterval = setInterval(() => {
+      fetchNotifications();
+      fetchSummary();
+    }, 30000);
 
     return () => {
-      stopPolling();
+      clearInterval(pollInterval);
     };
-  }, [fetchNotifications, fetchStats, fetchLeaderboard, startPolling, stopPolling]);
+  }, [fetchNotifications, fetchSummary, fetchStats, fetchLeaderboard]);
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
