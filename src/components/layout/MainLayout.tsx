@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, NavLink } from 'react-router-dom';
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/utils/cn';
@@ -16,12 +16,39 @@ import {
   useSmartWellnessNotifications,
   WellnessPulse,
 } from '@/components/wellness';
-import { Sparkles, Trophy } from 'lucide-react';
+import {
+  Sparkles,
+  Trophy,
+  X,
+  LayoutDashboard,
+  Library,
+  MessageSquare,
+  MessagesSquare,
+  Users,
+  Newspaper,
+  Heart,
+  Network,
+  Settings,
+} from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
 import { Button } from '@/components/shared/Button';
 
+// Mobile navigation items
+const mobileNavItems = [
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/library', label: 'Library', icon: Library },
+  { path: '/research-hub', label: 'Research Hub', icon: Network },
+  { path: '/wellness', label: 'Wellness', icon: Heart },
+  { path: '/forum', label: 'Forum', icon: MessageSquare },
+  { path: '/chat', label: 'Chat', icon: MessagesSquare },
+  { path: '/groups', label: 'Groups', icon: Users },
+  { path: '/news', label: 'News', icon: Newspaper },
+  { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
+  { path: '/settings', label: 'Settings', icon: Settings },
+];
+
 export function MainLayout() {
-  const { sidebar } = useUIStore();
+  const { sidebar, isMobileMenuOpen, setMobileMenuOpen } = useUIStore();
   const { fetchNotifications, startPolling, stopPolling } = useNotificationsStore();
   const { fetchStats, fetchLeaderboard } = useGamificationStore();
   const { showNudge, dismissNudge, acceptNudge } = useWellnessNudge();
@@ -48,8 +75,66 @@ export function MainLayout() {
       {/* Offline Status Banner */}
       <OfflineIndicator />
 
-      {/* Sidebar */}
+      {/* Desktop Sidebar (hidden on mobile) */}
       <Sidebar />
+
+      {/* Mobile Navigation Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            />
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed left-0 top-0 h-full w-72 bg-white dark:bg-surface-800 z-50 lg:hidden shadow-xl"
+            >
+              {/* Header */}
+              <div className="h-16 flex items-center justify-between px-4 border-b border-surface-200 dark:border-surface-700">
+                <span className="font-heading font-bold text-lg text-surface-900 dark:text-surface-50">
+                  OHCS E-Library
+                </span>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              {/* Navigation */}
+              <nav className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-4rem)]">
+                {mobileNavItems.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
+                        isActive
+                          ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                          : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700'
+                      )
+                    }
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </NavLink>
+                ))}
+              </nav>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Header */}
       <Header />
@@ -58,7 +143,10 @@ export function MainLayout() {
       <main
         className={cn(
           'pt-16 min-h-screen transition-all duration-300',
-          sidebar.isCollapsed ? 'pl-20' : 'pl-64'
+          // No left padding on mobile (sidebar is hidden), add padding on lg+ screens
+          'pl-0 lg:pl-20',
+          // Adjust for expanded sidebar on lg+ screens
+          !sidebar.isCollapsed && 'lg:pl-64'
         )}
       >
         <div className="p-4 lg:p-6">

@@ -84,6 +84,8 @@ export function Sidebar() {
     <aside
       className={cn(
         'fixed left-0 top-0 h-screen z-40 transition-all duration-300 flex flex-col',
+        // Hidden on mobile/tablet, visible on lg+ screens
+        'hidden lg:flex',
         // Light mode
         'bg-white border-r border-surface-200',
         // Dark mode - rich warm tones inspired by landing page

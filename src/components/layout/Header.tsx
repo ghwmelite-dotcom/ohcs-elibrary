@@ -29,7 +29,7 @@ import { formatRelativeTime } from '@/utils/formatters';
 export function Header() {
   const navigate = useNavigate();
   const { user, logout, hasRole } = useAuthStore();
-  const { sidebar, toggleSidebar, toggleSearch, isSearchOpen, searchQuery, setSearchQuery } = useUIStore();
+  const { sidebar, toggleMobileMenu, toggleSearch, isSearchOpen, searchQuery, setSearchQuery } = useUIStore();
   const { notifications, summary, fetchNotifications, fetchSummary, markAsRead, markAllAsRead } = useNotificationStore();
   const { stats } = useGamificationStore();
 
@@ -59,14 +59,17 @@ export function Header() {
         'bg-white/95 border-b border-surface-200',
         // Dark mode - rich warm tones
         'dark:bg-[#1a1510]/95 dark:border-b dark:border-amber-900/20',
-        sidebar.isCollapsed ? 'left-20' : 'left-64'
+        // Full width on mobile, adjust for sidebar on lg+ screens
+        'left-0',
+        'lg:left-20',
+        !sidebar.isCollapsed && 'lg:left-64'
       )}
     >
       <div className="h-full flex items-center justify-between px-4 lg:px-6">
         {/* Left section */}
         <div className="flex items-center gap-4">
           <button
-            onClick={toggleSidebar}
+            onClick={toggleMobileMenu}
             aria-label="Open menu"
             className="lg:hidden p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
           >
