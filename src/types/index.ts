@@ -1252,7 +1252,7 @@ export interface CounselorDashboardStats {
 }
 
 // ============================================================================
-// Research Lab Types
+// Research Hub Types
 // ============================================================================
 
 export type ResearchProjectStatus = 'draft' | 'planning' | 'active' | 'review' | 'completed' | 'archived';
@@ -1588,7 +1588,7 @@ export interface ResearchDashboardData {
 }
 
 // ============================================================================
-// Research Lab - Phase 3: Collaboration Types
+// Research Hub - Phase 3: Collaboration Types
 // ============================================================================
 
 export type ResearchNoteType = 'general' | 'methodology' | 'findings' | 'discussion' | 'conclusion' | 'appendix';

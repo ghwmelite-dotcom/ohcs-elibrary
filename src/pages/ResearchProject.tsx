@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FlaskConical,
+  Network,
   ArrowLeft,
   Settings,
   Users,
@@ -138,7 +138,7 @@ export default function ResearchProject() {
     if (!id) return;
     try {
       await deleteProject(id);
-      navigate('/research-lab');
+      navigate('/research-hub');
     } catch (error) {
       console.error('Failed to delete project:', error);
     }
@@ -211,10 +211,10 @@ export default function ResearchProject() {
             {error || 'Project not found'}
           </h2>
           <Link
-            to="/research-lab"
+            to="/research-hub"
             className="text-primary-600 hover:text-primary-700 dark:text-primary-400"
           >
-            Back to Research Lab
+            Back to Research Hub
           </Link>
         </div>
       </div>
@@ -253,9 +253,9 @@ export default function ResearchProject() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-white/70 mb-4">
-            <Link to="/research-lab" className="hover:text-white transition-colors flex items-center gap-1">
+            <Link to="/research-hub" className="hover:text-white transition-colors flex items-center gap-1">
               <ArrowLeft className="w-4 h-4" />
-              Research Lab
+              Research Hub
             </Link>
             <span>/</span>
             <span className="text-white">Project</span>

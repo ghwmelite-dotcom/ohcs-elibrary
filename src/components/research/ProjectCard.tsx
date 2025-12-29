@@ -40,7 +40,7 @@ export function ProjectCard({ project, variant = 'default', className }: Project
 
   if (variant === 'compact') {
     return (
-      <Link to={`/research-lab/projects/${project.id}`}>
+      <Link to={`/research-hub/projects/${project.id}`}>
         <motion.div
           whileHover={{ scale: 1.01 }}
           className={cn(
@@ -72,7 +72,7 @@ export function ProjectCard({ project, variant = 'default', className }: Project
   }
 
   return (
-    <Link to={`/research-lab/projects/${project.id}`}>
+    <Link to={`/research-hub/projects/${project.id}`}>
       <motion.div
         whileHover={{ y: -4 }}
         className={cn(

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FlaskConical,
+  Network,
   Plus,
   Search,
   Filter,
@@ -97,7 +97,7 @@ export default function ResearchProjects() {
   };
 
   const handleProjectCreated = (projectId: string) => {
-    navigate(`/research-lab/projects/${projectId}`);
+    navigate(`/research-hub/projects/${projectId}`);
   };
 
   const handlePageChange = (page: number) => {
@@ -120,7 +120,7 @@ export default function ResearchProjects() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary-100 dark:bg-primary-900 rounded-xl">
-                <FlaskConical className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                <Network className="w-6 h-6 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -263,7 +263,7 @@ export default function ResearchProjects() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-16"
           >
-            <FlaskConical className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <Network className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               No projects found
             </h3>

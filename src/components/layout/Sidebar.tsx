@@ -16,7 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  FlaskConical,
+  Network,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useUIStore } from '@/stores/uiStore';
@@ -37,7 +37,7 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
   { path: '/library', label: 'Library', icon: <Library className="w-5 h-5 text-amber-500" /> },
-  { path: '/research-lab', label: 'Research Lab', icon: <FlaskConical className="w-5 h-5 text-violet-500" /> },
+  { path: '/research-hub', label: 'Research Hub', icon: <Network className="w-5 h-5 text-violet-500" /> },
   { path: '/wellness', label: 'Wellness', icon: <Heart className="w-5 h-5 text-pink-500" /> },
   { path: '/forum', label: 'Forum', icon: <MessageSquare className="w-5 h-5" /> },
   { path: '/chat', label: 'Chat', icon: <MessagesSquare className="w-5 h-5" /> },
@@ -151,20 +151,20 @@ export function Sidebar() {
             const badgeCount = item.path === '/news' ? newArticlesCount : item.badge;
             const isWellness = item.path === '/wellness';
             const isLibrary = item.path === '/library';
-            const isResearchLab = item.path === '/research-lab';
-            const isHighlighted = isWellness || isLibrary || isResearchLab;
+            const isResearchHub = item.path === '/research-hub';
+            const isHighlighted = isWellness || isLibrary || isResearchHub;
 
             // Get theme colors for highlighted items
             const getActiveClasses = () => {
               if (isLibrary) return 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 font-medium';
-              if (isResearchLab) return 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 font-medium';
+              if (isResearchHub) return 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 font-medium';
               if (isWellness) return 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 font-medium';
               return 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium';
             };
 
             const getHoverClasses = () => {
               if (isLibrary) return 'text-surface-600 dark:text-amber-50/60 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300';
-              if (isResearchLab) return 'text-surface-600 dark:text-amber-50/60 hover:bg-violet-50 dark:hover:bg-violet-900/30 hover:text-violet-700 dark:hover:text-violet-300';
+              if (isResearchHub) return 'text-surface-600 dark:text-amber-50/60 hover:bg-violet-50 dark:hover:bg-violet-900/30 hover:text-violet-700 dark:hover:text-violet-300';
               if (isWellness) return 'text-surface-600 dark:text-amber-50/60 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300';
               return 'text-surface-600 dark:text-amber-50/60 hover:bg-surface-100 dark:hover:bg-amber-900/20 hover:text-surface-900 dark:hover:text-amber-50';
             };
@@ -206,8 +206,8 @@ export function Sidebar() {
                         transition={{ duration: 2, repeat: Infinity }}
                       />
                     )}
-                    {/* Research Lab pulsing flask indicator */}
-                    {isCollapsed && isResearchLab && (
+                    {/* Research Hub pulsing network indicator */}
+                    {isCollapsed && isResearchHub && (
                       <motion.span
                         className="absolute -top-1 -right-1 w-2 h-2 bg-violet-500 rounded-full"
                         animate={{ scale: [1, 1.3, 1] }}
@@ -236,8 +236,8 @@ export function Sidebar() {
                       HOT
                     </motion.span>
                   )}
-                  {/* Research Lab "AI" badge */}
-                  {!isCollapsed && isResearchLab && (
+                  {/* Research Hub "AI" badge */}
+                  {!isCollapsed && isResearchHub && (
                     <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}

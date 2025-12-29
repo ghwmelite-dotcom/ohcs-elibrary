@@ -11,7 +11,7 @@ import {
   Filter,
   Sparkles,
   BookOpen,
-  FlaskConical,
+  Network,
   BarChart3,
   FileText,
   X,
@@ -312,7 +312,7 @@ function TemplateCard({ template, index, isSelected, onSelect, compact }: Templa
             'p-2.5 rounded-xl',
             category?.color || 'bg-primary-100 dark:bg-primary-900/30'
           )}>
-            <FlaskConical className="w-5 h-5 text-white" />
+            <Network className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold text-gray-900 dark:text-white truncate">

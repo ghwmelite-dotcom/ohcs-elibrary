@@ -37,7 +37,7 @@ import {
   Briefcase,
   AlertCircle,
   Check,
-  FlaskConical,
+  Network,
   BarChart3,
   Target,
   FileDown,
@@ -2049,10 +2049,10 @@ const features = [
   },
 ];
 
-// Research Lab Features
+// Research Hub Features
 const researchFeatures = [
   {
-    icon: FlaskConical,
+    icon: Network,
     title: 'Research Projects',
     description: 'Create and manage comprehensive research projects with structured phases and milestones.',
     color: 'from-blue-500 to-indigo-600',
@@ -2778,7 +2778,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Research Lab Section */}
+      {/* Research Hub Section */}
       <section className="relative py-24 overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0 pointer-events-none">
@@ -2814,9 +2814,9 @@ export default function Landing() {
               }}
               whileHover={{ scale: 1.05 }}
             >
-              <FlaskConical className={cn('w-4 h-4', isDark ? 'text-indigo-400' : 'text-indigo-600')} />
+              <Network className={cn('w-4 h-4', isDark ? 'text-indigo-400' : 'text-indigo-600')} />
               <span className={cn('text-sm font-semibold', isDark ? 'text-indigo-300' : 'text-indigo-700')}>
-                New: Research Lab
+                New: Research Hub
               </span>
               <motion.div
                 className="w-2 h-2 rounded-full bg-green-500"
@@ -2888,7 +2888,7 @@ export default function Landing() {
             ))}
           </div>
 
-          {/* Research Lab CTA */}
+          {/* Research Hub CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -2905,7 +2905,7 @@ export default function Landing() {
                 boxShadow: '0 4px 25px rgba(99, 102, 241, 0.4)',
               }}
             >
-              <FlaskConical className="w-5 h-5" />
+              <Network className="w-5 h-5" />
               Start Your Research Project
               <ArrowRight className="w-5 h-5" />
             </motion.button>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  FlaskConical,
+  Network,
   Plus,
   BookOpen,
   Lightbulb,
@@ -39,7 +39,7 @@ export default function ResearchLab() {
   }, [fetchDashboard, fetchTemplates]);
 
   const handleProjectCreated = (projectId: string) => {
-    navigate(`/research-lab/projects/${projectId}`);
+    navigate(`/research-hub/projects/${projectId}`);
   };
 
   const containerVariants = {
@@ -92,7 +92,7 @@ export default function ResearchLab() {
                 top: `${20 + (i % 3) * 20}%`,
               }}
             >
-              <FlaskConical className="w-8 h-8 text-white/20" />
+              <Network className="w-8 h-8 text-white/20" />
             </motion.div>
           ))}
         </div>
@@ -106,14 +106,14 @@ export default function ResearchLab() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm">
-                  <FlaskConical className="w-8 h-8 text-white" />
+                  <Network className="w-8 h-8 text-white" />
                 </div>
                 <span className="px-3 py-1 text-sm font-medium bg-secondary-400 text-secondary-900 rounded-full">
                   AI-Powered
                 </span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                Research Lab
+                Research Hub
               </h1>
               <p className="text-lg text-primary-100 max-w-xl">
                 Conduct evidence-based policy research with AI-powered insights and collaborative tools.
@@ -122,7 +122,7 @@ export default function ResearchLab() {
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
-                to="/research-lab/projects"
+                to="/research-hub/projects"
                 className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white/10 text-white border border-white/20 rounded-xl hover:bg-white/20 backdrop-blur-sm transition-colors"
               >
                 <Search className="w-5 h-5" />
@@ -166,7 +166,7 @@ export default function ResearchLab() {
               {
                 label: 'Total Projects',
                 value: (dashboard?.stats?.myActiveProjects || 0) + (dashboard?.stats?.myCompletedProjects || 0),
-                icon: FlaskConical,
+                icon: Network,
                 color: 'from-purple-500 to-purple-600',
               },
               {
@@ -203,11 +203,11 @@ export default function ResearchLab() {
             <motion.div variants={itemVariants} className="lg:col-span-2">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <FlaskConical className="w-5 h-5 text-primary-500" />
+                  <Network className="w-5 h-5 text-primary-500" />
                   My Projects
                 </h2>
                 <Link
-                  to="/research-lab/projects?myProjects=true"
+                  to="/research-hub/projects?myProjects=true"
                   className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 flex items-center gap-1"
                 >
                   View All
@@ -229,7 +229,7 @@ export default function ResearchLab() {
                 </div>
               ) : (
                 <div className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center border border-gray-200 dark:border-gray-700">
-                  <FlaskConical className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <Network className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                     No projects yet
                   </h3>
@@ -266,7 +266,7 @@ export default function ResearchLab() {
                     {dashboard.trendingTopics.map((topic, index) => (
                       <Link
                         key={topic.topic}
-                        to={`/research-lab/projects?search=${encodeURIComponent(topic.topic)}`}
+                        to={`/research-hub/projects?search=${encodeURIComponent(topic.topic)}`}
                         className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       >
                         <div className="flex items-center gap-3">
@@ -350,7 +350,7 @@ export default function ResearchLab() {
                   {dashboard.recentActivity.map((activity) => (
                     <Link
                       key={activity.id}
-                      to={`/research-lab/projects/${activity.projectId}`}
+                      to={`/research-hub/projects/${activity.projectId}`}
                       className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                     >
                       {activity.user?.avatar ? (

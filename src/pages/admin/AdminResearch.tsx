@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  FlaskConical,
+  Network,
   Search,
   Filter,
   Plus,
@@ -93,9 +93,9 @@ export default function AdminResearch() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
             <div className="p-2 bg-primary-100 dark:bg-primary-900 rounded-xl">
-              <FlaskConical className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+              <Network className="w-6 h-6 text-primary-600 dark:text-primary-400" />
             </div>
-            Research Lab Management
+            Research Hub Management
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
             Manage research projects, templates, and analytics
@@ -117,7 +117,7 @@ export default function AdminResearch() {
           {
             label: 'Total Projects',
             value: stats?.projects?.total || 0,
-            icon: FlaskConical,
+            icon: Network,
             color: 'bg-blue-500',
           },
           {
@@ -303,7 +303,7 @@ export default function AdminResearch() {
               ) : projects.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center">
-                    <FlaskConical className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                    <Network className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                     <p className="text-gray-500 dark:text-gray-400">No projects found</p>
                   </td>
                 </tr>
@@ -380,7 +380,7 @@ export default function AdminResearch() {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <a
-                            href={`/research-lab/projects/${project.id}`}
+                            href={`/research-hub/projects/${project.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 text-gray-400 hover:text-primary-500 transition-colors"

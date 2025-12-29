@@ -55,7 +55,7 @@ const WellnessChat = lazy(() => import('@/pages/WellnessChat'));
 const WellnessResources = lazy(() => import('@/pages/WellnessResources'));
 const WellnessResource = lazy(() => import('@/pages/WellnessResource'));
 
-// Research Lab pages
+// Research Hub pages
 const ResearchLab = lazy(() => import('@/pages/ResearchLab'));
 const ResearchProjects = lazy(() => import('@/pages/ResearchProjects'));
 const ResearchProject = lazy(() => import('@/pages/ResearchProject'));
@@ -297,10 +297,10 @@ export default function App() {
             <Route path="/wellness/resources" element={<WellnessResources />} />
             <Route path="/wellness/resources/:id" element={<WellnessResource />} />
 
-            {/* Research Lab routes */}
-            <Route path="/research-lab" element={<ResearchLab />} />
-            <Route path="/research-lab/projects" element={<ResearchProjects />} />
-            <Route path="/research-lab/projects/:id" element={<ResearchProject />} />
+            {/* Research Hub routes */}
+            <Route path="/research-hub" element={<ResearchLab />} />
+            <Route path="/research-hub/projects" element={<ResearchProjects />} />
+            <Route path="/research-hub/projects/:id" element={<ResearchProject />} />
 
             {/* Profile routes */}
             <Route path="/profile" element={<Profile />} />
