@@ -1,6 +1,34 @@
 import { motion } from 'framer-motion';
-import { MessageSquare, Users, TrendingUp, Clock, FileText } from 'lucide-react';
+import {
+  MessageSquare,
+  Users,
+  TrendingUp,
+  Clock,
+  FileText,
+  GraduationCap,
+  Laptop,
+  MapPin,
+  Megaphone,
+  Lightbulb,
+  LucideIcon,
+} from 'lucide-react';
 import { cn } from '@/utils/cn';
+
+// Map icon names to Lucide components
+const iconMap: Record<string, LucideIcon> = {
+  MessageSquare,
+  FileText,
+  GraduationCap,
+  Laptop,
+  Users,
+  MapPin,
+  Megaphone,
+  Lightbulb,
+};
+
+function getIconComponent(iconName: string): LucideIcon {
+  return iconMap[iconName] || MessageSquare;
+}
 
 interface ForumStatsProps {
   stats: {
@@ -112,6 +140,8 @@ interface CategoryStatsProps {
 }
 
 export function CategoryStats({ category }: CategoryStatsProps) {
+  const IconComponent = getIconComponent(category.icon || 'MessageSquare');
+
   return (
     <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
       <div className="flex items-center gap-3 mb-4">
@@ -119,7 +149,7 @@ export function CategoryStats({ category }: CategoryStatsProps) {
           className="w-12 h-12 rounded-xl flex items-center justify-center"
           style={{ backgroundColor: `${category.color}20` }}
         >
-          <span className="text-2xl">{category.icon}</span>
+          <IconComponent className="w-6 h-6" style={{ color: category.color }} />
         </div>
         <div>
           <h3 className="font-semibold text-surface-900 dark:text-surface-50">

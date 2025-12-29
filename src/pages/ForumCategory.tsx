@@ -1,7 +1,34 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import {
+  ArrowLeft,
+  MessageSquare,
+  FileText,
+  GraduationCap,
+  Laptop,
+  Users,
+  MapPin,
+  Megaphone,
+  Lightbulb,
+  LucideIcon,
+} from 'lucide-react';
 import { useForumStore } from '@/stores/forumStore';
+
+// Map icon names to Lucide components
+const iconMap: Record<string, LucideIcon> = {
+  MessageSquare,
+  FileText,
+  GraduationCap,
+  Laptop,
+  Users,
+  MapPin,
+  Megaphone,
+  Lightbulb,
+};
+
+function getIconComponent(iconName: string): LucideIcon {
+  return iconMap[iconName] || MessageSquare;
+}
 import {
   TopicList,
   CategoryStats,
@@ -87,12 +114,17 @@ export default function ForumCategory() {
       {/* Category Header */}
       <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-          <div
-            className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: `${category.color}20` }}
-          >
-            <span className="text-2xl sm:text-3xl">{category.icon}</span>
-          </div>
+          {(() => {
+            const IconComponent = getIconComponent(category.icon || 'MessageSquare');
+            return (
+              <div
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: `${category.color}20` }}
+              >
+                <IconComponent className="w-6 h-6 sm:w-8 sm:h-8" style={{ color: category.color }} />
+              </div>
+            );
+          })()}
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl font-heading font-bold text-surface-900 dark:text-surface-50 truncate">
               {category.name}
