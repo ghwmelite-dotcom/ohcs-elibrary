@@ -133,48 +133,47 @@ export function WallPost({
       )}
     >
       {/* Header */}
-      <div className="p-4 pb-0">
-        <div className="flex items-start gap-3">
-          <Link to={`/profile/${post.authorId}`}>
+      <div className="p-3 sm:p-4 pb-0">
+        <div className="flex items-start gap-2.5 sm:gap-3">
+          <Link to={`/profile/${post.authorId}`} className="flex-shrink-0">
             <Avatar
               src={post.author?.avatar}
               name={post.author?.displayName || 'User'}
               size="md"
-              className="flex-shrink-0"
             />
           </Link>
 
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 overflow-hidden">
             <div className="flex items-center gap-2 flex-wrap">
               <Link
                 to={`/profile/${post.authorId}`}
-                className="font-semibold text-surface-900 dark:text-surface-100 hover:text-primary-600 dark:hover:text-primary-400"
+                className="font-semibold text-surface-900 dark:text-surface-100 hover:text-primary-600 dark:hover:text-primary-400 truncate max-w-[150px] sm:max-w-none"
               >
                 {post.author?.displayName || 'User'}
               </Link>
               {post.author?.title && (
-                <span className="text-sm text-surface-500">
+                <span className="text-sm text-surface-500 truncate hidden sm:inline max-w-[120px]">
                   {post.author.title}
                 </span>
               )}
               {post.isPinned && (
-                <span className="flex items-center gap-1 text-xs px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
+                <span className="flex items-center gap-1 text-xs px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full flex-shrink-0">
                   <Pin className="w-3 h-3" />
-                  Pinned
+                  <span className="hidden xs:inline">Pinned</span>
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-surface-500 mt-0.5">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-surface-500 mt-0.5">
               <Link
                 to={`/wall/post/${post.id}`}
-                className="hover:text-primary-600 flex items-center gap-1"
+                className="hover:text-primary-600 flex items-center gap-1 flex-shrink-0"
               >
                 <Clock className="w-3 h-3" />
-                {formatRelativeTime(post.createdAt)}
+                <span className="truncate">{formatRelativeTime(post.createdAt)}</span>
               </Link>
-              {post.isEdited && <span>(edited)</span>}
-              <span className="flex items-center gap-1" title={post.visibility}>
+              {post.isEdited && <span className="flex-shrink-0">(edited)</span>}
+              <span className="flex items-center gap-1 flex-shrink-0" title={post.visibility}>
                 <VisibilityIcon className="w-3 h-3" />
               </span>
             </div>
@@ -244,8 +243,8 @@ export function WallPost({
       </div>
 
       {/* Content */}
-      <div className="px-4 py-3">
-        <p className="text-surface-800 dark:text-surface-200 whitespace-pre-wrap break-words">
+      <div className="px-3 sm:px-4 py-3">
+        <p className="text-surface-800 dark:text-surface-200 whitespace-pre-wrap break-words text-sm sm:text-base leading-relaxed">
           {post.content}
         </p>
 
@@ -345,12 +344,12 @@ export function WallPost({
       )}
 
       {/* Action Buttons */}
-      <div className="px-4 py-2 flex items-center justify-between border-t border-surface-100 dark:border-surface-700">
+      <div className="px-2 sm:px-4 py-2 flex items-center justify-around sm:justify-between border-t border-surface-100 dark:border-surface-700">
         <button
           onClick={handleLike}
           disabled={isLiking}
           className={cn(
-            'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors',
+            'flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm',
             post.isLiked
               ? 'text-error-600 dark:text-error-400'
               : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700'
@@ -364,7 +363,7 @@ export function WallPost({
 
         <button
           onClick={handleShowComments}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+          className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg font-medium text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors text-sm"
         >
           <MessageCircle className="w-5 h-5" />
           <span className="hidden sm:inline">Comment</span>
@@ -372,7 +371,7 @@ export function WallPost({
 
         <button
           onClick={onShare}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+          className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg font-medium text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors text-sm"
         >
           <Share2 className="w-5 h-5" />
           <span className="hidden sm:inline">Share</span>
@@ -382,7 +381,7 @@ export function WallPost({
           onClick={handleBookmark}
           disabled={isBookmarking}
           className={cn(
-            'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors',
+            'flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm',
             post.isBookmarked
               ? 'text-accent-600 dark:text-accent-400'
               : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700'

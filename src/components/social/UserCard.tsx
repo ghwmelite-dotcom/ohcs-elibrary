@@ -51,9 +51,9 @@ export function UserCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
       className={cn(
-        'rounded-xl transition-all',
+        'rounded-xl transition-all overflow-hidden',
         compact
-          ? 'p-2 hover:bg-surface-50 dark:hover:bg-surface-700/50'
+          ? 'p-2.5 hover:bg-surface-50 dark:hover:bg-surface-700/50'
           : 'bg-white dark:bg-surface-800 shadow-elevation-1 border border-surface-200 dark:border-surface-700 p-4 hover:shadow-elevation-2',
         className
       )}
@@ -63,18 +63,18 @@ export function UserCard({
           <Avatar
             src={userData?.avatar}
             name={userData?.displayName || 'User'}
-            size={compact ? 'md' : 'lg'}
+            size={compact ? 'sm' : 'lg'}
           />
         </Link>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 overflow-hidden">
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1 overflow-hidden">
               <Link
                 to={`/profile/${userId}`}
                 className={cn(
-                  'font-semibold text-surface-900 dark:text-surface-100 hover:text-primary-600 dark:hover:text-primary-400 truncate block',
-                  compact && 'text-sm'
+                  'font-semibold text-surface-900 dark:text-surface-100 hover:text-primary-600 dark:hover:text-primary-400 block truncate',
+                  compact ? 'text-sm' : 'text-base'
                 )}
               >
                 {userData?.displayName || 'User'}
@@ -87,9 +87,9 @@ export function UserCard({
               )}
 
               {!compact && userData?.mda && (
-                <p className="text-xs text-surface-400 flex items-center gap-1 mt-0.5">
-                  <Building2 className="w-3 h-3" />
-                  {userData.mda}
+                <p className="text-xs text-surface-400 flex items-center gap-1 mt-0.5 truncate">
+                  <Building2 className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">{userData.mda}</span>
                 </p>
               )}
             </div>
@@ -97,7 +97,7 @@ export function UserCard({
             {onDismiss && !compact && (
               <button
                 onClick={onDismiss}
-                className="p-1 rounded-full text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700"
+                className="p-1 rounded-full text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 flex-shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -106,7 +106,7 @@ export function UserCard({
 
           {/* Reason for suggestion */}
           {showReason && reason && (
-            <p className="text-xs text-primary-600 dark:text-primary-400 mt-1">
+            <p className="text-xs text-primary-600 dark:text-primary-400 mt-1 truncate">
               {reasonLabels[reason] || reason}
             </p>
           )}
@@ -120,7 +120,7 @@ export function UserCard({
 
           {/* Actions */}
           {showActions && (
-            <div className={cn('flex items-center gap-2', compact ? 'mt-1.5' : 'mt-3')}>
+            <div className={cn('flex items-center gap-2 flex-wrap', compact ? 'mt-2' : 'mt-3')}>
               {showFollow && (
                 <FollowButton
                   userId={userId}
