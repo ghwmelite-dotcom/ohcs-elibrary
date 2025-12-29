@@ -11,7 +11,7 @@ import {
 import { Skeleton } from '@/components/shared/Skeleton';
 
 export default function ForumCategory() {
-  const { id } = useParams<{ id: string }>();
+  const { categoryId: id } = useParams<{ categoryId: string }>();
   const {
     categories,
     topics,

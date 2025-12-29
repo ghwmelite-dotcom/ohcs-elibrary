@@ -271,7 +271,7 @@ export default function App() {
 
             {/* Forum routes */}
             <Route path="/forum" element={<Forum />} />
-            <Route path="/forum/:categoryId" element={<ForumCategory />} />
+            <Route path="/forum/category/:categoryId" element={<ForumCategory />} />
             <Route path="/forum/topic/:topicId" element={<ForumTopic />} />
 
             {/* Chat routes */}
