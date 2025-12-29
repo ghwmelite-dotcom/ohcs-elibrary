@@ -85,19 +85,19 @@ export default function ForumCategory() {
       </nav>
 
       {/* Category Header */}
-      <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
-        <div className="flex items-center gap-4">
+      <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <div
-            className="w-16 h-16 rounded-xl flex items-center justify-center"
+            className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: `${category.color}20` }}
           >
-            <span className="text-3xl">{category.icon}</span>
+            <span className="text-2xl sm:text-3xl">{category.icon}</span>
           </div>
-          <div>
-            <h1 className="text-2xl font-heading font-bold text-surface-900 dark:text-surface-50">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-heading font-bold text-surface-900 dark:text-surface-50 truncate">
               {category.name}
             </h1>
-            <p className="mt-1 text-surface-600 dark:text-surface-400">
+            <p className="mt-1 text-sm sm:text-base text-surface-600 dark:text-surface-400 line-clamp-2">
               {category.description}
             </p>
           </div>
@@ -105,9 +105,27 @@ export default function ForumCategory() {
       </div>
 
       {/* Main Content */}
-      <div className="grid lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
+        {/* Mobile: Category Stats (shown first on mobile) */}
+        <div className="lg:hidden">
+          <CategoryStats
+            category={{
+              name: category.name,
+              icon: category.icon || '',
+              color: category.color || '#6B7280',
+              topicCount: category.topicCount,
+              postCount: category.postCount,
+              lastActivity: category.lastActivityAt ? {
+                topicTitle: 'Recent activity',
+                userName: 'User',
+                timestamp: category.lastActivityAt,
+              } : undefined,
+            }}
+          />
+        </div>
+
         {/* Topics */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 order-2 lg:order-1">
           <TopicList
             topics={categoryTopics}
             categories={categories}
@@ -116,8 +134,8 @@ export default function ForumCategory() {
           />
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block space-y-6 order-1 lg:order-2">
           <CategoryStats
             category={{
               name: category.name,

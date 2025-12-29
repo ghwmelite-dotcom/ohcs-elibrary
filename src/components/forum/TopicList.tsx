@@ -124,8 +124,9 @@ export function TopicList({
   return (
     <div className="space-y-4">
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-        <div className="flex-1">
+      <div className="flex flex-col gap-3 sm:gap-4">
+        {/* Search Row */}
+        <div className="w-full">
           <Input
             placeholder="Search topics..."
             value={searchQuery}
@@ -137,7 +138,8 @@ export function TopicList({
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Controls Row */}
+        <div className="flex flex-wrap items-center gap-2">
           {/* Filter */}
           <Dropdown
             items={filterOptions.map((opt) => ({
@@ -147,11 +149,12 @@ export function TopicList({
                 setCurrentPage(1);
               },
             }))}
-            align="right"
+            align="left"
           >
-            <button className="px-4 py-2.5 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-2">
-              <Filter className="w-4 h-4" />
-              {filterOptions.find((o) => o.value === filterBy)?.label}
+            <button className="px-3 py-2 sm:px-4 sm:py-2.5 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg text-xs sm:text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
+              <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">{filterOptions.find((o) => o.value === filterBy)?.label}</span>
+              <span className="sm:hidden">Filter</span>
             </button>
           </Dropdown>
 
@@ -162,18 +165,28 @@ export function TopicList({
               icon: opt.icon,
               onClick: () => setSortBy(opt.value as SortOption),
             }))}
-            align="right"
+            align="left"
           >
-            <button className="px-4 py-2.5 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-2">
-              <SortDesc className="w-4 h-4" />
-              {sortOptions.find((o) => o.value === sortBy)?.label}
+            <button className="px-3 py-2 sm:px-4 sm:py-2.5 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-lg text-xs sm:text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
+              <SortDesc className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">{sortOptions.find((o) => o.value === sortBy)?.label}</span>
+              <span className="sm:hidden">Sort</span>
             </button>
           </Dropdown>
 
+          {/* Spacer */}
+          <div className="flex-1" />
+
           {/* New Topic Button */}
           {showNewTopicButton && (
-            <Button onClick={onNewTopic} leftIcon={<Plus className="w-5 h-5" />}>
-              New Topic
+            <Button
+              onClick={onNewTopic}
+              leftIcon={<Plus className="w-4 h-4 sm:w-5 sm:h-5" />}
+              size="sm"
+              className="sm:!py-2.5 sm:!px-4 sm:!text-sm"
+            >
+              <span className="hidden sm:inline">New Topic</span>
+              <span className="sm:hidden">New</span>
             </Button>
           )}
         </div>

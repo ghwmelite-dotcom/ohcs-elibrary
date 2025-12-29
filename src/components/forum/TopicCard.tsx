@@ -29,17 +29,17 @@ export function TopicCard({ topic, category, index = 0 }: TopicCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
       className={cn(
-        'bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 hover:shadow-elevation-2 transition-all p-4',
+        'bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 hover:shadow-elevation-2 transition-all p-3 sm:p-4',
         topic.isPinned && 'ring-2 ring-primary-500/20'
       )}
     >
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3 sm:gap-4">
         {/* Author Avatar */}
         <Avatar
           src={topic.author?.avatar}
           name={topic.author?.displayName || 'Anonymous'}
-          size="md"
-          className="flex-shrink-0"
+          size="sm"
+          className="flex-shrink-0 sm:w-10 sm:h-10"
         />
 
         {/* Content */}
