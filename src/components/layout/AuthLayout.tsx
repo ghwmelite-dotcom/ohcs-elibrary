@@ -1,6 +1,7 @@
 import { Outlet, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Star, Users, Building2, Bot, Shield } from 'lucide-react';
+import { Library, Users, Building2, Bot, Shield } from 'lucide-react';
+import { cn } from '@/utils/cn';
 
 const stats = [
   { value: '20K+', label: 'Civil Servants', icon: Users },
@@ -8,6 +9,195 @@ const stats = [
   { value: '24/7', label: 'AI Assistance', icon: Bot },
   { value: '100%', label: 'Secured', icon: Shield },
 ];
+
+// Animated Logo for Auth Pages - Light variant (for dark background)
+function AnimatedAuthLogo({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
+  const isLight = variant === 'light';
+
+  return (
+    <Link to="/" className="flex items-center gap-3 group">
+      <motion.div
+        className="relative w-12 h-12"
+        whileHover={{ rotate: [0, -5, 5, 0] }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* Outer glow ring - animated */}
+        <motion.div
+          className={cn(
+            'absolute -inset-1 rounded-xl blur-md transition-opacity duration-500',
+            isLight ? 'opacity-60 group-hover:opacity-100' : 'opacity-0 group-hover:opacity-100'
+          )}
+          style={{
+            background: isLight
+              ? 'linear-gradient(135deg, rgba(255,255,255,0.5), #FCD116, rgba(255,255,255,0.5))'
+              : 'linear-gradient(135deg, #006B3F, #FCD116, #CE1126, #006B3F)',
+          }}
+          animate={{
+            rotate: [0, 360],
+          }}
+          transition={{
+            rotate: { duration: 8, repeat: Infinity, ease: 'linear' },
+          }}
+        />
+
+        {/* Pulsing glow effect */}
+        <motion.div
+          className="absolute -inset-0.5 rounded-xl blur-sm"
+          style={{
+            background: isLight
+              ? 'rgba(255, 255, 255, 0.3)'
+              : 'linear-gradient(135deg, #006B3F 0%, #004d2d 100%)',
+          }}
+          animate={{
+            opacity: [0.4, 0.7, 0.4],
+            scale: [1, 1.05, 1],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+
+        {/* Main logo container */}
+        <div
+          className={cn(
+            'absolute inset-0 rounded-xl overflow-hidden',
+            isLight ? 'bg-white/20 backdrop-blur-sm' : 'bg-ghana-gradient'
+          )}
+          style={{
+            boxShadow: isLight
+              ? '0 4px 20px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.3)'
+              : '0 4px 20px rgba(0, 107, 63, 0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
+          }}
+        >
+          {/* Shimmer effect */}
+          <motion.div
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.3) 50%, transparent 80%)',
+            }}
+            animate={{
+              x: ['-100%', '200%'],
+            }}
+            transition={{
+              x: { duration: 2, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' },
+            }}
+          />
+
+          {/* Gold accent line */}
+          <motion.div
+            className="absolute bottom-0 left-0 right-0 h-0.5"
+            style={{
+              background: 'linear-gradient(90deg, transparent, #FCD116, transparent)',
+            }}
+            animate={{
+              opacity: [0.5, 1, 0.5],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+        </div>
+
+        {/* Library Icon */}
+        <div className="relative w-full h-full rounded-xl flex items-center justify-center">
+          <motion.div
+            animate={{
+              rotateY: [0, 10, -10, 0],
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <Library className={cn(
+              'w-6 h-6 drop-shadow-lg',
+              isLight ? 'text-secondary-400' : 'text-secondary-500'
+            )} />
+          </motion.div>
+        </div>
+
+        {/* Corner sparkle */}
+        <motion.div
+          className="absolute -top-0.5 -right-0.5 w-2 h-2"
+          animate={{
+            scale: [0, 1, 0],
+            opacity: [0, 1, 0],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            repeatDelay: 3,
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
+            <path
+              d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z"
+              fill="#FCD116"
+            />
+          </svg>
+        </motion.div>
+      </motion.div>
+
+      {/* Text */}
+      <motion.div
+        className="overflow-hidden"
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <motion.div
+          className="flex flex-col"
+          whileHover={{ x: 2 }}
+          transition={{ type: 'spring', stiffness: 300 }}
+        >
+          <div className="flex items-center gap-1.5">
+            <h1 className={cn(
+              'font-heading font-bold text-xl leading-tight',
+              isLight ? 'text-white' : 'text-primary-600 dark:text-primary-400'
+            )}>
+              OHCS E-Library
+            </h1>
+            {/* AI Badge */}
+            <motion.span
+              className={cn(
+                'px-1.5 py-0.5 text-[9px] font-bold rounded relative overflow-hidden',
+                isLight
+                  ? 'bg-white/20 text-secondary-400'
+                  : 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+              )}
+              whileHover={{ scale: 1.1 }}
+              animate={{
+                boxShadow: [
+                  '0 0 0 rgba(252, 209, 22, 0)',
+                  '0 0 10px rgba(252, 209, 22, 0.5)',
+                  '0 0 0 rgba(252, 209, 22, 0)',
+                ],
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              AI
+              <motion.div
+                className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+                }}
+                animate={{ x: ['-100%', '100%'] }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
+              />
+            </motion.span>
+          </div>
+          <p className={cn(
+            'text-sm leading-tight',
+            isLight ? 'text-white/60' : 'text-surface-500 dark:text-surface-400'
+          )}>
+            Ghana Civil Service
+          </p>
+        </motion.div>
+      </motion.div>
+    </Link>
+  );
+}
 
 export function AuthLayout() {
   return (
@@ -58,24 +248,13 @@ export function AuthLayout() {
         </div>
 
         <div className="relative z-10 flex flex-col justify-between w-full p-8 xl:p-12">
-          {/* Logo */}
+          {/* Animated Logo */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex items-center gap-3"
           >
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                <Star className="w-7 h-7 text-secondary-400" />
-              </div>
-              <div>
-                <h1 className="font-heading font-bold text-white text-xl">
-                  OHCS E-Library
-                </h1>
-                <p className="text-white/60 text-sm">Ghana Civil Service</p>
-              </div>
-            </Link>
+            <AnimatedAuthLogo variant="light" />
           </motion.div>
 
           {/* Main Content */}
@@ -142,18 +321,9 @@ export function AuthLayout() {
 
       {/* Right Panel - Form (exactly 50%) */}
       <div className="w-full lg:w-1/2 flex flex-col min-h-screen bg-white dark:bg-surface-900">
-        {/* Mobile header */}
+        {/* Mobile header with animated logo */}
         <div className="lg:hidden p-6 flex items-center justify-center border-b border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-ghana-gradient flex items-center justify-center">
-              <Star className="w-6 h-6 text-secondary-500" />
-            </div>
-            <div>
-              <h1 className="font-heading font-bold text-primary-600 dark:text-primary-400">
-                OHCS E-Library
-              </h1>
-            </div>
-          </Link>
+          <AnimatedAuthLogo variant="dark" />
         </div>
 
         {/* Ghana flag stripe - mobile */}

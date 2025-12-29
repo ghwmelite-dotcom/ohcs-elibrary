@@ -17,12 +17,17 @@ import {
   ChevronRight,
   LogOut,
   Network,
+  Rss,
+  Mail,
+  UserPlus,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useUIStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useNewsStore } from '@/stores/newsStore';
+import { useDMStore } from '@/stores/dmStore';
 import { Avatar } from '@/components/shared/Avatar';
 import { Badge } from '@/components/shared/Badge';
 import { AnimatedLogo } from '@/components/shared/AnimatedLogo';
@@ -35,7 +40,10 @@ interface NavItem {
 }
 
 const mainNavItems: NavItem[] = [
-  { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+  { path: '/feed', label: 'Feed', icon: <Rss className="w-5 h-5 text-primary-500" /> },
+  { path: '/dashboard', label: 'Dashboard', icon: <BarChart3 className="w-5 h-5" /> },
+  { path: '/dm', label: 'Messages', icon: <Mail className="w-5 h-5 text-blue-500" /> },
+  { path: '/network', label: 'Network', icon: <UserPlus className="w-5 h-5 text-emerald-500" /> },
   { path: '/library', label: 'Library', icon: <Library className="w-5 h-5 text-amber-500" /> },
   { path: '/research-hub', label: 'Research Hub', icon: <Network className="w-5 h-5 text-violet-500" /> },
   { path: '/wellness', label: 'Wellness', icon: <Heart className="w-5 h-5 text-pink-500" /> },
@@ -58,6 +66,7 @@ export function Sidebar() {
   const { summary } = useNotificationStore();
   const unreadCount = summary?.unreadTotal || 0;
   const { newArticlesCount, checkForNewArticles, markNewsAsViewed } = useNewsStore();
+  const { unreadCount: dmUnreadCount, fetchUnreadCount } = useDMStore();
   const location = useLocation();
 
   const isCollapsed = sidebar.isCollapsed;
@@ -80,6 +89,18 @@ export function Sidebar() {
       markNewsAsViewed();
     }
   }, [location.pathname, markNewsAsViewed]);
+
+  // Fetch DM unread count on mount and periodically
+  useEffect(() => {
+    fetchUnreadCount();
+
+    // Check every 30 seconds for new messages
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+    }, 30 * 1000);
+
+    return () => clearInterval(interval);
+  }, [fetchUnreadCount]);
 
   return (
     <aside
@@ -150,15 +171,25 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto py-4 px-3">
         <ul className="space-y-1">
           {mainNavItems.map((item) => {
-            // Add news badge count
-            const badgeCount = item.path === '/news' ? newArticlesCount : item.badge;
+            // Add badge counts for news and messages
+            const badgeCount = item.path === '/news'
+              ? newArticlesCount
+              : item.path === '/dm'
+                ? dmUnreadCount
+                : item.badge;
             const isWellness = item.path === '/wellness';
             const isLibrary = item.path === '/library';
             const isResearchHub = item.path === '/research-hub';
-            const isHighlighted = isWellness || isLibrary || isResearchHub;
+            const isFeed = item.path === '/feed';
+            const isMessages = item.path === '/dm';
+            const isNetwork = item.path === '/network';
+            const isHighlighted = isWellness || isLibrary || isResearchHub || isFeed;
 
             // Get theme colors for highlighted items
             const getActiveClasses = () => {
+              if (isFeed) return 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium';
+              if (isMessages) return 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium';
+              if (isNetwork) return 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-medium';
               if (isLibrary) return 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 font-medium';
               if (isResearchHub) return 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 font-medium';
               if (isWellness) return 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 font-medium';
@@ -166,6 +197,9 @@ export function Sidebar() {
             };
 
             const getHoverClasses = () => {
+              if (isFeed) return 'text-surface-600 dark:text-amber-50/60 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-700 dark:hover:text-primary-300';
+              if (isMessages) return 'text-surface-600 dark:text-amber-50/60 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300';
+              if (isNetwork) return 'text-surface-600 dark:text-amber-50/60 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-300';
               if (isLibrary) return 'text-surface-600 dark:text-amber-50/60 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300';
               if (isResearchHub) return 'text-surface-600 dark:text-amber-50/60 hover:bg-violet-50 dark:hover:bg-violet-900/30 hover:text-violet-700 dark:hover:text-violet-300';
               if (isWellness) return 'text-surface-600 dark:text-amber-50/60 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300';
@@ -228,6 +262,16 @@ export function Sidebar() {
                   </span>
                   {!isCollapsed && (
                     <span className="flex-1">{item.label}</span>
+                  )}
+                  {/* Feed "HOME" badge */}
+                  {!isCollapsed && isFeed && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-full shadow-sm"
+                    >
+                      HOME
+                    </motion.span>
                   )}
                   {/* Library "FEATURED" badge */}
                   {!isCollapsed && isLibrary && (

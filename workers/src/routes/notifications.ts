@@ -10,7 +10,8 @@ function generateId(): string {
 
 // GET /notifications - Get user notifications with pagination and filtering
 app.get('/', async (c) => {
-  const userId = c.get('userId');
+  const user = c.get('user');
+  const userId = user?.id;
   if (!userId) {
     return c.json({ error: 'Unauthorized' }, 401);
   }
@@ -93,7 +94,7 @@ app.get('/', async (c) => {
 
 // GET /notifications/summary - Get notification summary/stats
 app.get('/summary', async (c) => {
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
   if (!userId) {
     return c.json({ error: 'Unauthorized' }, 401);
   }
@@ -161,7 +162,7 @@ app.get('/summary', async (c) => {
 
 // POST /notifications - Create a notification (internal use)
 app.post('/', async (c) => {
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
   const body = await c.req.json();
 
   const {
@@ -208,7 +209,7 @@ app.post('/', async (c) => {
 
 // PATCH /notifications/:id/read - Mark notification as read
 app.patch('/:id/read', async (c) => {
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
   const { id } = c.req.param();
 
   if (!userId) {
@@ -231,7 +232,7 @@ app.patch('/:id/read', async (c) => {
 
 // PATCH /notifications/read-all - Mark all notifications as read
 app.patch('/read-all', async (c) => {
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
 
   if (!userId) {
     return c.json({ error: 'Unauthorized' }, 401);
@@ -256,7 +257,7 @@ app.patch('/read-all', async (c) => {
 
 // PATCH /notifications/:id/archive - Archive notification
 app.patch('/:id/archive', async (c) => {
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
   const { id } = c.req.param();
 
   if (!userId) {
@@ -279,7 +280,7 @@ app.patch('/:id/archive', async (c) => {
 
 // DELETE /notifications/:id - Delete notification
 app.delete('/:id', async (c) => {
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
   const { id } = c.req.param();
 
   if (!userId) {
@@ -300,7 +301,7 @@ app.delete('/:id', async (c) => {
 
 // DELETE /notifications - Clear all notifications
 app.delete('/', async (c) => {
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
   const archived = c.req.query('archived') === 'true';
 
   if (!userId) {
@@ -327,7 +328,7 @@ app.delete('/', async (c) => {
 
 // GET /notifications/preferences - Get notification preferences
 app.get('/preferences', async (c) => {
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
 
   if (!userId) {
     return c.json({ error: 'Unauthorized' }, 401);
@@ -379,7 +380,7 @@ app.get('/preferences', async (c) => {
 
 // PUT /notifications/preferences - Update notification preferences
 app.put('/preferences', async (c) => {
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
   const body = await c.req.json();
 
   if (!userId) {
@@ -470,7 +471,7 @@ app.put('/preferences', async (c) => {
 
 // POST /notifications/subscribe - Subscribe to push notifications
 app.post('/subscribe', async (c) => {
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
   const body = await c.req.json();
 
   if (!userId) {
@@ -501,7 +502,7 @@ app.post('/subscribe', async (c) => {
 
 // DELETE /notifications/subscribe - Unsubscribe from push notifications
 app.delete('/subscribe', async (c) => {
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
   const { endpoint } = await c.req.json();
 
   if (!userId) {
@@ -536,7 +537,7 @@ app.get('/templates', async (c) => {
 
 // Helper endpoint to create welcome notification for new users
 app.post('/welcome', async (c) => {
-  const userId = c.get('userId');
+  const userId = c.get('user')?.id;
 
   if (!userId) {
     return c.json({ error: 'Unauthorized' }, 401);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   Phone,
@@ -15,6 +15,13 @@ import {
 } from 'lucide-react';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useCallStore, CallType } from '@/stores/callStore';
+import {
+  CallModal,
+  IncomingCallNotification,
+  VideoCallView,
+  PreCallSetup,
+} from '@/components/chat';
 import { Avatar } from '@/components/shared/Avatar';
 import { Button } from '@/components/shared/Button';
 import { Dropdown } from '@/components/shared/Dropdown';
@@ -26,9 +33,18 @@ export default function Conversation() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { directMessages, fetchDirectMessages, sendDirectMessage } = useChatStore();
+  const {
+    activeCall,
+    startCall,
+    endCall,
+  } = useCallStore();
 
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showCallModal, setShowCallModal] = useState(false);
+  const [showVideoCall, setShowVideoCall] = useState(false);
+  const [showPreCallSetup, setShowPreCallSetup] = useState(false);
+  const [pendingCallType, setPendingCallType] = useState<CallType>('audio');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Mock conversation partner
@@ -41,6 +57,61 @@ export default function Conversation() {
     status: 'online' as const,
     lastSeen: new Date(),
   };
+
+  // Open pre-call setup modal for private calls
+  const handleOpenPreCallSetup = (type: CallType) => {
+    setPendingCallType(type);
+    setShowPreCallSetup(true);
+  };
+
+  // Start the call after pre-call setup
+  const handleConfirmStartCall = async () => {
+    setShowPreCallSetup(false);
+
+    try {
+      const participant = {
+        id: partner.id,
+        displayName: partner.name,
+        avatar: partner.avatar,
+        isMuted: false,
+        isVideoOff: pendingCallType === 'audio',
+        isSpeaking: false,
+      };
+
+      await startCall({
+        type: pendingCallType,
+        roomId: conversationId || 'dm-call',
+        roomName: partner.name,
+        participants: [participant],
+      });
+
+      setShowCallModal(true);
+
+      // For video calls, transition to full video view when connected
+      if (pendingCallType === 'video') {
+        setTimeout(() => {
+          if (useCallStore.getState().activeCall?.status === 'connected') {
+            setShowCallModal(false);
+            setShowVideoCall(true);
+          }
+        }, 2500);
+      }
+    } catch (error: any) {
+      console.error('Failed to start call:', error);
+    }
+  };
+
+  // Watch for call status changes
+  useEffect(() => {
+    if (activeCall?.status === 'connected' && activeCall.type === 'video' && showCallModal) {
+      setShowCallModal(false);
+      setShowVideoCall(true);
+    }
+    if (activeCall?.status === 'ended' || !activeCall) {
+      setShowCallModal(false);
+      setShowVideoCall(false);
+    }
+  }, [activeCall?.status, activeCall?.type, showCallModal]);
 
   // Mock messages
   const messages = [
@@ -139,10 +210,22 @@ export default function Conversation() {
         </div>
 
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleOpenPreCallSetup('audio')}
+            title="Start voice call"
+            className="hover:text-success-600 hover:bg-success-50 dark:hover:bg-success-900/20"
+          >
             <Phone className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleOpenPreCallSetup('video')}
+            title="Start video call"
+            className="hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+          >
             <Video className="w-5 h-5" />
           </Button>
           <Dropdown items={menuItems} align="right">
@@ -258,6 +341,43 @@ export default function Conversation() {
           </Button>
         </div>
       </div>
+
+      {/* Call Modal - for calling/ringing state */}
+      <CallModal
+        isOpen={showCallModal}
+        onClose={() => {
+          endCall();
+          setShowCallModal(false);
+        }}
+      />
+
+      {/* Incoming Call Notification */}
+      <AnimatePresence>
+        <IncomingCallNotification />
+      </AnimatePresence>
+
+      {/* Full Video Call View */}
+      <AnimatePresence>
+        {showVideoCall && activeCall && (
+          <VideoCallView
+            onClose={() => {
+              endCall();
+              setShowVideoCall(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Pre-Call Setup Modal */}
+      <PreCallSetup
+        isOpen={showPreCallSetup}
+        onClose={() => setShowPreCallSetup(false)}
+        onStartCall={handleConfirmStartCall}
+        callType={pendingCallType}
+        roomName={partner.name}
+        participantName={partner.name}
+        participantAvatar={partner.avatar}
+      />
     </div>
   );
 }

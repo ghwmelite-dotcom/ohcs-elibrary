@@ -26,8 +26,11 @@ const VerifyEmail = lazy(() => import('@/pages/VerifyEmail'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 
 // Main pages
+const Wall = lazy(() => import('@/pages/Wall'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Library = lazy(() => import('@/pages/Library'));
+const DirectMessages = lazy(() => import('@/pages/DirectMessages'));
+const Network = lazy(() => import('@/pages/Network'));
 const DocumentView = lazy(() => import('@/pages/DocumentView'));
 const Forum = lazy(() => import('@/pages/Forum'));
 const ForumCategory = lazy(() => import('@/pages/ForumCategory'));
@@ -118,7 +121,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
   const adminRoles = ['admin', 'director', 'super_admin'];
   if (!user || !adminRoles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/feed" replace />;
   }
 
   return <>{children}</>;
@@ -133,7 +136,7 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/feed" replace />;
   }
 
   return <>{children}</>;
@@ -263,7 +266,19 @@ export default function App() {
               </ProtectedRoute>
             }
           >
+            {/* Social Wall - New Home */}
+            <Route path="/feed" element={<Wall />} />
+            <Route path="/wall" element={<Navigate to="/feed" replace />} />
+
+            {/* Dashboard (Analytics) */}
             <Route path="/dashboard" element={<Dashboard />} />
+
+            {/* Network */}
+            <Route path="/network" element={<Network />} />
+
+            {/* Direct Messages (New DM System) */}
+            <Route path="/dm" element={<DirectMessages />} />
+            <Route path="/dm/:userId" element={<DirectMessages />} />
 
             {/* Library routes */}
             <Route path="/library" element={<Library />} />

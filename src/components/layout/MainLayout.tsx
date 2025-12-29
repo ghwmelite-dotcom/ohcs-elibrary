@@ -5,6 +5,7 @@ import { cn } from '@/utils/cn';
 import { useUIStore } from '@/stores/uiStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
+import { usePresenceStore } from '@/stores/presenceStore';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -29,13 +30,20 @@ import {
   Heart,
   Network,
   Settings,
+  Rss,
+  Mail,
+  UserPlus,
+  BarChart3,
 } from 'lucide-react';
 import { Modal } from '@/components/shared/Modal';
 import { Button } from '@/components/shared/Button';
 
 // Mobile navigation items
 const mobileNavItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/feed', label: 'Feed', icon: Rss },
+  { path: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+  { path: '/dm', label: 'Messages', icon: Mail },
+  { path: '/network', label: 'Network', icon: UserPlus },
   { path: '/library', label: 'Library', icon: Library },
   { path: '/research-hub', label: 'Research Hub', icon: Network },
   { path: '/wellness', label: 'Wellness', icon: Heart },
@@ -51,6 +59,7 @@ export function MainLayout() {
   const { sidebar, isMobileMenuOpen, setMobileMenuOpen } = useUIStore();
   const { fetchNotifications, fetchSummary } = useNotificationStore();
   const { fetchStats, fetchLeaderboard } = useGamificationStore();
+  const { startHeartbeatPolling, stopHeartbeatPolling } = usePresenceStore();
   const { showNudge, dismissNudge, acceptNudge } = useWellnessNudge();
   const {
     notification: smartNotification,
@@ -75,6 +84,12 @@ export function MainLayout() {
       clearInterval(pollInterval);
     };
   }, [fetchNotifications, fetchSummary, fetchStats, fetchLeaderboard]);
+
+  // Start presence heartbeat polling
+  useEffect(() => {
+    startHeartbeatPolling(30000); // 30 second intervals
+    return () => stopHeartbeatPolling();
+  }, [startHeartbeatPolling, stopHeartbeatPolling]);
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-900">

@@ -1931,3 +1931,304 @@ export interface ResearchTag {
   color: string;
   usageCount: number;
 }
+
+// ============================================================================
+// Social Networking Types - Phase 1
+// ============================================================================
+
+// ============================================================================
+// Social Graph Types (Following, Connections, Blocks)
+// ============================================================================
+
+export interface UserFollow {
+  id: UUID;
+  followerId: UUID;
+  follower?: User;
+  followingId: UUID;
+  following?: User;
+  createdAt: Timestamp;
+}
+
+export type ConnectionType = 'colleague' | 'mentor' | 'mentee';
+export type ConnectionStatus = 'pending' | 'accepted' | 'declined';
+
+export interface UserConnection {
+  id: UUID;
+  userId: UUID;
+  user?: User;
+  connectedUserId: UUID;
+  connectedUser?: User;
+  connectionType: ConnectionType;
+  status: ConnectionStatus;
+  requestedAt: Timestamp;
+  respondedAt?: Timestamp;
+}
+
+export interface UserBlock {
+  id: UUID;
+  blockerId: UUID;
+  blocker?: User;
+  blockedId: UUID;
+  blocked?: User;
+  reason?: string;
+  createdAt: Timestamp;
+}
+
+export interface SuggestedConnection {
+  id: UUID;
+  userId: UUID;
+  suggestedUserId: UUID;
+  suggestedUser?: User;
+  score: number;
+  reason: 'same_mda' | 'mutual_connections' | 'similar_interests' | 'active_in_same_groups';
+  mutualCount?: number;
+  isHidden: boolean;
+  createdAt: Timestamp;
+  expiresAt?: Timestamp;
+}
+
+export interface SocialStats {
+  followersCount: number;
+  followingCount: number;
+  connectionsCount: number;
+  postsCount: number;
+  mutualConnectionsCount?: number;
+}
+
+export interface UserWithSocialStats extends User {
+  isFollowing?: boolean;
+  isFollowedBy?: boolean;
+  isConnected?: boolean;
+  connectionStatus?: ConnectionStatus;
+  isBlocked?: boolean;
+  socialStats?: SocialStats;
+}
+
+// ============================================================================
+// Social Wall Types (Posts, Comments, Reactions)
+// ============================================================================
+
+export type PostVisibility =
+  | 'public'
+  | 'network'
+  | 'mda'
+  | 'close_colleagues'
+  | 'mentors'
+  | 'custom_list'
+  | 'private';
+
+export type WallPostType =
+  | 'status'
+  | 'share'
+  | 'achievement'
+  | 'document_share'
+  | 'poll';
+
+export interface AudienceList {
+  id: UUID;
+  userId: UUID;
+  name: string;
+  listType: 'custom' | 'close_colleagues' | 'mentors' | 'mentees';
+  memberCount: number;
+  members?: User[];
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface AudienceListMember {
+  listId: UUID;
+  memberId: UUID;
+  member?: User;
+  addedAt: Timestamp;
+}
+
+export interface WallPostReaction {
+  emoji: string;
+  count: number;
+  users: string[];
+  hasReacted: boolean;
+}
+
+export interface WallPost {
+  id: UUID;
+  authorId: UUID;
+  author?: User;
+  content: string;
+  visibility: PostVisibility;
+  customListId?: UUID;
+  customList?: AudienceList;
+  postType: WallPostType;
+  sharedPostId?: UUID;
+  sharedPost?: WallPost;
+  sharedDocumentId?: UUID;
+  sharedDocument?: Document;
+  attachments: Attachment[];
+  mentionedUserIds: string[];
+  mentionedUsers?: User[];
+  likesCount: number;
+  commentsCount: number;
+  sharesCount: number;
+  isPinned: boolean;
+  isEdited: boolean;
+  isDeleted: boolean;
+  isLiked?: boolean;
+  isBookmarked?: boolean;
+  reactions?: WallPostReaction[];
+  comments?: WallComment[];
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface WallComment {
+  id: UUID;
+  postId: UUID;
+  authorId: UUID;
+  author?: User;
+  parentId?: UUID;
+  content: string;
+  likesCount: number;
+  isEdited: boolean;
+  isDeleted: boolean;
+  isLiked?: boolean;
+  replies?: WallComment[];
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface WallBookmark {
+  postId: UUID;
+  post?: WallPost;
+  userId: UUID;
+  createdAt: Timestamp;
+}
+
+export interface WallFeedFilter {
+  feedType: 'forYou' | 'following' | 'mda' | 'trending';
+  authorId?: UUID;
+  search?: string;
+  postType?: WallPostType;
+  page: number;
+  limit: number;
+}
+
+export interface CreateWallPostOptions {
+  content: string;
+  visibility: PostVisibility;
+  customListId?: UUID;
+  postType?: WallPostType;
+  attachments?: File[];
+  mentionedUserIds?: string[];
+  sharedPostId?: UUID;
+  sharedDocumentId?: UUID;
+}
+
+// ============================================================================
+// Enhanced Direct Message Types
+// ============================================================================
+
+export interface DMConversation {
+  id: UUID;
+  participant1Id: UUID;
+  participant2Id: UUID;
+  participant?: User;
+  lastMessageId?: UUID;
+  lastMessage?: EnhancedDirectMessage;
+  lastMessageAt?: Timestamp;
+  unreadCount: number;
+  isPinned?: boolean;
+  isMuted?: boolean;
+  createdAt: Timestamp;
+}
+
+export interface EnhancedDirectMessage {
+  id: UUID;
+  conversationId: UUID;
+  senderId: UUID;
+  sender?: User;
+  content: string;
+  attachments: Attachment[];
+  replyToId?: UUID;
+  replyTo?: EnhancedDirectMessage;
+  reactions: MessageReaction[];
+  isRead: boolean;
+  readAt?: Timestamp;
+  isEdited: boolean;
+  isDeleted: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface DMReaction {
+  id: UUID;
+  messageId: UUID;
+  userId: UUID;
+  user?: User;
+  emoji: string;
+  createdAt: Timestamp;
+}
+
+// ============================================================================
+// Presence Types
+// ============================================================================
+
+export type PresenceStatus = 'online' | 'away' | 'busy' | 'offline';
+
+export interface UserPresence {
+  userId: UUID;
+  user?: User;
+  status: PresenceStatus;
+  lastSeenAt: Timestamp;
+  currentActivity?: string;
+}
+
+export interface TypingStatus {
+  roomId: UUID;
+  roomType: 'dm' | 'chat' | 'group';
+  userId: UUID;
+  user?: User;
+  timestamp: Timestamp;
+}
+
+// ============================================================================
+// Social Notification Types (Extensions)
+// ============================================================================
+
+export type SocialNotificationType =
+  | 'follow'
+  | 'connection_request'
+  | 'connection_accepted'
+  | 'wall_like'
+  | 'wall_comment'
+  | 'wall_mention'
+  | 'wall_share'
+  | 'dm_message';
+
+// ============================================================================
+// Social Activity Types
+// ============================================================================
+
+export type SocialActivityType =
+  | 'followed_user'
+  | 'unfollowed_user'
+  | 'connection_sent'
+  | 'connection_accepted'
+  | 'created_post'
+  | 'liked_post'
+  | 'commented_post'
+  | 'shared_post'
+  | 'shared_document'
+  | 'earned_badge'
+  | 'level_up';
+
+export interface SocialActivity {
+  id: UUID;
+  userId: UUID;
+  user?: User;
+  activityType: SocialActivityType;
+  targetUserId?: UUID;
+  targetUser?: User;
+  targetId?: UUID;
+  targetType?: 'post' | 'comment' | 'document' | 'badge';
+  metadata?: Record<string, unknown>;
+  createdAt: Timestamp;
+}

@@ -13,12 +13,17 @@ import {
   LogOut,
   Shield,
   Sparkles,
+  UserPlus,
+  Users,
+  Check,
+  Clock,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
+import { useSocialStore } from '@/stores/socialStore';
 import { Avatar } from '@/components/shared/Avatar';
 import { Badge } from '@/components/shared/Badge';
 import { Dropdown, DropdownItem, DropdownDivider, DropdownLabel } from '@/components/shared/Dropdown';
@@ -32,11 +37,17 @@ export function Header() {
   const { sidebar, toggleMobileMenu, toggleSearch, isSearchOpen, searchQuery, setSearchQuery } = useUIStore();
   const { notifications, summary, fetchNotifications, fetchSummary, markAsRead, markAllAsRead } = useNotificationStore();
   const { stats } = useGamificationStore();
+  const {
+    pendingRequests,
+    fetchPendingRequests,
+    respondToConnectionRequest,
+  } = useSocialStore();
 
-  // Fetch notifications on mount
+  // Fetch notifications and friend requests on mount
   useEffect(() => {
     fetchNotifications();
     fetchSummary();
+    fetchPendingRequests();
   }, []);
 
   const unreadCount = summary?.unreadTotal || 0;
@@ -99,7 +110,7 @@ export function Header() {
         </div>
 
         {/* Right section */}
-        <div className="flex items-center gap-2 lg:gap-4">
+        <div className="flex items-center gap-1.5 lg:gap-3">
           {/* XP Display */}
           {stats && (
             <Link
@@ -118,6 +129,114 @@ export function Header() {
 
           {/* Animated Theme Toggle */}
           <AnimatedThemeToggle size="md" />
+
+          {/* Friend Requests */}
+          <Dropdown
+            trigger={
+              <button
+                aria-label={`Friend requests${pendingRequests.length > 0 ? ` (${pendingRequests.length} pending)` : ''}`}
+                className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+              >
+                <UserPlus className="w-5 h-5" />
+                {pendingRequests.length > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-lg"
+                  >
+                    {pendingRequests.length > 9 ? '9+' : pendingRequests.length}
+                  </motion.span>
+                )}
+              </button>
+            }
+            align="right"
+            className="w-80"
+          >
+            <div className="px-4 py-3 border-b border-surface-200 dark:border-surface-700 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
+                  <Users className="w-4 h-4 text-emerald-500" />
+                  Connection Requests
+                </h3>
+                {pendingRequests.length > 0 && (
+                  <Badge variant="success" size="sm">
+                    {pendingRequests.length} new
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <div className="max-h-80 overflow-y-auto">
+              {pendingRequests.length > 0 ? (
+                pendingRequests.slice(0, 5).map((request) => (
+                  <div
+                    key={request.id}
+                    className="px-4 py-3 hover:bg-surface-50 dark:hover:bg-surface-700/50 border-b border-surface-100 dark:border-surface-700/50 last:border-b-0"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Link to={`/profile/${request.userId}`}>
+                        <Avatar
+                          src={request.user?.avatar}
+                          name={request.user?.displayName || 'User'}
+                          size="md"
+                        />
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        <Link
+                          to={`/profile/${request.userId}`}
+                          className="font-medium text-sm text-surface-900 dark:text-surface-100 hover:text-primary-600 dark:hover:text-primary-400 truncate block"
+                        >
+                          {request.user?.displayName || 'User'}
+                        </Link>
+                        <p className="text-xs text-surface-500 truncate">
+                          {request.user?.title || request.connectionType || 'wants to connect'}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              respondToConnectionRequest(request.userId, true);
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+                          >
+                            <Check className="w-3 h-3" />
+                            Accept
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              respondToConnectionRequest(request.userId, false);
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                            Decline
+                          </button>
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-surface-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {formatRelativeTime(request.requestedAt)}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-8 text-center text-surface-500">
+                  <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No pending requests</p>
+                  <p className="text-xs mt-1">You're all caught up!</p>
+                </div>
+              )}
+            </div>
+            <div className="px-4 py-3 border-t border-surface-200 dark:border-surface-700">
+              <Link
+                to="/network?tab=connections"
+                className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+              >
+                View all connections
+              </Link>
+            </div>
+          </Dropdown>
 
           {/* Notifications */}
           <Dropdown

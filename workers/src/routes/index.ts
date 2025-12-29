@@ -17,6 +17,12 @@ export { backupRoutes, createScheduledBackup } from './backup';
 export { adminUsersRoutes } from './admin-users';
 export { researchRoutes } from './research';
 
+// Phase 1 Social Networking Routes
+export { default as socialRoutes } from './social';
+export { default as wallRoutes } from './wall';
+export { default as dmRoutes } from './dm';
+export { default as presenceRoutes } from './presence';
+
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
 

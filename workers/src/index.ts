@@ -26,6 +26,11 @@ import {
   adminUsersRoutes,
   broadcastsRoutes,
   researchRoutes,
+  // Phase 1 Social Networking
+  socialRoutes,
+  wallRoutes,
+  dmRoutes,
+  presenceRoutes,
 } from './routes';
 
 export interface Env {
@@ -123,6 +128,7 @@ app.use('/api/v1/users/*', authMiddleware);
 app.use('/api/v1/bookmarks/*', authMiddleware);
 // Forum, Gamification, Chat, and Groups handle their own auth (some endpoints are public)
 // News routes handle their own auth - some are public (categories, sources, articles list)
+app.use('/api/v1/notifications', authMiddleware);
 app.use('/api/v1/notifications/*', authMiddleware);
 app.use('/api/v1/settings/*', authMiddleware);
 app.use('/api/v1/admin/*', authMiddleware);
@@ -142,6 +148,13 @@ app.route('/api/v1/admin/users', adminUsersRoutes);
 app.route('/api/v1/counselor', counselorRoutes);
 app.route('/api/v1/broadcasts', broadcastsRoutes);
 app.route('/api/v1/research', researchRoutes);
+
+// Phase 1 Social Networking Routes
+// Social, Wall, and DM routes handle their own auth (some endpoints are public for profiles)
+app.route('/api/v1/social', socialRoutes);
+app.route('/api/v1/wall', wallRoutes);
+app.route('/api/v1/dm', dmRoutes);
+app.route('/api/v1/presence', presenceRoutes);
 
 // News aggregation admin endpoints
 app.post('/api/v1/admin/news/aggregate', authMiddleware, async (c) => {
