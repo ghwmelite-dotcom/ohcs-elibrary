@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/utils/cn';
 import { useUIStore } from '@/stores/uiStore';
 import { useNotificationsStore } from '@/stores/notificationsStore';
@@ -8,11 +9,27 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { OfflineIndicator } from '@/components/shared/OfflineIndicator';
+import {
+  ActivityNudge,
+  useWellnessNudge,
+  SmartNotificationBanner,
+  useSmartWellnessNotifications,
+  WellnessPulse,
+} from '@/components/wellness';
+import { Sparkles, Trophy } from 'lucide-react';
+import { Modal } from '@/components/shared/Modal';
+import { Button } from '@/components/shared/Button';
 
 export function MainLayout() {
   const { sidebar } = useUIStore();
   const { fetchNotifications, startPolling, stopPolling } = useNotificationsStore();
   const { fetchStats, fetchLeaderboard } = useGamificationStore();
+  const { showNudge, dismissNudge, acceptNudge } = useWellnessNudge();
+  const {
+    notification: smartNotification,
+    dismissNotification: dismissSmartNotification,
+    acceptNotification: acceptSmartNotification,
+  } = useSmartWellnessNotifications();
 
   // Fetch initial data
   useEffect(() => {
@@ -56,14 +73,32 @@ export function MainLayout() {
 
       {/* Level Up Modal */}
       <LevelUpModal />
+
+      {/* Wellness Activity Nudge */}
+      <AnimatePresence>
+        {showNudge && (
+          <ActivityNudge onDismiss={dismissNudge} onAccept={acceptNudge} />
+        )}
+      </AnimatePresence>
+
+      {/* Smart Wellness Notifications */}
+      <AnimatePresence>
+        {smartNotification && (
+          <SmartNotificationBanner
+            notification={smartNotification}
+            onDismiss={dismissSmartNotification}
+            onAccept={acceptSmartNotification}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Floating Wellness Pulse (subtle ambient reminder) */}
+      <WellnessPulse onClick={() => window.location.href = '/wellness'} />
     </div>
   );
 }
 
 // XP earned notification
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
-
 function XPNotification() {
   const { showXPNotification, lastXPGain, dismissXPNotification } = useGamificationStore();
 
@@ -87,10 +122,6 @@ function XPNotification() {
 }
 
 // Level up celebration modal
-import { Modal } from '@/components/shared/Modal';
-import { Button } from '@/components/shared/Button';
-import { Trophy } from 'lucide-react';
-
 function LevelUpModal() {
   const { showLevelUpModal, dismissLevelUpModal, stats } = useGamificationStore();
 

@@ -35,7 +35,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
 import { useLibraryStore } from '@/stores/libraryStore';
 import { useForumStore } from '@/stores/forumStore';
-import { WellnessDashboardCard } from '@/components/wellness';
+import { EnhancedWellnessDashboardCard } from '@/components/wellness';
 import { cn } from '@/utils/cn';
 
 // ============================================================================
@@ -766,7 +766,7 @@ export default function Dashboard() {
           transition={{ delay: 0.15 }}
           className="mb-8"
         >
-          <WellnessDashboardCard />
+          <EnhancedWellnessDashboardCard />
         </motion.div>
 
         {/* Quick Stats */}
