@@ -52,7 +52,7 @@ export function WelcomeCard({ onStartChat }: WelcomeCardProps) {
       icon: History,
       label: 'Past Sessions',
       description: 'Continue a conversation',
-      onClick: () => navigate('/wellness/history'),
+      onClick: () => navigate('/wellness/chat'),
       primary: false,
     },
     {

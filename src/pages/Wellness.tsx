@@ -12,6 +12,10 @@ import {
   ChevronRight,
   AlertTriangle,
   RefreshCw,
+  Phone,
+  Mail,
+  MapPin,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
 import {
@@ -94,6 +98,7 @@ export default function Wellness() {
   const [showNewSession, setShowNewSession] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<CounselorTopic | undefined>();
   const [isStarting, setIsStarting] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   // Fetch data on mount
   useEffect(() => {
@@ -289,7 +294,7 @@ export default function Wellness() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate('/wellness/history')}
+                      onClick={() => navigate('/wellness/chat')}
                       className="text-teal-600"
                     >
                       View all
@@ -446,6 +451,7 @@ export default function Wellness() {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => setShowContactModal(true)}
                   className="w-full border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30"
                 >
                   Contact Counseling Unit
@@ -454,6 +460,120 @@ export default function Wellness() {
             </div>
           </div>
         </div>
+
+        {/* Contact Counseling Unit Modal */}
+        {showContactModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowContactModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6 relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setShowContactModal(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/30">
+                  <Heart className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    Counseling Unit
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Professional support when you need it
+                  </p>
+                </div>
+              </div>
+
+              {/* Contact Info */}
+              <div className="space-y-4 mb-6">
+                <a
+                  href="tel:+233302123456"
+                  className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors group"
+                >
+                  <div className="p-2.5 rounded-lg bg-teal-100 dark:bg-teal-900/30">
+                    <Phone className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
+                    <p className="font-medium text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                      +233 30 212 3456
+                    </p>
+                  </div>
+                </a>
+
+                <a
+                  href="mailto:counseling@ohcs.gov.gh"
+                  className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors group"
+                >
+                  <div className="p-2.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                    <Mail className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
+                    <p className="font-medium text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                      counseling@ohcs.gov.gh
+                    </p>
+                  </div>
+                </a>
+
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50">
+                  <div className="p-2.5 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                    <MapPin className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Office</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      OHCS Building, Room 215
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Accra, Ghana
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hours */}
+              <div className="p-4 rounded-xl bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 mb-6">
+                <h3 className="font-medium text-gray-900 dark:text-white mb-2">
+                  Office Hours
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Monday - Friday: 8:00 AM - 5:00 PM
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <span className="text-teal-600 dark:text-teal-400 font-medium">
+                    24/7 Crisis Line:
+                  </span>{' '}
+                  +233 30 212 9999
+                </p>
+              </div>
+
+              {/* CTA */}
+              <Button
+                onClick={() => setShowContactModal(false)}
+                className="w-full"
+              >
+                Got it, thanks!
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
       </div>
     </WellnessErrorBoundary>
   );
