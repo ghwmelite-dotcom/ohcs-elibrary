@@ -378,64 +378,93 @@ export default function WellnessChat() {
           </div>
         )}
 
-        {/* Escalation modal */}
+        {/* Escalation modal - Fully Responsive */}
         <AnimatePresence>
           {showEscalation && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50"
               onClick={() => setShowEscalation(false)}
             >
               <motion.div
-                initial={{ scale: 0.95, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.95, y: 20 }}
+                initial={{ opacity: 0, y: 100, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 100, scale: 0.95 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full"
+                className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:mx-4 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/30 shadow-inner">
-                    <PhoneCall className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                {/* Mobile drag indicator */}
+                <div className="sm:hidden flex justify-center pt-3 pb-1">
+                  <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+                </div>
+
+                {/* Header */}
+                <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-gray-100 dark:border-gray-700/50">
+                  <div className="flex items-center gap-3">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
+                      className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/30 shadow-inner shrink-0"
+                    >
+                      <PhoneCall className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 dark:text-amber-400" />
+                    </motion.div>
+                    <div className="min-w-0">
+                      <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                        Request CSEAP Counselor
+                      </h2>
+                      <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 font-medium truncate">
+                        Civil Service Employee Assistance Programme
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Request CSEAP Counselor
-                    </h2>
-                    <p className="text-xs text-amber-600 dark:text-amber-500 font-medium">
-                      Civil Service Employee Assistance Programme
+                </div>
+
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-4">
+                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">
+                    Our trained CSEAP counselors are here to provide confidential support.
+                    Please share what you'd like help with (optional):
+                  </p>
+
+                  <textarea
+                    value={escalationReason}
+                    onChange={(e) => setEscalationReason(e.target.value)}
+                    placeholder="Tell us briefly what you need help with..."
+                    rows={4}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm sm:text-base touch-manipulation"
+                  />
+
+                  {/* Info note */}
+                  <div className="mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/50">
+                    <p className="text-xs text-amber-700 dark:text-amber-400">
+                      <span className="font-semibold">Confidential:</span> Your request will be handled privately by our professional counselors.
                     </p>
                   </div>
                 </div>
 
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  Our trained CSEAP counselors are here to provide confidential support.
-                  Please share what you'd like help with (optional):
-                </p>
-
-                <textarea
-                  value={escalationReason}
-                  onChange={(e) => setEscalationReason(e.target.value)}
-                  placeholder="Tell us briefly what you need help with..."
-                  rows={3}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 mb-4"
-                />
-
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowEscalation(false)}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleEscalate}
-                    className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-amber-500/25"
-                  >
-                    Contact CSEAP
-                  </Button>
+                {/* Fixed Bottom Actions */}
+                <div className="shrink-0 px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700/50">
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowEscalation(false)}
+                      className="flex-1 py-2.5 sm:py-2 text-sm sm:text-base touch-manipulation"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleEscalate}
+                      className="flex-1 py-2.5 sm:py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:from-amber-700 active:to-orange-700 shadow-lg shadow-amber-500/25 text-sm sm:text-base touch-manipulation"
+                    >
+                      Contact CSEAP
+                    </Button>
+                  </div>
+                  {/* Safe area padding for notched devices */}
+                  <div className="h-safe-area-inset-bottom" />
                 </div>
               </motion.div>
             </motion.div>
