@@ -6,7 +6,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Ghana National Colors
+        // Ghana Color Shortcuts (for classes like bg-ghana-green, text-ghana-gold)
+        'ghana-green': '#006B3F',
+        'ghana-gold': '#FCD116',
+        'ghana-red': '#CE1126',
+        // Ghana National Colors (full palette)
         ghana: {
           green: {
             50: '#e6f5ee',
@@ -19,6 +23,7 @@ const config: Config = {
             700: '#004026',
             800: '#002b19',
             900: '#00150d',
+            DEFAULT: '#006B3F',
           },
           gold: {
             50: '#fffdf0',
@@ -31,6 +36,7 @@ const config: Config = {
             700: '#b39200',
             800: '#806900',
             900: '#4d3f00',
+            DEFAULT: '#FCD116',
           },
           red: {
             50: '#fdf2f3',
@@ -43,6 +49,7 @@ const config: Config = {
             700: '#7c0a17',
             800: '#520710',
             900: '#290308',
+            DEFAULT: '#CE1126',
           },
           black: '#000000', // Black Star
         },

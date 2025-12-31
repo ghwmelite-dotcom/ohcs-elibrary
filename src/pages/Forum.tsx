@@ -38,6 +38,7 @@ export default function Forum() {
   } = useForumStore();
   const [activeTab, setActiveTab] = useState('categories');
   const [showNewTopic, setShowNewTopic] = useState(false);
+  const [showMobileStats, setShowMobileStats] = useState(false);
 
   // Collapsible stats sidebar state with localStorage persistence
   const [isStatsCollapsed, setIsStatsCollapsed] = useState(() => {
@@ -321,25 +322,60 @@ export default function Forum() {
           </motion.div>
         </motion.div>
 
-        {/* Mobile Stats - Always visible on mobile */}
-        <div className="lg:hidden fixed bottom-4 right-4 z-40">
-          <motion.button
-            onClick={toggleStats}
-            className="w-12 h-12 rounded-full bg-primary-500 text-white shadow-lg flex items-center justify-center"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <BarChart3 className="w-5 h-5" />
-          </motion.button>
-        </div>
+        {/* Mobile Stats FAB */}
+        <motion.button
+          onClick={() => setShowMobileStats(true)}
+          className="lg:hidden fixed bottom-20 right-4 z-40 w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-xl shadow-primary-500/30 flex items-center justify-center"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <BarChart3 className="w-6 h-6" />
+        </motion.button>
       </div>
 
-      {/* Mobile Stats Modal */}
+      {/* Mobile Stats Drawer */}
       <AnimatePresence>
-        {isStatsCollapsed === false && (
-          <div className="lg:hidden">
-            {/* This will show in the normal flow on mobile */}
-          </div>
+        {showMobileStats && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMobileStats(false)}
+              className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+              className="lg:hidden fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-surface-800 rounded-t-3xl shadow-2xl max-h-[80vh] overflow-hidden"
+            >
+              {/* Drag Handle */}
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="w-10 h-1 bg-surface-300 dark:bg-surface-600 rounded-full" />
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 pb-3 border-b border-surface-200 dark:border-surface-700">
+                <h3 className="text-lg font-bold text-surface-900 dark:text-white flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-primary-500" />
+                  Forum Statistics
+                </h3>
+                <button
+                  onClick={() => setShowMobileStats(false)}
+                  className="p-2 rounded-xl bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600"
+                >
+                  <ChevronRight className="w-5 h-5 text-surface-500 rotate-90" />
+                </button>
+              </div>
+
+              {/* Stats Content */}
+              <div className="p-4 overflow-y-auto max-h-[calc(80vh-80px)]">
+                <ForumStats stats={forumStats} />
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

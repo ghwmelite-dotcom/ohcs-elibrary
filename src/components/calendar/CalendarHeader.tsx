@@ -197,10 +197,10 @@ export default function CalendarHeader({ onCreateEvent }: CalendarHeaderProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => onCreateEvent()}
-              className="hidden md:flex items-center gap-1.5 px-3 py-2 bg-ghana-green hover:bg-ghana-green/90 text-white rounded-xl text-sm font-medium shadow-sm transition-colors"
+              className="hidden md:flex items-center gap-1.5 px-3 py-2 bg-ghana-green hover:bg-ghana-green/90 text-white rounded-xl text-sm font-medium shadow-md transition-colors"
             >
               <Plus className="w-4 h-4" />
-              <span className="hidden lg:inline">New Event</span>
+              <span>New Event</span>
             </motion.button>
           )}
         </div>

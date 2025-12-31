@@ -220,15 +220,15 @@ export default function EventForm({
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
           />
 
-          {/* Modal - Bottom sheet on mobile, centered on desktop */}
+          {/* Modal - Full screen on mobile, centered on desktop */}
           <motion.div
-            initial={{ opacity: 0, y: '100%' }}
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: '100%' }}
+            exit={{ opacity: 0, y: 50 }}
             transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-            className="fixed inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 w-full sm:w-[95%] sm:max-w-2xl"
+            className="fixed inset-2 sm:inset-4 md:inset-auto md:top-[5%] md:left-1/2 md:-translate-x-1/2 z-50 w-auto md:w-[90%] md:max-w-2xl md:max-h-[90vh]"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-2xl h-full md:h-auto md:max-h-[90vh] flex flex-col overflow-hidden">
               {/* Drag Handle - Mobile */}
               <div className="sm:hidden flex justify-center pt-3 pb-1">
                 <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />

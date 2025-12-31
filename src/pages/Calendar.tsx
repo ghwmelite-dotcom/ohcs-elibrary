@@ -429,7 +429,7 @@ export default function CalendarPage() {
                 className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-ghana-green to-emerald-600 hover:from-ghana-green/90 hover:to-emerald-600/90 text-white rounded-xl font-medium shadow-lg shadow-ghana-green/25 transition-all"
               >
                 <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden lg:inline">New Event</span>
+                <span>New Event</span>
               </motion.button>
             </div>
           </div>
