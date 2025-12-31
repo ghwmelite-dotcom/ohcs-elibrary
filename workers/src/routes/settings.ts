@@ -4,6 +4,122 @@ import type { Env } from '../index';
 const app = new Hono<{ Bindings: Env }>();
 
 // =====================================================
+// SYSTEM SETTINGS (Admin only)
+// =====================================================
+
+// GET /settings/system - Get system settings (admin only)
+app.get('/system', async (c) => {
+  const user = c.get('user');
+  if (!user || !['admin', 'super_admin'].includes(user.role)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  try {
+    // Get all system settings from KV or DB
+    const settings = await c.env.DB.prepare(`
+      SELECT key, value FROM system_settings
+    `).all();
+
+    // Convert to object
+    const settingsObj: Record<string, string> = {};
+    for (const row of settings.results || []) {
+      settingsObj[row.key as string] = row.value as string;
+    }
+
+    // Return with defaults for missing keys
+    return c.json({
+      siteName: settingsObj.siteName || 'OHCS E-Library',
+      siteDescription: settingsObj.siteDescription || 'Digital knowledge platform for Ghana Civil Service',
+      supportEmail: settingsObj.supportEmail || 'support@ohcs.gov.gh',
+      siteUrl: settingsObj.siteUrl || 'https://elibrary.ohcs.gov.gh',
+      timezone: settingsObj.timezone || 'Africa/Accra',
+      language: settingsObj.language || 'en',
+      allowRegistration: settingsObj.allowRegistration === 'true',
+      requireEmailVerification: settingsObj.requireEmailVerification !== 'false',
+      allowPublicAccess: settingsObj.allowPublicAccess === 'true',
+      maintenanceMode: settingsObj.maintenanceMode === 'true',
+      restrictToGovEmail: settingsObj.restrictToGovEmail !== 'false',
+      sessionTimeout: settingsObj.sessionTimeout || '60',
+      maxLoginAttempts: settingsObj.maxLoginAttempts || '5',
+      lockoutDuration: settingsObj.lockoutDuration || '15',
+      passwordMinLength: settingsObj.passwordMinLength || '12',
+      requireTwoFactor: settingsObj.requireTwoFactor === 'true',
+      requireUppercase: settingsObj.requireUppercase !== 'false',
+      requireNumbers: settingsObj.requireNumbers !== 'false',
+      requireSymbols: settingsObj.requireSymbols !== 'false',
+      passwordExpiry: settingsObj.passwordExpiry || '90',
+      emailNotifications: settingsObj.emailNotifications !== 'false',
+      pushNotifications: settingsObj.pushNotifications !== 'false',
+      smsNotifications: settingsObj.smsNotifications === 'true',
+      digestFrequency: settingsObj.digestFrequency || 'daily',
+      notifyNewUsers: settingsObj.notifyNewUsers !== 'false',
+      notifyNewDocuments: settingsObj.notifyNewDocuments !== 'false',
+      notifySecurityAlerts: settingsObj.notifySecurityAlerts !== 'false',
+      smtpHost: settingsObj.smtpHost || '',
+      smtpPort: settingsObj.smtpPort || '587',
+      smtpUsername: settingsObj.smtpUsername || '',
+      fromAddress: settingsObj.fromAddress || 'noreply@ohcs.gov.gh',
+      fromName: settingsObj.fromName || 'OHCS E-Library',
+      smtpEncryption: settingsObj.smtpEncryption || 'tls',
+      maxUploadSize: settingsObj.maxUploadSize || '50',
+      allowedFileTypes: settingsObj.allowedFileTypes || 'pdf,doc,docx,xls,xlsx,ppt,pptx',
+      autoDeleteDays: settingsObj.autoDeleteDays || '0',
+      compressUploads: settingsObj.compressUploads !== 'false',
+      primaryColor: settingsObj.primaryColor || '#006B3F',
+      accentColor: settingsObj.accentColor || '#FCD116',
+      darkModeDefault: settingsObj.darkModeDefault === 'true',
+      showFooter: settingsObj.showFooter !== 'false',
+    });
+  } catch (error) {
+    console.error('Error fetching system settings:', error);
+    return c.json({ error: 'Failed to fetch system settings' }, 500);
+  }
+});
+
+// PUT /settings/system - Update system settings (admin only)
+app.put('/system', async (c) => {
+  const user = c.get('user');
+  if (!user || !['admin', 'super_admin'].includes(user.role)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  try {
+    const body = await c.req.json();
+
+    // List of allowed setting keys
+    const allowedKeys = [
+      'siteName', 'siteDescription', 'supportEmail', 'siteUrl', 'timezone', 'language',
+      'allowRegistration', 'requireEmailVerification', 'allowPublicAccess', 'maintenanceMode', 'restrictToGovEmail',
+      'sessionTimeout', 'maxLoginAttempts', 'lockoutDuration', 'passwordMinLength', 'requireTwoFactor',
+      'requireUppercase', 'requireNumbers', 'requireSymbols', 'passwordExpiry',
+      'emailNotifications', 'pushNotifications', 'smsNotifications', 'digestFrequency',
+      'notifyNewUsers', 'notifyNewDocuments', 'notifySecurityAlerts',
+      'smtpHost', 'smtpPort', 'smtpUsername', 'smtpPassword', 'fromAddress', 'fromName', 'smtpEncryption',
+      'maxUploadSize', 'allowedFileTypes', 'autoDeleteDays', 'compressUploads',
+      'primaryColor', 'accentColor', 'darkModeDefault', 'showFooter',
+    ];
+
+    // Upsert each setting
+    for (const key of allowedKeys) {
+      if (body[key] !== undefined) {
+        const value = typeof body[key] === 'boolean' ? body[key].toString() : String(body[key]);
+
+        await c.env.DB.prepare(`
+          INSERT INTO system_settings (key, value, updatedAt, updatedBy)
+          VALUES (?, ?, datetime('now'), ?)
+          ON CONFLICT(key) DO UPDATE SET value = ?, updatedAt = datetime('now'), updatedBy = ?
+        `).bind(key, value, user.id, value, user.id).run();
+      }
+    }
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('Error updating system settings:', error);
+    return c.json({ error: 'Failed to update system settings' }, 500);
+  }
+});
+
+// =====================================================
 // USER SETTINGS (Preferences)
 // =====================================================
 

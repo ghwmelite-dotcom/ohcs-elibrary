@@ -619,12 +619,56 @@ export default function AdminSettings() {
     customCss: '',
   });
 
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  // Fetch system settings on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/settings/system`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(prev => ({ ...prev, ...data }));
+          setSettingsLoaded(true);
+        }
+      } catch (error) {
+        console.error('Failed to fetch system settings:', error);
+      }
+    };
+
+    if (token) {
+      fetchSettings();
+    }
+  }, [token]);
+
   const handleSave = async () => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    setShowSaveSuccess(true);
-    setTimeout(() => setShowSaveSuccess(false), 3000);
+    try {
+      const response = await fetch(`${API_BASE}/settings/system`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(settings),
+      });
+
+      if (response.ok) {
+        setShowSaveSuccess(true);
+        setTimeout(() => setShowSaveSuccess(false), 3000);
+      } else {
+        const error = await response.json();
+        console.error('Failed to save settings:', error);
+        alert('Failed to save settings: ' + (error.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Failed to save settings. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const tabs = [
