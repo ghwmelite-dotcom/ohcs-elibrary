@@ -1,6 +1,6 @@
 /**
  * Calendar Page
- * Main calendar view with events, holidays, and scheduling
+ * Stunning, sleek, and fully responsive calendar view
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react';
@@ -9,21 +9,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar as CalendarIcon,
   Settings,
-  Download,
   RefreshCw,
   Check,
   X,
-  Moon,
-  Sun,
   Bell,
   Eye,
   EyeOff,
   Clock,
   FileDown,
   Sparkles,
+  Menu,
+  ChevronDown,
+  Filter,
+  Plus,
 } from 'lucide-react';
 import { useCalendarStore } from '@/stores/calendarStore';
-import { useThemeStore } from '@/stores/themeStore';
 import {
   CalendarHeader,
   CalendarSidebar,
@@ -35,7 +35,6 @@ import type { CalendarEvent, GhanaHoliday } from '@/types/calendar';
 
 export default function CalendarPage() {
   const navigate = useNavigate();
-  const { theme } = useThemeStore();
 
   const {
     events,
@@ -60,9 +59,12 @@ export default function CalendarPage() {
   const [showEventForm, setShowEventForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [defaultEventDate, setDefaultEventDate] = useState<Date | undefined>(undefined);
+
+  // Mobile sidebar
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Action button states
+  // Action states
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshSuccess, setRefreshSuccess] = useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
@@ -78,6 +80,18 @@ export default function CalendarPage() {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close mobile sidebar on route change or escape
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowMobileSidebar(false);
+        setShowSettingsDropdown(false);
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
   }, []);
 
   // Initial data fetch
@@ -98,15 +112,14 @@ export default function CalendarPage() {
   const handleEventClick = useCallback((event: CalendarEvent) => {
     setSelectedEvent(event);
     setShowEventModal(true);
+    setShowMobileSidebar(false);
   }, []);
 
   const handleHolidayClick = useCallback((holiday: GhanaHoliday) => {
-    // Could show a toast or modal with holiday info
     console.log('Holiday clicked:', holiday);
   }, []);
 
   const handleDateClick = useCallback((date: Date) => {
-    // View day events
     console.log('Date clicked:', date);
   }, []);
 
@@ -114,6 +127,7 @@ export default function CalendarPage() {
     setSelectedEvent(null);
     setDefaultEventDate(date);
     setShowEventForm(true);
+    setShowMobileSidebar(false);
   }, []);
 
   const handleEditEvent = useCallback((event: CalendarEvent) => {
@@ -139,7 +153,6 @@ export default function CalendarPage() {
   }, [navigate]);
 
   const handleEventFormSuccess = useCallback(() => {
-    // Refresh events
     const startDate = visibleRange.start.toISOString().split('T')[0];
     const endDate = visibleRange.end.toISOString().split('T')[0];
     fetchEvents(startDate, endDate);
@@ -181,11 +194,9 @@ export default function CalendarPage() {
       'X-WR-TIMEZONE:Africa/Accra',
     ];
 
-    // Add events
     events.forEach(event => {
       const startDate = new Date(event.startDate);
       const endDate = new Date(event.endDate);
-
       icsContent.push(
         'BEGIN:VEVENT',
         `UID:${event.id}@ohcs-elibrary`,
@@ -200,12 +211,9 @@ export default function CalendarPage() {
       );
     });
 
-    // Add holidays
     holidays.forEach(holiday => {
-      const date = new Date(holiday.date);
-      const nextDay = new Date(date);
+      const nextDay = new Date(holiday.date);
       nextDay.setDate(nextDay.getDate() + 1);
-
       icsContent.push(
         'BEGIN:VEVENT',
         `UID:${holiday.id}@ohcs-elibrary`,
@@ -221,7 +229,6 @@ export default function CalendarPage() {
 
     icsContent.push('END:VCALENDAR');
 
-    // Create and download file
     const blob = new Blob([icsContent.filter(line => line).join('\r\n')], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -237,261 +244,227 @@ export default function CalendarPage() {
   }, [events, holidays, selectedDate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-ghana-green/5 dark:from-gray-900 dark:via-gray-900 dark:to-ghana-green/10">
-      {/* Page Header */}
-      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
-        <div className="px-4 py-4 sm:px-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {/* Title */}
-            <div className="flex items-center gap-4">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="relative"
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {showMobileSidebar && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+              onClick={() => setShowMobileSidebar(false)}
+            />
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed left-0 top-0 bottom-0 w-[85%] max-w-[320px] bg-white dark:bg-gray-800 z-50 lg:hidden shadow-2xl"
+            >
+              <CalendarSidebar
+                onEventClick={handleEventClick}
+                onHolidayClick={handleHolidayClick}
+                isCollapsed={false}
+                onToggleCollapse={() => setShowMobileSidebar(false)}
+                isMobile={true}
+                onClose={() => setShowMobileSidebar(false)}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-700/80">
+        <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            {/* Left: Menu + Title */}
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              {/* Mobile Menu Button */}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowMobileSidebar(true)}
+                className="lg:hidden p-2 -ml-1 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
               >
-                <div className="p-3 bg-gradient-to-br from-ghana-green to-ghana-green/80 rounded-2xl shadow-lg shadow-ghana-green/20">
-                  <CalendarIcon className="w-7 h-7 text-white" />
+                <Menu className="w-5 h-5" />
+              </motion.button>
+
+              {/* Icon */}
+              <div className="hidden sm:flex relative flex-shrink-0">
+                <div className="p-2.5 sm:p-3 bg-gradient-to-br from-ghana-green via-ghana-green to-emerald-600 rounded-xl sm:rounded-2xl shadow-lg shadow-ghana-green/25">
+                  <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ repeat: Infinity, duration: 2, repeatDelay: 3 }}
-                  className="absolute -top-1 -right-1 w-3 h-3 bg-ghana-gold rounded-full"
-                />
-              </motion.div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 via-ghana-green to-ghana-green dark:from-white dark:via-ghana-gold dark:to-ghana-gold bg-clip-text text-transparent">
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-ghana-gold rounded-full ring-2 ring-white dark:ring-gray-900" />
+              </div>
+
+              {/* Title */}
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate">
                   Calendar
                 </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-ghana-gold" />
-                  Training sessions, events & Ghana holidays
+                <p className="hidden sm:flex text-xs sm:text-sm text-gray-500 dark:text-gray-400 items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-ghana-gold flex-shrink-0" />
+                  <span className="truncate">Events & Ghana Holidays</span>
                 </p>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2">
-              {/* Refresh Button */}
+            {/* Right: Actions */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* Stats - Hidden on mobile */}
+              <div className="hidden md:flex items-center gap-2 mr-2">
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-ghana-green/10 dark:bg-ghana-green/20 rounded-lg">
+                  <div className="w-1.5 h-1.5 bg-ghana-green rounded-full" />
+                  <span className="text-xs font-semibold text-ghana-green">{events.length}</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                  <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{holidays.length}</span>
+                </div>
+              </div>
+
+              {/* Refresh */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className={`
-                  relative p-2.5 rounded-xl transition-all duration-300 group
-                  ${refreshSuccess
-                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
-                    : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }
-                `}
-                title="Refresh Calendar"
+                className={`p-2 sm:p-2.5 rounded-xl transition-all ${
+                  refreshSuccess
+                    ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600'
+                    : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'
+                }`}
+                title="Refresh"
               >
-                <AnimatePresence mode="wait">
-                  {refreshSuccess ? (
-                    <motion.div
-                      key="check"
-                      initial={{ scale: 0, rotate: -180 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      exit={{ scale: 0, rotate: 180 }}
-                    >
-                      <Check className="w-5 h-5" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="refresh"
-                      animate={isRefreshing ? { rotate: 360 } : {}}
-                      transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0, ease: 'linear' }}
-                    >
-                      <RefreshCw className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {refreshSuccess ? (
+                  <Check className="w-4 h-4 sm:w-5 sm:h-5" />
+                ) : (
+                  <RefreshCw className={`w-4 h-4 sm:w-5 sm:h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                )}
               </motion.button>
 
-              {/* Export Button */}
+              {/* Export */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleExport}
-                className={`
-                  relative p-2.5 rounded-xl transition-all duration-300
-                  ${exportSuccess
-                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
-                    : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }
-                `}
-                title="Export Calendar (ICS)"
+                className={`p-2 sm:p-2.5 rounded-xl transition-all ${
+                  exportSuccess
+                    ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600'
+                    : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'
+                }`}
+                title="Export ICS"
               >
-                <AnimatePresence mode="wait">
-                  {exportSuccess ? (
-                    <motion.div
-                      key="check"
-                      initial={{ scale: 0, rotate: -180 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      exit={{ scale: 0, rotate: 180 }}
-                    >
-                      <Check className="w-5 h-5" />
-                    </motion.div>
-                  ) : (
-                    <FileDown className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                  )}
-                </AnimatePresence>
+                {exportSuccess ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <FileDown className="w-4 h-4 sm:w-5 sm:h-5" />}
               </motion.button>
 
-              {/* Settings Dropdown */}
+              {/* Settings */}
               <div className="relative" ref={settingsRef}>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
-                  className={`
-                    p-2.5 rounded-xl transition-all duration-300
-                    ${showSettingsDropdown
+                  className={`p-2 sm:p-2.5 rounded-xl transition-all ${
+                    showSettingsDropdown
                       ? 'bg-ghana-green text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }
-                  `}
-                  title="Calendar Settings"
+                      : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'
+                  }`}
+                  title="Settings"
                 >
-                  <Settings className={`w-5 h-5 ${showSettingsDropdown ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`} />
+                  <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
                 </motion.button>
 
                 <AnimatePresence>
                   {showSettingsDropdown && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-56 sm:w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-xl ring-1 ring-black/5 dark:ring-white/10 overflow-hidden z-50"
                     >
-                      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                        <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <div className="p-3 sm:p-4 border-b border-gray-100 dark:border-gray-700">
+                        <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white flex items-center gap-2">
                           <Settings className="w-4 h-4 text-ghana-green" />
-                          Calendar Settings
+                          Settings
                         </h3>
                       </div>
-
-                      <div className="p-2">
-                        {/* Show Holidays Toggle */}
+                      <div className="p-1.5 sm:p-2">
                         <button
-                          onClick={() => {
-                            toggleHolidays();
-                          }}
-                          className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          onClick={toggleHolidays}
+                          className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                         >
-                          <div className="flex items-center gap-3">
-                            {showHolidays ? (
-                              <Eye className="w-5 h-5 text-emerald-500" />
-                            ) : (
-                              <EyeOff className="w-5 h-5 text-gray-400" />
-                            )}
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                              Ghana Holidays
-                            </span>
+                          <div className="flex items-center gap-2.5">
+                            {showHolidays ? <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> : <EyeOff className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />}
+                            <span className="text-sm text-gray-700 dark:text-gray-300">Ghana Holidays</span>
                           </div>
-                          <div className={`w-10 h-6 rounded-full transition-colors ${showHolidays ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
-                            <motion.div
-                              animate={{ x: showHolidays ? 16 : 2 }}
-                              className="w-5 h-5 mt-0.5 bg-white rounded-full shadow-sm"
-                            />
+                          <div className={`w-9 h-5 sm:w-10 sm:h-6 rounded-full transition-colors flex items-center ${showHolidays ? 'bg-emerald-500 justify-end' : 'bg-gray-300 dark:bg-gray-600 justify-start'}`}>
+                            <div className="w-4 h-4 sm:w-5 sm:h-5 mx-0.5 bg-white rounded-full shadow-sm" />
                           </div>
                         </button>
-
-                        {/* Reminder Settings */}
-                        <button
-                          onClick={() => {
-                            setShowSettingsDropdown(false);
-                            // Could open a reminder settings modal
-                          }}
-                          className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <Bell className="w-5 h-5 text-ghana-gold" />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            Default Reminders
-                          </span>
+                        <button className="w-full flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                          <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-ghana-gold" />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">Reminders</span>
                         </button>
-
-                        {/* Working Hours */}
-                        <button
-                          onClick={() => {
-                            setShowSettingsDropdown(false);
-                          }}
-                          className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <Clock className="w-5 h-5 text-blue-500" />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            Working Hours
-                          </span>
+                        <button className="w-full flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                          <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">Working Hours</span>
                         </button>
                       </div>
-
-                      <div className="p-2 border-t border-gray-200 dark:border-gray-700">
-                        <div className="p-3 text-xs text-gray-500 dark:text-gray-400">
-                          Timezone: Africa/Accra (GMT+0)
-                        </div>
+                      <div className="px-4 py-2.5 border-t border-gray-100 dark:border-gray-700">
+                        <p className="text-xs text-gray-400">Africa/Accra (GMT+0)</p>
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* Create Event - Mobile FAB style on small screens */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleCreateEvent()}
+                className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-ghana-green to-emerald-600 hover:from-ghana-green/90 hover:to-emerald-600/90 text-white rounded-xl font-medium shadow-lg shadow-ghana-green/25 transition-all"
+              >
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden lg:inline">New Event</span>
+              </motion.button>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Stats Bar */}
-      <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-b border-gray-200/50 dark:border-gray-700/50 px-4 py-3 sm:px-6">
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-ghana-green/10 dark:bg-ghana-green/20 rounded-lg">
-            <div className="w-2 h-2 bg-ghana-green rounded-full animate-pulse" />
-            <span className="font-medium text-ghana-green dark:text-ghana-green">
-              {events.length} Events
-            </span>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-            <span className="font-medium text-emerald-700 dark:text-emerald-400">
-              {holidays.length} Holidays
-            </span>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-ghana-gold/10 dark:bg-ghana-gold/20 rounded-lg">
-            <div className="w-2 h-2 bg-ghana-gold rounded-full" />
-            <span className="font-medium text-ghana-gold dark:text-ghana-gold">
-              {categories.length} Categories
-            </span>
-          </div>
-        </div>
-      </div>
+      </header>
 
       {/* Error Banner */}
       <AnimatePresence>
         {error && (
           <motion.div
-            initial={{ opacity: 0, y: -10, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: -10, height: 0 }}
-            className="mx-4 mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl flex items-center justify-between"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="border-b border-red-200 dark:border-red-800"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                <X className="w-4 h-4 text-red-600 dark:text-red-400" />
+            <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <X className="w-4 h-4 text-red-500 flex-shrink-0" />
+                <p className="text-sm text-red-700 dark:text-red-400 truncate">{error}</p>
               </div>
-              <p className="text-red-700 dark:text-red-400">{error}</p>
+              <button
+                onClick={clearError}
+                className="text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 flex-shrink-0"
+              >
+                Dismiss
+              </button>
             </div>
-            <button
-              onClick={clearError}
-              className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-            >
-              Dismiss
-            </button>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden" style={{ height: 'calc(100vh - 220px)' }}>
-        {/* Sidebar - Hidden on mobile */}
-        <div className="hidden lg:block">
+      <div className="flex h-[calc(100vh-65px)] sm:h-[calc(100vh-73px)] overflow-hidden">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block flex-shrink-0">
           <CalendarSidebar
             onEventClick={handleEventClick}
             onHolidayClick={handleHolidayClick}
@@ -501,24 +474,22 @@ export default function CalendarPage() {
         </div>
 
         {/* Calendar Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Calendar Header */}
-          <CalendarHeader onCreateEvent={() => handleCreateEvent()} />
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <CalendarHeader onCreateEvent={handleCreateEvent} />
 
-          {/* Calendar Grid */}
           <div className="flex-1 overflow-hidden">
             {isLoading && events.length === 0 ? (
               <div className="flex items-center justify-center h-full bg-white dark:bg-gray-800">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="text-center"
+                  className="text-center p-8"
                 >
-                  <div className="relative">
-                    <div className="w-16 h-16 border-4 border-ghana-green/20 border-t-ghana-green rounded-full animate-spin mx-auto" />
-                    <CalendarIcon className="w-6 h-6 text-ghana-green absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                  <div className="relative inline-flex">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 border-4 border-ghana-green/20 border-t-ghana-green rounded-full animate-spin" />
+                    <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-ghana-green absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                   </div>
-                  <p className="mt-4 text-gray-500 dark:text-gray-400 font-medium">Loading calendar...</p>
+                  <p className="mt-4 text-sm sm:text-base text-gray-500 dark:text-gray-400">Loading calendar...</p>
                 </motion.div>
               </div>
             ) : (
@@ -532,6 +503,18 @@ export default function CalendarPage() {
           </div>
         </div>
       </div>
+
+      {/* Mobile FAB */}
+      <motion.button
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => handleCreateEvent()}
+        className="sm:hidden fixed bottom-6 right-4 z-30 w-14 h-14 bg-gradient-to-br from-ghana-green to-emerald-600 text-white rounded-2xl shadow-xl shadow-ghana-green/30 flex items-center justify-center"
+      >
+        <Plus className="w-6 h-6" />
+      </motion.button>
 
       {/* Event Modal */}
       <EventModal
