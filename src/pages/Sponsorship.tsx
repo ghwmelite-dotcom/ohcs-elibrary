@@ -1078,7 +1078,7 @@ export default function Sponsorship() {
             </a>
           </div>
           <div className="mt-8 pt-8 border-t border-white/10 text-surface-400 text-sm">
-            <p>&copy; 2026 Office of the Head of Civil Service, Ghana. All rights reserved.</p>
+            <p>&copy; {Math.max(2026, new Date().getFullYear())} Office of the Head of Civil Service, Ghana. All rights reserved.</p>
           </div>
         </div>
       </footer>
