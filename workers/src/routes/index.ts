@@ -32,6 +32,9 @@ export { default as kwameRoutes } from './kwame';
 // Learning Management System (LMS)
 export { default as lmsRoutes } from './lms';
 
+// Calendar & Events System
+export { calendarRoutes } from './calendar';
+
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
 

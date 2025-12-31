@@ -37,6 +37,8 @@ import {
   kwameRoutes,
   // Learning Management System (LMS)
   lmsRoutes,
+  // Calendar & Events System
+  calendarRoutes,
 } from './routes';
 
 export interface Env {
@@ -173,6 +175,10 @@ app.route('/api/v1/kwame', kwameRoutes);
 // Learning Management System (LMS)
 // LMS routes handle their own auth internally
 app.route('/api/v1/lms', lmsRoutes);
+
+// Calendar & Events System
+// Calendar routes handle their own auth internally
+app.route('/api/v1/calendar', calendarRoutes);
 
 // News aggregation admin endpoints
 app.post('/api/v1/admin/news/aggregate', authMiddleware, async (c) => {

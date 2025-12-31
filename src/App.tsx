@@ -63,6 +63,10 @@ const WellnessResource = lazy(() => import('@/pages/WellnessResource'));
 // AI Knowledge Assistant
 const Kwame = lazy(() => import('@/pages/Kwame'));
 
+// Calendar & Events
+const CalendarPage = lazy(() => import('@/pages/Calendar'));
+const EventDetail = lazy(() => import('@/pages/EventDetail'));
+
 // Learning Management System (LMS) pages
 const CourseCatalog = lazy(() => import('@/pages/lms/CourseCatalog'));
 const CourseDetail = lazy(() => import('@/pages/lms/CourseDetail'));
@@ -366,6 +370,10 @@ export default function App() {
 
             {/* AI Knowledge Assistant */}
             <Route path="/kwame" element={<Kwame />} />
+
+            {/* Calendar & Events */}
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/calendar/event/:eventId" element={<EventDetail />} />
 
             {/* Learning Management System (LMS) routes */}
             <Route path="/courses" element={<CourseCatalog />} />

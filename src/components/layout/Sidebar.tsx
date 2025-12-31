@@ -26,6 +26,7 @@ import {
   Home,
   Brain,
   Compass,
+  Calendar,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
@@ -74,7 +75,8 @@ const navSections: NavSection[] = [
     items: [
       { path: '/courses', label: 'Course Catalog', icon: Compass, color: 'indigo', tag: { label: 'LMS', color: 'indigo' } },
       { path: '/my-courses', label: 'My Learning', icon: BookOpen, color: 'sky' },
-      { path: '/certificates', label: 'Certificates', icon: BadgeCheck, color: 'green' },
+      { path: '/calendar', label: 'Calendar', icon: Calendar, color: 'green', tag: { label: 'NEW', color: 'green' } },
+      { path: '/certificates', label: 'Certificates', icon: BadgeCheck, color: 'emerald' },
       { path: '/peer-reviews', label: 'Peer Reviews', icon: Users, color: 'violet' },
       { path: '/library', label: 'Library', icon: Library, color: 'amber', tag: { label: 'HOT', color: 'amber' } },
     ],
