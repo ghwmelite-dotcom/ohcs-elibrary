@@ -134,19 +134,52 @@ export default function CalendarSidebar({
 
   if (isCollapsed && !isMobile) {
     return (
-      <div className="w-12 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col items-center py-4">
-        <button
+      <motion.div
+        initial={{ width: 0, opacity: 0 }}
+        animate={{ width: 56, opacity: 1 }}
+        exit={{ width: 0, opacity: 0 }}
+        className="h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col items-center py-4"
+      >
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           onClick={onToggleCollapse}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
+          className="p-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-ghana-green/10 dark:hover:bg-ghana-green/20 text-gray-500 hover:text-ghana-green transition-colors"
+          title="Expand sidebar"
         >
           <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
+        </motion.button>
+
+        {/* Mini indicators */}
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-ghana-green/10 flex items-center justify-center" title={`${events.length} events`}>
+            <Calendar className="w-5 h-5 text-ghana-green" />
+          </div>
+          {showHolidays && (
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center" title={`${holidays.length} holidays`}>
+              <Palmtree className="w-5 h-5 text-emerald-600" />
+            </div>
+          )}
+        </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className={`${isMobile ? 'w-full' : 'w-72 lg:w-80'} h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden`}>
+    <div className={`${isMobile ? 'w-full' : 'w-72 lg:w-80'} h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden relative`}>
+      {/* Collapse Toggle Button - Desktop only */}
+      {!isMobile && onToggleCollapse && (
+        <motion.button
+          whileHover={{ scale: 1.05, x: 2 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={onToggleCollapse}
+          className="absolute top-4 -right-3 z-10 flex items-center justify-center w-6 h-12 rounded-r-lg bg-white dark:bg-gray-700 border border-l-0 border-gray-200 dark:border-gray-600 shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-400 hover:text-ghana-green transition-all"
+          title="Collapse sidebar"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </motion.button>
+      )}
+
       {/* Mobile Header */}
       {isMobile && (
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
