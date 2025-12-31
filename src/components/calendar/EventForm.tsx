@@ -222,13 +222,17 @@ export default function EventForm({
 
           {/* Modal - Full screen on mobile, centered on desktop */}
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-            className="fixed inset-2 sm:inset-4 md:inset-auto md:top-[5%] md:left-1/2 md:-translate-x-1/2 z-50 w-auto md:w-[90%] md:max-w-2xl md:max-h-[90vh]"
+            className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto"
+            onClick={onClose}
           >
-            <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-2xl h-full md:h-auto md:max-h-[90vh] flex flex-col overflow-hidden">
+            <div
+              className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Drag Handle - Mobile */}
               <div className="sm:hidden flex justify-center pt-3 pb-1">
                 <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
