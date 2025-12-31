@@ -20,6 +20,7 @@ import {
   Sparkles,
   Menu,
   ChevronDown,
+  ChevronLeft,
   Filter,
   Plus,
 } from 'lucide-react';
@@ -463,15 +464,38 @@ export default function CalendarPage() {
 
       {/* Main Content */}
       <div className="flex h-[calc(100vh-65px)] sm:h-[calc(100vh-73px)] overflow-hidden">
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block flex-shrink-0">
+        {/* Desktop Sidebar with Collapse */}
+        <motion.div
+          className="hidden lg:flex relative flex-shrink-0"
+          initial={false}
+          animate={{
+            width: sidebarCollapsed ? 64 : 320,
+          }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
+          {/* Collapse Toggle Button - positioned on right edge */}
+          <motion.button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="absolute top-4 -right-3 z-30 flex items-center justify-center w-6 h-12 rounded-r-lg shadow-lg bg-white dark:bg-gray-700 border border-l-0 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-500 hover:text-ghana-green transition-all"
+            whileHover={{ scale: 1.05, width: 28 }}
+            whileTap={{ scale: 0.95 }}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <motion.div
+              animate={{ rotate: sidebarCollapsed ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </motion.div>
+          </motion.button>
+
           <CalendarSidebar
             onEventClick={handleEventClick}
             onHolidayClick={handleHolidayClick}
             isCollapsed={sidebarCollapsed}
             onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           />
-        </div>
+        </motion.div>
 
         {/* Calendar Content */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">

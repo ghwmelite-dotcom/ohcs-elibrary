@@ -166,22 +166,7 @@ export default function CalendarSidebar({
   }
 
   return (
-    <div className={`${isMobile ? 'w-full' : 'w-72 lg:w-80'} h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col relative`}>
-      {/* Collapse Toggle Button - Desktop only */}
-      {!isMobile && onToggleCollapse && (
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onToggleCollapse}
-          className="absolute top-4 right-3 z-20 flex items-center justify-center w-10 h-10 rounded-xl bg-ghana-green hover:bg-ghana-green/90 text-white shadow-lg shadow-ghana-green/30 transition-all"
-          title="Collapse sidebar (Ctrl+.)"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </motion.button>
-      )}
-
+    <div className={`${isMobile ? 'w-full' : 'w-full'} h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden`}>
       {/* Mobile Header */}
       {isMobile && (
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
