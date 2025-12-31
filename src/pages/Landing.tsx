@@ -51,6 +51,15 @@ import {
   CheckCircle2,
   Layout,
   Layers,
+  ShieldCheck,
+  Fingerprint,
+  Eye,
+  Bell,
+  Compass,
+  Activity,
+  SearchCheck,
+  KeyRound,
+  Server,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useThemeStore, useEffectiveTheme } from '@/stores/themeStore';
@@ -2130,6 +2139,52 @@ const platformFeatures = [
   },
 ];
 
+// Enterprise & Security Features (New!)
+const enterpriseFeatures = [
+  {
+    icon: SearchCheck,
+    title: 'Global Smart Search',
+    description: 'Find anything across documents, forums, courses, and users with our AI-powered unified search that understands context.',
+    gradient: 'from-blue-500 to-cyan-500',
+    badge: 'AI-Powered',
+  },
+  {
+    icon: Fingerprint,
+    title: 'Two-Factor Authentication',
+    description: 'Secure your account with TOTP-based 2FA. Generate codes via authenticator apps for an extra layer of protection.',
+    gradient: 'from-emerald-500 to-green-600',
+    badge: 'Security',
+  },
+  {
+    icon: Eye,
+    title: 'Comprehensive Audit Logs',
+    description: 'Track every action on the platform with detailed audit trails. Filter by user, action type, and date for full accountability.',
+    gradient: 'from-violet-500 to-purple-600',
+    badge: 'Compliance',
+  },
+  {
+    icon: Activity,
+    title: 'Real-time Analytics',
+    description: 'Beautiful dashboards showing user growth, engagement metrics, content distribution, and MDA leaderboards at a glance.',
+    gradient: 'from-orange-500 to-red-500',
+    badge: 'Insights',
+  },
+  {
+    icon: Bell,
+    title: 'Smart Notifications',
+    description: 'Stay informed with customizable email digests, real-time alerts, and push notifications tailored to your preferences.',
+    gradient: 'from-pink-500 to-rose-500',
+    badge: 'Personalized',
+  },
+  {
+    icon: Compass,
+    title: 'Guided Onboarding Tour',
+    description: 'New users are welcomed with an interactive step-by-step tour highlighting key features and helping them get started quickly.',
+    gradient: 'from-amber-500 to-yellow-500',
+    badge: 'User-Friendly',
+  },
+];
+
 const stats = [
   { value: 20000, label: 'Civil Servants', suffix: '+', icon: Users },
   { value: 50, label: 'MDAs Targeted', suffix: '+', icon: Building2 },
@@ -2912,6 +2967,216 @@ export default function Landing() {
               Start Your Research Project
               <ArrowRight className="w-5 h-5" />
             </motion.button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Enterprise & Security Section - NEW! */}
+      <section className="relative py-24 overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Geometric grid pattern */}
+          <svg className="absolute inset-0 w-full h-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="enterprise-grid" width="60" height="60" patternUnits="userSpaceOnUse">
+                <path d="M 60 0 L 0 0 0 60" fill="none" stroke={isDark ? '#fff' : '#000'} strokeWidth="1" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#enterprise-grid)" />
+          </svg>
+
+          {/* Floating orbs */}
+          <motion.div
+            className="absolute top-1/4 left-[10%] w-80 h-80 rounded-full blur-[100px]"
+            style={{ background: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)' }}
+            animate={{
+              scale: [1, 1.2, 1],
+              x: [0, 30, 0],
+              opacity: [0.3, 0.5, 0.3]
+            }}
+            transition={{ duration: 12, repeat: Infinity }}
+          />
+          <motion.div
+            className="absolute bottom-1/4 right-[10%] w-96 h-96 rounded-full blur-[120px]"
+            style={{ background: isDark ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.08)' }}
+            animate={{
+              scale: [1.2, 1, 1.2],
+              x: [0, -30, 0],
+              opacity: [0.3, 0.5, 0.3]
+            }}
+            transition={{ duration: 15, repeat: Infinity }}
+          />
+        </div>
+
+        <div className="max-w-6xl mx-auto px-6 lg:px-8 relative">
+          {/* Section header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-3xl mx-auto mb-16"
+          >
+            <motion.div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+              style={{
+                background: isDark
+                  ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%)'
+                  : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)',
+                border: `1px solid ${isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.25)'}`,
+              }}
+              whileHover={{ scale: 1.05 }}
+            >
+              <ShieldCheck className={cn('w-4 h-4', isDark ? 'text-blue-400' : 'text-blue-600')} />
+              <span className={cn('text-sm font-semibold', isDark ? 'text-blue-300' : 'text-blue-700')}>
+                Enterprise Ready
+              </span>
+              <motion.div
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                style={{
+                  background: isDark ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)',
+                  color: isDark ? '#6ee7b7' : '#047857',
+                }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                New
+              </motion.div>
+            </motion.div>
+
+            <h2 className={cn('font-heading text-3xl lg:text-5xl font-bold mb-5', isDark ? 'text-amber-50' : 'text-surface-900')}>
+              Built for{' '}
+              <span className="bg-gradient-to-r from-blue-500 via-cyan-500 to-emerald-500 bg-clip-text text-transparent">
+                Enterprise Scale
+              </span>
+            </h2>
+            <p className={cn('text-lg', theme.textMuted)}>
+              Security, compliance, and powerful tools designed for Ghana's largest institutions.
+              Every feature built with government-grade standards in mind.
+            </p>
+          </motion.div>
+
+          {/* Enterprise Features Grid - 3x2 Bento-style */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+            {enterpriseFeatures.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, type: 'spring', stiffness: 100 }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="group relative"
+              >
+                <div
+                  className="relative p-6 rounded-2xl h-full overflow-hidden"
+                  style={{
+                    background: isDark
+                      ? 'linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%)'
+                      : 'linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%)',
+                    border: `1px solid ${isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.2)'}`,
+                    boxShadow: isDark
+                      ? '0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                      : '0 8px 32px rgba(59, 130, 246, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+                  }}
+                >
+                  {/* Gradient overlay on hover */}
+                  <motion.div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"
+                    style={{
+                      background: `linear-gradient(135deg, ${isDark ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)'} 0%, transparent 60%)`,
+                    }}
+                  />
+
+                  {/* Top row: Icon + Badge */}
+                  <div className="flex items-center justify-between mb-4 relative z-10">
+                    {/* Icon with gradient background */}
+                    <motion.div
+                      className={cn('w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br shadow-lg', feature.gradient)}
+                      whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <feature.icon className="w-6 h-6 text-white" />
+                    </motion.div>
+
+                    {/* Badge */}
+                    <span
+                      className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full"
+                      style={{
+                        background: isDark
+                          ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%)'
+                          : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)',
+                        color: isDark ? '#93c5fd' : '#1d4ed8',
+                        border: `1px solid ${isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.25)'}`,
+                      }}
+                    >
+                      {feature.badge}
+                    </span>
+                  </div>
+
+                  {/* Content */}
+                  <h3 className={cn(
+                    'text-lg font-bold mb-2 transition-colors relative z-10',
+                    isDark ? 'text-amber-50 group-hover:text-blue-300' : 'text-slate-800 group-hover:text-blue-700'
+                  )}>
+                    {feature.title}
+                  </h3>
+                  <p className={cn('text-sm leading-relaxed relative z-10', isDark ? 'text-slate-400' : 'text-slate-600')}>
+                    {feature.description}
+                  </p>
+
+                  {/* Bottom accent line */}
+                  <motion.div
+                    className={cn('absolute bottom-0 left-0 h-1 rounded-b-2xl bg-gradient-to-r', feature.gradient)}
+                    initial={{ width: '0%' }}
+                    whileInView={{ width: '100%' }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.5 + index * 0.1, duration: 0.8, ease: 'easeOut' }}
+                  />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Stats row */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-wrap justify-center gap-8 mt-12"
+          >
+            {[
+              { icon: ShieldCheck, value: '256-bit', label: 'AES Encryption' },
+              { icon: Server, value: '99.9%', label: 'Uptime SLA' },
+              { icon: KeyRound, value: 'SOC 2', label: 'Compliant Ready' },
+              { icon: Eye, value: 'Full', label: 'Audit Trail' },
+            ].map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="flex items-center gap-3"
+              >
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                  style={{
+                    background: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)',
+                    border: `1px solid ${isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
+                  }}
+                >
+                  <stat.icon className={cn('w-5 h-5', isDark ? 'text-blue-400' : 'text-blue-600')} />
+                </div>
+                <div>
+                  <div className={cn('text-lg font-bold', isDark ? 'text-amber-50' : 'text-slate-900')}>
+                    {stat.value}
+                  </div>
+                  <div className={cn('text-xs', isDark ? 'text-slate-400' : 'text-slate-600')}>
+                    {stat.label}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
       </section>
