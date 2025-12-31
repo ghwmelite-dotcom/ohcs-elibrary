@@ -136,7 +136,7 @@ export default function CalendarSidebar({
     return (
       <motion.div
         initial={{ width: 0, opacity: 0 }}
-        animate={{ width: 56, opacity: 1 }}
+        animate={{ width: 64, opacity: 1 }}
         exit={{ width: 0, opacity: 0 }}
         className="h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col items-center py-4"
       >
@@ -144,19 +144,19 @@ export default function CalendarSidebar({
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={onToggleCollapse}
-          className="p-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-ghana-green/10 dark:hover:bg-ghana-green/20 text-gray-500 hover:text-ghana-green transition-colors"
-          title="Expand sidebar"
+          className="w-12 h-12 rounded-xl bg-ghana-green hover:bg-ghana-green/90 text-white shadow-lg shadow-ghana-green/30 flex items-center justify-center transition-all"
+          title="Expand sidebar (Ctrl+.)"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-6 h-6" />
         </motion.button>
 
         {/* Mini indicators */}
         <div className="mt-6 flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-ghana-green/10 flex items-center justify-center" title={`${events.length} events`}>
+          <div className="w-11 h-11 rounded-xl bg-ghana-green/10 flex items-center justify-center" title={`${events.length} events`}>
             <Calendar className="w-5 h-5 text-ghana-green" />
           </div>
           {showHolidays && (
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center" title={`${holidays.length} holidays`}>
+            <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center" title={`${holidays.length} holidays`}>
               <Palmtree className="w-5 h-5 text-emerald-600" />
             </div>
           )}
@@ -170,13 +170,15 @@ export default function CalendarSidebar({
       {/* Collapse Toggle Button - Desktop only */}
       {!isMobile && onToggleCollapse && (
         <motion.button
-          whileHover={{ scale: 1.05, x: 2 }}
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          whileHover={{ scale: 1.1, x: 3 }}
           whileTap={{ scale: 0.95 }}
           onClick={onToggleCollapse}
-          className="absolute top-4 -right-3 z-10 flex items-center justify-center w-6 h-12 rounded-r-lg bg-white dark:bg-gray-700 border border-l-0 border-gray-200 dark:border-gray-600 shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-400 hover:text-ghana-green transition-all"
-          title="Collapse sidebar"
+          className="absolute top-6 -right-4 z-20 flex items-center justify-center w-8 h-16 rounded-r-xl bg-ghana-green hover:bg-ghana-green/90 text-white shadow-lg shadow-ghana-green/30 transition-all"
+          title="Collapse sidebar (Ctrl+.)"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-5 h-5" />
         </motion.button>
       )}
 
