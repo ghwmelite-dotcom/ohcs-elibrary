@@ -435,142 +435,191 @@ export default function Wellness() {
                 </ul>
               </motion.div>
 
-              {/* Counseling unit contact */}
+              {/* CSEAP Contact Card */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
-                className="bg-amber-50 dark:bg-amber-950/30 rounded-xl p-5 border border-amber-200 dark:border-amber-800"
+                className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-yellow-950/20 rounded-xl p-5 border border-amber-200/80 dark:border-amber-700/50 shadow-sm"
               >
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  Need Human Support?
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                  Our trained counselors are available to help with more serious concerns.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowContactModal(true)}
-                  className="w-full border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30"
-                >
-                  Contact Counseling Unit
-                </Button>
+                {/* Decorative pattern */}
+                <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
+                  <svg viewBox="0 0 100 100" className="w-full h-full text-amber-600">
+                    <pattern id="cseap-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                      <circle cx="10" cy="10" r="2" fill="currentColor"/>
+                    </pattern>
+                    <rect width="100" height="100" fill="url(#cseap-pattern)"/>
+                  </svg>
+                </div>
+
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-800/40">
+                      <Heart className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 dark:text-white text-sm">
+                        CSEAP
+                      </h3>
+                      <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium tracking-wide">
+                        Employee Assistance Programme
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Professional counselors ready to support you with confidential assistance.
+                  </p>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowContactModal(true)}
+                    className="w-full border-amber-400 dark:border-amber-600 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 font-medium"
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    Contact CSEAP
+                  </Button>
+                </div>
               </motion.div>
             </div>
           </div>
         </div>
 
-        {/* Contact Counseling Unit Modal */}
+        {/* CSEAP Contact Modal */}
         {showContactModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowContactModal(false)}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6 relative"
+              className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Close button */}
-              <button
-                onClick={() => setShowContactModal(false)}
-                className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-
-              {/* Header */}
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/30">
-                  <Heart className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+              {/* Decorative Header Banner */}
+              <div className="relative bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 px-6 py-8">
+                {/* Ghana-inspired decorative pattern */}
+                <div className="absolute inset-0 opacity-20">
+                  <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <pattern id="ghana-kente" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                      <rect x="0" y="0" width="10" height="10" fill="white"/>
+                      <rect x="10" y="10" width="10" height="10" fill="white"/>
+                    </pattern>
+                    <rect width="100" height="100" fill="url(#ghana-kente)"/>
+                  </svg>
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                    Counseling Unit
+
+                {/* Close button */}
+                <button
+                  onClick={() => setShowContactModal(false)}
+                  className="absolute top-4 right-4 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+
+                <div className="relative text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm mb-4 ring-4 ring-white/30">
+                    <Heart className="w-8 h-8 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-white mb-1">
+                    CSEAP
                   </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Professional support when you need it
+                  <p className="text-amber-100 text-sm font-medium tracking-wide">
+                    Civil Service Employee Assistance Programme
                   </p>
                 </div>
               </div>
 
-              {/* Contact Info */}
-              <div className="space-y-4 mb-6">
-                <a
-                  href="tel:+233302123456"
-                  className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors group"
-                >
-                  <div className="p-2.5 rounded-lg bg-teal-100 dark:bg-teal-900/30">
-                    <Phone className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
-                    <p className="font-medium text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                      +233 30 212 3456
-                    </p>
-                  </div>
-                </a>
+              {/* Content */}
+              <div className="p-6">
+                <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+                  Confidential support for Ghana's civil servants. We're here to help.
+                </p>
 
-                <a
-                  href="mailto:counseling@ohcs.gov.gh"
-                  className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors group"
-                >
-                  <div className="p-2.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                    <Mail className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
-                    <p className="font-medium text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                      counseling@ohcs.gov.gh
-                    </p>
-                  </div>
-                </a>
+                {/* Contact Info */}
+                <div className="space-y-3 mb-6">
+                  <a
+                    href="tel:+233503337119"
+                    className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/30 dark:to-emerald-950/30 border border-teal-200/50 dark:border-teal-800/50 hover:shadow-md transition-all group"
+                  >
+                    <div className="p-3 rounded-xl bg-teal-500 shadow-lg shadow-teal-500/30 group-hover:scale-110 transition-transform">
+                      <Phone className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-teal-600 dark:text-teal-400 uppercase tracking-wider">Counseling Hotline</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        +233 50 333 7119
+                      </p>
+                    </div>
+                  </a>
 
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50">
-                  <div className="p-2.5 rounded-lg bg-amber-100 dark:bg-amber-900/30">
-                    <MapPin className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Office</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      OHCS Building, Room 215
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Accra, Ghana
-                    </p>
+                  <a
+                    href="mailto:cseap@ohcs.gov.gh"
+                    className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border border-purple-200/50 dark:border-purple-800/50 hover:shadow-md transition-all group"
+                  >
+                    <div className="p-3 rounded-xl bg-purple-500 shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform">
+                      <Mail className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wider">Email Support</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        cseap@ohcs.gov.gh
+                      </p>
+                    </div>
+                  </a>
+
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200/50 dark:border-amber-800/50">
+                    <div className="p-3 rounded-xl bg-amber-500 shadow-lg shadow-amber-500/30">
+                      <MapPin className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider">Visit Us</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        OHCS Headquarters, Accra
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Hours */}
-              <div className="p-4 rounded-xl bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 mb-6">
-                <h3 className="font-medium text-gray-900 dark:text-white mb-2">
-                  Office Hours
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Monday - Friday: 8:00 AM - 5:00 PM
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  <span className="text-teal-600 dark:text-teal-400 font-medium">
-                    24/7 Crisis Line:
-                  </span>{' '}
-                  +233 30 212 9999
-                </p>
-              </div>
+                {/* Hours Card */}
+                <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">Available Now</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-500 dark:text-gray-400">Weekdays</p>
+                      <p className="font-medium text-gray-900 dark:text-white">8:00 AM - 5:00 PM</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 dark:text-gray-400">Crisis Support</p>
+                      <p className="font-medium text-teal-600 dark:text-teal-400">24/7 Available</p>
+                    </div>
+                  </div>
+                </div>
 
-              {/* CTA */}
-              <Button
-                onClick={() => setShowContactModal(false)}
-                className="w-full"
-              >
-                Got it, thanks!
-              </Button>
+                {/* Ghana colors accent bar */}
+                <div className="flex gap-1 mb-4">
+                  <div className="flex-1 h-1 rounded-full bg-red-500"></div>
+                  <div className="flex-1 h-1 rounded-full bg-yellow-500"></div>
+                  <div className="flex-1 h-1 rounded-full bg-green-600"></div>
+                </div>
+
+                {/* CTA */}
+                <Button
+                  onClick={() => setShowContactModal(false)}
+                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold shadow-lg shadow-amber-500/25"
+                >
+                  Thank You
+                </Button>
+              </div>
             </motion.div>
           </motion.div>
         )}

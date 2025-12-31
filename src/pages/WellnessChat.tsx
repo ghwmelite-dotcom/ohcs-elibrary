@@ -248,7 +248,7 @@ export default function WellnessChat() {
                       className="w-full px-4 py-2 text-left flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
                     >
                       <PhoneCall className="w-4 h-4" />
-                      <span>Request Human Counselor</span>
+                      <span>Request CSEAP Counselor</span>
                     </button>
                     <button
                       onClick={() => {
@@ -327,7 +327,7 @@ export default function WellnessChat() {
                       Escalation Requested
                     </h3>
                     <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                      A human counselor from the OHCS counseling unit will be in touch with you soon.
+                      A counselor from <span className="font-semibold">CSEAP</span> (Civil Service Employee Assistance Programme) will be in touch with you soon.
                       You can continue chatting with Ayo in the meantime.
                     </p>
                   </div>
@@ -396,16 +396,21 @@ export default function WellnessChat() {
                 className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full"
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/30 shadow-inner">
                     <PhoneCall className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Request Human Counselor
-                  </h2>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Request CSEAP Counselor
+                    </h2>
+                    <p className="text-xs text-amber-600 dark:text-amber-500 font-medium">
+                      Civil Service Employee Assistance Programme
+                    </p>
+                  </div>
                 </div>
 
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  Our trained counselors are here to provide additional support.
+                  Our trained CSEAP counselors are here to provide confidential support.
                   Please share what you'd like help with (optional):
                 </p>
 
@@ -427,9 +432,9 @@ export default function WellnessChat() {
                   </Button>
                   <Button
                     onClick={handleEscalate}
-                    className="flex-1 bg-amber-600 hover:bg-amber-700"
+                    className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-amber-500/25"
                   >
-                    Request Counselor
+                    Contact CSEAP
                   </Button>
                 </div>
               </motion.div>
