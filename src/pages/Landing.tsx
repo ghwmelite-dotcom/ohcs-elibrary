@@ -56,6 +56,7 @@ import { cn } from '@/utils/cn';
 import { useThemeStore, useEffectiveTheme } from '@/stores/themeStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/components/shared/Toast';
+import { ThemeToggleHint } from '@/components/shared/ThemeToggleHint';
 import {
   loginSchema,
   staffIdLoginSchema,
@@ -2340,67 +2341,69 @@ export default function Landing() {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            {/* Theme toggle - Enhanced with rotation and glow */}
-            <motion.button
-              onClick={toggleTheme}
-              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              className={cn(
-                'relative p-2.5 rounded-xl overflow-hidden group/theme',
-                isDark ? 'text-amber-50' : 'text-surface-700'
-              )}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9, rotate: 15 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-            >
-              {/* Background glow */}
-              <motion.div
-                className="absolute inset-0 rounded-xl opacity-0 group-hover/theme:opacity-100 transition-opacity duration-300"
-                style={{
-                  background: isDark
-                    ? 'radial-gradient(circle, rgba(252, 209, 22, 0.2) 0%, transparent 70%)'
-                    : 'radial-gradient(circle, rgba(0, 107, 63, 0.15) 0%, transparent 70%)',
-                }}
-              />
-              {/* Rotating ring on hover */}
-              <motion.div
-                className="absolute inset-0 rounded-xl opacity-0 group-hover/theme:opacity-100"
-                style={{
-                  border: `1px solid ${isDark ? 'rgba(252, 209, 22, 0.3)' : 'rgba(0, 107, 63, 0.3)'}`,
-                }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-              />
-              {/* Icon with morph animation */}
-              <motion.div
-                className="relative"
-                initial={false}
-                animate={{
-                  rotate: isDark ? 0 : 180,
-                  scale: [1, 1.2, 1],
-                }}
-                transition={{
-                  rotate: { duration: 0.5 },
-                  scale: { duration: 0.3 },
-                }}
-              >
-                {isDark ? (
-                  <Sun className="w-5 h-5 drop-shadow-[0_0_8px_rgba(252,209,22,0.5)]" />
-                ) : (
-                  <Moon className="w-5 h-5 drop-shadow-[0_0_8px_rgba(0,107,63,0.5)]" />
+            {/* Theme toggle - Enhanced with rotation and glow + Discovery Hint */}
+            <ThemeToggleHint variant="landing">
+              <motion.button
+                onClick={toggleTheme}
+                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                className={cn(
+                  'relative p-2.5 rounded-xl overflow-hidden group/theme',
+                  isDark ? 'text-amber-50' : 'text-surface-700'
                 )}
-              </motion.div>
-              {/* Sparkle particles on hover */}
-              <motion.div
-                className="absolute top-0 right-0 w-2 h-2 rounded-full opacity-0 group-hover/theme:opacity-100"
-                style={{ background: isDark ? '#FCD116' : '#006B3F' }}
-                animate={{
-                  scale: [0, 1, 0],
-                  y: [0, -10],
-                  x: [0, 5],
-                }}
-                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 0.5 }}
-              />
-            </motion.button>
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9, rotate: 15 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              >
+                {/* Background glow */}
+                <motion.div
+                  className="absolute inset-0 rounded-xl opacity-0 group-hover/theme:opacity-100 transition-opacity duration-300"
+                  style={{
+                    background: isDark
+                      ? 'radial-gradient(circle, rgba(252, 209, 22, 0.2) 0%, transparent 70%)'
+                      : 'radial-gradient(circle, rgba(0, 107, 63, 0.15) 0%, transparent 70%)',
+                  }}
+                />
+                {/* Rotating ring on hover */}
+                <motion.div
+                  className="absolute inset-0 rounded-xl opacity-0 group-hover/theme:opacity-100"
+                  style={{
+                    border: `1px solid ${isDark ? 'rgba(252, 209, 22, 0.3)' : 'rgba(0, 107, 63, 0.3)'}`,
+                  }}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                />
+                {/* Icon with morph animation */}
+                <motion.div
+                  className="relative"
+                  initial={false}
+                  animate={{
+                    rotate: isDark ? 0 : 180,
+                    scale: [1, 1.2, 1],
+                  }}
+                  transition={{
+                    rotate: { duration: 0.5 },
+                    scale: { duration: 0.3 },
+                  }}
+                >
+                  {isDark ? (
+                    <Sun className="w-5 h-5 drop-shadow-[0_0_8px_rgba(252,209,22,0.5)]" />
+                  ) : (
+                    <Moon className="w-5 h-5 drop-shadow-[0_0_8px_rgba(0,107,63,0.5)]" />
+                  )}
+                </motion.div>
+                {/* Sparkle particles on hover */}
+                <motion.div
+                  className="absolute top-0 right-0 w-2 h-2 rounded-full opacity-0 group-hover/theme:opacity-100"
+                  style={{ background: isDark ? '#FCD116' : '#006B3F' }}
+                  animate={{
+                    scale: [0, 1, 0],
+                    y: [0, -10],
+                    x: [0, 5],
+                  }}
+                  transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 0.5 }}
+                />
+              </motion.button>
+            </ThemeToggleHint>
 
             {/* Sign In - Enhanced with magnetic effect and underline */}
             <motion.button

@@ -29,6 +29,9 @@ export { default as recognitionRoutes } from './recognition';
 // AI Knowledge Assistant "Kwame"
 export { default as kwameRoutes } from './kwame';
 
+// Learning Management System (LMS)
+export { default as lmsRoutes } from './lms';
+
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
 
@@ -311,16 +314,16 @@ adminRoutes.get('/stats', async (c) => {
       LIMIT 10
     `).all();
 
-    // Get top MDAs
+    // Get top departments (MDAs)
     const topMDAs = await c.env.DB.prepare(`
       SELECT
-        m.name,
+        COALESCE(u.department, 'Unassigned') as name,
         COUNT(DISTINCT u.id) as users,
         COUNT(DISTINCT d.id) as documents
-      FROM mdas m
-      LEFT JOIN users u ON u.mdaId = m.id AND u.isActive = 1
-      LEFT JOIN documents d ON d.uploadedBy = u.id AND d.status = 'published'
-      GROUP BY m.id, m.name
+      FROM users u
+      LEFT JOIN documents d ON d.authorId = u.id AND d.status = 'published'
+      WHERE u.isActive = 1
+      GROUP BY u.department
       ORDER BY users DESC
       LIMIT 5
     `).all();
@@ -358,10 +361,11 @@ adminRoutes.get('/stats', async (c) => {
         documents: m.documents || 0
       }))
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching admin stats:', error);
     return c.json({
       error: 'Failed to fetch statistics',
+      details: error?.message || String(error),
       stats: {
         totalUsers: 0,
         usersChange: 0,

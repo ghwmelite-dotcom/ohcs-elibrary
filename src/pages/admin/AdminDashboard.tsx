@@ -643,11 +643,24 @@ export default function AdminDashboard() {
           },
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-          throw new Error('Failed to fetch dashboard statistics');
+          console.error('Admin stats API error:', {
+            status: response.status,
+            statusText: response.statusText,
+            data
+          });
+
+          // If API returned error with stats fallback, use the stats
+          if (data.stats) {
+            setDashboardData(data);
+            setError(data.details || data.error || 'Partial data loaded');
+            return;
+          }
+          throw new Error(`${response.status}: ${data.message || data.details || data.error || 'Failed to fetch dashboard statistics'}`);
         }
 
-        const data = await response.json();
         setDashboardData(data);
       } catch (err) {
         console.error('Error fetching dashboard stats:', err);

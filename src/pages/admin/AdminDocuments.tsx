@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText,
@@ -39,8 +39,80 @@ import {
   CloudUpload,
   ToggleLeft,
   ToggleRight,
+  Settings,
+  Plus,
+  GripVertical,
+  Palette,
+  Loader2,
+  Folder,
+  BarChart2,
+  ClipboardList,
+  FilePlus,
+  Scale,
+  Mail,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { useAuthStore } from '@/stores/authStore';
+
+// Category interface
+interface DocumentCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  icon: string;
+  color: string;
+  sortOrder: number;
+  isActive: number;
+  documentCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Icon options for categories
+const ICON_OPTIONS = [
+  { value: 'folder', label: 'Folder', icon: Folder },
+  { value: 'file-text', label: 'Document', icon: FileText },
+  { value: 'bar-chart-2', label: 'Chart', icon: BarChart2 },
+  { value: 'book-open', label: 'Book', icon: BookOpen },
+  { value: 'clipboard-list', label: 'Clipboard', icon: ClipboardList },
+  { value: 'file-plus', label: 'File Plus', icon: FilePlus },
+  { value: 'scale', label: 'Scale', icon: Scale },
+  { value: 'search', label: 'Search', icon: Search },
+  { value: 'mail', label: 'Mail', icon: Mail },
+  { value: 'shield', label: 'Shield', icon: Shield },
+];
+
+// Color options for categories
+const COLOR_OPTIONS = [
+  { value: '#006B3F', label: 'Ghana Green' },
+  { value: '#FCD116', label: 'Ghana Gold' },
+  { value: '#CE1126', label: 'Ghana Red' },
+  { value: '#3B82F6', label: 'Blue' },
+  { value: '#8B5CF6', label: 'Purple' },
+  { value: '#10B981', label: 'Emerald' },
+  { value: '#F59E0B', label: 'Amber' },
+  { value: '#EC4899', label: 'Pink' },
+  { value: '#6366F1', label: 'Indigo' },
+  { value: '#6B7280', label: 'Gray' },
+];
+
+// Get icon component from name
+function getIconComponent(iconName: string) {
+  const iconMap: Record<string, React.ElementType> = {
+    'folder': Folder,
+    'file-text': FileText,
+    'bar-chart-2': BarChart2,
+    'book-open': BookOpen,
+    'clipboard-list': ClipboardList,
+    'file-plus': FilePlus,
+    'scale': Scale,
+    'search': Search,
+    'mail': Mail,
+    'shield': Shield,
+  };
+  return iconMap[iconName] || Folder;
+}
 
 interface Document {
   id: string;
@@ -931,8 +1003,489 @@ function UploadModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
   );
 }
 
+// Category Management Modal
+function CategoryManagementModal({
+  isOpen,
+  onClose,
+  categories,
+  onRefresh
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  categories: DocumentCategory[];
+  onRefresh: () => void;
+}) {
+  const { token } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [editingCategory, setEditingCategory] = useState<DocumentCategory | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    icon: 'folder',
+    color: '#006B3F',
+  });
+
+  const API_URL = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
+
+  const resetForm = () => {
+    setFormData({ name: '', description: '', icon: 'folder', color: '#006B3F' });
+    setEditingCategory(null);
+    setIsCreating(false);
+    setError(null);
+  };
+
+  const handleEdit = (category: DocumentCategory) => {
+    setEditingCategory(category);
+    setFormData({
+      name: category.name,
+      description: category.description || '',
+      icon: category.icon,
+      color: category.color,
+    });
+    setIsCreating(false);
+  };
+
+  const handleCreate = async () => {
+    if (!formData.name.trim()) {
+      setError('Category name is required');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/api/v1/documents/categories`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create category');
+      }
+
+      resetForm();
+      onRefresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create category');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!editingCategory || !formData.name.trim()) {
+      setError('Category name is required');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/api/v1/documents/categories/${editingCategory.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update category');
+      }
+
+      resetForm();
+      onRefresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update category');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (category: DocumentCategory) => {
+    if (category.documentCount > 0) {
+      setError(`Cannot delete "${category.name}" - it has ${category.documentCount} document(s)`);
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete "${category.name}"?`)) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/api/v1/documents/categories/${category.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Failed to delete category');
+      }
+
+      onRefresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete category');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleToggleActive = async (category: DocumentCategory) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/api/v1/documents/categories/${category.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: category.isActive ? false : true }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update category');
+      }
+
+      onRefresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update category');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      >
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={onClose}
+        />
+
+        {/* Modal */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="relative w-full max-w-4xl bg-white dark:bg-surface-800 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+        >
+          {/* Ghana stripe header */}
+          <div className="h-1.5 flex flex-shrink-0">
+            <div className="flex-1 bg-[#CE1126]" />
+            <div className="flex-1 bg-[#FCD116]" />
+            <div className="flex-1 bg-[#006B3F]" />
+          </div>
+
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-surface-200 dark:border-surface-700 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                <Settings className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-surface-900 dark:text-surface-50">
+                  Manage Document Categories
+                </h2>
+                <p className="text-sm text-surface-500">{categories.length} categories</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-surface-500" />
+            </button>
+          </div>
+
+          {/* Error banner */}
+          {error && (
+            <div className="mx-6 mt-4 p-3 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-error-500 flex-shrink-0" />
+              <p className="text-sm text-error-700 dark:text-error-300">{error}</p>
+              <button onClick={() => setError(null)} className="ml-auto p-1 hover:bg-error-100 dark:hover:bg-error-800 rounded">
+                <X className="w-4 h-4 text-error-500" />
+              </button>
+            </div>
+          )}
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Categories List */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-medium text-surface-900 dark:text-surface-50">Categories</h3>
+                  <button
+                    onClick={() => { resetForm(); setIsCreating(true); }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-lg text-sm font-medium hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add New
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {categories.map((category) => {
+                    const IconComponent = getIconComponent(category.icon);
+                    return (
+                      <motion.div
+                        key={category.id}
+                        layout
+                        className={cn(
+                          'flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer',
+                          editingCategory?.id === category.id
+                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                            : 'border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600',
+                          !category.isActive && 'opacity-50'
+                        )}
+                        onClick={() => handleEdit(category)}
+                      >
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: `${category.color}20` }}
+                        >
+                          <IconComponent className="w-5 h-5" style={{ color: category.color }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-surface-900 dark:text-surface-50 truncate">
+                            {category.name}
+                          </p>
+                          <p className="text-xs text-surface-500 truncate">
+                            {category.documentCount} documents • {category.isActive ? 'Active' : 'Inactive'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleToggleActive(category); }}
+                            className={cn(
+                              'p-1.5 rounded-lg transition-colors',
+                              category.isActive
+                                ? 'text-success-500 hover:bg-success-100 dark:hover:bg-success-900/20'
+                                : 'text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700'
+                            )}
+                            title={category.isActive ? 'Deactivate' : 'Activate'}
+                          >
+                            {category.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDelete(category); }}
+                            className="p-1.5 text-error-500 hover:bg-error-100 dark:hover:bg-error-900/20 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+
+                  {categories.length === 0 && (
+                    <div className="text-center py-8 text-surface-500">
+                      <Folder className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p>No categories yet</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Edit/Create Form */}
+              <div>
+                <h3 className="font-medium text-surface-900 dark:text-surface-50 mb-4">
+                  {isCreating ? 'Create New Category' : editingCategory ? 'Edit Category' : 'Select a Category'}
+                </h3>
+
+                {(isCreating || editingCategory) ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-1.5">
+                        Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter category name"
+                        className="w-full px-4 py-2.5 bg-surface-50 dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-surface-900 dark:text-surface-50 placeholder-surface-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-1.5">
+                        Description
+                      </label>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Enter description (optional)"
+                        rows={2}
+                        className="w-full px-4 py-2.5 bg-surface-50 dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-surface-900 dark:text-surface-50 placeholder-surface-400 resize-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-1.5">
+                        Icon
+                      </label>
+                      <div className="grid grid-cols-5 gap-2">
+                        {ICON_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, icon: option.value }))}
+                            className={cn(
+                              'p-3 rounded-xl border-2 transition-all flex items-center justify-center',
+                              formData.icon === option.value
+                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                                : 'border-surface-200 dark:border-surface-600 hover:border-surface-300'
+                            )}
+                            title={option.label}
+                          >
+                            <option.icon className="w-5 h-5 text-surface-600 dark:text-surface-300" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-1.5">
+                        Color
+                      </label>
+                      <div className="grid grid-cols-5 gap-2">
+                        {COLOR_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, color: option.value }))}
+                            className={cn(
+                              'p-3 rounded-xl border-2 transition-all flex items-center justify-center',
+                              formData.color === option.value
+                                ? 'border-primary-500 ring-2 ring-primary-500/20'
+                                : 'border-surface-200 dark:border-surface-600 hover:border-surface-300'
+                            )}
+                            title={option.label}
+                          >
+                            <div
+                              className="w-6 h-6 rounded-full"
+                              style={{ backgroundColor: option.value }}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Preview */}
+                    <div className="p-4 bg-surface-50 dark:bg-surface-700/50 rounded-xl">
+                      <p className="text-xs text-surface-500 mb-2">Preview</p>
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-12 h-12 rounded-xl flex items-center justify-center"
+                          style={{ backgroundColor: `${formData.color}20` }}
+                        >
+                          {(() => {
+                            const PreviewIcon = getIconComponent(formData.icon);
+                            return <PreviewIcon className="w-6 h-6" style={{ color: formData.color }} />;
+                          })()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-surface-900 dark:text-surface-50">
+                            {formData.name || 'Category Name'}
+                          </p>
+                          <p className="text-sm text-surface-500">
+                            {formData.description || 'No description'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3 pt-2">
+                      <button
+                        onClick={resetForm}
+                        className="flex-1 px-4 py-2.5 text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-xl transition-colors font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={isCreating ? handleCreate : handleUpdate}
+                        disabled={isLoading || !formData.name.trim()}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl font-medium shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Check className="w-4 h-4" />
+                            {isCreating ? 'Create Category' : 'Save Changes'}
+                          </>
+                        )}
+                      </motion.button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center text-surface-500">
+                    <Edit2 className="w-12 h-12 mb-3 opacity-50" />
+                    <p>Select a category to edit</p>
+                    <p className="text-sm">or click "Add New" to create one</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-surface-200 dark:border-surface-700 flex items-center justify-end flex-shrink-0">
+            <button
+              onClick={onClose}
+              className="px-6 py-2 bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-200 rounded-xl font-medium hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 // Main Component
 export default function AdminDocuments() {
+  const { token } = useAuthStore();
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -940,12 +1493,39 @@ export default function AdminDocuments() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [accessFilter, setAccessFilter] = useState('all');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [documentCategories, setDocumentCategories] = useState<DocumentCategory[]>([]);
+
+  const API_URL = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
+
+  // Fetch categories from API
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/v1/documents/categories/admin`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setDocumentCategories(data);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchCategories();
+    }
+  }, [token]);
 
   // Documents data - to be populated from API
   const documents: Document[] = [];
 
-  const categories = ['Policy Documents', 'Reports', 'Training Materials', 'Guidelines', 'Forms & Templates', 'Legislation', 'Research Papers'];
+  const categories = documentCategories.map(c => c.name);
   const accessLevels = ['public', 'internal', 'restricted', 'confidential'];
   const statuses = ['published', 'draft', 'pending', 'archived'];
 
@@ -995,15 +1575,26 @@ export default function AdminDocuments() {
               Manage and moderate platform documents
             </p>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setShowUploadModal(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-600 to-primary-500 text-white font-medium rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 transition-shadow"
-          >
-            <Upload className="w-4 h-4" />
-            Upload Document
-          </motion.button>
+          <div className="flex items-center gap-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowCategoryModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-200 font-medium rounded-xl hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+              Categories
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-600 to-primary-500 text-white font-medium rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 transition-shadow"
+            >
+              <Upload className="w-4 h-4" />
+              Upload Document
+            </motion.button>
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -1339,6 +1930,14 @@ export default function AdminDocuments() {
 
       {/* Upload Modal */}
       <UploadModal isOpen={showUploadModal} onClose={() => setShowUploadModal(false)} />
+
+      {/* Category Management Modal */}
+      <CategoryManagementModal
+        isOpen={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        categories={documentCategories}
+        onRefresh={fetchCategories}
+      />
     </div>
   );
 }

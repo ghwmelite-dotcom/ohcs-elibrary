@@ -35,6 +35,8 @@ import {
   recognitionRoutes,
   // AI Knowledge Assistant "Kwame"
   kwameRoutes,
+  // Learning Management System (LMS)
+  lmsRoutes,
 } from './routes';
 
 export interface Env {
@@ -167,6 +169,10 @@ app.route('/api/v1/recognition', recognitionRoutes);
 // AI Knowledge Assistant "Kwame"
 // Kwame routes handle their own auth
 app.route('/api/v1/kwame', kwameRoutes);
+
+// Learning Management System (LMS)
+// LMS routes handle their own auth internally
+app.route('/api/v1/lms', lmsRoutes);
 
 // News aggregation admin endpoints
 app.post('/api/v1/admin/news/aggregate', authMiddleware, async (c) => {

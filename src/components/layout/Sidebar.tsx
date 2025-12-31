@@ -16,13 +16,17 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Network,
-  Rss,
   Mail,
   UserPlus,
-  BarChart3,
   Award,
   Sparkles,
+  GraduationCap,
+  BookOpen,
+  BadgeCheck,
+  Home,
+  Brain,
+  Compass,
+  type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useUIStore } from '@/stores/uiStore';
@@ -31,38 +35,329 @@ import { useNotificationStore } from '@/stores/notificationStore';
 import { useNewsStore } from '@/stores/newsStore';
 import { useDMStore } from '@/stores/dmStore';
 import { Avatar } from '@/components/shared/Avatar';
-import { Badge } from '@/components/shared/Badge';
 import { AnimatedLogo } from '@/components/shared/AnimatedLogo';
 
 interface NavItem {
   path: string;
   label: string;
-  icon: React.ReactNode;
-  badge?: number;
+  icon: LucideIcon;
+  color?: string;
+  tag?: { label: string; color: string; pulse?: boolean };
+  hasBadge?: boolean;
 }
 
-const mainNavItems: NavItem[] = [
-  { path: '/feed', label: 'Feed', icon: <Rss className="w-5 h-5 text-primary-500" /> },
-  { path: '/dashboard', label: 'Dashboard', icon: <BarChart3 className="w-5 h-5" /> },
-  { path: '/dm', label: 'Messages', icon: <Mail className="w-5 h-5 text-blue-500" /> },
-  { path: '/network', label: 'Network', icon: <UserPlus className="w-5 h-5 text-emerald-500" /> },
-  { path: '/library', label: 'Library', icon: <Library className="w-5 h-5 text-amber-500" /> },
-  { path: '/kwame', label: 'Ask Kwame', icon: <Sparkles className="w-5 h-5 text-gold-500" /> },
-  { path: '/research-hub', label: 'Research Hub', icon: <Network className="w-5 h-5 text-violet-500" /> },
-  { path: '/wellness', label: 'Wellness', icon: <Heart className="w-5 h-5 text-pink-500" /> },
-  { path: '/forum', label: 'Forum', icon: <MessageSquare className="w-5 h-5" /> },
-  { path: '/chat', label: 'Chat', icon: <MessagesSquare className="w-5 h-5" /> },
-  { path: '/groups', label: 'Groups', icon: <Users className="w-5 h-5" /> },
-  { path: '/news', label: 'News', icon: <Newspaper className="w-5 h-5" /> },
-  { path: '/leaderboard', label: 'Leaderboard', icon: <Trophy className="w-5 h-5" /> },
-  { path: '/recognition', label: 'Recognition', icon: <Award className="w-5 h-5 text-rose-500" /> },
+interface NavSection {
+  title?: string;
+  items: NavItem[];
+  requiresInstructor?: boolean;
+}
+
+// Organized navigation sections with tags
+const navSections: NavSection[] = [
+  {
+    items: [
+      { path: '/feed', label: 'Home', icon: Home, color: 'primary' },
+      { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'slate' },
+    ],
+  },
+  {
+    title: 'Connect',
+    items: [
+      { path: '/dm', label: 'Messages', icon: Mail, color: 'blue', hasBadge: true },
+      { path: '/network', label: 'Network', icon: UserPlus, color: 'emerald' },
+      { path: '/chat', label: 'Chat Rooms', icon: MessagesSquare, color: 'cyan', tag: { label: 'LIVE', color: 'cyan', pulse: true } },
+      { path: '/groups', label: 'Groups', icon: Users, color: 'violet' },
+    ],
+  },
+  {
+    title: 'Learn',
+    items: [
+      { path: '/courses', label: 'Course Catalog', icon: Compass, color: 'indigo', tag: { label: 'LMS', color: 'indigo' } },
+      { path: '/my-courses', label: 'My Learning', icon: BookOpen, color: 'sky' },
+      { path: '/certificates', label: 'Certificates', icon: BadgeCheck, color: 'green' },
+      { path: '/peer-reviews', label: 'Peer Reviews', icon: Users, color: 'violet' },
+      { path: '/library', label: 'Library', icon: Library, color: 'amber', tag: { label: 'HOT', color: 'amber' } },
+    ],
+  },
+  {
+    title: 'Teach',
+    items: [
+      { path: '/instructor', label: 'Instructor Hub', icon: GraduationCap, color: 'violet', tag: { label: 'NEW', color: 'violet' } },
+    ],
+    requiresInstructor: true,
+  },
+  {
+    title: 'AI Tools',
+    items: [
+      { path: '/kwame', label: 'Ask Kwame', icon: Sparkles, color: 'yellow', tag: { label: 'AI', color: 'gradient', pulse: true } },
+      { path: '/research-hub', label: 'Research Hub', icon: Brain, color: 'purple', tag: { label: 'AI', color: 'gradient' } },
+    ],
+  },
+  {
+    title: 'Community',
+    items: [
+      { path: '/forum', label: 'Forum', icon: MessageSquare, color: 'orange' },
+      { path: '/news', label: 'News', icon: Newspaper, color: 'rose', hasBadge: true },
+      { path: '/leaderboard', label: 'Leaderboard', icon: Trophy, color: 'yellow' },
+      { path: '/recognition', label: 'Recognition', icon: Award, color: 'pink', tag: { label: 'NEW', color: 'pink' } },
+    ],
+  },
+  {
+    title: 'Wellness',
+    items: [
+      { path: '/wellness', label: 'Wellness Hub', icon: Heart, color: 'teal', tag: { label: 'CARE', color: 'teal' } },
+    ],
+  },
 ];
 
 const bottomNavItems: NavItem[] = [
-  { path: '/notifications', label: 'Notifications', icon: <Bell className="w-5 h-5" /> },
-  { path: '/settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
-  { path: '/help', label: 'Help', icon: <HelpCircle className="w-5 h-5" /> },
+  { path: '/notifications', label: 'Notifications', icon: Bell, color: 'slate', hasBadge: true },
+  { path: '/settings', label: 'Settings', icon: Settings, color: 'slate' },
+  { path: '/help', label: 'Help & Support', icon: HelpCircle, color: 'slate' },
 ];
+
+// Enhanced color mappings with gradients and glows for beautiful icons
+const colorMap: Record<string, {
+  bg: string;
+  text: string;
+  hover: string;
+  icon: string;
+  iconActive: string;
+  glow: string;
+  tag: string;
+}> = {
+  primary: {
+    bg: 'bg-primary-50 dark:bg-primary-900/30',
+    text: 'text-primary-700 dark:text-primary-300',
+    hover: 'hover:bg-primary-50/80 dark:hover:bg-primary-900/20',
+    icon: 'text-primary-500 dark:text-primary-400',
+    iconActive: 'text-primary-600 dark:text-primary-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(0,107,63,0.5)] dark:drop-shadow-[0_0_8px_rgba(74,222,128,0.4)]',
+    tag: 'bg-primary-500',
+  },
+  slate: {
+    bg: 'bg-slate-100 dark:bg-slate-800/50',
+    text: 'text-slate-700 dark:text-slate-200',
+    hover: 'hover:bg-slate-100/80 dark:hover:bg-slate-800/40',
+    icon: 'text-slate-500 dark:text-slate-400',
+    iconActive: 'text-slate-700 dark:text-slate-200',
+    glow: 'drop-shadow-[0_0_4px_rgba(100,116,139,0.4)]',
+    tag: 'bg-slate-500',
+  },
+  blue: {
+    bg: 'bg-blue-50 dark:bg-blue-900/30',
+    text: 'text-blue-700 dark:text-blue-300',
+    hover: 'hover:bg-blue-50/80 dark:hover:bg-blue-900/20',
+    icon: 'text-blue-500 dark:text-blue-400',
+    iconActive: 'text-blue-600 dark:text-blue-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(59,130,246,0.5)] dark:drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]',
+    tag: 'bg-blue-500',
+  },
+  emerald: {
+    bg: 'bg-emerald-50 dark:bg-emerald-900/30',
+    text: 'text-emerald-700 dark:text-emerald-300',
+    hover: 'hover:bg-emerald-50/80 dark:hover:bg-emerald-900/20',
+    icon: 'text-emerald-500 dark:text-emerald-400',
+    iconActive: 'text-emerald-600 dark:text-emerald-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(16,185,129,0.5)] dark:drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]',
+    tag: 'bg-emerald-500',
+  },
+  cyan: {
+    bg: 'bg-cyan-50 dark:bg-cyan-900/30',
+    text: 'text-cyan-700 dark:text-cyan-300',
+    hover: 'hover:bg-cyan-50/80 dark:hover:bg-cyan-900/20',
+    icon: 'text-cyan-500 dark:text-cyan-400',
+    iconActive: 'text-cyan-600 dark:text-cyan-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(6,182,212,0.5)] dark:drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]',
+    tag: 'bg-cyan-500',
+  },
+  violet: {
+    bg: 'bg-violet-50 dark:bg-violet-900/30',
+    text: 'text-violet-700 dark:text-violet-300',
+    hover: 'hover:bg-violet-50/80 dark:hover:bg-violet-900/20',
+    icon: 'text-violet-500 dark:text-violet-400',
+    iconActive: 'text-violet-600 dark:text-violet-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(139,92,246,0.5)] dark:drop-shadow-[0_0_8px_rgba(167,139,250,0.5)]',
+    tag: 'bg-violet-500',
+  },
+  indigo: {
+    bg: 'bg-indigo-50 dark:bg-indigo-900/30',
+    text: 'text-indigo-700 dark:text-indigo-300',
+    hover: 'hover:bg-indigo-50/80 dark:hover:bg-indigo-900/20',
+    icon: 'text-indigo-500 dark:text-indigo-400',
+    iconActive: 'text-indigo-600 dark:text-indigo-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(99,102,241,0.5)] dark:drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]',
+    tag: 'bg-indigo-500',
+  },
+  sky: {
+    bg: 'bg-sky-50 dark:bg-sky-900/30',
+    text: 'text-sky-700 dark:text-sky-300',
+    hover: 'hover:bg-sky-50/80 dark:hover:bg-sky-900/20',
+    icon: 'text-sky-500 dark:text-sky-400',
+    iconActive: 'text-sky-600 dark:text-sky-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(14,165,233,0.5)] dark:drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]',
+    tag: 'bg-sky-500',
+  },
+  green: {
+    bg: 'bg-green-50 dark:bg-green-900/30',
+    text: 'text-green-700 dark:text-green-300',
+    hover: 'hover:bg-green-50/80 dark:hover:bg-green-900/20',
+    icon: 'text-green-500 dark:text-green-400',
+    iconActive: 'text-green-600 dark:text-green-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(34,197,94,0.5)] dark:drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]',
+    tag: 'bg-green-500',
+  },
+  amber: {
+    bg: 'bg-amber-50 dark:bg-amber-900/30',
+    text: 'text-amber-700 dark:text-amber-300',
+    hover: 'hover:bg-amber-50/80 dark:hover:bg-amber-900/20',
+    icon: 'text-amber-500 dark:text-amber-400',
+    iconActive: 'text-amber-600 dark:text-amber-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(245,158,11,0.5)] dark:drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]',
+    tag: 'bg-amber-500',
+  },
+  yellow: {
+    bg: 'bg-yellow-50 dark:bg-yellow-900/30',
+    text: 'text-yellow-700 dark:text-yellow-300',
+    hover: 'hover:bg-yellow-50/80 dark:hover:bg-yellow-900/20',
+    icon: 'text-yellow-500 dark:text-yellow-400',
+    iconActive: 'text-yellow-600 dark:text-yellow-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(234,179,8,0.5)] dark:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]',
+    tag: 'bg-yellow-500',
+  },
+  purple: {
+    bg: 'bg-purple-50 dark:bg-purple-900/30',
+    text: 'text-purple-700 dark:text-purple-300',
+    hover: 'hover:bg-purple-50/80 dark:hover:bg-purple-900/20',
+    icon: 'text-purple-500 dark:text-purple-400',
+    iconActive: 'text-purple-600 dark:text-purple-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(168,85,247,0.5)] dark:drop-shadow-[0_0_8px_rgba(192,132,252,0.5)]',
+    tag: 'bg-purple-500',
+  },
+  orange: {
+    bg: 'bg-orange-50 dark:bg-orange-900/30',
+    text: 'text-orange-700 dark:text-orange-300',
+    hover: 'hover:bg-orange-50/80 dark:hover:bg-orange-900/20',
+    icon: 'text-orange-500 dark:text-orange-400',
+    iconActive: 'text-orange-600 dark:text-orange-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(249,115,22,0.5)] dark:drop-shadow-[0_0_8px_rgba(251,146,60,0.5)]',
+    tag: 'bg-orange-500',
+  },
+  rose: {
+    bg: 'bg-rose-50 dark:bg-rose-900/30',
+    text: 'text-rose-700 dark:text-rose-300',
+    hover: 'hover:bg-rose-50/80 dark:hover:bg-rose-900/20',
+    icon: 'text-rose-500 dark:text-rose-400',
+    iconActive: 'text-rose-600 dark:text-rose-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(244,63,94,0.5)] dark:drop-shadow-[0_0_8px_rgba(251,113,133,0.5)]',
+    tag: 'bg-rose-500',
+  },
+  pink: {
+    bg: 'bg-pink-50 dark:bg-pink-900/30',
+    text: 'text-pink-700 dark:text-pink-300',
+    hover: 'hover:bg-pink-50/80 dark:hover:bg-pink-900/20',
+    icon: 'text-pink-500 dark:text-pink-400',
+    iconActive: 'text-pink-600 dark:text-pink-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(236,72,153,0.5)] dark:drop-shadow-[0_0_8px_rgba(244,114,182,0.5)]',
+    tag: 'bg-pink-500',
+  },
+  teal: {
+    bg: 'bg-teal-50 dark:bg-teal-900/30',
+    text: 'text-teal-700 dark:text-teal-300',
+    hover: 'hover:bg-teal-50/80 dark:hover:bg-teal-900/20',
+    icon: 'text-teal-500 dark:text-teal-400',
+    iconActive: 'text-teal-600 dark:text-teal-300',
+    glow: 'drop-shadow-[0_0_6px_rgba(20,184,166,0.5)] dark:drop-shadow-[0_0_8px_rgba(45,212,191,0.5)]',
+    tag: 'bg-teal-500',
+  },
+  gradient: {
+    bg: 'bg-gradient-to-r from-violet-500 to-fuchsia-500',
+    text: 'text-white',
+    hover: 'hover:opacity-90',
+    icon: 'text-violet-500 dark:text-violet-400',
+    iconActive: 'text-fuchsia-500 dark:text-fuchsia-400',
+    glow: 'drop-shadow-[0_0_8px_rgba(168,85,247,0.6)] dark:drop-shadow-[0_0_10px_rgba(232,121,249,0.6)]',
+    tag: 'bg-gradient-to-r from-violet-500 to-fuchsia-500',
+  },
+};
+
+// Animated Icon Component
+function AnimatedIcon({ Icon, color, isActive, isHovered }: { Icon: LucideIcon; color: string; isActive: boolean; isHovered: boolean }) {
+  return (
+    <motion.div
+      animate={{
+        scale: isHovered ? 1.15 : 1,
+        rotate: isHovered ? [0, -10, 10, -5, 5, 0] : 0,
+      }}
+      transition={{
+        scale: { type: 'spring', stiffness: 400, damping: 17 },
+        rotate: { duration: 0.5, ease: 'easeInOut' },
+      }}
+    >
+      <Icon
+        className={cn(
+          'w-[18px] h-[18px] transition-colors duration-200',
+          isActive || isHovered ? colorMap[color]?.icon : 'text-surface-400 dark:text-surface-500'
+        )}
+      />
+    </motion.div>
+  );
+}
+
+// Tag Component with enhanced styling
+function NavTag({ label, color, pulse }: { label: string; color: string; pulse?: boolean }) {
+  // Beautiful gradient backgrounds for tags
+  const tagStyles: Record<string, string> = {
+    gradient: 'bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 shadow-violet-500/30',
+    cyan: 'bg-gradient-to-r from-cyan-500 to-teal-500 shadow-cyan-500/30',
+    indigo: 'bg-gradient-to-r from-indigo-500 to-blue-500 shadow-indigo-500/30',
+    amber: 'bg-gradient-to-r from-amber-500 to-orange-500 shadow-amber-500/30',
+    pink: 'bg-gradient-to-r from-pink-500 to-rose-500 shadow-pink-500/30',
+    teal: 'bg-gradient-to-r from-teal-500 to-emerald-500 shadow-teal-500/30',
+  };
+
+  const tagColor = tagStyles[color] || `${colorMap[color]?.tag || 'bg-gray-500'} shadow-gray-500/20`;
+
+  return (
+    <motion.span
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      whileHover={{ scale: 1.1 }}
+      className={cn(
+        'px-1.5 py-0.5 text-[9px] font-bold text-white rounded-md shadow-lg',
+        tagColor
+      )}
+    >
+      {pulse ? (
+        <motion.span
+          animate={{ opacity: [1, 0.7, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          {label}
+        </motion.span>
+      ) : (
+        label
+      )}
+    </motion.span>
+  );
+}
+
+// Badge Count Component with gradient and glow
+function BadgeCount({ count }: { count: number }) {
+  if (count <= 0) return null;
+
+  return (
+    <motion.span
+      initial={{ scale: 0, rotate: -180 }}
+      animate={{ scale: 1, rotate: 0 }}
+      whileHover={{ scale: 1.15 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+      className="min-w-[18px] px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-full text-center shadow-lg shadow-red-500/40"
+    >
+      {count > 99 ? '99+' : count}
+    </motion.span>
+  );
+}
 
 export function Sidebar() {
   const { sidebar, setSidebarCollapsed } = useUIStore();
@@ -75,52 +370,77 @@ export function Sidebar() {
 
   const isCollapsed = sidebar.isCollapsed;
 
-  // Check for new articles on mount and periodically
   useEffect(() => {
     checkForNewArticles();
-
-    // Check every 5 minutes for new articles
-    const interval = setInterval(() => {
-      checkForNewArticles();
-    }, 5 * 60 * 1000);
-
+    const interval = setInterval(checkForNewArticles, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [checkForNewArticles]);
 
-  // Mark news as viewed when navigating to news page
   useEffect(() => {
     if (location.pathname === '/news' || location.pathname.startsWith('/news/')) {
       markNewsAsViewed();
     }
   }, [location.pathname, markNewsAsViewed]);
 
-  // Fetch DM unread count on mount and periodically
   useEffect(() => {
     fetchUnreadCount();
-
-    // Check every 30 seconds for new messages
-    const interval = setInterval(() => {
-      fetchUnreadCount();
-    }, 30 * 1000);
-
+    const interval = setInterval(fetchUnreadCount, 30 * 1000);
     return () => clearInterval(interval);
   }, [fetchUnreadCount]);
+
+  const getBadgeCount = (path: string) => {
+    if (path === '/news') return newArticlesCount;
+    if (path === '/dm') return dmUnreadCount;
+    if (path === '/notifications') return unreadCount;
+    return 0;
+  };
+
+  const renderNavItem = (item: NavItem) => {
+    const colors = colorMap[item.color || 'slate'];
+    const badgeCount = item.hasBadge ? getBadgeCount(item.path) : 0;
+    const Icon = item.icon;
+
+    return (
+      <li key={item.path}>
+        <NavLink
+          to={item.path}
+          className={({ isActive }) =>
+            cn(
+              'group relative flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200',
+              isActive
+                ? `${colors.bg} ${colors.text} font-medium shadow-sm`
+                : `text-surface-600 dark:text-surface-400 ${colors.hover}`,
+              isCollapsed && 'justify-center px-2'
+            )
+          }
+          title={isCollapsed ? item.label : undefined}
+        >
+          {({ isActive }) => (
+            <NavItemContent
+              item={item}
+              isActive={isActive}
+              isCollapsed={isCollapsed}
+              badgeCount={badgeCount}
+              colors={colors}
+            />
+          )}
+        </NavLink>
+      </li>
+    );
+  };
 
   return (
     <aside
       className={cn(
         'fixed left-0 top-0 h-screen z-40 transition-all duration-300 flex flex-col',
-        // Hidden on mobile/tablet, visible on lg+ screens
         'hidden lg:flex',
-        // Light mode
-        'bg-white border-r border-surface-200',
-        // Dark mode - rich warm tones inspired by landing page
-        'dark:bg-gradient-to-b dark:from-[#1a1510] dark:via-[#15120d] dark:to-[#1a1510] dark:border-r dark:border-amber-900/20',
-        isCollapsed ? 'w-20' : 'w-64'
+        'bg-white/95 backdrop-blur-xl border-r border-surface-200/80',
+        'dark:bg-surface-900/95 dark:border-surface-800',
+        isCollapsed ? 'w-[72px]' : 'w-60'
       )}
     >
       {/* Logo and Toggle */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-surface-200 dark:border-amber-900/20">
+      <div className="h-14 flex items-center justify-between px-4 border-b border-surface-200/60 dark:border-surface-800">
         <AnimatePresence mode="wait">
           {!isCollapsed ? (
             <motion.div
@@ -128,8 +448,9 @@ export function Sidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              className="flex items-center gap-2"
             >
-              <AnimatedLogo size="sm" showText showAIBadge isCollapsed={false} />
+              <AnimatedLogo size="sm" showText showAIBadge={false} isCollapsed={false} />
             </motion.div>
           ) : (
             <motion.div
@@ -139,314 +460,247 @@ export function Sidebar() {
               exit={{ opacity: 0 }}
               className="mx-auto"
             >
-              <AnimatedLogo size="md" showText={false} showAIBadge={false} isCollapsed />
+              <AnimatedLogo size="sm" showText={false} showAIBadge={false} isCollapsed />
             </motion.div>
           )}
         </AnimatePresence>
 
         {!isCollapsed && (
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setSidebarCollapsed(!isCollapsed)}
-            className="p-1.5 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:text-amber-50/40 dark:hover:text-amber-50/80 dark:hover:bg-amber-900/20 transition-colors"
+            className="p-1.5 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
             title="Collapse sidebar"
           >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
+            <ChevronLeft className="w-4 h-4" />
+          </motion.button>
         )}
       </div>
 
       {/* Expand button when collapsed */}
       {isCollapsed && (
         <div className="px-3 py-2">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setSidebarCollapsed(false)}
-            className="w-full p-2 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:text-amber-50/40 dark:hover:text-amber-50/80 dark:hover:bg-amber-900/20 transition-colors flex items-center justify-center"
+            className="w-full p-2 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors flex items-center justify-center"
             title="Expand sidebar"
           >
-            <ChevronRight className="w-5 h-5" />
-          </button>
+            <ChevronRight className="w-4 h-4" />
+          </motion.button>
         </div>
       )}
 
-      {/* Ghana flag stripe */}
-      <div className="ghana-flag-stripe" />
-
       {/* Main Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3">
-        <ul className="space-y-1">
-          {mainNavItems.map((item) => {
-            // Add badge counts for news and messages
-            const badgeCount = item.path === '/news'
-              ? newArticlesCount
-              : item.path === '/dm'
-                ? dmUnreadCount
-                : item.badge;
-            const isWellness = item.path === '/wellness';
-            const isLibrary = item.path === '/library';
-            const isResearchHub = item.path === '/research-hub';
-            const isKwame = item.path === '/kwame';
-            const isFeed = item.path === '/feed';
-            const isMessages = item.path === '/dm';
-            const isNetwork = item.path === '/network';
-            const isHighlighted = isWellness || isLibrary || isResearchHub || isKwame || isFeed;
+      <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-4 scrollbar-thin scrollbar-thumb-surface-300 dark:scrollbar-thumb-surface-700">
+        {navSections.map((section, sectionIndex) => {
+          // Skip instructor section if user doesn't have instructor role
+          const instructorRoles = ['instructor', 'admin', 'director', 'super_admin'];
+          if (section.requiresInstructor && (!user || !instructorRoles.includes(user.role))) {
+            return null;
+          }
 
-            // Get theme colors for highlighted items
-            const getActiveClasses = () => {
-              if (isFeed) return 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium';
-              if (isMessages) return 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium';
-              if (isNetwork) return 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-medium';
-              if (isLibrary) return 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 font-medium';
-              if (isKwame) return 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 font-medium';
-              if (isResearchHub) return 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 font-medium';
-              if (isWellness) return 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 font-medium';
-              return 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium';
-            };
-
-            const getHoverClasses = () => {
-              if (isFeed) return 'text-surface-600 dark:text-amber-50/60 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-700 dark:hover:text-primary-300';
-              if (isMessages) return 'text-surface-600 dark:text-amber-50/60 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300';
-              if (isNetwork) return 'text-surface-600 dark:text-amber-50/60 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-300';
-              if (isLibrary) return 'text-surface-600 dark:text-amber-50/60 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300';
-              if (isKwame) return 'text-surface-600 dark:text-amber-50/60 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 hover:text-yellow-700 dark:hover:text-yellow-300';
-              if (isResearchHub) return 'text-surface-600 dark:text-amber-50/60 hover:bg-violet-50 dark:hover:bg-violet-900/30 hover:text-violet-700 dark:hover:text-violet-300';
-              if (isWellness) return 'text-surface-600 dark:text-amber-50/60 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300';
-              return 'text-surface-600 dark:text-amber-50/60 hover:bg-surface-100 dark:hover:bg-amber-900/20 hover:text-surface-900 dark:hover:text-amber-50';
-            };
-
-            return (
-              <li key={item.path}>
-                <NavLink
-                  to={item.path}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
-                      isActive ? getActiveClasses() : getHoverClasses(),
-                      isCollapsed && 'justify-center px-2'
-                    )
-                  }
-                  title={isCollapsed ? item.label : undefined}
-                >
-                  <span className="flex-shrink-0 relative">
-                    {item.icon}
-                    {/* Animated badge dot for collapsed state */}
-                    {isCollapsed && badgeCount && badgeCount > 0 && (
-                      <motion.span
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-error-500 rounded-full"
-                      >
-                        <motion.span
-                          className="absolute inset-0 bg-error-500 rounded-full"
-                          animate={{ scale: [1, 1.5, 1], opacity: [1, 0, 1] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        />
-                      </motion.span>
-                    )}
-                    {/* Library pulsing book indicator */}
-                    {isCollapsed && isLibrary && (
-                      <motion.span
-                        className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full"
-                        animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
-                    )}
-                    {/* Research Hub pulsing network indicator */}
-                    {isCollapsed && isResearchHub && (
-                      <motion.span
-                        className="absolute -top-1 -right-1 w-2 h-2 bg-violet-500 rounded-full"
-                        animate={{ scale: [1, 1.3, 1] }}
-                        transition={{ duration: 1.2, repeat: Infinity }}
-                      />
-                    )}
-                    {/* Wellness pulsing heart indicator */}
-                    {isCollapsed && isWellness && (
-                      <motion.span
-                        className="absolute -top-1 -right-1 w-2 h-2 bg-pink-500 rounded-full"
-                        animate={{ scale: [1, 1.3, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      />
-                    )}
-                    {/* Kwame pulsing wisdom indicator */}
-                    {isCollapsed && isKwame && (
-                      <motion.span
-                        className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full"
-                        animate={{ scale: [1, 1.4, 1], opacity: [0.8, 1, 0.8] }}
-                        transition={{ duration: 1.8, repeat: Infinity }}
-                      />
-                    )}
-                  </span>
-                  {!isCollapsed && (
-                    <span className="flex-1">{item.label}</span>
-                  )}
-                  {/* Feed "HOME" badge */}
-                  {!isCollapsed && isFeed && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-full shadow-sm"
-                    >
-                      HOME
-                    </motion.span>
-                  )}
-                  {/* Library "FEATURED" badge */}
-                  {!isCollapsed && isLibrary && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full shadow-sm"
-                    >
-                      HOT
-                    </motion.span>
-                  )}
-                  {/* Kwame "ASK AI" badge */}
-                  {!isCollapsed && isKwame && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-yellow-500 to-amber-500 text-white rounded-full shadow-sm flex items-center gap-0.5"
-                    >
-                      <motion.span
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="inline-block"
-                      >
-                        ✨
-                      </motion.span>
-                      AI
-                    </motion.span>
-                  )}
-                  {/* Research Hub "AI" badge */}
-                  {!isCollapsed && isResearchHub && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-full shadow-sm flex items-center gap-0.5"
-                    >
-                      <motion.span
-                        animate={{ rotate: [0, 360] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                        className="inline-block"
-                      >
-                        ✨
-                      </motion.span>
-                      AI
-                    </motion.span>
-                  )}
-                  {/* Wellness "New" badge */}
-                  {!isCollapsed && isWellness && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-full"
-                    >
-                      NEW
-                    </motion.span>
-                  )}
-                  {!isCollapsed && badgeCount && badgeCount > 0 && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                    >
-                      <Badge variant="error" size="sm" className="animate-pulse">
-                        {badgeCount > 99 ? '99+' : badgeCount}
-                      </Badge>
-                    </motion.div>
-                  )}
-                </NavLink>
-              </li>
-            );
-          })}
-        </ul>
+          return (
+            <div key={sectionIndex}>
+              {section.title && !isCollapsed && (
+                <h3 className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-surface-400 dark:text-surface-500">
+                  {section.title}
+                </h3>
+              )}
+              {section.title && isCollapsed && (
+                <div className="h-px bg-surface-200 dark:bg-surface-800 mx-2 my-2" />
+              )}
+              <ul className="space-y-0.5">
+                {section.items.map(renderNavItem)}
+              </ul>
+            </div>
+          );
+        })}
       </nav>
 
       {/* Bottom Navigation */}
-      <div className="px-3 py-4 border-t border-surface-200 dark:border-amber-900/20">
-        <ul className="space-y-1">
-          {bottomNavItems.map((item) => {
-            const badgeCount = item.path === '/notifications' ? unreadCount : undefined;
-            return (
-              <li key={item.path}>
-                <NavLink
-                  to={item.path}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm',
-                      isActive
-                        ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 font-medium'
-                        : 'text-surface-600 dark:text-amber-50/60 hover:bg-surface-100 dark:hover:bg-amber-900/20 hover:text-surface-900 dark:hover:text-amber-50',
-                      isCollapsed && 'justify-center px-2'
-                    )
-                  }
-                  title={isCollapsed ? item.label : undefined}
-                >
-                  <span className="flex-shrink-0 relative">
-                    {item.icon}
-                    {isCollapsed && badgeCount && badgeCount > 0 && (
-                      <motion.span
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -top-1 -right-1 w-2 h-2 bg-error-500 rounded-full"
-                      />
-                    )}
-                  </span>
-                  {!isCollapsed && (
-                    <>
-                      <span className="flex-1">{item.label}</span>
-                      {badgeCount && badgeCount > 0 && (
-                        <Badge variant="error" size="sm">
-                          {badgeCount > 99 ? '99+' : badgeCount}
-                        </Badge>
-                      )}
-                    </>
-                  )}
-                </NavLink>
-              </li>
-            );
-          })}
+      <div className="px-3 py-3 border-t border-surface-200/60 dark:border-surface-800">
+        <ul className="space-y-0.5">
+          {bottomNavItems.map(renderNavItem)}
         </ul>
       </div>
 
       {/* User Profile */}
       {user && (
-        <div className="px-3 py-4 border-t border-surface-200 dark:border-amber-900/20">
-          <div
-            className={cn(
-              'flex items-center gap-3',
-              isCollapsed && 'justify-center'
-            )}
-          >
-            <NavLink to="/profile" className="flex-shrink-0">
-              <Avatar
-                src={user.avatar}
-                name={user.displayName}
-                size={isCollapsed ? 'md' : 'sm'}
-                showStatus
-                status="online"
-              />
+        <div className="px-3 py-3 border-t border-surface-200/60 dark:border-surface-800">
+          <div className={cn('flex items-center gap-3', isCollapsed && 'justify-center')}>
+            <NavLink to="/profile" className="flex-shrink-0 group">
+              <motion.div
+                className="relative"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Avatar
+                  src={user.avatar}
+                  name={user.displayName}
+                  size={isCollapsed ? 'md' : 'sm'}
+                  className="ring-2 ring-transparent group-hover:ring-primary-200 dark:group-hover:ring-primary-800 transition-all"
+                />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full ring-2 ring-white dark:ring-surface-900" />
+              </motion.div>
             </NavLink>
             {!isCollapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-surface-900 dark:text-amber-50 truncate">
-                  {user.displayName}
-                </p>
-                <p className="text-xs text-surface-500 dark:text-amber-50/50 truncate">
-                  {user.title || user.role}
-                </p>
-              </div>
-            )}
-            {!isCollapsed && (
-              <button
-                onClick={logout}
-                aria-label="Sign out"
-                className="p-2 text-surface-400 hover:text-error-500 hover:bg-error-50 dark:text-amber-50/40 dark:hover:text-error-400 dark:hover:bg-error-900/30 rounded-lg transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
+              <>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm text-surface-900 dark:text-surface-100 truncate">
+                    {user.displayName}
+                  </p>
+                  <p className="text-[11px] text-surface-500 dark:text-surface-500 truncate">
+                    {user.title || user.role?.replace('_', ' ')}
+                  </p>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: -10 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={logout}
+                  aria-label="Sign out"
+                  className="p-1.5 text-surface-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                </motion.button>
+              </>
             )}
           </div>
         </div>
       )}
     </aside>
+  );
+}
+
+// Separate component for nav item content to handle hover state
+function NavItemContent({
+  item,
+  isActive,
+  isCollapsed,
+  badgeCount,
+  colors
+}: {
+  item: NavItem;
+  isActive: boolean;
+  isCollapsed: boolean;
+  badgeCount: number;
+  colors: typeof colorMap[string];
+}) {
+  const Icon = item.icon;
+
+  // Beautiful inline styles for each icon color - ALWAYS colorful!
+  const iconColorStyles: Record<string, { color: string; glow: string; bgGlow: string }> = {
+    primary: { color: '#006B3F', glow: '0 0 8px rgba(0,107,63,0.6)', bgGlow: 'rgba(0,107,63,0.15)' },
+    slate: { color: '#64748b', glow: '0 0 6px rgba(100,116,139,0.5)', bgGlow: 'rgba(100,116,139,0.12)' },
+    blue: { color: '#3b82f6', glow: '0 0 10px rgba(59,130,246,0.6)', bgGlow: 'rgba(59,130,246,0.15)' },
+    emerald: { color: '#10b981', glow: '0 0 10px rgba(16,185,129,0.6)', bgGlow: 'rgba(16,185,129,0.15)' },
+    cyan: { color: '#06b6d4', glow: '0 0 10px rgba(6,182,212,0.6)', bgGlow: 'rgba(6,182,212,0.15)' },
+    violet: { color: '#8b5cf6', glow: '0 0 10px rgba(139,92,246,0.6)', bgGlow: 'rgba(139,92,246,0.15)' },
+    indigo: { color: '#6366f1', glow: '0 0 10px rgba(99,102,241,0.6)', bgGlow: 'rgba(99,102,241,0.15)' },
+    sky: { color: '#0ea5e9', glow: '0 0 10px rgba(14,165,233,0.6)', bgGlow: 'rgba(14,165,233,0.15)' },
+    green: { color: '#22c55e', glow: '0 0 10px rgba(34,197,94,0.6)', bgGlow: 'rgba(34,197,94,0.15)' },
+    amber: { color: '#f59e0b', glow: '0 0 10px rgba(245,158,11,0.6)', bgGlow: 'rgba(245,158,11,0.15)' },
+    yellow: { color: '#eab308', glow: '0 0 10px rgba(234,179,8,0.6)', bgGlow: 'rgba(234,179,8,0.15)' },
+    purple: { color: '#a855f7', glow: '0 0 10px rgba(168,85,247,0.6)', bgGlow: 'rgba(168,85,247,0.15)' },
+    orange: { color: '#f97316', glow: '0 0 10px rgba(249,115,22,0.6)', bgGlow: 'rgba(249,115,22,0.15)' },
+    rose: { color: '#f43f5e', glow: '0 0 10px rgba(244,63,94,0.6)', bgGlow: 'rgba(244,63,94,0.15)' },
+    pink: { color: '#ec4899', glow: '0 0 10px rgba(236,72,153,0.6)', bgGlow: 'rgba(236,72,153,0.15)' },
+    teal: { color: '#14b8a6', glow: '0 0 10px rgba(20,184,166,0.6)', bgGlow: 'rgba(20,184,166,0.15)' },
+  };
+
+  const colorStyle = iconColorStyles[item.color || 'slate'] || iconColorStyles.slate;
+
+  return (
+    <>
+      <span className="relative flex-shrink-0">
+        <motion.div
+          whileHover={{ scale: 1.25, rotate: [0, -12, 12, -6, 6, 0] }}
+          transition={{
+            scale: { type: 'spring', stiffness: 500, damping: 15 },
+            rotate: { duration: 0.5, ease: 'easeInOut' }
+          }}
+          className="relative"
+        >
+          {/* Glowing background circle - always visible, brighter on active/hover */}
+          <motion.div
+            className="absolute -inset-1 rounded-lg"
+            style={{
+              background: colorStyle.bgGlow,
+              opacity: isActive ? 1 : 0.6,
+            }}
+            whileHover={{ opacity: 1, scale: 1.1 }}
+            transition={{ duration: 0.2 }}
+          />
+
+          {/* The icon - ALWAYS colorful with glow */}
+          <Icon
+            className="w-[18px] h-[18px] relative z-10 transition-all duration-200"
+            style={{
+              color: colorStyle.color,
+              filter: isActive
+                ? `drop-shadow(${colorStyle.glow})`
+                : `drop-shadow(0 0 4px ${colorStyle.bgGlow})`,
+            }}
+          />
+        </motion.div>
+
+        {/* Notification dot for collapsed state */}
+        {isCollapsed && badgeCount > 0 && (
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-gradient-to-r from-red-500 to-rose-500 rounded-full ring-2 ring-white dark:ring-surface-900 shadow-lg shadow-red-500/50"
+          />
+        )}
+
+        {/* Pulsing indicator for collapsed AI items */}
+        {isCollapsed && item.tag?.label === 'AI' && (
+          <motion.span
+            animate={{
+              scale: [1, 1.4, 1],
+              opacity: [0.6, 1, 0.6],
+              boxShadow: [
+                '0 0 4px rgba(168,85,247,0.4)',
+                '0 0 12px rgba(168,85,247,0.8)',
+                '0 0 4px rgba(168,85,247,0.4)'
+              ]
+            }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full"
+          />
+        )}
+
+        {/* Live indicator for chat */}
+        {isCollapsed && item.tag?.label === 'LIVE' && (
+          <motion.span
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.7, 1, 0.7]
+            }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-cyan-500 rounded-full shadow-lg shadow-cyan-500/50"
+          />
+        )}
+      </span>
+
+      {!isCollapsed && (
+        <>
+          <span className={cn(
+            'flex-1 text-[13px] transition-colors duration-200',
+            isActive && 'font-medium'
+          )}>
+            {item.label}
+          </span>
+
+          {/* Tag */}
+          {item.tag && <NavTag {...item.tag} />}
+
+          {/* Badge Count */}
+          {badgeCount > 0 && <BadgeCount count={badgeCount} />}
+        </>
+      )}
+    </>
   );
 }

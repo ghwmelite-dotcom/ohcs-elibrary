@@ -68,17 +68,19 @@ export const documentsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>
 // Apply optional auth to all document routes
 documentsRoutes.use('*', optionalAuth);
 
-// Document categories (static data)
-const CATEGORIES = [
-  { id: 'circulars', name: 'Circulars & Directives' },
-  { id: 'policies', name: 'Policies & Guidelines' },
-  { id: 'training', name: 'Training Materials' },
-  { id: 'reports', name: 'Reports & Publications' },
-  { id: 'forms', name: 'Forms & Templates' },
-  { id: 'legal', name: 'Legal Documents' },
-  { id: 'research', name: 'Research Papers' },
-  { id: 'general', name: 'General Resources' },
-];
+// Helper to generate slug from name
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+// Helper to check if user is admin
+function isAdmin(c: AppContext): boolean {
+  const role = c.get('userRole');
+  return role === 'admin' || role === 'super_admin';
+}
 
 // GET /documents - List documents with filtering and pagination
 documentsRoutes.get('/', async (c: AppContext) => {
@@ -173,27 +175,29 @@ documentsRoutes.get('/', async (c: AppContext) => {
   }
 });
 
-// GET /documents/categories - Get category counts
+// GET /documents/categories - Get all categories with document counts
 documentsRoutes.get('/categories', async (c: AppContext) => {
   try {
     const { DB } = c.env;
 
+    // Get categories from database with document counts
     const { results } = await DB.prepare(`
-      SELECT category, COUNT(*) as count
-      FROM documents
-      WHERE status = 'published'
-      GROUP BY category
+      SELECT
+        dc.*,
+        COALESCE(
+          (SELECT COUNT(*) FROM documents d
+           WHERE d.category = dc.slug AND d.status = 'published'),
+          0
+        ) as documentCount
+      FROM document_categories dc
+      WHERE dc.isActive = 1
+      ORDER BY dc.sortOrder ASC, dc.name ASC
     `).all();
 
-    const categoryCounts = CATEGORIES.map((cat) => ({
-      ...cat,
-      count: results.find((r: any) => r.category === cat.id)?.count || 0,
-    }));
-
-    return c.json(categoryCounts);
+    return c.json(results || []);
   } catch (error) {
     console.error('Error fetching categories:', error);
-    return c.json(CATEGORIES.map((cat) => ({ ...cat, count: 0 })));
+    return c.json([]);
   }
 });
 
@@ -1027,5 +1031,252 @@ documentsRoutes.get('/:id/download', async (c: AppContext) => {
   } catch (error) {
     console.error('Error downloading document:', error);
     return c.json({ error: 'Failed to download document' }, 500);
+  }
+});
+
+// ============================================================================
+// ADMIN CATEGORY MANAGEMENT ENDPOINTS
+// ============================================================================
+
+// GET /documents/categories/admin - Get all categories (including inactive) for admin
+documentsRoutes.get('/categories/admin', requireAuth, async (c: AppContext) => {
+  try {
+    if (!isAdmin(c)) {
+      return c.json({ error: 'Forbidden', message: 'Admin access required' }, 403);
+    }
+
+    const { DB } = c.env;
+
+    const { results } = await DB.prepare(`
+      SELECT
+        dc.*,
+        COALESCE(
+          (SELECT COUNT(*) FROM documents d
+           WHERE d.category = dc.slug AND d.status = 'published'),
+          0
+        ) as documentCount
+      FROM document_categories dc
+      ORDER BY dc.sortOrder ASC, dc.name ASC
+    `).all();
+
+    return c.json(results || []);
+  } catch (error) {
+    console.error('Error fetching admin categories:', error);
+    return c.json({ error: 'Failed to fetch categories' }, 500);
+  }
+});
+
+// POST /documents/categories - Create a new category (admin only)
+documentsRoutes.post('/categories', requireAuth, async (c: AppContext) => {
+  try {
+    if (!isAdmin(c)) {
+      return c.json({ error: 'Forbidden', message: 'Admin access required' }, 403);
+    }
+
+    const { DB } = c.env;
+    const body = await c.req.json();
+    const { name, description, icon, color } = body;
+
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return c.json({ error: 'Category name is required' }, 400);
+    }
+
+    const slug = generateSlug(name.trim());
+    const id = `cat-${slug}-${Date.now()}`;
+
+    // Check for duplicate name or slug
+    const existing = await DB.prepare(`
+      SELECT id FROM document_categories WHERE name = ? OR slug = ?
+    `).bind(name.trim(), slug).first();
+
+    if (existing) {
+      return c.json({ error: 'A category with this name already exists' }, 400);
+    }
+
+    // Get max sort order
+    const maxOrder = await DB.prepare(`
+      SELECT COALESCE(MAX(sortOrder), 0) + 1 as nextOrder FROM document_categories
+    `).first<{ nextOrder: number }>();
+
+    await DB.prepare(`
+      INSERT INTO document_categories (id, name, slug, description, icon, color, sortOrder)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id,
+      name.trim(),
+      slug,
+      description || null,
+      icon || 'folder',
+      color || '#006B3F',
+      maxOrder?.nextOrder || 1
+    ).run();
+
+    const newCategory = await DB.prepare(`
+      SELECT * FROM document_categories WHERE id = ?
+    `).bind(id).first();
+
+    return c.json(newCategory, 201);
+  } catch (error) {
+    console.error('Error creating category:', error);
+    return c.json({ error: 'Failed to create category' }, 500);
+  }
+});
+
+// PUT /documents/categories/:id - Update a category (admin only)
+documentsRoutes.put('/categories/:id', requireAuth, async (c: AppContext) => {
+  try {
+    if (!isAdmin(c)) {
+      return c.json({ error: 'Forbidden', message: 'Admin access required' }, 403);
+    }
+
+    const { DB } = c.env;
+    const categoryId = c.req.param('id');
+    const body = await c.req.json();
+    const { name, description, icon, color, sortOrder, isActive } = body;
+
+    // Check category exists
+    const existing = await DB.prepare(`
+      SELECT * FROM document_categories WHERE id = ?
+    `).bind(categoryId).first();
+
+    if (!existing) {
+      return c.json({ error: 'Category not found' }, 404);
+    }
+
+    // Build update query dynamically
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (name !== undefined) {
+      const newSlug = generateSlug(name.trim());
+      // Check for duplicate
+      const duplicate = await DB.prepare(`
+        SELECT id FROM document_categories WHERE (name = ? OR slug = ?) AND id != ?
+      `).bind(name.trim(), newSlug, categoryId).first();
+
+      if (duplicate) {
+        return c.json({ error: 'A category with this name already exists' }, 400);
+      }
+
+      updates.push('name = ?', 'slug = ?');
+      values.push(name.trim(), newSlug);
+    }
+
+    if (description !== undefined) {
+      updates.push('description = ?');
+      values.push(description);
+    }
+
+    if (icon !== undefined) {
+      updates.push('icon = ?');
+      values.push(icon);
+    }
+
+    if (color !== undefined) {
+      updates.push('color = ?');
+      values.push(color);
+    }
+
+    if (sortOrder !== undefined) {
+      updates.push('sortOrder = ?');
+      values.push(sortOrder);
+    }
+
+    if (isActive !== undefined) {
+      updates.push('isActive = ?');
+      values.push(isActive ? 1 : 0);
+    }
+
+    if (updates.length === 0) {
+      return c.json({ error: 'No valid fields to update' }, 400);
+    }
+
+    updates.push('updatedAt = datetime("now")');
+    values.push(categoryId);
+
+    await DB.prepare(`
+      UPDATE document_categories SET ${updates.join(', ')} WHERE id = ?
+    `).bind(...values).run();
+
+    const updated = await DB.prepare(`
+      SELECT * FROM document_categories WHERE id = ?
+    `).bind(categoryId).first();
+
+    return c.json(updated);
+  } catch (error) {
+    console.error('Error updating category:', error);
+    return c.json({ error: 'Failed to update category' }, 500);
+  }
+});
+
+// DELETE /documents/categories/:id - Delete a category (admin only)
+documentsRoutes.delete('/categories/:id', requireAuth, async (c: AppContext) => {
+  try {
+    if (!isAdmin(c)) {
+      return c.json({ error: 'Forbidden', message: 'Admin access required' }, 403);
+    }
+
+    const { DB } = c.env;
+    const categoryId = c.req.param('id');
+
+    // Check category exists
+    const existing = await DB.prepare(`
+      SELECT * FROM document_categories WHERE id = ?
+    `).bind(categoryId).first<any>();
+
+    if (!existing) {
+      return c.json({ error: 'Category not found' }, 404);
+    }
+
+    // Check if any documents use this category
+    const docCount = await DB.prepare(`
+      SELECT COUNT(*) as count FROM documents WHERE category = ?
+    `).bind(existing.slug).first<{ count: number }>();
+
+    if (docCount && docCount.count > 0) {
+      return c.json({
+        error: 'Cannot delete category',
+        message: `This category is used by ${docCount.count} document(s). Please reassign them first.`,
+        documentCount: docCount.count
+      }, 400);
+    }
+
+    await DB.prepare(`
+      DELETE FROM document_categories WHERE id = ?
+    `).bind(categoryId).run();
+
+    return c.json({ success: true, message: 'Category deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    return c.json({ error: 'Failed to delete category' }, 500);
+  }
+});
+
+// PUT /documents/categories/reorder - Reorder categories (admin only)
+documentsRoutes.put('/categories/reorder', requireAuth, async (c: AppContext) => {
+  try {
+    if (!isAdmin(c)) {
+      return c.json({ error: 'Forbidden', message: 'Admin access required' }, 403);
+    }
+
+    const { DB } = c.env;
+    const body = await c.req.json();
+    const { categories } = body;
+
+    if (!Array.isArray(categories)) {
+      return c.json({ error: 'Categories array is required' }, 400);
+    }
+
+    // Update sort order for each category
+    for (let i = 0; i < categories.length; i++) {
+      await DB.prepare(`
+        UPDATE document_categories SET sortOrder = ?, updatedAt = datetime("now") WHERE id = ?
+      `).bind(i + 1, categories[i]).run();
+    }
+
+    return c.json({ success: true, message: 'Categories reordered successfully' });
+  } catch (error) {
+    console.error('Error reordering categories:', error);
+    return c.json({ error: 'Failed to reorder categories' }, 500);
   }
 });

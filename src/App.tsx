@@ -24,6 +24,7 @@ const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const VerifyEmail = lazy(() => import('@/pages/VerifyEmail'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const VerifyCertificate = lazy(() => import('@/pages/VerifyCertificate'));
 
 // Main pages
 const Wall = lazy(() => import('@/pages/Wall'));
@@ -62,6 +63,30 @@ const WellnessResource = lazy(() => import('@/pages/WellnessResource'));
 // AI Knowledge Assistant
 const Kwame = lazy(() => import('@/pages/Kwame'));
 
+// Learning Management System (LMS) pages
+const CourseCatalog = lazy(() => import('@/pages/lms/CourseCatalog'));
+const CourseDetail = lazy(() => import('@/pages/lms/CourseDetail'));
+const CourseLearn = lazy(() => import('@/pages/lms/CourseLearn'));
+const MyCourses = lazy(() => import('@/pages/lms/MyCourses'));
+const Certificates = lazy(() => import('@/pages/lms/Certificates'));
+const QuizPage = lazy(() => import('@/pages/lms/QuizPage'));
+const AssignmentPage = lazy(() => import('@/pages/lms/AssignmentPage'));
+const CourseDiscussions = lazy(() => import('@/pages/lms/CourseDiscussions'));
+const CourseAnnouncements = lazy(() => import('@/pages/lms/CourseAnnouncements'));
+const PeerReviews = lazy(() => import('@/pages/lms/PeerReviews'));
+const PeerReviewForm = lazy(() => import('@/pages/lms/PeerReviewForm'));
+const CourseReviews = lazy(() => import('@/pages/lms/CourseReviews'));
+
+// Instructor pages
+const InstructorDashboard = lazy(() => import('@/pages/instructor/InstructorDashboard'));
+const CourseBuilder = lazy(() => import('@/pages/instructor/CourseBuilder'));
+const CourseGradebook = lazy(() => import('@/pages/instructor/CourseGradebook'));
+const CourseStudents = lazy(() => import('@/pages/instructor/CourseStudents'));
+const CourseAnalytics = lazy(() => import('@/pages/instructor/CourseAnalytics'));
+const QuizBuilder = lazy(() => import('@/pages/instructor/QuizBuilder'));
+const AssignmentGrading = lazy(() => import('@/pages/instructor/AssignmentGrading'));
+const RubricsManagement = lazy(() => import('@/pages/instructor/RubricsManagement'));
+
 // Research Hub pages
 const ResearchLab = lazy(() => import('@/pages/ResearchLab'));
 const ResearchProjects = lazy(() => import('@/pages/ResearchProjects'));
@@ -83,6 +108,7 @@ const AdminCounselors = lazy(() => import('@/pages/admin/AdminCounselors'));
 const CounselorReports = lazy(() => import('@/pages/admin/CounselorReports'));
 const AdminBroadcasts = lazy(() => import('@/pages/admin/AdminBroadcasts'));
 const AdminResearch = lazy(() => import('@/pages/admin/AdminResearch'));
+const AdminLMS = lazy(() => import('@/pages/admin/AdminLMS'));
 
 // Loading fallback component
 function PageLoader() {
@@ -125,6 +151,27 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
   const adminRoles = ['admin', 'director', 'super_admin'];
   if (!user || !adminRoles.includes(user.role)) {
+    return <Navigate to="/feed" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+// Instructor route wrapper
+function InstructorRoute({ children }: { children: React.ReactNode }) {
+  const { user, isAuthenticated, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return <PageLoader />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Allow instructors, admins, and directors to access instructor features
+  const instructorRoles = ['instructor', 'admin', 'director', 'super_admin'];
+  if (!user || !instructorRoles.includes(user.role)) {
     return <Navigate to="/feed" replace />;
   }
 
@@ -231,6 +278,7 @@ export default function App() {
           <Routes>
           {/* Public routes */}
           <Route path="/" element={<Landing />} />
+          <Route path="/verify" element={<VerifyCertificate />} />
 
           {/* Auth routes (guest only) */}
           <Route element={<AuthLayout />}>
@@ -319,10 +367,91 @@ export default function App() {
             {/* AI Knowledge Assistant */}
             <Route path="/kwame" element={<Kwame />} />
 
+            {/* Learning Management System (LMS) routes */}
+            <Route path="/courses" element={<CourseCatalog />} />
+            <Route path="/courses/:courseId" element={<CourseDetail />} />
+            <Route path="/courses/:courseId/learn" element={<CourseLearn />} />
+            <Route path="/courses/:courseId/learn/:lessonId" element={<CourseLearn />} />
+            <Route path="/courses/:courseId/quiz/:quizId" element={<QuizPage />} />
+            <Route path="/courses/:courseId/assignment/:assignmentId" element={<AssignmentPage />} />
+            <Route path="/courses/:courseId/discussions" element={<CourseDiscussions />} />
+            <Route path="/courses/:courseId/announcements" element={<CourseAnnouncements />} />
+            <Route path="/courses/:courseId/reviews" element={<CourseReviews />} />
+            <Route path="/my-courses" element={<MyCourses />} />
+            <Route path="/certificates" element={<Certificates />} />
+            <Route path="/peer-reviews" element={<PeerReviews />} />
+            <Route path="/peer-reviews/:reviewId" element={<PeerReviewForm />} />
+
             {/* Research Hub routes */}
             <Route path="/research-hub" element={<ResearchLab />} />
             <Route path="/research-hub/projects" element={<ResearchProjects />} />
             <Route path="/research-hub/projects/:id" element={<ResearchProject />} />
+
+            {/* Instructor routes */}
+            <Route
+              path="/instructor"
+              element={
+                <InstructorRoute>
+                  <InstructorDashboard />
+                </InstructorRoute>
+              }
+            />
+            <Route
+              path="/instructor/courses/:courseId/edit"
+              element={
+                <InstructorRoute>
+                  <CourseBuilder />
+                </InstructorRoute>
+              }
+            />
+            <Route
+              path="/instructor/courses/:courseId/students"
+              element={
+                <InstructorRoute>
+                  <CourseStudents />
+                </InstructorRoute>
+              }
+            />
+            <Route
+              path="/instructor/courses/:courseId/grades"
+              element={
+                <InstructorRoute>
+                  <CourseGradebook />
+                </InstructorRoute>
+              }
+            />
+            <Route
+              path="/instructor/courses/:courseId/analytics"
+              element={
+                <InstructorRoute>
+                  <CourseAnalytics />
+                </InstructorRoute>
+              }
+            />
+            <Route
+              path="/instructor/courses/:courseId/quiz/:quizId"
+              element={
+                <InstructorRoute>
+                  <QuizBuilder />
+                </InstructorRoute>
+              }
+            />
+            <Route
+              path="/instructor/courses/:courseId/assignment/:assignmentId/grade"
+              element={
+                <InstructorRoute>
+                  <AssignmentGrading />
+                </InstructorRoute>
+              }
+            />
+            <Route
+              path="/instructor/rubrics"
+              element={
+                <InstructorRoute>
+                  <RubricsManagement />
+                </InstructorRoute>
+              }
+            />
 
             {/* Profile routes */}
             <Route path="/profile" element={<Profile />} />
@@ -361,6 +490,7 @@ export default function App() {
             <Route path="/admin/counselors" element={<AdminCounselors />} />
             <Route path="/admin/broadcasts" element={<AdminBroadcasts />} />
             <Route path="/admin/research" element={<AdminResearch />} />
+            <Route path="/admin/lms" element={<AdminLMS />} />
           </Route>
 
           {/* 404 route */}

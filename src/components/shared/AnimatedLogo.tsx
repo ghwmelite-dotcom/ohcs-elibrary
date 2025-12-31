@@ -187,7 +187,7 @@ export function AnimatedLogo({
                 </motion.span>
               )}
             </div>
-            <p className="text-[9px] text-surface-500 dark:text-surface-400 leading-tight">
+            <p className="text-[9px] font-medium leading-tight" style={{ color: '#D4A017' }}>
               Ghana Civil Service
             </p>
           </motion.div>

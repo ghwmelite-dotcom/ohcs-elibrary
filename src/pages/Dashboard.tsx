@@ -235,14 +235,16 @@ interface StatCardProps {
   value: number | string;
   icon: React.ElementType;
   color: string;
+  glow?: string;
   link: string;
   delay?: number;
 }
 
-function StatCard({ label, value, icon: Icon, color, link, delay = 0 }: StatCardProps) {
+function StatCard({ label, value, icon: Icon, color, glow, link, delay = 0 }: StatCardProps) {
   const ref = useRef<HTMLAnchorElement>(null);
   const isInView = useInView(ref, { once: true });
   const [isHovered, setIsHovered] = useState(false);
+  const glowColor = glow || `${color}40`;
 
   return (
     <motion.div
@@ -258,7 +260,7 @@ function StatCard({ label, value, icon: Icon, color, link, delay = 0 }: StatCard
         onMouseLeave={() => setIsHovered(false)}
         style={{
           boxShadow: isHovered
-            ? `0 20px 40px -12px ${color}40, 0 0 0 1px ${color}20`
+            ? `0 20px 40px -12px ${glowColor}, 0 0 0 1px ${color}30`
             : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
         }}
       >
@@ -266,20 +268,40 @@ function StatCard({ label, value, icon: Icon, color, link, delay = 0 }: StatCard
         <motion.div
           className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
           style={{
-            background: `radial-gradient(circle at 50% 50%, ${color}30, transparent 70%)`,
-            filter: 'blur(15px)',
+            background: `radial-gradient(circle at 50% 50%, ${glowColor}, transparent 70%)`,
+            filter: 'blur(20px)',
           }}
         />
 
         <div className="relative flex items-center gap-2 sm:gap-3 md:gap-4">
-          {/* Icon */}
+          {/* Icon with glow */}
           <motion.div
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0"
+            className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: `${color}15` }}
-            animate={{ rotate: isHovered ? 360 : 0 }}
-            transition={{ duration: 0.5 }}
+            animate={{
+              rotate: isHovered ? [0, -10, 10, -5, 5, 0] : 0,
+              scale: isHovered ? 1.1 : 1
+            }}
+            transition={{
+              rotate: { duration: 0.5 },
+              scale: { type: 'spring', stiffness: 400 }
+            }}
           >
-            <Icon className="w-5 h-5 sm:w-6 sm:h-6" style={{ color }} />
+            {/* Icon glow */}
+            <motion.div
+              className="absolute inset-0 rounded-xl"
+              style={{
+                boxShadow: isHovered ? `0 0 20px ${glowColor}` : 'none',
+                transition: 'box-shadow 0.3s ease'
+              }}
+            />
+            <Icon
+              className="w-5 h-5 sm:w-6 sm:h-6 relative z-10 transition-all duration-300"
+              style={{
+                color,
+                filter: isHovered ? `drop-shadow(0 0 8px ${glowColor})` : 'none'
+              }}
+            />
           </motion.div>
 
           {/* Content */}
@@ -422,6 +444,8 @@ interface ActivityItemProps {
 }
 
 function ActivityItem({ type, message, time, delay = 0 }: ActivityItemProps) {
+  const [isHovered, setIsHovered] = useState(false);
+
   const icons = {
     xp: Zap,
     badge: Star,
@@ -429,11 +453,28 @@ function ActivityItem({ type, message, time, delay = 0 }: ActivityItemProps) {
     document: BookOpen,
   };
 
+  // Vibrant color configurations with glows
   const colors = {
-    xp: { bg: 'from-success-400 to-success-600', text: 'text-success-600' },
-    badge: { bg: 'from-secondary-400 to-secondary-600', text: 'text-secondary-600' },
-    forum: { bg: 'from-info-400 to-info-600', text: 'text-info-600' },
-    document: { bg: 'from-primary-400 to-primary-600', text: 'text-primary-600' },
+    xp: {
+      bg: 'from-emerald-400 to-green-500',
+      glow: 'rgba(16,185,129,0.5)',
+      color: '#10b981'
+    },
+    badge: {
+      bg: 'from-amber-400 to-yellow-500',
+      glow: 'rgba(245,158,11,0.5)',
+      color: '#f59e0b'
+    },
+    forum: {
+      bg: 'from-cyan-400 to-blue-500',
+      glow: 'rgba(6,182,212,0.5)',
+      color: '#06b6d4'
+    },
+    document: {
+      bg: 'from-violet-400 to-purple-500',
+      glow: 'rgba(139,92,246,0.5)',
+      color: '#8b5cf6'
+    },
   };
 
   const Icon = icons[type];
@@ -445,12 +486,29 @@ function ActivityItem({ type, message, time, delay = 0 }: ActivityItemProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
       className="flex items-start gap-3 group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <motion.div
-        className={cn('w-9 h-9 rounded-lg flex items-center justify-center text-white shadow-sm bg-gradient-to-br', color.bg)}
-        whileHover={{ scale: 1.1, rotate: 5 }}
+        className={cn('relative w-9 h-9 rounded-lg flex items-center justify-center text-white bg-gradient-to-br', color.bg)}
+        animate={{
+          rotate: isHovered ? [0, -8, 8, -4, 4, 0] : 0,
+          scale: isHovered ? 1.15 : 1
+        }}
+        transition={{
+          rotate: { duration: 0.5 },
+          scale: { type: 'spring', stiffness: 400 }
+        }}
+        style={{
+          boxShadow: isHovered ? `0 8px 20px -4px ${color.glow}` : '0 2px 4px rgba(0,0,0,0.1)'
+        }}
       >
-        <Icon className="w-4 h-4" />
+        <Icon
+          className="w-4 h-4 relative z-10"
+          style={{
+            filter: isHovered ? `drop-shadow(0 0 6px rgba(255,255,255,0.6))` : 'none'
+          }}
+        />
       </motion.div>
       <div className="flex-1 min-w-0">
         <p className="text-sm text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-100 transition-colors">
@@ -473,10 +531,14 @@ interface QuickActionProps {
   icon: React.ElementType;
   link: string;
   color: string;
+  glow?: string;
   delay?: number;
 }
 
-function QuickAction({ label, icon: Icon, link, color, delay = 0 }: QuickActionProps) {
+function QuickAction({ label, icon: Icon, link, color, glow, delay = 0 }: QuickActionProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const glowColor = glow || `${color}40`;
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
@@ -485,16 +547,52 @@ function QuickAction({ label, icon: Icon, link, color, delay = 0 }: QuickActionP
     >
       <Link
         to={link}
-        className="group flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-white dark:bg-surface-800/90 backdrop-blur-xl border border-surface-200/50 dark:border-surface-700/50 hover:shadow-lg transition-all"
+        className="group flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-white dark:bg-surface-800/90 backdrop-blur-xl border border-surface-200/50 dark:border-surface-700/50 transition-all duration-300"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        style={{
+          boxShadow: isHovered
+            ? `0 15px 30px -10px ${glowColor}, 0 0 0 1px ${color}20`
+            : '0 2px 4px rgba(0,0,0,0.05)',
+        }}
       >
+        {/* Hover glow effect */}
         <motion.div
-          className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg sm:rounded-xl flex items-center justify-center"
+          className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{
+            background: `radial-gradient(circle at 50% 30%, ${glowColor}, transparent 70%)`,
+            filter: 'blur(15px)',
+          }}
+        />
+        <motion.div
+          className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg sm:rounded-xl flex items-center justify-center"
           style={{ backgroundColor: `${color}15` }}
-          whileHover={{ scale: 1.1, rotate: 5 }}
+          animate={{
+            rotate: isHovered ? [0, -8, 8, -4, 4, 0] : 0,
+            scale: isHovered ? 1.15 : 1
+          }}
+          transition={{
+            rotate: { duration: 0.5 },
+            scale: { type: 'spring', stiffness: 400 }
+          }}
         >
-          <Icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" style={{ color }} />
+          {/* Glow ring */}
+          <motion.div
+            className="absolute inset-0 rounded-xl"
+            style={{
+              boxShadow: isHovered ? `0 0 20px ${glowColor}` : 'none',
+              transition: 'box-shadow 0.3s ease'
+            }}
+          />
+          <Icon
+            className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 relative z-10 transition-all duration-300"
+            style={{
+              color,
+              filter: isHovered ? `drop-shadow(0 0 8px ${glowColor})` : 'none'
+            }}
+          />
         </motion.div>
-        <span className="text-xs sm:text-sm font-medium text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-100 transition-colors text-center truncate w-full">
+        <span className="text-xs sm:text-sm font-medium text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-100 transition-colors text-center truncate w-full relative z-10">
           {label}
         </span>
       </Link>
@@ -596,11 +694,12 @@ export default function Dashboard() {
   const badgesEarned = stats?.badgeCount || 0;
   const currentStreak = stats?.streaks?.[0]?.currentStreak || 0;
 
+  // Beautiful varied colors with glow effects
   const quickStats = [
-    { label: 'Documents Read', value: documentsRead, icon: BookOpen, color: '#006B3F', link: '/library' },
-    { label: 'Forum Posts', value: forumPosts, icon: MessageSquare, color: '#3B82F6', link: '/forum' },
-    { label: 'Groups Joined', value: 3, icon: Users, color: '#FCD116', link: '/groups' },
-    { label: 'Badges Earned', value: badgesEarned, icon: Trophy, color: '#CE1126', link: '/leaderboard' },
+    { label: 'Documents Read', value: documentsRead, icon: BookOpen, color: '#10b981', glow: 'rgba(16,185,129,0.4)', link: '/library' },
+    { label: 'Forum Posts', value: forumPosts, icon: MessageSquare, color: '#3b82f6', glow: 'rgba(59,130,246,0.4)', link: '/forum' },
+    { label: 'Groups Joined', value: 3, icon: Users, color: '#8b5cf6', glow: 'rgba(139,92,246,0.4)', link: '/groups' },
+    { label: 'Badges Earned', value: badgesEarned, icon: Trophy, color: '#f59e0b', glow: 'rgba(245,158,11,0.4)', link: '/leaderboard' },
   ];
 
   // Use real recent documents or fallback
@@ -651,11 +750,12 @@ export default function Dashboard() {
     { type: 'xp' as const, message: 'Welcome to OHCS E-Library!', time: 'Just now' },
   ];
 
+  // Beautiful varied colors for quick actions
   const quickActions = [
-    { label: 'Browse Library', icon: BookOpen, link: '/library', color: '#006B3F' },
-    { label: 'Forum', icon: MessageSquare, link: '/forum', color: '#3B82F6' },
-    { label: 'News Feed', icon: Newspaper, link: '/news', color: '#CE1126' },
-    { label: 'Leaderboard', icon: Trophy, link: '/leaderboard', color: '#FCD116' },
+    { label: 'Browse Library', icon: BookOpen, link: '/library', color: '#10b981', glow: 'rgba(16,185,129,0.4)' },
+    { label: 'Forum', icon: MessageSquare, link: '/forum', color: '#06b6d4', glow: 'rgba(6,182,212,0.4)' },
+    { label: 'News Feed', icon: Newspaper, link: '/news', color: '#f43f5e', glow: 'rgba(244,63,94,0.4)' },
+    { label: 'Leaderboard', icon: Trophy, link: '/leaderboard', color: '#eab308', glow: 'rgba(234,179,8,0.4)' },
   ];
 
   const upcomingEvents = [

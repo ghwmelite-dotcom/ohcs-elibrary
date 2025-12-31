@@ -29,6 +29,7 @@ import { Badge } from '@/components/shared/Badge';
 import { Dropdown, DropdownItem, DropdownDivider, DropdownLabel } from '@/components/shared/Dropdown';
 import { SearchInput } from '@/components/shared/Input';
 import { AnimatedThemeToggle } from '@/components/shared/AnimatedThemeToggle';
+import { ThemeToggleHint } from '@/components/shared/ThemeToggleHint';
 import { formatRelativeTime } from '@/utils/formatters';
 
 export function Header() {
@@ -127,8 +128,10 @@ export function Header() {
             </Link>
           )}
 
-          {/* Animated Theme Toggle */}
-          <AnimatedThemeToggle size="md" />
+          {/* Animated Theme Toggle with Discovery Hint */}
+          <ThemeToggleHint variant="dashboard">
+            <AnimatedThemeToggle size="md" />
+          </ThemeToggleHint>
 
           {/* Friend Requests */}
           <Dropdown

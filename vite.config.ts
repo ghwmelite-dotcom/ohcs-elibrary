@@ -38,9 +38,9 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'https://ohcs-elibrary-api.ghwmelite.workers.dev',
+        target: 'http://127.0.0.1:8787',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
     },
   },

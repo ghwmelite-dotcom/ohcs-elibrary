@@ -2239,3 +2239,6 @@ export * from './recognition';
 
 // Re-export Kwame AI Assistant Types
 export * from './kwame';
+
+// Re-export LMS Types
+export * from './lms';

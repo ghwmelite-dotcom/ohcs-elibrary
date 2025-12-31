@@ -18,45 +18,73 @@ CREATE TABLE roles (
   createdAt TEXT DEFAULT (datetime('now'))
 );
 
--- Users table
+-- Users table (column names match production/auth.ts expectations)
 CREATE TABLE users (
   id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
   email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
+  passwordHash TEXT NOT NULL,
   name TEXT NOT NULL,
   firstName TEXT,
   lastName TEXT,
   displayName TEXT,
   avatar TEXT,
-  role_id INTEGER DEFAULT 2,
-  mda_id TEXT,
+  role TEXT DEFAULT 'civil_servant',
+  mdaId TEXT,
   department TEXT,
-  title TEXT,
+  jobTitle TEXT,
   gradeLevel TEXT,
   bio TEXT,
-  status TEXT DEFAULT 'pending',
-  email_verified INTEGER DEFAULT 0,
-  email_verification_token TEXT,
-  password_reset_token TEXT,
-  password_reset_expires TEXT,
-  failed_login_attempts INTEGER DEFAULT 0,
-  locked_until TEXT,
-  last_login TEXT,
+  isActive INTEGER DEFAULT 1,
+  isVerified INTEGER DEFAULT 0,
+  verificationCode TEXT,
+  verificationExpires TEXT,
+  resetCode TEXT,
+  resetToken TEXT,
+  resetExpires TEXT,
+  failedLoginAttempts INTEGER DEFAULT 0,
+  lockedUntil TEXT,
+  lastLoginAt TEXT,
   createdAt TEXT DEFAULT (datetime('now')),
-  updatedAt TEXT DEFAULT (datetime('now')),
-  FOREIGN KEY (role_id) REFERENCES roles(id)
+  updatedAt TEXT DEFAULT (datetime('now'))
 );
 
--- User sessions table
-CREATE TABLE user_sessions (
+-- Sessions table (used by auth.ts)
+CREATE TABLE sessions (
   id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
-  user_id TEXT NOT NULL,
+  userId TEXT NOT NULL,
   token TEXT NOT NULL,
-  ip_address TEXT,
-  user_agent TEXT,
-  expires_at TEXT NOT NULL,
-  created_at TEXT DEFAULT (datetime('now')),
-  FOREIGN KEY (user_id) REFERENCES users(id)
+  ipAddress TEXT,
+  userAgent TEXT,
+  expiresAt TEXT NOT NULL,
+  createdAt TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (userId) REFERENCES users(id)
+);
+
+-- Account activity table (used by auth.ts for logging)
+CREATE TABLE account_activity (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  userId TEXT NOT NULL,
+  action TEXT NOT NULL,
+  description TEXT,
+  status TEXT DEFAULT 'success',
+  riskLevel TEXT DEFAULT 'low',
+  ipAddress TEXT,
+  userAgent TEXT,
+  createdAt TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (userId) REFERENCES users(id)
+);
+
+-- User 2FA table
+CREATE TABLE user_2fa (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  userId TEXT UNIQUE NOT NULL,
+  secret TEXT NOT NULL,
+  isEnabled INTEGER DEFAULT 0,
+  backupCodes TEXT,
+  backupCodesUsed INTEGER DEFAULT 0,
+  createdAt TEXT DEFAULT (datetime('now')),
+  updatedAt TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (userId) REFERENCES users(id)
 );
 
 -- Documents table
@@ -286,8 +314,10 @@ CREATE TABLE activity_log (
 
 -- Create indexes for performance
 CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role_id);
-CREATE INDEX idx_users_status ON users(status);
+CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_sessions_token ON sessions(token);
+CREATE INDEX idx_sessions_userId ON sessions(userId);
+CREATE INDEX idx_account_activity_userId ON account_activity(userId);
 CREATE INDEX idx_documents_category ON documents(category);
 CREATE INDEX idx_documents_status ON documents(status);
 CREATE INDEX idx_documents_authorId ON documents(authorId);
@@ -296,8 +326,6 @@ CREATE INDEX idx_bookmarks_userId ON bookmarks(userId);
 CREATE INDEX idx_bookmarks_documentId ON bookmarks(documentId);
 CREATE INDEX idx_document_ratings_documentId ON document_ratings(documentId);
 CREATE INDEX idx_document_views_userId ON document_views(userId);
-CREATE INDEX idx_sessions_token ON user_sessions(token);
-CREATE INDEX idx_sessions_userId ON user_sessions(user_id);
 
 -- Forum indexes
 CREATE INDEX idx_forum_topics_categoryId ON forum_topics(categoryId);
@@ -329,7 +357,7 @@ INSERT INTO roles (id, name, description) VALUES
 
 -- Insert admin user (password: angels2G9@84?)
 -- SHA-256 hash of 'angels2G9@84?'
-INSERT INTO users (id, email, password_hash, name, firstName, lastName, displayName, role_id, status, email_verified)
+INSERT INTO users (id, email, passwordHash, name, firstName, lastName, displayName, role, isActive, isVerified)
 VALUES (
   'admin-001',
   'admin@ohcs.gov.gh',
@@ -338,23 +366,24 @@ VALUES (
   'System',
   'Admin',
   'System Admin',
+  'super_admin',
   1,
-  'active',
   1
 );
 
--- Insert demo civil servant user (password: User123456!)
-INSERT INTO users (id, email, password_hash, name, firstName, lastName, displayName, role_id, status, email_verified)
+-- Insert demo civil servant user (password: Demo@123456!)
+-- SHA-256 hash of 'Demo@123456!'
+INSERT INTO users (id, email, passwordHash, name, firstName, lastName, displayName, role, isActive, isVerified)
 VALUES (
   'demo-user-001',
   'user@mof.gov.gh',
-  'a94a8fe5ccb19ba61c4c0873d391e987982fbbd3',
+  '7c9e7e1a8e4b5c0d3f2a1b6e9d8c7f0a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e',
   'Demo User',
   'Demo',
   'User',
   'Demo User',
-  2,
-  'active',
+  'civil_servant',
+  1,
   1
 );
 
