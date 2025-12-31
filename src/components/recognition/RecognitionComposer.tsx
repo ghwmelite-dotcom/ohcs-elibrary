@@ -155,40 +155,46 @@ export function RecognitionComposer() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
         onClick={(e) => e.target === e.currentTarget && handleClose()}
       >
         <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          className="w-full max-w-lg bg-white dark:bg-surface-800 rounded-2xl shadow-xl overflow-hidden"
+          initial={{ opacity: 0, y: 100, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 100, scale: 0.95 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          className="w-full sm:max-w-lg sm:mx-4 bg-white dark:bg-surface-800 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
         >
+          {/* Mobile drag indicator */}
+          <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
+            <div className="w-10 h-1 rounded-full bg-surface-300 dark:bg-surface-600" />
+          </div>
+
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-surface-200 dark:border-surface-700">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center">
-                <Award className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-between px-4 py-3 sm:p-4 border-b border-surface-200 dark:border-surface-700 shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shrink-0">
+                <Award className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
-              <div>
-                <h2 className="font-semibold text-surface-900 dark:text-white">
+              <div className="min-w-0">
+                <h2 className="text-sm sm:text-base font-semibold text-surface-900 dark:text-white truncate">
                   Give Recognition
                 </h2>
-                <p className="text-xs text-surface-500 dark:text-surface-400">
-                  {remaining} recognition{remaining !== 1 ? 's' : ''} remaining this month
+                <p className="text-[10px] sm:text-xs text-surface-500 dark:text-surface-400">
+                  {remaining} recognition{remaining !== 1 ? 's' : ''} remaining
                 </p>
               </div>
             </div>
             <button
               onClick={handleClose}
-              className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+              className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 active:bg-surface-200 dark:active:bg-surface-600 transition-colors touch-manipulation shrink-0"
             >
               <X className="w-5 h-5 text-surface-500" />
             </button>
           </div>
 
           {/* Content */}
-          <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+          <div className="p-4 space-y-4 flex-1 overflow-y-auto overscroll-contain">
             {/* Limit Warning */}
             {remaining === 0 && (
               <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-start gap-2">

@@ -78,18 +78,18 @@ export default function Certificates() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-0">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center">
-            <Award className="w-6 h-6 text-white" />
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-center gap-2.5 sm:gap-3 mb-2">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shrink-0">
+            <Award className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold font-heading text-surface-900 dark:text-surface-50">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold font-heading text-surface-900 dark:text-surface-50 truncate">
               My Certificates
             </h1>
-            <p className="text-surface-600 dark:text-surface-400">
+            <p className="text-xs sm:text-sm text-surface-600 dark:text-surface-400 truncate">
               Your earned achievements and credentials
             </p>
           </div>
@@ -97,19 +97,19 @@ export default function Certificates() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-accent-500 to-accent-600 rounded-xl p-6 text-white"
+          className="bg-gradient-to-br from-accent-500 to-accent-600 rounded-xl p-4 sm:p-6 text-white"
         >
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center">
-              <Trophy className="w-7 h-7" />
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <Trophy className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
-            <div>
-              <p className="text-4xl font-bold">{certificates.length}</p>
-              <p className="text-accent-100">Certificates Earned</p>
+            <div className="min-w-0">
+              <p className="text-2xl sm:text-4xl font-bold">{certificates.length}</p>
+              <p className="text-xs sm:text-sm text-accent-100 truncate">Certificates Earned</p>
             </div>
           </div>
         </motion.div>
@@ -118,17 +118,17 @@ export default function Certificates() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-6"
+          className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-4 sm:p-6"
         >
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <Star className="w-7 h-7 text-green-600 dark:text-green-400" />
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
+              <Star className="w-5 h-5 sm:w-7 sm:h-7 text-green-600 dark:text-green-400" />
             </div>
-            <div>
-              <p className="text-4xl font-bold text-surface-900 dark:text-surface-50">
+            <div className="min-w-0">
+              <p className="text-2xl sm:text-4xl font-bold text-surface-900 dark:text-surface-50">
                 {certificates.filter((c) => c.gradeLabel?.startsWith('A')).length}
               </p>
-              <p className="text-surface-600 dark:text-surface-400">A-Grade Achievements</p>
+              <p className="text-xs sm:text-sm text-surface-600 dark:text-surface-400 truncate">A-Grade Achievements</p>
             </div>
           </div>
         </motion.div>
@@ -137,14 +137,14 @@ export default function Certificates() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-6"
+          className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-4 sm:p-6"
         >
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-              <GraduationCap className="w-7 h-7 text-primary-600 dark:text-primary-400" />
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center shrink-0">
+              <GraduationCap className="w-5 h-5 sm:w-7 sm:h-7 text-primary-600 dark:text-primary-400" />
             </div>
-            <div>
-              <p className="text-4xl font-bold text-surface-900 dark:text-surface-50">
+            <div className="min-w-0">
+              <p className="text-2xl sm:text-4xl font-bold text-surface-900 dark:text-surface-50">
                 {certificates.length > 0
                   ? Math.round(
                       certificates.reduce((acc, c) => acc + (c.grade || 0), 0) / certificates.length
@@ -152,38 +152,38 @@ export default function Certificates() {
                   : 0}
                 %
               </p>
-              <p className="text-surface-600 dark:text-surface-400">Average Grade</p>
+              <p className="text-xs sm:text-sm text-surface-600 dark:text-surface-400 truncate">Average Grade</p>
             </div>
           </div>
         </motion.div>
       </div>
 
       {/* Search */}
-      <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-4 mb-6">
+      <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-3 sm:p-4 mb-4 sm:mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-surface-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search certificates by course or certificate number..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="Search certificates..."
+            className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-2.5 text-sm sm:text-base rounded-lg border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent placeholder-surface-400 touch-manipulation"
           />
         </div>
       </div>
 
       {/* Certificates Grid */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-8 sm:py-12">
           <Spinner size="lg" />
         </div>
       ) : filteredCertificates.length === 0 ? (
-        <div className="text-center py-12">
-          <Award className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">
+        <div className="text-center py-8 sm:py-12 px-4">
+          <Award className="w-12 h-12 sm:w-16 sm:h-16 text-surface-300 dark:text-surface-600 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold text-surface-900 dark:text-surface-100 mb-1.5 sm:mb-2">
             {certificates.length === 0 ? 'No certificates yet' : 'No certificates found'}
           </h3>
-          <p className="text-surface-600 dark:text-surface-400 mb-6">
+          <p className="text-sm sm:text-base text-surface-600 dark:text-surface-400 mb-4 sm:mb-6">
             {certificates.length === 0
               ? 'Complete courses to earn certificates'
               : 'Try adjusting your search'}
@@ -191,15 +191,15 @@ export default function Certificates() {
           {certificates.length === 0 && (
             <Link
               to="/courses"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white rounded-lg font-medium transition-colors touch-manipulation"
             >
-              <GraduationCap className="w-5 h-5" />
+              <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
               Browse Courses
             </Link>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredCertificates.map((certificate, index) => (
             <CertificateCard
               key={certificate.id}
@@ -258,36 +258,36 @@ function CertificateCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="group bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden hover:shadow-lg transition-all duration-300"
+      className="group bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden hover:shadow-lg active:shadow-md transition-all duration-300"
     >
       {/* Certificate Preview */}
-      <div className="relative h-40 bg-gradient-to-br from-accent-50 via-white to-primary-50 dark:from-accent-900/20 dark:via-surface-800 dark:to-primary-900/20 flex items-center justify-center border-b border-surface-200 dark:border-surface-700">
+      <div className="relative h-32 sm:h-40 bg-gradient-to-br from-accent-50 via-white to-primary-50 dark:from-accent-900/20 dark:via-surface-800 dark:to-primary-900/20 flex items-center justify-center border-b border-surface-200 dark:border-surface-700">
         <div className="text-center">
-          <Award className="w-12 h-12 text-accent-500 mx-auto mb-2" />
-          <p className="text-sm font-medium text-surface-600 dark:text-surface-400">
+          <Award className="w-10 h-10 sm:w-12 sm:h-12 text-accent-500 mx-auto mb-1.5 sm:mb-2" />
+          <p className="text-xs sm:text-sm font-medium text-surface-600 dark:text-surface-400">
             Certificate of Completion
           </p>
         </div>
 
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+        {/* Hover/Touch overlay - always visible on mobile via tap */}
+        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 active:opacity-100 transition-opacity flex items-center justify-center gap-2">
           <button
             onClick={onView}
-            className="p-2 bg-white rounded-lg text-surface-900 hover:bg-surface-100 transition-colors"
+            className="p-2.5 sm:p-2 bg-white rounded-lg text-surface-900 hover:bg-surface-100 active:bg-surface-200 transition-colors touch-manipulation"
             title="View Certificate"
           >
             <Eye className="w-5 h-5" />
           </button>
           <button
             onClick={onDownload}
-            className="p-2 bg-white rounded-lg text-surface-900 hover:bg-surface-100 transition-colors"
+            className="p-2.5 sm:p-2 bg-white rounded-lg text-surface-900 hover:bg-surface-100 active:bg-surface-200 transition-colors touch-manipulation"
             title="Download PDF"
           >
             <Download className="w-5 h-5" />
           </button>
           <button
             onClick={onShare}
-            className="p-2 bg-white rounded-lg text-surface-900 hover:bg-surface-100 transition-colors"
+            className="p-2.5 sm:p-2 bg-white rounded-lg text-surface-900 hover:bg-surface-100 active:bg-surface-200 transition-colors touch-manipulation"
             title="Share Certificate"
           >
             <Share2 className="w-5 h-5" />
@@ -296,25 +296,25 @@ function CertificateCard({
       </div>
 
       {/* Content */}
-      <div className="p-4">
-        <h3 className="font-semibold text-surface-900 dark:text-surface-100 mb-2 line-clamp-2">
+      <div className="p-3 sm:p-4">
+        <h3 className="font-semibold text-sm sm:text-base text-surface-900 dark:text-surface-100 mb-1.5 sm:mb-2 line-clamp-2">
           {certificate.courseTitle}
         </h3>
 
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1 text-sm text-surface-500 dark:text-surface-400">
-            <Calendar className="w-4 h-4" />
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <div className="flex items-center gap-1 text-xs sm:text-sm text-surface-500 dark:text-surface-400">
+            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>{formatDate(certificate.completionDate)}</span>
           </div>
           {certificate.gradeLabel && (
-            <div className={cn('text-lg font-bold', gradeClass)}>
+            <div className={cn('text-base sm:text-lg font-bold', gradeClass)}>
               {certificate.gradeLabel}
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-between pt-3 border-t border-surface-100 dark:border-surface-700">
-          <span className="text-xs text-surface-400 font-mono">
+        <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-surface-100 dark:border-surface-700">
+          <span className="text-[10px] sm:text-xs text-surface-400 font-mono truncate max-w-[120px] sm:max-w-none">
             #{certificate.certificateNumber}
           </span>
           {certificate.verificationUrl && (
@@ -322,10 +322,10 @@ function CertificateCard({
               href={certificate.verificationUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:underline"
+              className="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:underline active:text-primary-700 touch-manipulation shrink-0"
             >
               <CheckCircle2 className="w-3 h-3" />
-              Verify
+              <span className="hidden sm:inline">Verify</span>
             </a>
           )}
         </div>
@@ -354,112 +354,144 @@ function CertificatePreviewModal({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
-      onClick={onClose}
-    >
+    <>
+      {/* Backdrop */}
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="relative w-full max-w-3xl bg-white dark:bg-surface-800 rounded-xl overflow-hidden shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/80 dark:bg-surface-700/80 rounded-full text-surface-600 dark:text-surface-400 hover:bg-white dark:hover:bg-surface-700 transition-colors"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
+      />
+
+      {/* Modal - Bottom sheet on mobile, centered on desktop */}
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 100, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 100, scale: 0.95 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full sm:max-w-2xl lg:max-w-3xl sm:mx-4 bg-white dark:bg-surface-800 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[95vh] sm:max-h-[90vh] flex flex-col"
         >
-          <X className="w-5 h-5" />
-        </button>
+          {/* Mobile drag indicator */}
+          <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
+            <div className="w-10 h-1 rounded-full bg-surface-300 dark:bg-surface-600" />
+          </div>
 
-        {/* Certificate Design */}
-        <div className="p-8 bg-gradient-to-br from-accent-50 via-white to-primary-50 dark:from-accent-900/20 dark:via-surface-800 dark:to-primary-900/20">
-          <div className="text-center border-8 border-double border-accent-300 dark:border-accent-700 rounded-lg p-8">
-            {/* Header */}
-            <div className="mb-6">
-              <Award className="w-16 h-16 text-accent-500 mx-auto mb-4" />
-              <h2 className="text-3xl font-heading font-bold text-surface-900 dark:text-surface-50">
-                Certificate of Completion
-              </h2>
-              <p className="text-surface-600 dark:text-surface-400 mt-2">
-                OHCS E-Library Learning Management System
-              </p>
-            </div>
-
-            {/* Body */}
-            <div className="mb-6">
-              <p className="text-surface-600 dark:text-surface-400 mb-2">
-                This is to certify that
-              </p>
-              <p className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-2">
-                {certificate.recipientName}
-              </p>
-              <p className="text-surface-600 dark:text-surface-400 mb-4">
-                has successfully completed
-              </p>
-              <p className="text-xl font-semibold text-surface-900 dark:text-surface-50 mb-4">
-                {certificate.courseTitle}
-              </p>
-              {certificate.grade && (
-                <p className="text-lg text-surface-700 dark:text-surface-300">
-                  with a grade of{' '}
-                  <span className="font-bold text-accent-600 dark:text-accent-400">
-                    {certificate.gradeLabel} ({certificate.grade}%)
-                  </span>
+          {/* Header with close button */}
+          <div className="flex items-center justify-between px-4 py-3 sm:py-4 border-b border-surface-200 dark:border-surface-700 shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-accent-500 to-accent-600 rounded-xl flex items-center justify-center">
+                <Award className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-sm sm:text-base font-semibold text-surface-900 dark:text-white">
+                  Certificate Preview
+                </h2>
+                <p className="text-[10px] sm:text-xs text-surface-500 dark:text-surface-400 font-mono">
+                  #{certificate.certificateNumber}
                 </p>
-              )}
+              </div>
             </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 active:bg-surface-200 dark:active:bg-surface-600 transition-colors touch-manipulation shrink-0"
+            >
+              <X className="w-5 h-5 text-surface-500" />
+            </button>
+          </div>
 
-            {/* Footer */}
-            <div className="pt-6 border-t border-accent-200 dark:border-accent-800">
-              <p className="text-sm text-surface-500 dark:text-surface-400">
-                Issued on {formatDate(certificate.completionDate)}
-              </p>
-              <p className="text-xs text-surface-400 dark:text-surface-500 mt-2 font-mono">
-                Certificate ID: {certificate.certificateNumber}
-              </p>
+          {/* Certificate Design - Scrollable */}
+          <div className="flex-1 overflow-y-auto overscroll-contain">
+            <div className="p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-accent-50 via-white to-primary-50 dark:from-accent-900/20 dark:via-surface-800 dark:to-primary-900/20">
+              <div className="text-center border-4 sm:border-8 border-double border-accent-300 dark:border-accent-700 rounded-lg p-4 sm:p-6 lg:p-8">
+                {/* Header */}
+                <div className="mb-4 sm:mb-6">
+                  <Award className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-accent-500 mx-auto mb-2 sm:mb-4" />
+                  <h2 className="text-lg sm:text-2xl lg:text-3xl font-heading font-bold text-surface-900 dark:text-surface-50">
+                    Certificate of Completion
+                  </h2>
+                  <p className="text-xs sm:text-sm text-surface-600 dark:text-surface-400 mt-1 sm:mt-2">
+                    OHCS E-Library Learning Management System
+                  </p>
+                </div>
+
+                {/* Body */}
+                <div className="mb-4 sm:mb-6">
+                  <p className="text-xs sm:text-sm text-surface-600 dark:text-surface-400 mb-1 sm:mb-2">
+                    This is to certify that
+                  </p>
+                  <p className="text-base sm:text-xl lg:text-2xl font-bold text-primary-600 dark:text-primary-400 mb-1 sm:mb-2 break-words">
+                    {certificate.recipientName}
+                  </p>
+                  <p className="text-xs sm:text-sm text-surface-600 dark:text-surface-400 mb-2 sm:mb-4">
+                    has successfully completed
+                  </p>
+                  <p className="text-sm sm:text-lg lg:text-xl font-semibold text-surface-900 dark:text-surface-50 mb-2 sm:mb-4 break-words">
+                    {certificate.courseTitle}
+                  </p>
+                  {certificate.grade && (
+                    <p className="text-sm sm:text-base lg:text-lg text-surface-700 dark:text-surface-300">
+                      with a grade of{' '}
+                      <span className="font-bold text-accent-600 dark:text-accent-400">
+                        {certificate.gradeLabel} ({certificate.grade}%)
+                      </span>
+                    </p>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="pt-4 sm:pt-6 border-t border-accent-200 dark:border-accent-800">
+                  <p className="text-xs sm:text-sm text-surface-500 dark:text-surface-400">
+                    Issued on {formatDate(certificate.completionDate)}
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-surface-400 dark:text-surface-500 mt-1 sm:mt-2 font-mono break-all">
+                    Certificate ID: {certificate.certificateNumber}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Actions */}
-        <div className="p-4 bg-surface-50 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700 flex items-center justify-between">
-          <div className="text-sm text-surface-600 dark:text-surface-400">
+          {/* Actions Footer */}
+          <div className="px-4 py-3 sm:py-4 bg-surface-50 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700 shrink-0">
+            {/* Verification link - visible on all screens */}
             {certificate.verificationUrl && (
               <a
                 href={certificate.verificationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 hover:text-primary-600 dark:hover:text-primary-400"
+                className="flex items-center justify-center gap-1.5 text-xs sm:text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mb-3 touch-manipulation"
               >
-                <ExternalLink className="w-4 h-4" />
-                Verify Certificate
+                <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Verify Certificate Online</span>
               </a>
             )}
-          </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onShare}
-              className="flex items-center gap-2 px-4 py-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-lg transition-colors"
-            >
-              <Share2 className="w-4 h-4" />
-              Share
-            </button>
-            <button
-              onClick={onDownload}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              Download PDF
-            </button>
+            {/* Action buttons - stacked on mobile, side by side on desktop */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+              <button
+                onClick={onShare}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium text-surface-700 dark:text-surface-300 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 active:bg-surface-300 dark:active:bg-surface-600 rounded-lg transition-colors touch-manipulation sm:flex-1"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>Share</span>
+              </button>
+              <button
+                onClick={onDownload}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white rounded-lg transition-colors touch-manipulation sm:flex-1"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download PDF</span>
+              </button>
+            </div>
+
+            {/* Safe area for notched devices */}
+            <div className="sm:hidden h-safe-area-inset-bottom" />
           </div>
-        </div>
-      </motion.div>
-    </motion.div>
+        </motion.div>
+      </div>
+    </>
   );
 }
