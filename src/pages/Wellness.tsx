@@ -486,139 +486,180 @@ export default function Wellness() {
           </div>
         </div>
 
-        {/* CSEAP Contact Modal */}
+        {/* CSEAP Contact Modal - Fully Responsive */}
         {showContactModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
             onClick={() => setShowContactModal(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+              initial={{ opacity: 0, y: 100, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 100, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative bg-white dark:bg-gray-800 w-full sm:max-w-md sm:mx-4 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Mobile drag indicator */}
+              <div className="sm:hidden flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+              </div>
+
               {/* Decorative Header Banner */}
-              <div className="relative bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 px-6 py-8">
+              <div className="relative bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 px-4 sm:px-6 py-6 sm:py-8 shrink-0">
                 {/* Ghana-inspired decorative pattern */}
                 <div className="absolute inset-0 opacity-20">
                   <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <pattern id="ghana-kente" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <pattern id="ghana-kente-modal" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
                       <rect x="0" y="0" width="10" height="10" fill="white"/>
                       <rect x="10" y="10" width="10" height="10" fill="white"/>
                     </pattern>
-                    <rect width="100" height="100" fill="url(#ghana-kente)"/>
+                    <rect width="100" height="100" fill="url(#ghana-kente-modal)"/>
                   </svg>
                 </div>
 
                 {/* Close button */}
                 <button
                   onClick={() => setShowContactModal(false)}
-                  className="absolute top-4 right-4 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                  className="absolute top-3 sm:top-4 right-3 sm:right-4 p-2 sm:p-1.5 rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 transition-colors touch-manipulation"
                 >
                   <X className="w-5 h-5 text-white" />
                 </button>
 
                 <div className="relative text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm mb-4 ring-4 ring-white/30">
-                    <Heart className="w-8 h-8 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-white mb-1">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
+                    className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 backdrop-blur-sm mb-3 sm:mb-4 ring-4 ring-white/30"
+                  >
+                    <Heart className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                  </motion.div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-0.5 sm:mb-1">
                     CSEAP
                   </h2>
-                  <p className="text-amber-100 text-sm font-medium tracking-wide">
+                  <p className="text-amber-100 text-xs sm:text-sm font-medium tracking-wide px-4">
                     Civil Service Employee Assistance Programme
                   </p>
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="p-6">
-                <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
-                  Confidential support for Ghana's civil servants. We're here to help.
-                </p>
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto overscroll-contain">
+                <div className="p-4 sm:p-6">
+                  <p className="text-center text-gray-600 dark:text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">
+                    Confidential support for Ghana's civil servants. We're here to help.
+                  </p>
 
-                {/* Contact Info */}
-                <div className="space-y-3 mb-6">
-                  <a
-                    href="tel:+233503337119"
-                    className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/30 dark:to-emerald-950/30 border border-teal-200/50 dark:border-teal-800/50 hover:shadow-md transition-all group"
-                  >
-                    <div className="p-3 rounded-xl bg-teal-500 shadow-lg shadow-teal-500/30 group-hover:scale-110 transition-transform">
-                      <Phone className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-teal-600 dark:text-teal-400 uppercase tracking-wider">Counseling Hotline</p>
-                      <p className="text-lg font-bold text-gray-900 dark:text-white">
-                        +233 50 333 7119
-                      </p>
-                    </div>
-                  </a>
+                  {/* Contact Info */}
+                  <div className="space-y-2.5 sm:space-y-3 mb-4 sm:mb-6">
+                    {/* Phone */}
+                    <a
+                      href="tel:+233503337119"
+                      className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/30 dark:to-emerald-950/30 border border-teal-200/50 dark:border-teal-800/50 hover:shadow-md active:scale-[0.98] transition-all group touch-manipulation"
+                    >
+                      <div className="p-2.5 sm:p-3 rounded-xl bg-teal-500 shadow-lg shadow-teal-500/30 group-hover:scale-110 group-active:scale-95 transition-transform shrink-0">
+                        <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] sm:text-xs font-medium text-teal-600 dark:text-teal-400 uppercase tracking-wider">Counseling Hotline</p>
+                        <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
+                          +233 50 333 7119
+                        </p>
+                      </div>
+                      <div className="hidden xs:flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/50 shrink-0">
+                        <Phone className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                      </div>
+                    </a>
 
-                  <a
-                    href="mailto:cseap@ohcs.gov.gh"
-                    className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border border-purple-200/50 dark:border-purple-800/50 hover:shadow-md transition-all group"
-                  >
-                    <div className="p-3 rounded-xl bg-purple-500 shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform">
-                      <Mail className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wider">Email Support</p>
-                      <p className="text-lg font-bold text-gray-900 dark:text-white">
-                        cseap@ohcs.gov.gh
-                      </p>
-                    </div>
-                  </a>
+                    {/* Email */}
+                    <a
+                      href="mailto:cseap@ohcs.gov.gh"
+                      className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border border-purple-200/50 dark:border-purple-800/50 hover:shadow-md active:scale-[0.98] transition-all group touch-manipulation"
+                    >
+                      <div className="p-2.5 sm:p-3 rounded-xl bg-purple-500 shadow-lg shadow-purple-500/30 group-hover:scale-110 group-active:scale-95 transition-transform shrink-0">
+                        <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] sm:text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wider">Email Support</p>
+                        <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
+                          cseap@ohcs.gov.gh
+                        </p>
+                      </div>
+                      <div className="hidden xs:flex items-center justify-center w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/50 shrink-0">
+                        <Mail className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      </div>
+                    </a>
 
-                  <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200/50 dark:border-amber-800/50">
-                    <div className="p-3 rounded-xl bg-amber-500 shadow-lg shadow-amber-500/30">
-                      <MapPin className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider">Visit Us</p>
-                      <p className="font-semibold text-gray-900 dark:text-white">
-                        OHCS Headquarters, Accra
-                      </p>
+                    {/* Location */}
+                    <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200/50 dark:border-amber-800/50">
+                      <div className="p-2.5 sm:p-3 rounded-xl bg-amber-500 shadow-lg shadow-amber-500/30 shrink-0">
+                        <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] sm:text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider">Visit Us</p>
+                        <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
+                          OHCS Headquarters, Accra
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Hours Card */}
-                <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">Available Now</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-500 dark:text-gray-400">Weekdays</p>
-                      <p className="font-medium text-gray-900 dark:text-white">8:00 AM - 5:00 PM</p>
+                  {/* Hours Card */}
+                  <div className="p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 mb-4 sm:mb-6">
+                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">Available Now</span>
                     </div>
-                    <div>
-                      <p className="text-gray-500 dark:text-gray-400">Crisis Support</p>
-                      <p className="font-medium text-teal-600 dark:text-teal-400">24/7 Available</p>
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">Weekdays</p>
+                        <p className="font-medium text-gray-900 dark:text-white">8:00 AM - 5:00 PM</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">Crisis Support</p>
+                        <p className="font-medium text-teal-600 dark:text-teal-400">24/7 Available</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Ghana colors accent bar */}
-                <div className="flex gap-1 mb-4">
-                  <div className="flex-1 h-1 rounded-full bg-red-500"></div>
-                  <div className="flex-1 h-1 rounded-full bg-yellow-500"></div>
-                  <div className="flex-1 h-1 rounded-full bg-green-600"></div>
+                  {/* Ghana colors accent bar */}
+                  <div className="flex gap-1 mb-4">
+                    <motion.div
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="flex-1 h-1 sm:h-1.5 rounded-full bg-red-500 origin-left"
+                    />
+                    <motion.div
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ delay: 0.3 }}
+                      className="flex-1 h-1 sm:h-1.5 rounded-full bg-yellow-500 origin-left"
+                    />
+                    <motion.div
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ delay: 0.4 }}
+                      className="flex-1 h-1 sm:h-1.5 rounded-full bg-green-600 origin-left"
+                    />
+                  </div>
                 </div>
+              </div>
 
-                {/* CTA */}
+              {/* Fixed Bottom CTA */}
+              <div className="shrink-0 p-4 sm:p-6 pt-0 bg-white dark:bg-gray-800">
                 <Button
                   onClick={() => setShowContactModal(false)}
-                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold shadow-lg shadow-amber-500/25"
+                  className="w-full py-3 sm:py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:from-amber-700 active:to-orange-700 text-white font-semibold shadow-lg shadow-amber-500/25 text-sm sm:text-base touch-manipulation"
                 >
                   Thank You
                 </Button>
+                {/* Safe area padding for notched devices */}
+                <div className="h-safe-area-inset-bottom" />
               </div>
             </motion.div>
           </motion.div>
