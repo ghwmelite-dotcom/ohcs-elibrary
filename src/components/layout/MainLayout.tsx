@@ -18,6 +18,8 @@ import {
   WellnessPulse,
 } from '@/components/wellness';
 import { KwameWidget } from '@/components/kwame';
+import { GlobalSearch } from '@/components/search';
+import { TourOverlay, WelcomeTourTrigger } from '@/components/onboarding';
 import {
   Sparkles,
   Trophy,
@@ -207,6 +209,13 @@ export function MainLayout() {
 
       {/* Kwame AI Knowledge Assistant Widget */}
       <KwameWidget />
+
+      {/* Global Search Modal (Ctrl+K) */}
+      <GlobalSearch />
+
+      {/* Onboarding Tour */}
+      <TourOverlay />
+      <WelcomeTourTrigger />
     </div>
   );
 }

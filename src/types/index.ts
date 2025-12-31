@@ -2242,3 +2242,12 @@ export * from './kwame';
 
 // Re-export LMS Types
 export * from './lms';
+
+// Re-export Two-Factor Authentication Types
+export * from './twoFactor';
+
+// Re-export Audit Log Types
+export * from './audit';
+
+// Re-export Analytics Types
+export * from './analytics';

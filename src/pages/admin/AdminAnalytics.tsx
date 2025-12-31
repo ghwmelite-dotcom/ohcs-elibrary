@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3,
@@ -36,10 +36,13 @@ import {
   MessageCircle,
   Trophy,
   Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
 import { cn } from '@/utils/cn';
 import { format, subDays, subHours } from 'date-fns';
+import { useAnalyticsStore } from '@/stores/analyticsStore';
+import type { ActivityItem as ActivityItemType, TopContent as TopContentType, MDAStats } from '@/types/analytics';
 
 // Animated Background Component
 function AnimatedBackground() {
@@ -194,15 +197,7 @@ function StatCard({ label, value, change, trend, icon: Icon, color, subValue }: 
 }
 
 // Activity Feed Item
-interface ActivityItem {
-  id: string;
-  type: 'user_joined' | 'document_uploaded' | 'post_created' | 'badge_earned' | 'comment_added';
-  user: string;
-  content: string;
-  time: Date;
-}
-
-function ActivityFeedItem({ activity }: { activity: ActivityItem }) {
+function ActivityFeedItem({ activity }: { activity: ActivityItemType }) {
   const iconMap = {
     user_joined: { icon: UserPlus, color: '#006B3F' },
     document_uploaded: { icon: FileUp, color: '#3B82F6' },
@@ -211,7 +206,8 @@ function ActivityFeedItem({ activity }: { activity: ActivityItem }) {
     comment_added: { icon: MessageSquare, color: '#10B981' },
   };
 
-  const { icon: Icon, color } = iconMap[activity.type];
+  const { icon: Icon, color } = iconMap[activity.type] || iconMap.user_joined;
+  const activityTime = new Date(activity.time);
 
   return (
     <motion.div
@@ -231,7 +227,7 @@ function ActivityFeedItem({ activity }: { activity: ActivityItem }) {
           {' '}{activity.content}
         </p>
         <p className="text-xs text-surface-400 mt-0.5">
-          {format(activity.time, 'h:mm a')}
+          {isNaN(activityTime.getTime()) ? 'Recently' : format(activityTime, 'h:mm a')}
         </p>
       </div>
     </motion.div>
@@ -355,18 +351,6 @@ function HeatMap({ data }: { data: number[][] }) {
 }
 
 // MDA Leaderboard Row
-interface MDAStats {
-  rank: number;
-  name: string;
-  acronym: string;
-  users: number;
-  documents: number;
-  posts: number;
-  engagement: number;
-  trend: 'up' | 'down' | 'same';
-  change: number;
-}
-
 function MDALeaderboardRow({ mda, index }: { mda: MDAStats; index: number }) {
   const getRankStyle = (rank: number) => {
     if (rank === 1) return 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white';
@@ -436,18 +420,7 @@ function MDALeaderboardRow({ mda, index }: { mda: MDAStats; index: number }) {
 }
 
 // Top Content Card
-interface TopContentItem {
-  id: string;
-  title: string;
-  type: 'document' | 'post' | 'article';
-  views: number;
-  likes: number;
-  shares: number;
-  author: string;
-  thumbnail?: string;
-}
-
-function TopContentCard({ item, rank }: { item: TopContentItem; rank: number }) {
+function TopContentCard({ item, rank }: { item: TopContentType; rank: number }) {
   const typeIcons = {
     document: FileText,
     post: MessageSquare,
@@ -510,31 +483,113 @@ function TopContentCard({ item, rank }: { item: TopContentItem; rank: number }) 
 export default function AdminAnalytics() {
   const [selectedTab, setSelectedTab] = useState('overview');
   const [dateRange, setDateRange] = useState('30d');
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Analytics data - to be populated from API
-  const stats: StatCardProps[] = [
+  const {
+    overview,
+    userGrowth,
+    contentDistribution,
+    engagement,
+    topContent,
+    mdaLeaderboard,
+    recentActivity,
+    heatmapData,
+    quickStats,
+    loading,
+    fetchAllAnalytics,
+  } = useAnalyticsStore();
+
+  // Map date range to days
+  const getDays = useCallback(() => {
+    const daysMap: Record<string, number> = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 };
+    return daysMap[dateRange] || 30;
+  }, [dateRange]);
+
+  // Fetch data on mount and when date range changes
+  useEffect(() => {
+    fetchAllAnalytics(getDays());
+  }, [dateRange, getDays, fetchAllAnalytics]);
+
+  const handleRefresh = () => {
+    fetchAllAnalytics(getDays());
+  };
+
+  // Build stats from API data
+  const stats: StatCardProps[] = overview ? [
+    {
+      label: 'Total Users',
+      value: overview.stats.totalUsers.toString(),
+      change: `${overview.stats.userChange.value}%`,
+      trend: overview.stats.userChange.trend,
+      icon: Users,
+      color: '#006B3F',
+      subValue: `${overview.stats.newUsers} new`,
+    },
+    {
+      label: 'Documents',
+      value: overview.stats.totalDocuments.toString(),
+      change: `${overview.stats.documentChange.value}%`,
+      trend: overview.stats.documentChange.trend,
+      icon: FileText,
+      color: '#3B82F6',
+      subValue: `${overview.stats.newDocuments} new`,
+    },
+    {
+      label: 'Forum Posts',
+      value: overview.stats.totalPosts.toString(),
+      change: `${overview.stats.postChange.value}%`,
+      trend: overview.stats.postChange.trend,
+      icon: MessageSquare,
+      color: '#8B5CF6',
+      subValue: `${overview.stats.newPosts} new`,
+    },
+    {
+      label: 'Groups',
+      value: overview.stats.totalGroups.toString(),
+      change: `${overview.stats.activeGroups}`,
+      trend: 'up',
+      icon: Building2,
+      color: '#FCD116',
+      subValue: 'active groups',
+    },
+    {
+      label: 'Courses',
+      value: overview.stats.totalCourses.toString(),
+      change: `${overview.stats.courseEnrollments}`,
+      trend: 'up',
+      icon: BookOpen,
+      color: '#10B981',
+      subValue: 'enrollments',
+    },
+    {
+      label: 'Total XP',
+      value: overview.stats.totalXPEarned > 1000
+        ? `${(overview.stats.totalXPEarned / 1000).toFixed(1)}K`
+        : overview.stats.totalXPEarned.toString(),
+      change: `${overview.stats.badgesAwarded}`,
+      trend: 'up',
+      icon: Award,
+      color: '#CE1126',
+      subValue: 'badges awarded',
+    },
+  ] : [
     { label: 'Total Users', value: '0', change: '0%', trend: 'up', icon: Users, color: '#006B3F' },
     { label: 'Documents', value: '0', change: '0%', trend: 'up', icon: FileText, color: '#3B82F6' },
     { label: 'Forum Posts', value: '0', change: '0%', trend: 'up', icon: MessageSquare, color: '#8B5CF6' },
-    { label: 'Page Views', value: '0', change: '0%', trend: 'up', icon: Eye, color: '#FCD116' },
-    { label: 'Avg Session', value: '0', change: '0%', trend: 'up', icon: Clock, color: '#10B981' },
-    { label: 'Engagement Rate', value: '0', change: '0%', trend: 'up', icon: Activity, color: '#CE1126' },
+    { label: 'Groups', value: '0', change: '0%', trend: 'up', icon: Building2, color: '#FCD116' },
+    { label: 'Courses', value: '0', change: '0%', trend: 'up', icon: BookOpen, color: '#10B981' },
+    { label: 'Total XP', value: '0', change: '0%', trend: 'up', icon: Award, color: '#CE1126' },
   ];
 
-  const userGrowthData: { month: string; users: number }[] = [];
+  // Map user growth data with labels
+  const userGrowthData = userGrowth.map(d => ({
+    month: d.month,
+    users: d.users,
+    label: d.label,
+  }));
 
-  const contentDistribution: { label: string; value: number; color: string }[] = [];
-
-  const engagementByType: { label: string; value: number; color: string }[] = [];
-
-  const mdaLeaderboard: MDAStats[] = [];
-
-  const recentActivities: ActivityItem[] = [];
-
-  const heatMapData: number[][] = [];
-
-  const topContent: TopContentItem[] = [];
+  const engagementByType = engagement;
+  const heatMapData = heatmapData.length > 0 ? heatmapData : Array(7).fill(null).map(() => Array(8).fill(0));
+  const recentActivities = recentActivity;
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
@@ -551,12 +606,20 @@ export default function AdminAnalytics() {
     { id: '1y', label: '1 Year' },
   ];
 
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1500);
-  };
+  const maxUsers = Math.max(...userGrowthData.map(d => d.users), 1);
 
-  const maxUsers = Math.max(...userGrowthData.map(d => d.users));
+  // Build quick stats from API
+  const quickStatsDisplay = quickStats ? [
+    { label: 'Avg. Response Time', value: quickStats.avgResponseTime, icon: Zap, color: '#10B981' },
+    { label: 'Uptime', value: quickStats.uptime, icon: Activity, color: '#006B3F' },
+    { label: 'Peak Users Today', value: quickStats.peakUsersToday.toLocaleString(), icon: TrendingUp, color: '#FCD116' },
+    { label: 'Total Downloads', value: quickStats.totalDownloads > 1000 ? `${(quickStats.totalDownloads / 1000).toFixed(1)}K` : quickStats.totalDownloads.toString(), icon: Download, color: '#3B82F6' },
+  ] : [
+    { label: 'Avg. Response Time', value: '1.2s', icon: Zap, color: '#10B981' },
+    { label: 'Uptime', value: '99.9%', icon: Activity, color: '#006B3F' },
+    { label: 'Peak Users Today', value: '0', icon: TrendingUp, color: '#FCD116' },
+    { label: 'Total Downloads', value: '0', icon: Download, color: '#3B82F6' },
+  ];
 
   return (
     <div className="relative min-h-screen">
@@ -602,11 +665,11 @@ export default function AdminAnalytics() {
 
             <Button
               variant="outline"
-              leftIcon={<RefreshCw className={cn('w-4 h-4', isRefreshing && 'animate-spin')} />}
+              leftIcon={<RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />}
               onClick={handleRefresh}
-              disabled={isRefreshing}
+              disabled={loading}
             >
-              Refresh
+              {loading ? 'Loading...' : 'Refresh'}
             </Button>
 
             <Button variant="primary" leftIcon={<Download className="w-4 h-4" />}>
@@ -855,12 +918,7 @@ export default function AdminAnalytics() {
 
         {/* Quick Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: 'Avg. Response Time', value: '1.2s', icon: Zap, color: '#10B981' },
-            { label: 'Uptime', value: '99.9%', icon: Activity, color: '#006B3F' },
-            { label: 'Peak Users Today', value: '1,847', icon: TrendingUp, color: '#FCD116' },
-            { label: 'Total Downloads', value: '45.6K', icon: Download, color: '#3B82F6' },
-          ].map((item) => (
+          {quickStatsDisplay.map((item) => (
             <motion.div
               key={item.label}
               whileHover={{ y: -2 }}

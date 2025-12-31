@@ -27,7 +27,6 @@ import { useSocialStore } from '@/stores/socialStore';
 import { Avatar } from '@/components/shared/Avatar';
 import { Badge } from '@/components/shared/Badge';
 import { Dropdown, DropdownItem, DropdownDivider, DropdownLabel } from '@/components/shared/Dropdown';
-import { SearchInput } from '@/components/shared/Input';
 import { AnimatedThemeToggle } from '@/components/shared/AnimatedThemeToggle';
 import { ThemeToggleHint } from '@/components/shared/ThemeToggleHint';
 import { formatRelativeTime } from '@/utils/formatters';
@@ -35,7 +34,7 @@ import { formatRelativeTime } from '@/utils/formatters';
 export function Header() {
   const navigate = useNavigate();
   const { user, logout, hasRole } = useAuthStore();
-  const { sidebar, toggleMobileMenu, toggleSearch, isSearchOpen, searchQuery, setSearchQuery } = useUIStore();
+  const { sidebar, toggleMobileMenu } = useUIStore();
   const { notifications, summary, fetchNotifications, fetchSummary, markAsRead, markAllAsRead } = useNotificationStore();
   const { stats } = useGamificationStore();
   const {
@@ -52,19 +51,11 @@ export function Header() {
   }, []);
 
   const unreadCount = summary?.unreadTotal || 0;
-
-  const handleSearch = (query: string) => {
-    if (query.trim()) {
-      navigate(`/search?q=${encodeURIComponent(query)}`);
-      toggleSearch();
-      setSearchQuery('');
-    }
-  };
-
   const isAdmin = hasRole(['admin', 'director', 'super_admin']);
 
   return (
     <header
+      data-tour="header"
       className={cn(
         'fixed top-0 right-0 h-16 backdrop-blur-sm z-30 transition-all duration-300',
         // Light mode
@@ -88,21 +79,22 @@ export function Header() {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Search */}
-          <div className="hidden md:block w-80">
-            <SearchInput
-              placeholder="Search documents, topics, users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onSearch={handleSearch}
-              onClear={() => setSearchQuery('')}
-              size="sm"
-            />
-          </div>
+          {/* Search Button - Opens Global Search Modal */}
+          <button
+            data-tour="search"
+            onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}
+            className="hidden md:flex items-center gap-3 w-80 px-3 py-2 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-xl text-surface-500 dark:text-surface-400 transition-colors group"
+          >
+            <Search className="w-4 h-4" />
+            <span className="text-sm">Search...</span>
+            <kbd className="ml-auto px-1.5 py-0.5 text-[10px] font-medium bg-surface-200 dark:bg-surface-700 rounded group-hover:bg-surface-300 dark:group-hover:bg-surface-600">
+              ⌘K
+            </kbd>
+          </button>
 
           {/* Mobile search button */}
           <button
-            onClick={toggleSearch}
+            onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}
             aria-label="Search"
             className="md:hidden p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
           >
@@ -115,6 +107,7 @@ export function Header() {
           {/* XP Display */}
           {stats && (
             <Link
+              data-tour="xp-display"
               to="/leaderboard"
               className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-secondary-50 dark:bg-secondary-900/20 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-900/30 transition-colors"
             >
@@ -129,9 +122,11 @@ export function Header() {
           )}
 
           {/* Animated Theme Toggle with Discovery Hint */}
-          <ThemeToggleHint variant="dashboard">
-            <AnimatedThemeToggle size="md" />
-          </ThemeToggleHint>
+          <div data-tour="theme-toggle">
+            <ThemeToggleHint variant="dashboard">
+              <AnimatedThemeToggle size="md" />
+            </ThemeToggleHint>
+          </div>
 
           {/* Friend Requests */}
           <Dropdown
@@ -245,6 +240,7 @@ export function Header() {
           <Dropdown
             trigger={
               <button
+                data-tour="notifications"
                 aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
                 className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
               >
@@ -356,7 +352,10 @@ export function Header() {
           {user && (
             <Dropdown
               trigger={
-                <button className="flex items-center gap-2 p-1.5 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors">
+                <button
+                  data-tour="user-menu"
+                  className="flex items-center gap-2 p-1.5 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                >
                   <Avatar
                     src={user.avatar}
                     name={user.displayName}
@@ -411,35 +410,6 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Search Overlay */}
-      <AnimatePresence>
-        {isSearchOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute inset-x-0 top-full bg-white dark:bg-surface-800 border-b border-surface-200 dark:border-surface-700 p-4 md:hidden"
-          >
-            <div className="flex items-center gap-2">
-              <SearchInput
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onSearch={handleSearch}
-                onClear={() => setSearchQuery('')}
-                className="flex-1"
-                autoFocus
-              />
-              <button
-                onClick={toggleSearch}
-                className="p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </header>
   );
 }

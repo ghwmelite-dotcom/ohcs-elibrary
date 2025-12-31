@@ -35,6 +35,18 @@ export { default as lmsRoutes } from './lms';
 // Calendar & Events System
 export { calendarRoutes } from './calendar';
 
+// Global Search
+export { default as searchRoutes } from './search';
+
+// Two-Factor Authentication
+export { twoFactorRoutes } from './twoFactor';
+
+// Audit Logging
+export { auditRoutes } from './audit';
+
+// Analytics Dashboard
+export { analyticsRoutes } from './analytics';
+
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
 

@@ -39,6 +39,14 @@ import {
   lmsRoutes,
   // Calendar & Events System
   calendarRoutes,
+  // Global Search
+  searchRoutes,
+  // Two-Factor Authentication
+  twoFactorRoutes,
+  // Audit Logging
+  auditRoutes,
+  // Analytics Dashboard
+  analyticsRoutes,
 } from './routes';
 
 export interface Env {
@@ -180,6 +188,22 @@ app.route('/api/v1/lms', lmsRoutes);
 // Calendar routes handle their own auth internally
 app.route('/api/v1/calendar', calendarRoutes);
 
+// Global Search
+// Search routes handle their own auth internally
+app.route('/api/v1/search', searchRoutes);
+
+// Two-Factor Authentication
+// 2FA routes handle their own auth internally
+app.route('/api/v1/2fa', twoFactorRoutes);
+
+// Audit Logging
+// Audit routes handle their own auth (admin only)
+app.route('/api/v1/audit', auditRoutes);
+
+// Analytics Dashboard
+// Analytics routes handle their own auth (admin only)
+app.route('/api/v1/analytics', analyticsRoutes);
+
 // News aggregation admin endpoints
 app.post('/api/v1/admin/news/aggregate', authMiddleware, async (c) => {
   try {
@@ -301,6 +325,25 @@ export default {
             }
           } catch (embError) {
             console.error('Embedding queue processing failed:', embError);
+          }
+
+          // Process email digests (runs every hour, filters by user digest time)
+          try {
+            const { processEmailDigests } = await import('./services/emailDigestService');
+            // Process daily digests
+            const dailyDigestResult = await processEmailDigests(env, 'daily');
+            if (dailyDigestResult.sent > 0 || dailyDigestResult.failed > 0) {
+              console.log('Daily email digest processed:', dailyDigestResult);
+            }
+            // Process weekly digests on Mondays
+            if (now.getUTCDay() === 1) {
+              const weeklyDigestResult = await processEmailDigests(env, 'weekly');
+              if (weeklyDigestResult.sent > 0 || weeklyDigestResult.failed > 0) {
+                console.log('Weekly email digest processed:', weeklyDigestResult);
+              }
+            }
+          } catch (digestError) {
+            console.error('Email digest processing failed:', digestError);
           }
         } catch (error) {
           console.error('Scheduled task failed:', error);

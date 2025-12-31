@@ -10,6 +10,7 @@ import {
   sendAdminNewUserNotification,
   type GmailCredentials,
 } from '../services/emailService';
+import { logAuthEvent, AuditActions } from '../services/auditService';
 
 // Helper to get Gmail credentials from env
 function getGmailCredentials(env: any): GmailCredentials | undefined {
@@ -166,6 +167,15 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
     `).bind(email.toLowerCase()).first();
 
     if (!user) {
+      // Log failed login - user not found
+      await logAuthEvent(c.env, AuditActions.AUTH_LOGIN_FAILED, {
+        userEmail: email.toLowerCase(),
+        ipAddress: c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown',
+        userAgent: c.req.header('User-Agent') || 'unknown',
+        success: false,
+        errorMessage: 'User not found',
+      });
+
       return c.json({
         error: 'Invalid Credentials',
         message: 'Email or password is incorrect',
@@ -185,14 +195,14 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
 
     if (passwordHash !== user.passwordHash) {
       // Log failed login attempt
-      try {
-        await c.env.DB.prepare(`
-          INSERT INTO account_activity (id, userId, action, description, status, riskLevel)
-          VALUES (?, ?, 'login', 'Failed login attempt - incorrect password', 'failed', 'medium')
-        `).bind(crypto.randomUUID(), user.id).run();
-      } catch (e) {
-        console.error('Failed to log failed login:', e);
-      }
+      await logAuthEvent(c.env, AuditActions.AUTH_LOGIN_FAILED, {
+        userId: user.id as string,
+        userEmail: user.email as string,
+        ipAddress: c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown',
+        userAgent: c.req.header('User-Agent') || 'unknown',
+        success: false,
+        errorMessage: 'Incorrect password',
+      });
 
       return c.json({
         error: 'Invalid Credentials',
@@ -271,15 +281,18 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
       console.error('Failed to store session:', e);
     }
 
-    // Log successful login activity
-    try {
-      await c.env.DB.prepare(`
-        INSERT INTO account_activity (id, userId, action, description, status, riskLevel)
-        VALUES (?, ?, 'login', 'Signed in successfully', 'success', 'low')
-      `).bind(crypto.randomUUID(), user.id).run();
-    } catch (e) {
-      console.error('Failed to log login activity:', e);
-    }
+    // Log successful login to audit log
+    await logAuthEvent(c.env, AuditActions.AUTH_LOGIN, {
+      userId: user.id as string,
+      userEmail: user.email as string,
+      ipAddress: c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown',
+      userAgent: c.req.header('User-Agent') || 'unknown',
+      success: true,
+      metadata: {
+        role: user.role,
+        has2FA: !!twoFa,
+      },
+    });
 
     // Send login notification email (async, don't wait)
     if (c.env.RESEND_API_KEY || c.env.GMAIL_CLIENT_ID) {

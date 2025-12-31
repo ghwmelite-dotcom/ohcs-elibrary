@@ -433,6 +433,7 @@ export function Sidebar() {
 
   return (
     <aside
+      data-tour="sidebar"
       className={cn(
         'fixed left-0 top-0 h-screen z-40 transition-all duration-300 flex flex-col',
         'hidden lg:flex',

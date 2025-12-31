@@ -431,10 +431,17 @@ export const useSettingsStore = create<SettingsState>()(
       fetchTwoFactorStatus: async () => {
         set({ is2FALoading: true });
         try {
-          const response = await authFetch(`${API_BASE}/settings/2fa`);
+          const response = await authFetch(`${API_BASE}/2fa/status`);
           if (!response.ok) throw new Error('Failed to fetch 2FA status');
           const data = await response.json();
-          set({ twoFactor: data, is2FALoading: false });
+          set({
+            twoFactor: {
+              isEnabled: data.enabled,
+              hasBackupCodes: data.enabled,
+              backupCodesRemaining: data.trustedDevicesCount || 0,
+            },
+            is2FALoading: false
+          });
         } catch (error: any) {
           console.error('Error fetching 2FA status:', error);
           set({ is2FALoading: false });
@@ -445,7 +452,7 @@ export const useSettingsStore = create<SettingsState>()(
       initializeTwoFactor: async () => {
         set({ is2FALoading: true });
         try {
-          const response = await authFetch(`${API_BASE}/settings/2fa/setup`, {
+          const response = await authFetch(`${API_BASE}/2fa/setup`, {
             method: 'POST',
           });
           if (!response.ok) {
@@ -453,8 +460,14 @@ export const useSettingsStore = create<SettingsState>()(
             throw new Error(errorData.error || 'Failed to initialize 2FA');
           }
           const data = await response.json();
-          set({ twoFactorSetup: data, is2FALoading: false });
-          return data;
+          // Map API response to expected format
+          const setup = {
+            secret: data.secret,
+            otpauthUrl: data.uri,
+            qrCode: data.qrCodeUrl,
+          };
+          set({ twoFactorSetup: setup, is2FALoading: false });
+          return setup;
         } catch (error) {
           set({ is2FALoading: false });
           throw error;
@@ -463,7 +476,7 @@ export const useSettingsStore = create<SettingsState>()(
 
       // Verify and enable 2FA
       verifyTwoFactor: async (code) => {
-        const response = await authFetch(`${API_BASE}/settings/2fa/verify`, {
+        const response = await authFetch(`${API_BASE}/2fa/enable`, {
           method: 'POST',
           body: JSON.stringify({ code }),
         });
@@ -482,9 +495,9 @@ export const useSettingsStore = create<SettingsState>()(
 
       // Disable 2FA
       disableTwoFactor: async (code) => {
-        const response = await authFetch(`${API_BASE}/settings/2fa`, {
-          method: 'DELETE',
-          body: JSON.stringify({ code }),
+        const response = await authFetch(`${API_BASE}/2fa/disable`, {
+          method: 'POST',
+          body: JSON.stringify({ password: code, code: code }),
         });
         if (!response.ok) {
           const error = await response.json();
@@ -498,7 +511,7 @@ export const useSettingsStore = create<SettingsState>()(
 
       // Regenerate backup codes
       regenerateBackupCodes: async (code) => {
-        const response = await authFetch(`${API_BASE}/settings/2fa/backup/regenerate`, {
+        const response = await authFetch(`${API_BASE}/2fa/backup-codes/regenerate`, {
           method: 'POST',
           body: JSON.stringify({ code }),
         });

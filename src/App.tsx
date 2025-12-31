@@ -19,6 +19,7 @@ import { BroadcastAlertContainer } from '@/components/broadcasts';
 // Lazy load pages for code splitting
 // Auth pages
 const Landing = lazy(() => import('@/pages/Landing'));
+const Sponsorship = lazy(() => import('@/pages/Sponsorship'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
@@ -282,6 +283,7 @@ export default function App() {
           <Routes>
           {/* Public routes */}
           <Route path="/" element={<Landing />} />
+          <Route path="/sponsorship" element={<Sponsorship />} />
           <Route path="/verify" element={<VerifyCertificate />} />
 
           {/* Auth routes (guest only) */}
