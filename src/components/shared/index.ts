@@ -63,3 +63,5 @@ export { OfflineIndicator, OfflineStatusBadge } from './OfflineIndicator';
 export { AnimatedLogo } from './AnimatedLogo';
 
 export { AnimatedThemeToggle, ThemeSwitch } from './AnimatedThemeToggle';
+
+export { SplashScreen } from './SplashScreen';

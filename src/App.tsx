@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { LazyMotion } from 'framer-motion';
 import { loadMotionFeatures } from '@/utils/motionFeatures';
 import { useAuthStore } from '@/stores/authStore';
@@ -13,6 +13,7 @@ import { Toaster } from '@/components/shared/Toast';
 import { PWAInstallPrompt } from '@/components/shared/PWAInstallPrompt';
 import { OfflineBanner } from '@/components/shared/OfflineBanner';
 import { DevTools } from '@/components/shared/DevTools';
+import { SplashScreen } from '@/components/shared/SplashScreen';
 import { KeyboardShortcutsProvider } from '@/hooks/useKeyboardShortcuts';
 import { BroadcastAlertContainer } from '@/components/broadcasts';
 
@@ -206,10 +207,37 @@ const fontSizeMap: Record<string, string> = {
   xlarge: '20px',
 };
 
+// Check if running in standalone/PWA mode
+function isPWAMode(): boolean {
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true ||
+    document.referrer.includes('android-app://') ||
+    window.matchMedia('(display-mode: fullscreen)').matches
+  );
+}
+
+// Check if this is a fresh session (no splash shown yet)
+function shouldShowSplash(): boolean {
+  const splashShown = sessionStorage.getItem('ohcs-splash-shown');
+  if (splashShown) return false;
+
+  // Show splash on PWA mode or on mobile devices
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  return isPWAMode() || isMobile;
+}
+
 export default function App() {
   const { theme, initializeTheme } = useThemeStore();
   const { initializeAuth, isAuthenticated } = useAuthStore();
   const { settings, fetchSettings } = useSettingsStore();
+  const [showSplash, setShowSplash] = useState(shouldShowSplash);
+
+  // Handle splash screen completion
+  const handleSplashComplete = () => {
+    sessionStorage.setItem('ohcs-splash-shown', 'true');
+    setShowSplash(false);
+  };
 
   // Initialize theme on mount
   useEffect(() => {
@@ -520,6 +548,14 @@ export default function App() {
 
         {/* Development Tools */}
         <DevTools />
+
+        {/* PWA Splash Screen - Shows on mobile/PWA first load */}
+        {showSplash && (
+          <SplashScreen
+            onComplete={handleSplashComplete}
+            minDisplayTime={2800}
+          />
+        )}
       </KeyboardShortcutsProvider>
     </LazyMotion>
   );
