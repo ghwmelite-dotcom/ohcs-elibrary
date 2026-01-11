@@ -25,12 +25,26 @@ import { formatCurrency } from '@/utils/formatters';
 import { cn } from '@/utils/cn';
 
 const ORDER_STATUSES = {
+  pending: {
+    label: 'Pending',
+    icon: Clock,
+    color: 'text-yellow-600 dark:text-yellow-400',
+    bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
+    borderColor: 'border-yellow-200 dark:border-yellow-800',
+  },
   pending_payment: {
     label: 'Pending Payment',
     icon: Clock,
     color: 'text-yellow-600 dark:text-yellow-400',
     bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
     borderColor: 'border-yellow-200 dark:border-yellow-800',
+  },
+  confirmed: {
+    label: 'Confirmed',
+    icon: CheckCircle,
+    color: 'text-emerald-600 dark:text-emerald-400',
+    bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+    borderColor: 'border-emerald-200 dark:border-emerald-800',
   },
   processing: {
     label: 'Processing',
@@ -78,6 +92,7 @@ const ORDER_STATUSES = {
 
 const PAYMENT_STATUSES = {
   pending: { label: 'Pending', color: 'text-yellow-600 dark:text-yellow-400', bgColor: 'bg-yellow-100 dark:bg-yellow-900/30' },
+  paid: { label: 'Paid', color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-100 dark:bg-green-900/30' },
   completed: { label: 'Paid', color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-100 dark:bg-green-900/30' },
   failed: { label: 'Failed', color: 'text-red-600 dark:text-red-400', bgColor: 'bg-red-100 dark:bg-red-900/30' },
   refunded: { label: 'Refunded', color: 'text-gray-600 dark:text-gray-400', bgColor: 'bg-gray-100 dark:bg-gray-900/30' },
@@ -233,7 +248,8 @@ export default function Orders() {
               className="pl-12 pr-10 py-3 bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none appearance-none min-w-[180px] cursor-pointer"
             >
               <option value="all">All Orders</option>
-              <option value="pending_payment">Pending Payment</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
               <option value="processing">Processing</option>
               <option value="shipped">Shipped</option>
               <option value="delivered">Delivered</option>
@@ -296,7 +312,7 @@ export default function Orders() {
                 const StatusIcon = statusConfig.icon;
 
                 const hasDigitalProducts = order.items?.some(
-                  (item: any) => (item.productType === 'ebook' || item.productType === 'document' || item.productType === 'digital') && order.paymentStatus === 'completed'
+                  (item: any) => (item.productType === 'ebook' || item.productType === 'document' || item.productType === 'digital') && (order.paymentStatus === 'completed' || order.paymentStatus === 'paid')
                 );
 
                 return (
@@ -382,7 +398,7 @@ export default function Orders() {
                               </p>
                               {/* Download button for digital products */}
                               {(item.productType === 'ebook' || item.productType === 'document' || item.productType === 'digital') &&
-                                order.paymentStatus === 'completed' && (
+                                (order.paymentStatus === 'completed' || order.paymentStatus === 'paid') && (
                                   <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}

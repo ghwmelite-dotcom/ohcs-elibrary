@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   CheckCircle,
@@ -22,12 +22,15 @@ import { cn } from '@/utils/cn';
 
 export default function OrderConfirmation() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
+  const [searchParams] = useSearchParams();
   const { selectedOrder, fetchOrder, downloadDigitalProduct } = useOrdersStore();
-  const { paymentInstructions, clearCheckout } = useCheckoutStore();
+  const { paymentInstructions, verifyPayment, clearCheckout } = useCheckoutStore();
   const [isLoading, setIsLoading] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [downloadingItem, setDownloadingItem] = useState<string | null>(null);
+  const [paymentVerified, setPaymentVerified] = useState(false);
 
   useEffect(() => {
     if (!orderNumber) return;
@@ -35,6 +38,24 @@ export default function OrderConfirmation() {
     const loadOrder = async () => {
       setIsLoading(true);
       try {
+        // Check for Paystack callback parameters
+        const reference = searchParams.get('reference') || searchParams.get('trxref');
+
+        if (reference && !paymentVerified) {
+          setIsVerifying(true);
+          try {
+            // Pass the reference (which is the order number used with Paystack)
+            // The reference returned by Paystack IS the order number we initialized with
+            await verifyPayment(reference, reference);
+            setPaymentVerified(true);
+          } catch (verifyErr) {
+            console.error('Payment verification error:', verifyErr);
+            // Still load order even if verification fails
+          } finally {
+            setIsVerifying(false);
+          }
+        }
+
         await fetchOrder(orderNumber);
       } catch (err) {
         setError('Failed to load order details');
@@ -48,7 +69,7 @@ export default function OrderConfirmation() {
     return () => {
       clearCheckout();
     };
-  }, [orderNumber, fetchOrder, clearCheckout]);
+  }, [orderNumber, searchParams, fetchOrder, clearCheckout, verifyPayment, paymentVerified]);
 
   const handleCopy = async (text: string, field: string) => {
     try {
@@ -97,7 +118,7 @@ export default function OrderConfirmation() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isVerifying) {
     return (
       <div className="min-h-screen bg-surface-50 dark:bg-surface-900 flex items-center justify-center">
         <motion.div
@@ -106,7 +127,9 @@ export default function OrderConfirmation() {
           className="text-center"
         >
           <Loader2 className="h-10 w-10 animate-spin text-primary-600 mx-auto mb-4" />
-          <p className="text-surface-600 dark:text-surface-400">Loading order details...</p>
+          <p className="text-surface-600 dark:text-surface-400">
+            {isVerifying ? 'Verifying payment...' : 'Loading order details...'}
+          </p>
         </motion.div>
       </div>
     );

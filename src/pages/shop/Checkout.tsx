@@ -226,21 +226,23 @@ export default function Checkout() {
         customerNote: shippingDetails.notes,
       });
 
+      console.log('Checkout result:', result);
+      console.log('Payment method:', paymentMethod);
+
       if (result.success && result.orderNumber) {
-        // For card payments, redirect to Paystack
-        if (paymentMethod === 'card') {
-          if (result.paystackData?.authorization_url) {
-            window.location.href = result.paystackData.authorization_url;
-          } else {
-            // Paystack initialization failed
-            setError('Payment gateway initialization failed. Please try again or choose a different payment method.');
-          }
+        // Redirect to Paystack for all payment methods
+        if (result.paystackData?.authorization_url) {
+          console.log('Redirecting to Paystack:', result.paystackData.authorization_url);
+          window.location.href = result.paystackData.authorization_url;
+          return;
         } else {
-          // For mobile money, go to confirmation page
-          navigate(`/shop/orders/${result.orderNumber}/confirmation`);
+          // Paystack initialization failed
+          console.error('Paystack data missing or no authorization_url');
+          setError('Payment gateway initialization failed. Please try again.');
+          return;
         }
       } else {
-        setError('Failed to process checkout');
+        setError(result.error || 'Failed to process checkout');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred during checkout');

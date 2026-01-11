@@ -63,7 +63,8 @@ async function initializePaystackTransaction(
   amount: number,
   reference: string,
   callbackUrl: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, any>,
+  channels: string[] = ['card', 'mobile_money']
 ) {
   const response = await fetch('https://api.paystack.co/transaction/initialize', {
     method: 'POST',
@@ -73,12 +74,12 @@ async function initializePaystackTransaction(
     },
     body: JSON.stringify({
       email,
-      amount: Math.round(amount * 100), // Paystack expects amount in pesewas
+      amount: Math.round(amount * 100), // Paystack expects amount in pesewas/kobo
       reference,
       currency: 'GHS',
       callback_url: callbackUrl,
       metadata,
-      channels: ['card', 'mobile_money'],
+      channels,
     }),
   });
 
@@ -557,69 +558,69 @@ orderRoutes.post('/checkout', async (c) => {
       SELECT email FROM users WHERE id = ?
     `).bind(user.userId).first();
 
-    // For Mobile Money, generate payment instructions
-    let paymentInstructions = null;
+    // Initialize Paystack for all payment methods (card and mobile money)
     let paystackData = null;
+    const callbackUrl = `https://ohcselibrary.xyz/shop/orders/${orderNumber}/confirmation`;
 
+    // Determine Paystack channels based on payment method
+    let channels: string[] = ['card', 'mobile_money']; // Default: all channels
     if (checkoutData.paymentMethod === 'mobile_money') {
-      paymentInstructions = {
-        provider: checkoutData.mobileMoneyProvider,
-        merchantCode: '*714*123#', // Placeholder - would be real merchant code
-        reference: orderNumber,
-        amount: total,
-        instructions: [
-          `Dial *${checkoutData.mobileMoneyProvider === 'MTN' ? '170' : checkoutData.mobileMoneyProvider === 'Vodafone' ? '110' : '500'}#`,
-          'Select "Pay Bill" or "MerchantPay"',
-          `Enter merchant code: OHCS123`,
-          `Enter reference: ${orderNumber}`,
-          `Enter amount: GHS ${total.toFixed(2)}`,
-          'Enter your PIN to confirm',
-        ],
-      };
+      channels = ['mobile_money'];
     } else if (checkoutData.paymentMethod === 'card') {
-      // Initialize Paystack transaction for card payments
-      const callbackUrl = `https://ohcselibrary.xyz/shop/orders/${orderNumber}/confirmation`;
+      channels = ['card'];
+    }
 
-      console.log('Initializing Paystack transaction:', {
-        email: userRecord?.email,
-        amount: total,
-        reference: orderNumber,
-        callbackUrl,
-      });
+    console.log('Initializing Paystack transaction:', {
+      email: userRecord?.email,
+      amount: total,
+      reference: orderNumber,
+      callbackUrl,
+      channels,
+      paymentMethod: checkoutData.paymentMethod,
+    });
 
-      const paystackResult = await initializePaystackTransaction(
-        c.env.PAYSTACK_SECRET_KEY,
-        userRecord?.email || 'customer@ohcs.gov.gh',
-        total,
+    const paystackResult = await initializePaystackTransaction(
+      c.env.PAYSTACK_SECRET_KEY,
+      userRecord?.email || 'customer@ohcs.gov.gh',
+      total,
+      orderNumber,
+      callbackUrl,
+      {
+        order_id: orderId,
+        order_number: orderNumber,
+        customer_id: user.userId,
+        payment_method: checkoutData.paymentMethod,
+        mobile_money_provider: checkoutData.mobileMoneyProvider,
+      },
+      channels
+    );
+
+    console.log('Paystack result:', JSON.stringify(paystackResult));
+
+    if (paystackResult.status && paystackResult.data?.authorization_url) {
+      paystackData = {
+        authorization_url: paystackResult.data.authorization_url,
+        access_code: paystackResult.data.access_code,
+        reference: paystackResult.data.reference,
+      };
+
+      // Update payment record with Paystack reference
+      await c.env.DB.prepare(`
+        UPDATE shop_payments SET
+          providerReference = ?,
+          providerAccessCode = ?
+        WHERE id = ?
+      `).bind(paystackResult.data.reference, paystackResult.data.access_code, paymentId).run();
+    } else {
+      // Paystack initialization failed - include error in response
+      console.error('Paystack initialization failed:', paystackResult);
+      return c.json({
+        success: false,
+        error: 'Payment gateway initialization failed',
+        paystackError: paystackResult.message || 'Unknown Paystack error',
+        details: JSON.stringify(paystackResult),
         orderNumber,
-        callbackUrl,
-        {
-          order_id: orderId,
-          order_number: orderNumber,
-          customer_id: user.userId,
-        }
-      );
-
-      console.log('Paystack result:', JSON.stringify(paystackResult));
-
-      if (paystackResult.status) {
-        paystackData = {
-          authorization_url: paystackResult.data.authorization_url,
-          access_code: paystackResult.data.access_code,
-          reference: paystackResult.data.reference,
-        };
-
-        // Update payment record with Paystack reference
-        await c.env.DB.prepare(`
-          UPDATE shop_payments SET
-            providerReference = ?,
-            providerAccessCode = ?
-          WHERE id = ?
-        `).bind(paystackResult.data.reference, paystackResult.data.access_code, paymentId).run();
-      } else {
-        // Paystack initialization failed - log the error
-        console.error('Paystack initialization failed:', paystackResult);
-      }
+      }, 400);
     }
 
     return c.json({
@@ -632,7 +633,6 @@ orderRoutes.post('/checkout', async (c) => {
         paymentStatus: 'pending',
       },
       paymentId,
-      paymentInstructions,
       paystackData,
       publicKey: c.env.PAYSTACK_PUBLIC_KEY,
     }, 201);
@@ -730,6 +730,8 @@ orderRoutes.post('/checkout/verify', zValidator('json', verifyPaymentSchema), as
 // Get user's orders
 orderRoutes.get('/', async (c) => {
   const user = getUserFromToken(c);
+  console.log('Fetching orders for user:', JSON.stringify(user));
+
   if (!user) {
     return c.json({ error: 'Unauthorized' }, 401);
   }
@@ -740,9 +742,11 @@ orderRoutes.get('/', async (c) => {
   const offset = (page - 1) * limit;
 
   try {
+    console.log('Looking for orders with userId:', user.userId);
     const countResult = await c.env.DB.prepare(`
       SELECT COUNT(*) as total FROM shop_orders WHERE userId = ?
     `).bind(user.userId).first();
+    console.log('Count result:', JSON.stringify(countResult));
 
     const orders = await c.env.DB.prepare(`
       SELECT
@@ -755,6 +759,7 @@ orderRoutes.get('/', async (c) => {
       ORDER BY o.createdAt DESC
       LIMIT ? OFFSET ?
     `).bind(user.userId, limit, offset).all();
+    console.log('Orders found:', orders.results?.length || 0);
 
     return c.json({
       orders: orders.results || [],
@@ -811,7 +816,7 @@ orderRoutes.get('/:orderNumber', async (c) => {
 
     // Get payment info
     const payment = await c.env.DB.prepare(`
-      SELECT * FROM shop_payments WHERE orderId = ? ORDER BY createdAt DESC LIMIT 1
+      SELECT * FROM shop_payments WHERE orderId = ? ORDER BY initiatedAt DESC LIMIT 1
     `).bind(order.id).first();
 
     return c.json({

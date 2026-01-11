@@ -219,8 +219,10 @@ app.route('/api/v1/shop/seller', sellerRoutes);
 app.route('/api/v1/shop/products', productRoutes);
 
 // Cart and orders require auth
+app.use('/api/v1/shop/cart', authMiddleware);
 app.use('/api/v1/shop/cart/*', authMiddleware);
 app.route('/api/v1/shop/cart', cartRoutes);
+app.use('/api/v1/shop/orders', authMiddleware);
 app.use('/api/v1/shop/orders/*', authMiddleware);
 app.route('/api/v1/shop/orders', orderRoutes);
 

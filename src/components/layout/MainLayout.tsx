@@ -6,6 +6,8 @@ import { useUIStore } from '@/stores/uiStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
 import { usePresenceStore } from '@/stores/presenceStore';
+import { useCartStore } from '@/stores/shopStore';
+import { useAuthStore } from '@/stores/authStore';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -63,6 +65,8 @@ export function MainLayout() {
   const { fetchNotifications, fetchSummary } = useNotificationStore();
   const { fetchStats, fetchLeaderboard } = useGamificationStore();
   const { startHeartbeatPolling, stopHeartbeatPolling } = usePresenceStore();
+  const { fetchCart } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
   const { showNudge, dismissNudge, acceptNudge } = useWellnessNudge();
   const {
     notification: smartNotification,
@@ -87,6 +91,13 @@ export function MainLayout() {
       clearInterval(pollInterval);
     };
   }, [fetchNotifications, fetchSummary, fetchStats, fetchLeaderboard]);
+
+  // Fetch cart when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCart();
+    }
+  }, [isAuthenticated, fetchCart]);
 
   // Start presence heartbeat polling
   useEffect(() => {
