@@ -10,6 +10,9 @@ RESEND_API_KEY = "re_KT4GJbwf_NhtRgQzS3dFQeK6r8oSGY5A3"
 GMAIL_CLIENT_ID = "393704243654-e5gjqadsn8spvc2ojdkk79h70ltcdvgm.apps.googleusercontent.com"
 GMAIL_CLIENT_SECRET = "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"
 GMAIL_REFRESH_TOKEN = "1//03j9dppcB5lIRCgYIARAAGAMSNwF-L9Ir1FHHO0D5DpYN4QqxAErekNS6kghF29ar2cVjVOkKZMIrskGehd0NfwSZ_BBoIVaYUaA"
+# Paystack payment gateway credentials (test mode)
+PAYSTACK_SECRET_KEY = "sk_test_7aa91fb0bf7031611e0d7c578d308bbcc5493ecc"
+PAYSTACK_PUBLIC_KEY = "pk_test_119f59063968b51884ee2a2868f20974982d5232"
 
 # D1 Database binding
 [[d1_databases]]

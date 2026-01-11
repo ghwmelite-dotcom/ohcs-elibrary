@@ -56,6 +56,47 @@ const COMMISSION_RATES = {
   verified: 0.08, // 8% for verified authors (seller keeps 92%)
 };
 
+// Paystack API helpers
+async function initializePaystackTransaction(
+  secretKey: string,
+  email: string,
+  amount: number,
+  reference: string,
+  callbackUrl: string,
+  metadata?: Record<string, any>
+) {
+  const response = await fetch('https://api.paystack.co/transaction/initialize', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${secretKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email,
+      amount: Math.round(amount * 100), // Paystack expects amount in pesewas
+      reference,
+      currency: 'GHS',
+      callback_url: callbackUrl,
+      metadata,
+      channels: ['card', 'mobile_money'],
+    }),
+  });
+
+  return response.json();
+}
+
+async function verifyPaystackTransaction(secretKey: string, reference: string) {
+  const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${secretKey}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return response.json();
+}
+
 // ============================================================================
 // CHECKOUT ROUTES
 // ============================================================================
@@ -243,13 +284,24 @@ orderRoutes.post('/checkout/discount', async (c) => {
 });
 
 // Create order (checkout)
-orderRoutes.post('/checkout', zValidator('json', checkoutSchema), async (c) => {
+orderRoutes.post('/checkout', async (c) => {
   const user = getUserFromToken(c);
   if (!user) {
     return c.json({ error: 'Unauthorized' }, 401);
   }
 
-  const checkoutData = c.req.valid('json');
+  // Manually validate to get better error messages
+  let checkoutData;
+  try {
+    const body = await c.req.json();
+    checkoutData = checkoutSchema.parse(body);
+  } catch (validationError: any) {
+    console.error('Checkout validation error:', validationError);
+    return c.json({
+      error: 'Validation failed',
+      details: validationError.errors?.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ') || validationError.message
+    }, 400);
+  }
 
   try {
     // Get cart items
@@ -479,21 +531,19 @@ orderRoutes.post('/checkout', zValidator('json', checkoutSchema), async (c) => {
     const paymentId = crypto.randomUUID();
     await c.env.DB.prepare(`
       INSERT INTO shop_payments (
-        id, orderId, userId, amount, currency, paymentMethod,
+        id, orderId, amount, currency, paymentMethod,
         mobileMoneyProvider, mobileMoneyNumber,
-        status, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        status, initiatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       paymentId,
       orderId,
-      user.userId,
       total,
       'GHS',
       checkoutData.paymentMethod,
       checkoutData.mobileMoneyProvider || null,
       checkoutData.mobileMoneyNumber || null,
       'pending',
-      now,
       now
     ).run();
 
@@ -502,8 +552,15 @@ orderRoutes.post('/checkout', zValidator('json', checkoutSchema), async (c) => {
       DELETE FROM shop_cart_items WHERE userId = ?
     `).bind(user.userId).run();
 
+    // Get user email for payment
+    const userRecord = await c.env.DB.prepare(`
+      SELECT email FROM users WHERE id = ?
+    `).bind(user.userId).first();
+
     // For Mobile Money, generate payment instructions
     let paymentInstructions = null;
+    let paystackData = null;
+
     if (checkoutData.paymentMethod === 'mobile_money') {
       paymentInstructions = {
         provider: checkoutData.mobileMoneyProvider,
@@ -519,6 +576,38 @@ orderRoutes.post('/checkout', zValidator('json', checkoutSchema), async (c) => {
           'Enter your PIN to confirm',
         ],
       };
+    } else if (checkoutData.paymentMethod === 'card') {
+      // Initialize Paystack transaction for card payments
+      const callbackUrl = `https://ohcselibrary.xyz/shop/orders/${orderNumber}/confirmation`;
+
+      const paystackResult = await initializePaystackTransaction(
+        c.env.PAYSTACK_SECRET_KEY,
+        userRecord?.email || 'customer@ohcs.gov.gh',
+        total,
+        orderNumber,
+        callbackUrl,
+        {
+          order_id: orderId,
+          order_number: orderNumber,
+          customer_id: user.userId,
+        }
+      );
+
+      if (paystackResult.status) {
+        paystackData = {
+          authorization_url: paystackResult.data.authorization_url,
+          access_code: paystackResult.data.access_code,
+          reference: paystackResult.data.reference,
+        };
+
+        // Update payment record with Paystack reference
+        await c.env.DB.prepare(`
+          UPDATE shop_payments SET
+            providerReference = ?,
+            providerAccessCode = ?
+          WHERE id = ?
+        `).bind(paystackResult.data.reference, paystackResult.data.access_code, paymentId).run();
+      }
     }
 
     return c.json({
@@ -532,10 +621,15 @@ orderRoutes.post('/checkout', zValidator('json', checkoutSchema), async (c) => {
       },
       paymentId,
       paymentInstructions,
+      paystackData,
+      publicKey: c.env.PAYSTACK_PUBLIC_KEY,
     }, 201);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating order:', error);
-    return c.json({ error: 'Failed to create order' }, 500);
+    return c.json({
+      error: 'Failed to create order',
+      details: error?.message || String(error)
+    }, 500);
   }
 });
 
@@ -561,19 +655,38 @@ orderRoutes.post('/checkout/verify', zValidator('json', verifyPaymentSchema), as
     }
 
     if (order.paymentStatus === 'paid') {
-      return c.json({ error: 'Order already paid' }, 400);
+      return c.json({
+        success: true,
+        message: 'Order already paid',
+        order: {
+          orderNumber: order.orderNumber,
+          paymentStatus: 'paid'
+        }
+      });
     }
 
-    // In production, this would verify with the payment provider's API
-    // For now, we'll simulate a successful payment verification
+    // Verify payment with Paystack
+    const paystackResult = await verifyPaystackTransaction(
+      c.env.PAYSTACK_SECRET_KEY,
+      reference
+    );
+
+    if (!paystackResult.status || paystackResult.data?.status !== 'success') {
+      return c.json({
+        error: 'Payment verification failed',
+        details: paystackResult.message || 'Transaction not successful'
+      }, 400);
+    }
+
+    // Payment verified successfully
     const now = new Date().toISOString();
 
     // Update payment
     await c.env.DB.prepare(`
       UPDATE shop_payments
-      SET status = 'completed', transactionId = ?, paidAt = ?, updatedAt = ?
+      SET status = 'successful', providerTransactionId = ?, completedAt = ?
       WHERE orderId = ?
-    `).bind(transactionId, now, now, order.id).run();
+    `).bind(transactionId, now, order.id).run();
 
     // Update order
     await c.env.DB.prepare(`
