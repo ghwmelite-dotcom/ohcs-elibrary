@@ -36,6 +36,7 @@ import {
   Zap
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
+import { useToast } from '@/components/shared/Toast';
 import { useCartStore, useWishlistStore } from '@/stores/shopStore';
 import { useAuthStore } from '@/stores/authStore';
 import { formatCurrency } from '@/utils/formatters';
@@ -109,6 +110,7 @@ interface ReviewData {
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const toast = useToast();
   const { user, isAuthenticated } = useAuthStore();
   const { addToCart, isUpdating: isAddingToCart } = useCartStore();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore();
@@ -191,6 +193,7 @@ export default function ProductDetail() {
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
+      toast.info('Please log in', 'You need to be logged in to add items to cart');
       navigate('/login?redirect=/shop/product/' + slug);
       return;
     }
@@ -200,9 +203,11 @@ export default function ProductDetail() {
     try {
       await addToCart(product.id, undefined, quantity);
       setAddedToCart(true);
+      toast.success('Added to Cart!', `${product.title} has been added to your cart`);
       setTimeout(() => setAddedToCart(false), 2000);
     } catch (err) {
       console.error('Add to cart error:', err);
+      toast.error('Failed to add to cart', err instanceof Error ? err.message : 'Please try again');
     }
   };
 

@@ -25,7 +25,7 @@ const updateCartItemSchema = z.object({
 function getUserFromToken(c: any): { userId: string; role: string } | null {
   const user = c.get('user');
   if (!user) return null;
-  return { userId: user.sub, role: user.role };
+  return { userId: user.id, role: user.role };
 }
 
 // ============================================================================
@@ -163,9 +163,12 @@ cartRoutes.post('/', zValidator('json', addToCartSchema), async (c) => {
         quantity,
       }, 201);
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error adding to cart:', error);
-    return c.json({ error: 'Failed to add to cart' }, 500);
+    return c.json({
+      error: 'Failed to add to cart',
+      details: error?.message || String(error)
+    }, 500);
   }
 });
 

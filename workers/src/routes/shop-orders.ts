@@ -40,7 +40,7 @@ const verifyPaymentSchema = z.object({
 function getUserFromToken(c: any): { userId: string; role: string } | null {
   const user = c.get('user');
   if (!user) return null;
-  return { userId: user.sub, role: user.role };
+  return { userId: user.id, role: user.role };
 }
 
 function generateOrderNumber(): string {

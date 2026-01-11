@@ -354,7 +354,10 @@ export const useCartStore = create<CartStore>()((set, get) => ({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to add to cart');
+        const errorMsg = result.details
+          ? `${result.error}: ${result.details}`
+          : result.error || 'Failed to add to cart';
+        throw new Error(errorMsg);
       }
 
       // Refresh cart
