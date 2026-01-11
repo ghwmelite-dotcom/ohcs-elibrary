@@ -9,8 +9,8 @@ const cartRoutes = new Hono();
 // ============================================================================
 
 const addToCartSchema = z.object({
-  productId: z.string().uuid(),
-  variantId: z.string().uuid().optional(),
+  productId: z.string().min(1),
+  variantId: z.string().optional(),
   quantity: z.number().min(1).default(1),
 });
 
