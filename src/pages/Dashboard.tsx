@@ -30,6 +30,9 @@ import {
   PanelRightClose,
   LayoutGrid,
   Activity,
+  ShoppingBag,
+  Store,
+  Package,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
@@ -753,8 +756,8 @@ export default function Dashboard() {
   // Beautiful varied colors for quick actions
   const quickActions = [
     { label: 'Browse Library', icon: BookOpen, link: '/library', color: '#10b981', glow: 'rgba(16,185,129,0.4)' },
+    { label: 'Shop', icon: ShoppingBag, link: '/shop', color: '#8b5cf6', glow: 'rgba(139,92,246,0.4)' },
     { label: 'Forum', icon: MessageSquare, link: '/forum', color: '#06b6d4', glow: 'rgba(6,182,212,0.4)' },
-    { label: 'News Feed', icon: Newspaper, link: '/news', color: '#f43f5e', glow: 'rgba(244,63,94,0.4)' },
     { label: 'Leaderboard', icon: Trophy, link: '/leaderboard', color: '#eab308', glow: 'rgba(234,179,8,0.4)' },
   ];
 
@@ -938,6 +941,126 @@ export default function Dashboard() {
                   delay={0.6 + index * 0.1}
                 />
               ))}
+            </motion.div>
+
+            {/* Marketplace Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55 }}
+              className="relative overflow-hidden rounded-2xl"
+            >
+              {/* Background gradient */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 50%, #4c1d95 100%)',
+                }}
+              />
+
+              {/* Animated pattern */}
+              <motion.div
+                className="absolute inset-0 opacity-10"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M0 20h40v1H0z'/%3E%3Cpath d='M20 0v40h1V0z'/%3E%3C/g%3E%3C/svg%3E")`,
+                }}
+                animate={{ x: [0, 40], y: [0, 40] }}
+                transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+              />
+
+              {/* Floating shop icons */}
+              {[...Array(4)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute text-white/20"
+                  style={{
+                    left: `${15 + i * 22}%`,
+                    top: '20%',
+                  }}
+                  animate={{
+                    y: [-10, 10, -10],
+                    rotate: [0, 10, -10, 0],
+                    opacity: [0.1, 0.3, 0.1],
+                  }}
+                  transition={{
+                    duration: 4 + i * 0.5,
+                    repeat: Infinity,
+                    delay: i * 0.3,
+                  }}
+                >
+                  {i % 2 === 0 ? <Package className="w-8 h-8" /> : <Store className="w-8 h-8" />}
+                </motion.div>
+              ))}
+
+              <div className="relative p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <motion.div
+                      className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg"
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 4, repeat: Infinity }}
+                    >
+                      <ShoppingBag className="w-7 h-7 text-white" />
+                    </motion.div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-1">
+                        OHCS Marketplace
+                      </h3>
+                      <p className="text-violet-200 text-sm max-w-md">
+                        Discover books and resources authored by fellow civil servants. Support your colleagues and expand your knowledge!
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+                    <Link
+                      to="/shop"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-violet-700 font-semibold text-sm hover:bg-violet-50 transition-colors shadow-lg"
+                    >
+                      <ShoppingBag className="w-4 h-4" />
+                      Browse Shop
+                    </Link>
+                    <Link
+                      to="/shop/become-seller"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/20 text-white font-medium text-sm hover:bg-white/30 transition-colors backdrop-blur-sm"
+                    >
+                      <Store className="w-4 h-4" />
+                      Become a Seller
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Quick stats */}
+                <div className="flex flex-wrap gap-6 mt-5 pt-5 border-t border-white/20">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                      <BookOpen className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-bold">50+</p>
+                      <p className="text-violet-200 text-xs">Publications</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-bold">20+</p>
+                      <p className="text-violet-200 text-xs">Authors</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                      <Star className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-bold">4.8</p>
+                      <p className="text-violet-200 text-xs">Avg. Rating</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
 
