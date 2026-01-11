@@ -580,6 +580,13 @@ orderRoutes.post('/checkout', async (c) => {
       // Initialize Paystack transaction for card payments
       const callbackUrl = `https://ohcselibrary.xyz/shop/orders/${orderNumber}/confirmation`;
 
+      console.log('Initializing Paystack transaction:', {
+        email: userRecord?.email,
+        amount: total,
+        reference: orderNumber,
+        callbackUrl,
+      });
+
       const paystackResult = await initializePaystackTransaction(
         c.env.PAYSTACK_SECRET_KEY,
         userRecord?.email || 'customer@ohcs.gov.gh',
@@ -592,6 +599,8 @@ orderRoutes.post('/checkout', async (c) => {
           customer_id: user.userId,
         }
       );
+
+      console.log('Paystack result:', JSON.stringify(paystackResult));
 
       if (paystackResult.status) {
         paystackData = {
@@ -607,6 +616,9 @@ orderRoutes.post('/checkout', async (c) => {
             providerAccessCode = ?
           WHERE id = ?
         `).bind(paystackResult.data.reference, paystackResult.data.access_code, paymentId).run();
+      } else {
+        // Paystack initialization failed - log the error
+        console.error('Paystack initialization failed:', paystackResult);
       }
     }
 

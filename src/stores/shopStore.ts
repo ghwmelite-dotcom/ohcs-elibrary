@@ -585,7 +585,10 @@ export const useCheckoutStore = create<CheckoutStore>()((set, get) => ({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Checkout failed');
+        const errorMsg = result.details
+          ? `${result.error}: ${result.details}`
+          : result.error || 'Checkout failed';
+        throw new Error(errorMsg);
       }
 
       set({
@@ -593,7 +596,12 @@ export const useCheckoutStore = create<CheckoutStore>()((set, get) => ({
         paymentInstructions: result.paymentInstructions,
       });
 
-      return { orderNumber: result.order.orderNumber };
+      return {
+        success: true,
+        orderNumber: result.order.orderNumber,
+        paystackData: result.paystackData,
+        publicKey: result.publicKey,
+      };
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Checkout failed' });
       throw error;
@@ -716,7 +724,8 @@ export const useOrdersStore = create<OrdersStore>()((set, get) => ({
       if (!response.ok) throw new Error('Failed to fetch order');
 
       const data = await response.json();
-      set({ selectedOrder: data });
+      // Flatten the response so order properties are at root level with items
+      set({ selectedOrder: { ...data.order, items: data.items, payment: data.payment } });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to load order' });
     } finally {

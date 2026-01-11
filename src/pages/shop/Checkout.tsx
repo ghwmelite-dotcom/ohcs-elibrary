@@ -204,17 +204,43 @@ export default function Checkout() {
         }
       }
 
+      // Map payment method to API format
+      const apiPaymentMethod = paymentMethod === 'card' ? 'card' : 'mobile_money';
+      const mobileProvider = paymentMethod === 'mtn_momo' ? 'MTN'
+        : paymentMethod === 'vodafone_cash' ? 'Vodafone'
+        : paymentMethod === 'airteltigo_money' ? 'AirtelTigo'
+        : undefined;
+
       const result = await processCheckout({
-        paymentMethod,
-        phoneNumber: paymentMethod !== 'card' ? phoneNumber : undefined,
-        shippingDetails: summary?.hasPhysicalProducts ? shippingDetails : undefined,
-        discountCode: appliedDiscount?.code,
+        paymentMethod: apiPaymentMethod,
+        mobileMoneyProvider: mobileProvider,
+        mobileMoneyNumber: apiPaymentMethod === 'mobile_money' ? phoneNumber : undefined,
+        shippingAddress: summary?.hasPhysicalProducts ? {
+          name: shippingDetails.fullName,
+          phone: shippingDetails.phone,
+          address: shippingDetails.address,
+          city: shippingDetails.city,
+          region: shippingDetails.region,
+          notes: shippingDetails.notes,
+        } : undefined,
+        customerNote: shippingDetails.notes,
       });
 
       if (result.success && result.orderNumber) {
-        navigate(`/shop/orders/${result.orderNumber}/confirmation`);
+        // For card payments, redirect to Paystack
+        if (paymentMethod === 'card') {
+          if (result.paystackData?.authorization_url) {
+            window.location.href = result.paystackData.authorization_url;
+          } else {
+            // Paystack initialization failed
+            setError('Payment gateway initialization failed. Please try again or choose a different payment method.');
+          }
+        } else {
+          // For mobile money, go to confirmation page
+          navigate(`/shop/orders/${result.orderNumber}/confirmation`);
+        }
       } else {
-        setError(result.error || 'Failed to process checkout');
+        setError('Failed to process checkout');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred during checkout');
