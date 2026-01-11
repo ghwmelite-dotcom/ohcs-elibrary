@@ -210,11 +210,15 @@ app.route('/api/v1/audit', auditRoutes);
 app.route('/api/v1/analytics', analyticsRoutes);
 
 // E-Shop Marketplace
-// Seller and product routes handle their own auth internally
+// Seller routes require auth
 app.use('/api/v1/shop/seller/*', authMiddleware);
 app.route('/api/v1/shop/seller', sellerRoutes);
-app.use('/api/v1/shop/products/*', authMiddleware);
+
+// Product routes - catalog endpoints are public, others require auth
+// Mount product routes (handles own auth for non-catalog routes)
 app.route('/api/v1/shop/products', productRoutes);
+
+// Cart and orders require auth
 app.use('/api/v1/shop/cart/*', authMiddleware);
 app.route('/api/v1/shop/cart', cartRoutes);
 app.use('/api/v1/shop/orders/*', authMiddleware);
