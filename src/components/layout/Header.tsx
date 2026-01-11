@@ -17,6 +17,8 @@ import {
   Users,
   Check,
   Clock,
+  Heart,
+  ShoppingCart,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
@@ -24,6 +26,7 @@ import { useUIStore } from '@/stores/uiStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
 import { useSocialStore } from '@/stores/socialStore';
+import { useWishlistStore, useCartStore } from '@/stores/shopStore';
 import { Avatar } from '@/components/shared/Avatar';
 import { Badge } from '@/components/shared/Badge';
 import { Dropdown, DropdownItem, DropdownDivider, DropdownLabel } from '@/components/shared/Dropdown';
@@ -42,6 +45,11 @@ export function Header() {
     fetchPendingRequests,
     respondToConnectionRequest,
   } = useSocialStore();
+  const { items: wishlistItems } = useWishlistStore();
+  const { summary: cartSummary } = useCartStore();
+
+  const wishlistCount = wishlistItems.length;
+  const cartCount = cartSummary?.itemCount || 0;
 
   // Fetch notifications and friend requests on mount
   useEffect(() => {
@@ -127,6 +135,42 @@ export function Header() {
               <AnimatedThemeToggle size="md" />
             </ThemeToggleHint>
           </div>
+
+          {/* Wishlist */}
+          <Link
+            to="/shop/wishlist"
+            className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+            aria-label={`Wishlist${wishlistCount > 0 ? ` (${wishlistCount} items)` : ''}`}
+          >
+            <Heart className={cn('w-5 h-5', wishlistCount > 0 && 'text-red-500')} />
+            {wishlistCount > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"
+              >
+                {wishlistCount > 9 ? '9+' : wishlistCount}
+              </motion.span>
+            )}
+          </Link>
+
+          {/* Cart */}
+          <Link
+            to="/shop/cart"
+            className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+            aria-label={`Shopping cart${cartCount > 0 ? ` (${cartCount} items)` : ''}`}
+          >
+            <ShoppingCart className="w-5 h-5" />
+            {cartCount > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-primary-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"
+              >
+                {cartCount > 9 ? '9+' : cartCount}
+              </motion.span>
+            )}
+          </Link>
 
           {/* Friend Requests */}
           <Dropdown

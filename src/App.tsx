@@ -98,6 +98,21 @@ const ResearchLab = lazy(() => import('@/pages/ResearchLab'));
 const ResearchProjects = lazy(() => import('@/pages/ResearchProjects'));
 const ResearchProject = lazy(() => import('@/pages/ResearchProject'));
 
+// Shop / Marketplace pages
+const Shop = lazy(() => import('@/pages/shop/Shop'));
+const BecomeSeller = lazy(() => import('@/pages/shop/BecomeSeller'));
+const SellerDashboard = lazy(() => import('@/pages/shop/SellerDashboard'));
+const SellerProducts = lazy(() => import('@/pages/shop/SellerProducts'));
+const ProductForm = lazy(() => import('@/pages/shop/ProductForm'));
+const Cart = lazy(() => import('@/pages/shop/Cart'));
+const Checkout = lazy(() => import('@/pages/shop/Checkout'));
+const Orders = lazy(() => import('@/pages/shop/Orders'));
+const OrderConfirmation = lazy(() => import('@/pages/shop/OrderConfirmation'));
+const ProductDetail = lazy(() => import('@/pages/shop/ProductDetail'));
+const Browse = lazy(() => import('@/pages/shop/Browse'));
+const Storefront = lazy(() => import('@/pages/shop/Storefront'));
+const Wishlist = lazy(() => import('@/pages/shop/Wishlist'));
+
 // Admin pages
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
@@ -115,6 +130,7 @@ const CounselorReports = lazy(() => import('@/pages/admin/CounselorReports'));
 const AdminBroadcasts = lazy(() => import('@/pages/admin/AdminBroadcasts'));
 const AdminResearch = lazy(() => import('@/pages/admin/AdminResearch'));
 const AdminLMS = lazy(() => import('@/pages/admin/AdminLMS'));
+const AdminSellerApplications = lazy(() => import('@/pages/admin/AdminSellerApplications'));
 
 // Loading fallback component
 function PageLoader() {
@@ -425,6 +441,23 @@ export default function App() {
             <Route path="/research-hub/projects" element={<ResearchProjects />} />
             <Route path="/research-hub/projects/:id" element={<ResearchProject />} />
 
+            {/* Shop / Marketplace routes */}
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/shop/browse" element={<Browse />} />
+            <Route path="/shop/store/:storeSlug" element={<Storefront />} />
+            <Route path="/shop/product/:slug" element={<ProductDetail />} />
+            <Route path="/shop/cart" element={<Cart />} />
+            <Route path="/shop/checkout" element={<Checkout />} />
+            <Route path="/shop/orders" element={<Orders />} />
+            <Route path="/shop/orders/:orderNumber" element={<OrderConfirmation />} />
+            <Route path="/shop/orders/:orderNumber/confirmation" element={<OrderConfirmation />} />
+            <Route path="/shop/wishlist" element={<Wishlist />} />
+            <Route path="/shop/become-seller" element={<BecomeSeller />} />
+            <Route path="/shop/seller/dashboard" element={<SellerDashboard />} />
+            <Route path="/shop/seller/products" element={<SellerProducts />} />
+            <Route path="/shop/seller/products/new" element={<ProductForm />} />
+            <Route path="/shop/seller/products/:id/edit" element={<ProductForm />} />
+
             {/* Instructor routes */}
             <Route
               path="/instructor"
@@ -529,6 +562,7 @@ export default function App() {
             <Route path="/admin/broadcasts" element={<AdminBroadcasts />} />
             <Route path="/admin/research" element={<AdminResearch />} />
             <Route path="/admin/lms" element={<AdminLMS />} />
+            <Route path="/admin/seller-applications" element={<AdminSellerApplications />} />
           </Route>
 
           {/* 404 route */}

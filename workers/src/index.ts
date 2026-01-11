@@ -47,6 +47,11 @@ import {
   auditRoutes,
   // Analytics Dashboard
   analyticsRoutes,
+  // E-Shop Marketplace
+  sellerRoutes,
+  productRoutes,
+  cartRoutes,
+  orderRoutes,
 } from './routes';
 
 export interface Env {
@@ -203,6 +208,17 @@ app.route('/api/v1/audit', auditRoutes);
 // Analytics Dashboard
 // Analytics routes handle their own auth (admin only)
 app.route('/api/v1/analytics', analyticsRoutes);
+
+// E-Shop Marketplace
+// Seller and product routes handle their own auth internally
+app.use('/api/v1/shop/seller/*', authMiddleware);
+app.route('/api/v1/shop/seller', sellerRoutes);
+app.use('/api/v1/shop/products/*', authMiddleware);
+app.route('/api/v1/shop/products', productRoutes);
+app.use('/api/v1/shop/cart/*', authMiddleware);
+app.route('/api/v1/shop/cart', cartRoutes);
+app.use('/api/v1/shop/orders/*', authMiddleware);
+app.route('/api/v1/shop/orders', orderRoutes);
 
 // News aggregation admin endpoints
 app.post('/api/v1/admin/news/aggregate', authMiddleware, async (c) => {

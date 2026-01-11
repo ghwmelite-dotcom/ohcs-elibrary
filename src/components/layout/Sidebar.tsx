@@ -27,6 +27,7 @@ import {
   Brain,
   Compass,
   Calendar,
+  ShoppingBag,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
@@ -93,6 +94,12 @@ const navSections: NavSection[] = [
     items: [
       { path: '/kwame', label: 'Ask Kwame', icon: Sparkles, color: 'yellow', tag: { label: 'AI', color: 'gradient', pulse: true } },
       { path: '/research-hub', label: 'Research Hub', icon: Brain, color: 'purple', tag: { label: 'AI', color: 'gradient' } },
+    ],
+  },
+  {
+    title: 'Marketplace',
+    items: [
+      { path: '/shop', label: 'Shop', icon: ShoppingBag, color: 'emerald', tag: { label: 'NEW', color: 'green' } },
     ],
   },
   {

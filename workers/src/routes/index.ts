@@ -47,6 +47,12 @@ export { auditRoutes } from './audit';
 // Analytics Dashboard
 export { analyticsRoutes } from './analytics';
 
+// E-Shop Marketplace
+export { sellerRoutes } from './shop-seller';
+export { productRoutes } from './shop-products';
+export { cartRoutes } from './shop-cart';
+export { orderRoutes } from './shop-orders';
+
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
 
