@@ -53,6 +53,9 @@ export { productRoutes } from './shop-products';
 export { cartRoutes } from './shop-cart';
 export { orderRoutes } from './shop-orders';
 
+// Google Drive Integration
+export { googleDriveRoutes } from './googleDrive';
+
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
 

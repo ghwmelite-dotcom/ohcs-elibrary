@@ -287,16 +287,21 @@ export const useAuthStore = create<AuthStore>()(
         });
       },
 
-      register: async (data: RegisterData) => {
+      register: async (data: RegisterData & { turnstileToken?: string }) => {
         try {
           const response = await fetch(`${API_BASE}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              name: `${data.firstName} ${data.lastName}`,
+              firstName: data.firstName,
+              lastName: data.lastName,
               email: data.email.toLowerCase(),
               password: data.password,
-              mda: data.mdaId,
+              staffId: data.staffId,
+              mdaId: data.mdaId,
+              department: data.department,
+              title: data.title,
+              turnstileToken: data.turnstileToken,
             }),
           });
 

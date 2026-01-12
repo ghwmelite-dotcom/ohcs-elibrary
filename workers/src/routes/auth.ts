@@ -115,8 +115,12 @@ async function verifyBackupCode(code: string, hashedCodes: string[]): Promise<nu
   return hashedCodes.indexOf(hashHex);
 }
 
+// Registration schema - synced with frontend validators.ts
 const registerSchema = z.object({
-  name: z.string().min(2),
+  // Support both legacy 'name' field and new firstName/lastName fields
+  name: z.string().min(2).optional(),
+  firstName: z.string().min(2, 'First name must be at least 2 characters').optional(),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters').optional(),
   email: z.string().email().refine(
     (email) => email.endsWith('.gov.gh'),
     { message: 'Only .gov.gh email addresses are allowed' }
@@ -127,7 +131,21 @@ const registerSchema = z.object({
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number')
     .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+  staffId: z.string().min(6, 'Staff ID must be at least 6 digits').regex(/^\d+$/, 'Staff ID must contain only numbers').optional(),
   mda: z.string().optional(),
+  mdaId: z.string().optional(),
+  department: z.string().optional(),
+  title: z.string().optional(),
+  // Cloudflare Turnstile token for bot protection
+  turnstileToken: z.string().optional(),
+}).refine(
+  (data) => data.name || (data.firstName && data.lastName),
+  { message: 'Either name or firstName and lastName must be provided' }
+);
+
+// Email availability check schema
+const checkEmailSchema = z.object({
+  email: z.string().email(),
 });
 
 const forgotPasswordSchema = z.object({
@@ -151,6 +169,117 @@ async function hashPassword(password: string): Promise<string> {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
+
+// Verify Cloudflare Turnstile token
+async function verifyTurnstile(token: string, secretKey: string, ip?: string): Promise<boolean> {
+  if (!secretKey) {
+    // Skip verification if no secret key configured
+    return true;
+  }
+
+  try {
+    const formData = new URLSearchParams();
+    formData.append('secret', secretKey);
+    formData.append('response', token);
+    if (ip) {
+      formData.append('remoteip', ip);
+    }
+
+    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData.toString(),
+    });
+
+    const result = await response.json() as { success: boolean };
+    return result.success;
+  } catch (error) {
+    console.error('Turnstile verification failed:', error);
+    return false;
+  }
+}
+
+// Rate limiting helper using KV
+async function checkRateLimit(
+  kv: KVNamespace,
+  key: string,
+  limit: number,
+  windowSeconds: number
+): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
+  const now = Math.floor(Date.now() / 1000);
+  const windowKey = `ratelimit:${key}:${Math.floor(now / windowSeconds)}`;
+
+  try {
+    const current = await kv.get(windowKey);
+    const count = current ? parseInt(current, 10) : 0;
+
+    if (count >= limit) {
+      return {
+        allowed: false,
+        remaining: 0,
+        resetAt: (Math.floor(now / windowSeconds) + 1) * windowSeconds,
+      };
+    }
+
+    await kv.put(windowKey, (count + 1).toString(), { expirationTtl: windowSeconds * 2 });
+
+    return {
+      allowed: true,
+      remaining: limit - count - 1,
+      resetAt: (Math.floor(now / windowSeconds) + 1) * windowSeconds,
+    };
+  } catch (error) {
+    console.error('Rate limit check failed:', error);
+    // Allow on error to prevent lockout
+    return { allowed: true, remaining: limit, resetAt: now + windowSeconds };
+  }
+}
+
+// Check email availability (for real-time validation during registration)
+authRoutes.post('/check-email', zValidator('json', checkEmailSchema), async (c) => {
+  const { email } = c.req.valid('json');
+
+  try {
+    // Rate limit: 10 checks per minute per IP
+    const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
+    if (c.env.KV) {
+      const rateLimit = await checkRateLimit(c.env.KV, `email-check:${ip}`, 10, 60);
+      if (!rateLimit.allowed) {
+        return c.json({
+          error: 'Rate Limited',
+          message: 'Too many requests. Please wait a moment.',
+          retryAfter: rateLimit.resetAt - Math.floor(Date.now() / 1000),
+        }, 429);
+      }
+    }
+
+    // Check if email exists
+    const existing = await c.env.DB.prepare(`
+      SELECT id FROM users WHERE email = ?
+    `).bind(email.toLowerCase()).first();
+
+    // Check if it's a valid .gov.gh email
+    const isGovEmail = email.toLowerCase().endsWith('.gov.gh');
+
+    return c.json({
+      available: !existing,
+      isGovEmail,
+      message: existing
+        ? 'This email is already registered'
+        : !isGovEmail
+          ? 'Only .gov.gh email addresses are allowed'
+          : 'Email is available',
+    });
+  } catch (error) {
+    console.error('Email check error:', error);
+    return c.json({
+      error: 'Server Error',
+      message: 'Unable to check email availability',
+    }, 500);
+  }
+});
 
 // Login
 authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
@@ -462,9 +591,41 @@ authRoutes.post('/login/verify-2fa', zValidator('json', verify2FASchema), async 
 
 // Register
 authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
-  const { name, email, password, mda } = c.req.valid('json');
+  const data = c.req.valid('json');
+  const { email, password, turnstileToken } = data;
 
   try {
+    // Rate limit: 5 registrations per hour per IP
+    const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
+    if (c.env.KV) {
+      const rateLimit = await checkRateLimit(c.env.KV, `register:${ip}`, 5, 3600);
+      if (!rateLimit.allowed) {
+        return c.json({
+          error: 'Rate Limited',
+          message: 'Too many registration attempts. Please try again later.',
+          retryAfter: rateLimit.resetAt - Math.floor(Date.now() / 1000),
+        }, 429);
+      }
+    }
+
+    // Verify Turnstile token if configured
+    if (c.env.TURNSTILE_SECRET_KEY) {
+      if (!turnstileToken) {
+        return c.json({
+          error: 'Verification Required',
+          message: 'Please complete the security verification',
+        }, 400);
+      }
+
+      const isValidTurnstile = await verifyTurnstile(turnstileToken, c.env.TURNSTILE_SECRET_KEY, ip);
+      if (!isValidTurnstile) {
+        return c.json({
+          error: 'Verification Failed',
+          message: 'Security verification failed. Please try again.',
+        }, 400);
+      }
+    }
+
     // Check if user exists
     const existing = await c.env.DB.prepare(`
       SELECT id FROM users WHERE email = ?
@@ -480,10 +641,29 @@ authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
     // Hash password
     const passwordHash = await hashPassword(password);
 
-    // Parse name into first/last
-    const nameParts = name.trim().split(' ');
-    const firstName = nameParts[0];
-    const lastName = nameParts.slice(1).join(' ') || '';
+    // Handle both legacy 'name' field and new firstName/lastName fields
+    let firstName: string;
+    let lastName: string;
+    let displayName: string;
+
+    if (data.firstName && data.lastName) {
+      firstName = data.firstName.trim();
+      lastName = data.lastName.trim();
+      displayName = `${firstName} ${lastName}`;
+    } else if (data.name) {
+      const nameParts = data.name.trim().split(' ');
+      firstName = nameParts[0];
+      lastName = nameParts.slice(1).join(' ') || '';
+      displayName = data.name.trim();
+    } else {
+      return c.json({
+        error: 'Invalid Data',
+        message: 'Name is required',
+      }, 400);
+    }
+
+    // Get MDA from either field
+    const mdaId = data.mdaId || data.mda || null;
 
     // Generate user ID
     const userId = crypto.randomUUID();
@@ -493,16 +673,19 @@ authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
 
     // Create user - auto-verify for .gov.gh emails
     await c.env.DB.prepare(`
-      INSERT INTO users (id, email, passwordHash, displayName, firstName, lastName, role, mdaId, isActive, isVerified)
-      VALUES (?, ?, ?, ?, ?, ?, 'civil_servant', ?, 1, ?)
+      INSERT INTO users (id, email, passwordHash, displayName, firstName, lastName, staffId, role, mdaId, department, jobTitle, isActive, isVerified)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'civil_servant', ?, ?, ?, 1, ?)
     `).bind(
       userId,
       email.toLowerCase(),
       passwordHash,
-      name,
+      displayName,
       firstName,
       lastName,
-      mda || null,
+      data.staffId || null,
+      mdaId,
+      data.department || null,
+      data.title || null,
       isGovEmail ? 1 : 0
     ).run();
 
@@ -511,11 +694,11 @@ authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
       try {
         const gmailCreds = getGmailCredentials(c.env);
         await sendAdminNewUserNotification(c.env.RESEND_API_KEY, {
-          displayName: name,
+          displayName,
           email: email.toLowerCase(),
-          department: '',
-          mda: mda || 'Not specified',
-          staffId: 'Pending',
+          department: data.department || '',
+          mda: mdaId || 'Not specified',
+          staffId: data.staffId || 'Not provided',
         }, gmailCreds);
       } catch (adminError) {
         console.error('Failed to send admin notification:', adminError);
@@ -542,10 +725,14 @@ authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
         user: {
           id: userId,
           email: email.toLowerCase(),
-          name,
+          name: displayName,
           firstName,
           lastName,
-          displayName: name,
+          displayName,
+          staffId: data.staffId || null,
+          mdaId,
+          department: data.department || null,
+          title: data.title || null,
           role: 'civil_servant',
         },
         accessToken,

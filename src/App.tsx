@@ -28,6 +28,10 @@ const VerifyEmail = lazy(() => import('@/pages/VerifyEmail'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const VerifyCertificate = lazy(() => import('@/pages/VerifyCertificate'));
 
+// Legal pages
+const PrivacyPolicy = lazy(() => import('@/pages/legal/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
+const TermsOfService = lazy(() => import('@/pages/legal/TermsOfService').then(m => ({ default: m.TermsOfService })));
+
 // Main pages
 const Wall = lazy(() => import('@/pages/Wall'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
@@ -112,6 +116,7 @@ const ProductDetail = lazy(() => import('@/pages/shop/ProductDetail'));
 const Browse = lazy(() => import('@/pages/shop/Browse'));
 const Storefront = lazy(() => import('@/pages/shop/Storefront'));
 const Wishlist = lazy(() => import('@/pages/shop/Wishlist'));
+const MyAccount = lazy(() => import('@/pages/shop/MyAccount'));
 
 // Admin pages
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
@@ -131,6 +136,7 @@ const AdminBroadcasts = lazy(() => import('@/pages/admin/AdminBroadcasts'));
 const AdminResearch = lazy(() => import('@/pages/admin/AdminResearch'));
 const AdminLMS = lazy(() => import('@/pages/admin/AdminLMS'));
 const AdminSellerApplications = lazy(() => import('@/pages/admin/AdminSellerApplications'));
+const AdminGoogleDrive = lazy(() => import('@/pages/admin/AdminGoogleDrive'));
 
 // Loading fallback component
 function PageLoader() {
@@ -329,6 +335,8 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/sponsorship" element={<Sponsorship />} />
           <Route path="/verify" element={<VerifyCertificate />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
 
           {/* Auth routes (guest only) */}
           <Route element={<AuthLayout />}>
@@ -452,6 +460,7 @@ export default function App() {
             <Route path="/shop/orders/:orderNumber" element={<OrderConfirmation />} />
             <Route path="/shop/orders/:orderNumber/confirmation" element={<OrderConfirmation />} />
             <Route path="/shop/wishlist" element={<Wishlist />} />
+            <Route path="/shop/account" element={<MyAccount />} />
             <Route path="/shop/become-seller" element={<BecomeSeller />} />
             <Route path="/shop/seller/dashboard" element={<SellerDashboard />} />
             <Route path="/shop/seller/products" element={<SellerProducts />} />
@@ -563,6 +572,8 @@ export default function App() {
             <Route path="/admin/research" element={<AdminResearch />} />
             <Route path="/admin/lms" element={<AdminLMS />} />
             <Route path="/admin/seller-applications" element={<AdminSellerApplications />} />
+            <Route path="/admin/integrations/google-drive" element={<AdminGoogleDrive />} />
+            <Route path="/admin/integrations/google-drive/callback" element={<AdminGoogleDrive />} />
           </Route>
 
           {/* 404 route */}

@@ -52,6 +52,8 @@ import {
   productRoutes,
   cartRoutes,
   orderRoutes,
+  // Google Drive Integration
+  googleDriveRoutes,
 } from './routes';
 
 export interface Env {
@@ -66,6 +68,10 @@ export interface Env {
   GMAIL_CLIENT_ID?: string;
   GMAIL_CLIENT_SECRET?: string;
   GMAIL_REFRESH_TOKEN?: string;
+  // Google Drive API credentials
+  GOOGLE_DRIVE_CLIENT_ID: string;
+  GOOGLE_DRIVE_CLIENT_SECRET: string;
+  GOOGLE_DRIVE_REDIRECT_URI: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -225,6 +231,10 @@ app.route('/api/v1/shop/cart', cartRoutes);
 app.use('/api/v1/shop/orders', authMiddleware);
 app.use('/api/v1/shop/orders/*', authMiddleware);
 app.route('/api/v1/shop/orders', orderRoutes);
+
+// Google Drive Integration
+// Google Drive routes handle their own auth internally
+app.route('/api/v1/google-drive', googleDriveRoutes);
 
 // News aggregation admin endpoints
 app.post('/api/v1/admin/news/aggregate', authMiddleware, async (c) => {

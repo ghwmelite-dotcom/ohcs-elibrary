@@ -28,6 +28,7 @@ import {
   Compass,
   Calendar,
   ShoppingBag,
+  UserCircle,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
@@ -100,6 +101,7 @@ const navSections: NavSection[] = [
     title: 'Marketplace',
     items: [
       { path: '/shop', label: 'Shop', icon: ShoppingBag, color: 'emerald', tag: { label: 'NEW', color: 'green' } },
+      { path: '/shop/account', label: 'My Account', icon: UserCircle, color: 'violet' },
     ],
   },
   {

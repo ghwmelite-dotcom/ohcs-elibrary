@@ -184,3 +184,15 @@ export function formatAccessLevel(level: string): string {
   };
   return levels[level] || titleCase(level);
 }
+
+/**
+ * Format currency (Ghana Cedi)
+ */
+export function formatCurrency(amount: number, currency: string = 'GHS'): string {
+  return new Intl.NumberFormat('en-GH', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}

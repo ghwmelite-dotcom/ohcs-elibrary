@@ -26,6 +26,10 @@ import {
   Cog,
   GraduationCap,
   BookOpen,
+  ShoppingBag,
+  Store,
+  HardDrive,
+  Plug,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
@@ -80,6 +84,15 @@ const adminNavCategories: NavCategory[] = [
     ],
   },
   {
+    id: 'marketplace',
+    label: 'Marketplace',
+    icon: ShoppingBag,
+    color: '#10B981',
+    items: [
+      { path: '/admin/seller-applications', label: 'Seller Applications', icon: Store },
+    ],
+  },
+  {
     id: 'community',
     label: 'Community',
     icon: UsersRound,
@@ -116,6 +129,15 @@ const adminNavCategories: NavCategory[] = [
     color: '#FCD116',
     items: [
       { path: '/admin/broadcasts', label: 'Broadcasts', icon: Megaphone },
+    ],
+  },
+  {
+    id: 'integrations',
+    label: 'Integrations',
+    icon: Plug,
+    color: '#6366F1',
+    items: [
+      { path: '/admin/integrations/google-drive', label: 'Google Drive', icon: HardDrive },
     ],
   },
   {

@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, Lock, User, BadgeCheck, Building2, Briefcase, AlertCircle, Check } from 'lucide-react';
+import { Mail, Lock, User, BadgeCheck, Building2, Briefcase, AlertCircle, Check, Loader2, ShieldAlert, ShieldCheck, XCircle, CheckCircle2 } from 'lucide-react';
 import { registerSchema, type RegisterFormData, getPasswordStrength } from '@/utils/validators';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/components/shared/Toast';
@@ -10,6 +10,10 @@ import { Button } from '@/components/shared/Button';
 import { Input } from '@/components/shared/Input';
 import { Select } from '@/components/shared/Dropdown';
 import { cn } from '@/utils/cn';
+import { useRegistrationValidation } from '@/hooks/useAuthValidation';
+
+// Turnstile site key - set in environment variables
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
 // Mock MDAs for selection
 const mdaOptions = [
@@ -31,6 +35,7 @@ export function RegisterForm() {
   const toast = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
   const [passwordValue, setPasswordValue] = useState('');
+  const [emailValue, setEmailValue] = useState('');
 
   const {
     register,
@@ -56,10 +61,42 @@ export function RegisterForm() {
   const selectedMda = watch('mdaId');
   const passwordStrength = getPasswordStrength(passwordValue);
 
+  // Real-time validation hooks
+  const validation = useRegistrationValidation(
+    emailValue,
+    passwordValue,
+    TURNSTILE_SITE_KEY
+  );
+
+  // Check if form has blocking validation issues
+  const hasEmailIssue = validation.email.isAvailable === false || validation.email.isGovEmail === false;
+  const hasBreachedPassword = validation.password.isBreached === true;
+
   const onSubmit = async (data: RegisterFormData) => {
     try {
       setServerError(null);
-      const result = await registerUser(data);
+
+      // Check for blocking validation issues
+      if (hasEmailIssue) {
+        setServerError('Please use a valid, available .gov.gh email address');
+        return;
+      }
+
+      if (hasBreachedPassword) {
+        setServerError('This password has been exposed in data breaches. Please choose a different password.');
+        return;
+      }
+
+      // Check Turnstile if configured
+      if (TURNSTILE_SITE_KEY && !validation.turnstile.token) {
+        setServerError('Please complete the security verification');
+        return;
+      }
+
+      const result = await registerUser({
+        ...data,
+        turnstileToken: validation.turnstile.token || undefined,
+      });
 
       if (result.requiresVerification) {
         toast.success(
@@ -128,15 +165,46 @@ export function RegisterForm() {
           />
         </div>
 
-        <Input
-          label="Email Address"
-          type="email"
-          placeholder="yourname@agency.gov.gh"
-          leftIcon={<Mail className="w-5 h-5" />}
-          error={errors.email?.message}
-          hint="Must be a .gov.gh email address"
-          {...register('email')}
-        />
+        <div>
+          <Input
+            label="Email Address"
+            type="email"
+            placeholder="yourname@agency.gov.gh"
+            leftIcon={<Mail className="w-5 h-5" />}
+            error={errors.email?.message}
+            hint="Must be a .gov.gh email address"
+            success={validation.email.isAvailable === true && validation.email.isGovEmail === true}
+            {...register('email', {
+              onChange: (e) => setEmailValue(e.target.value),
+            })}
+          />
+          {/* Real-time email validation feedback */}
+          {emailValue.length > 5 && (
+            <div className="mt-2 flex items-center gap-2 text-sm">
+              {validation.email.isChecking ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-surface-400" />
+                  <span className="text-surface-500">Checking availability...</span>
+                </>
+              ) : validation.email.isAvailable === false ? (
+                <>
+                  <XCircle className="w-4 h-4 text-error-500" />
+                  <span className="text-error-500">This email is already registered</span>
+                </>
+              ) : validation.email.isGovEmail === false ? (
+                <>
+                  <AlertCircle className="w-4 h-4 text-warning-500" />
+                  <span className="text-warning-500">Only .gov.gh emails are allowed</span>
+                </>
+              ) : validation.email.isAvailable === true ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-success-500" />
+                  <span className="text-success-500">Email is available</span>
+                </>
+              ) : null}
+            </div>
+          )}
+        </div>
 
         <Input
           label="Staff ID"
@@ -227,6 +295,35 @@ export function RegisterForm() {
                   </li>
                 ))}
               </ul>
+
+              {/* Password breach check */}
+              <div className="mt-3 flex items-center gap-2">
+                {validation.password.isChecking ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-surface-400" />
+                    <span className="text-xs text-surface-500">Checking password security...</span>
+                  </>
+                ) : validation.password.isBreached ? (
+                  <div className="flex items-start gap-2 p-2 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg w-full">
+                    <ShieldAlert className="w-4 h-4 text-error-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-medium text-error-700 dark:text-error-300">
+                        Password found in {validation.password.breachCount?.toLocaleString()} data breaches
+                      </p>
+                      <p className="text-xs text-error-600 dark:text-error-400">
+                        Please choose a different password for your security.
+                      </p>
+                    </div>
+                  </div>
+                ) : passwordValue.length >= 12 && validation.password.isBreached === false ? (
+                  <>
+                    <ShieldCheck className="w-4 h-4 text-success-500" />
+                    <span className="text-xs text-success-600 dark:text-success-400">
+                      Password not found in known breaches
+                    </span>
+                  </>
+                ) : null}
+              </div>
             </div>
           )}
         </div>
@@ -240,7 +337,32 @@ export function RegisterForm() {
           {...register('confirmPassword')}
         />
 
-        <Button type="submit" fullWidth isLoading={isSubmitting} size="lg">
+        {/* Cloudflare Turnstile CAPTCHA */}
+        {TURNSTILE_SITE_KEY && (
+          <div className="flex flex-col items-center gap-2">
+            <div id="turnstile-container" className="flex justify-center" />
+            {!validation.turnstile.isReady && (
+              <div className="flex items-center gap-2 text-sm text-surface-500">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Loading security verification...</span>
+              </div>
+            )}
+            {validation.turnstile.token && (
+              <div className="flex items-center gap-2 text-sm text-success-600">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Verification complete</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <Button
+          type="submit"
+          fullWidth
+          isLoading={isSubmitting || validation.isValidating}
+          disabled={hasEmailIssue || hasBreachedPassword || (TURNSTILE_SITE_KEY && !validation.turnstile.token)}
+          size="lg"
+        >
           Create Account
         </Button>
       </form>

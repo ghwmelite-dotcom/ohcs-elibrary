@@ -1,6 +1,98 @@
 import { z } from 'zod';
 
 // ============================================================================
+// Password Breach Check (HaveIBeenPwned API)
+// ============================================================================
+
+/**
+ * Checks if a password has been exposed in known data breaches using the
+ * HaveIBeenPwned API with k-anonymity (only first 5 chars of SHA-1 hash sent)
+ */
+export async function checkPasswordBreach(password: string): Promise<{
+  breached: boolean;
+  count: number;
+}> {
+  try {
+    // Create SHA-1 hash of password
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+
+    // Split hash: first 5 chars (prefix) and rest (suffix)
+    const prefix = hashHex.substring(0, 5);
+    const suffix = hashHex.substring(5);
+
+    // Query HIBP API with prefix only (k-anonymity)
+    const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+      headers: {
+        'Add-Padding': 'true', // Prevents response size analysis
+      },
+    });
+
+    if (!response.ok) {
+      // If API fails, don't block registration
+      console.warn('HIBP API unavailable');
+      return { breached: false, count: 0 };
+    }
+
+    const text = await response.text();
+    const lines = text.split('\n');
+
+    // Check if our suffix is in the results
+    for (const line of lines) {
+      const [hashSuffix, countStr] = line.split(':');
+      if (hashSuffix.trim() === suffix) {
+        return { breached: true, count: parseInt(countStr.trim(), 10) };
+      }
+    }
+
+    return { breached: false, count: 0 };
+  } catch (error) {
+    console.error('Password breach check failed:', error);
+    return { breached: false, count: 0 };
+  }
+}
+
+/**
+ * Debounced password breach check with caching
+ */
+const breachCache = new Map<string, { breached: boolean; count: number; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+export async function checkPasswordBreachCached(password: string): Promise<{
+  breached: boolean;
+  count: number;
+}> {
+  // Create a hash of the password for cache key (don't store actual password)
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const cacheKey = Array.from(new Uint8Array(hashBuffer)).slice(0, 8).join('');
+
+  const cached = breachCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return { breached: cached.breached, count: cached.count };
+  }
+
+  const result = await checkPasswordBreach(password);
+  breachCache.set(cacheKey, { ...result, timestamp: Date.now() });
+
+  // Clean old cache entries
+  if (breachCache.size > 100) {
+    const now = Date.now();
+    for (const [key, value] of breachCache.entries()) {
+      if (now - value.timestamp > CACHE_TTL) {
+        breachCache.delete(key);
+      }
+    }
+  }
+
+  return result;
+}
+
+// ============================================================================
 // Email Validation
 // ============================================================================
 

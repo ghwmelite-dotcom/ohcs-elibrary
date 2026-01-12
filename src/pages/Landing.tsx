@@ -3357,42 +3357,95 @@ export default function Landing() {
         style={{ borderTop: `1px solid ${isDark ? 'rgba(245, 240, 230, 0.05)' : 'rgba(0, 0, 0, 0.05)'}` }}
       >
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #006B3F, #004d2d)' }}
-              >
-                <Library className="w-5 h-5 text-secondary-400" />
+          <div className="flex flex-col gap-8">
+            {/* Main Footer Row */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-9 h-9 rounded-lg flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #006B3F, #004d2d)' }}
+                >
+                  <Library className="w-5 h-5 text-secondary-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className={cn('font-heading font-bold text-sm', isDark ? 'text-amber-50' : 'text-surface-900')}>
+                      OHCS E-Library
+                    </p>
+                    <span
+                      className="px-1 py-0.5 text-[9px] font-bold rounded"
+                      style={{
+                        background: isDark ? 'rgba(252, 209, 22, 0.2)' : 'rgba(0, 107, 63, 0.1)',
+                        color: isDark ? '#FCD116' : '#006B3F',
+                      }}
+                    >
+                      AI
+                    </span>
+                  </div>
+                  <p className={cn('text-xs', theme.textGhost)}>Office of the Head of Civil Service, Ghana</p>
+                </div>
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className={cn('font-heading font-bold text-sm', isDark ? 'text-amber-50' : 'text-surface-900')}>
-                    OHCS E-Library
-                  </p>
-                  <span
-                    className="px-1 py-0.5 text-[9px] font-bold rounded"
+
+              {/* Legal Links */}
+              <div className="flex items-center gap-6">
+                <a
+                  href="/privacy"
+                  className={cn(
+                    'group flex items-center gap-2 text-sm transition-all duration-300',
+                    isDark ? 'text-amber-50/50 hover:text-amber-50' : 'text-slate-500 hover:text-slate-900'
+                  )}
+                >
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110"
                     style={{
-                      background: isDark ? 'rgba(252, 209, 22, 0.2)' : 'rgba(0, 107, 63, 0.1)',
-                      color: isDark ? '#FCD116' : '#006B3F',
+                      background: isDark ? 'rgba(252, 209, 22, 0.1)' : 'rgba(0, 107, 63, 0.08)',
+                      border: `1px solid ${isDark ? 'rgba(252, 209, 22, 0.15)' : 'rgba(0, 107, 63, 0.12)'}`,
                     }}
                   >
-                    AI
-                  </span>
-                </div>
-                <p className={cn('text-xs', theme.textGhost)}>Office of the Head of Civil Service, Ghana</p>
+                    <Shield className={cn('w-3.5 h-3.5', isDark ? 'text-secondary-400' : 'text-primary-600')} />
+                  </div>
+                  <span className="font-medium">Privacy Policy</span>
+                </a>
+                <div
+                  className="w-px h-5 hidden sm:block"
+                  style={{ background: isDark ? 'rgba(245, 240, 230, 0.1)' : 'rgba(0, 0, 0, 0.1)' }}
+                />
+                <a
+                  href="/terms"
+                  className={cn(
+                    'group flex items-center gap-2 text-sm transition-all duration-300',
+                    isDark ? 'text-amber-50/50 hover:text-amber-50' : 'text-slate-500 hover:text-slate-900'
+                  )}
+                >
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                    style={{
+                      background: isDark ? 'rgba(252, 209, 22, 0.1)' : 'rgba(0, 107, 63, 0.08)',
+                      border: `1px solid ${isDark ? 'rgba(252, 209, 22, 0.15)' : 'rgba(0, 107, 63, 0.12)'}`,
+                    }}
+                  >
+                    <ScrollText className={cn('w-3.5 h-3.5', isDark ? 'text-secondary-400' : 'text-primary-600')} />
+                  </div>
+                  <span className="font-medium">Terms of Service</span>
+                </a>
+              </div>
+
+              <div className="flex h-1 w-24 rounded-full overflow-hidden">
+                <div className="w-1/3 bg-accent-500" />
+                <div className="w-1/3 bg-secondary-500" />
+                <div className="w-1/3 bg-primary-500" />
               </div>
             </div>
 
-            <div className="flex h-1 w-24 rounded-full overflow-hidden">
-              <div className="w-1/3 bg-accent-500" />
-              <div className="w-1/3 bg-secondary-500" />
-              <div className="w-1/3 bg-primary-500" />
+            {/* Copyright Row */}
+            <div
+              className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4 text-center"
+              style={{ borderTop: `1px solid ${isDark ? 'rgba(245, 240, 230, 0.03)' : 'rgba(0, 0, 0, 0.03)'}` }}
+            >
+              <p className={cn('text-xs', theme.textGhost)}>
+                © {new Date().getFullYear()} Office of the Head of Civil Service, Ghana. All rights reserved.
+              </p>
             </div>
-
-            <p className={cn('text-xs', theme.textGhost)}>
-              © {new Date().getFullYear()} All rights reserved.
-            </p>
           </div>
         </div>
       </footer>

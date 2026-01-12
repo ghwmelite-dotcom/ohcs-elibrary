@@ -13,6 +13,10 @@ GMAIL_REFRESH_TOKEN = "1//03j9dppcB5lIRCgYIARAAGAMSNwF-L9Ir1FHHO0D5DpYN4QqxAErek
 # Paystack payment gateway credentials (test mode)
 PAYSTACK_SECRET_KEY = "sk_test_7aa91fb0bf7031611e0d7c578d308bbcc5493ecc"
 PAYSTACK_PUBLIC_KEY = "pk_test_119f59063968b51884ee2a2868f20974982d5232"
+# Google Drive API credentials
+GOOGLE_DRIVE_CLIENT_ID = "539781967902-2vs31ks41h3sph7tcnl9trqtrf82fkqf.apps.googleusercontent.com"
+GOOGLE_DRIVE_CLIENT_SECRET = "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"
+GOOGLE_DRIVE_REDIRECT_URI = "https://ohcs-elibrary.pages.dev/admin/integrations/google-drive/callback"
 
 # D1 Database binding
 [[d1_databases]]

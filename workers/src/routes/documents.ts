@@ -11,12 +11,23 @@ import {
   getChatHistory,
 } from '../services/documentAI';
 
+import {
+  getConnection,
+  getValidAccessToken,
+  getFileContent,
+  extractTextFromDriveFile,
+  GOOGLE_EXPORT_MIMES,
+} from '../services/googleDrive';
+
 interface Env {
   DB: D1Database;
   DOCUMENTS: R2Bucket;
   CACHE: KVNamespace;
   AI: any;
   JWT_SECRET: string;
+  GOOGLE_DRIVE_CLIENT_ID: string;
+  GOOGLE_DRIVE_CLIENT_SECRET: string;
+  GOOGLE_DRIVE_REDIRECT_URI: string;
 }
 
 interface Variables {
@@ -653,6 +664,7 @@ documentsRoutes.post('/:id/rate', requireAuth, async (c: AppContext) => {
 });
 
 // POST /documents/:id/analyze - AI analysis (production-ready)
+// Supports both local R2 files and Google Drive files
 documentsRoutes.post('/:id/analyze', async (c: AppContext) => {
   try {
     const documentId = c.req.param('id');
@@ -660,7 +672,7 @@ documentsRoutes.post('/:id/analyze', async (c: AppContext) => {
 
     const document = await c.env.DB.prepare(`
       SELECT * FROM documents WHERE id = ?
-    `).bind(documentId).first();
+    `).bind(documentId).first() as any;
 
     if (!document) {
       return c.json({ error: 'Document not found' }, 404);
@@ -677,14 +689,34 @@ documentsRoutes.post('/:id/analyze', async (c: AppContext) => {
       }
     }
 
-    // Extract text from document
+    // Extract text from document (handle both local and Google Drive files)
     let extractedText = await getCachedText(c.env, documentId);
     if (!extractedText) {
-      extractedText = await extractTextFromDocument(
-        c.env,
-        document.fileUrl as string,
-        document.fileType as string
-      );
+      // Check if this is a Google Drive file
+      if (document.source === 'google_drive' && document.externalFileId && document.driveConnectionId) {
+        try {
+          const connection = await getConnection(c.env, document.driveConnectionId);
+          if (connection && connection.isActive) {
+            const accessToken = await getValidAccessToken(c.env, connection);
+            extractedText = await extractTextFromDriveFile(
+              accessToken,
+              document.externalFileId,
+              document.externalMimeType || document.fileType
+            );
+          }
+        } catch (driveError) {
+          console.error('Error extracting text from Drive file:', driveError);
+        }
+      }
+
+      // Fallback to local R2 extraction
+      if (!extractedText) {
+        extractedText = await extractTextFromDocument(
+          c.env,
+          document.fileUrl as string,
+          document.fileType as string
+        );
+      }
     }
 
     // Generate AI analysis
@@ -745,6 +777,7 @@ documentsRoutes.get('/:id/analysis', async (c: AppContext) => {
 });
 
 // POST /documents/:id/chat - Ask questions about the document
+// Supports both local R2 files and Google Drive files
 documentsRoutes.post('/:id/chat', async (c: AppContext) => {
   try {
     const documentId = c.req.param('id');
@@ -756,21 +789,41 @@ documentsRoutes.post('/:id/chat', async (c: AppContext) => {
     }
 
     const document = await c.env.DB.prepare(`
-      SELECT id, title, description, category, fileUrl, fileType FROM documents WHERE id = ?
-    `).bind(documentId).first();
+      SELECT id, title, description, category, fileUrl, fileType, source, externalFileId, externalMimeType, driveConnectionId FROM documents WHERE id = ?
+    `).bind(documentId).first() as any;
 
     if (!document) {
       return c.json({ error: 'Document not found' }, 404);
     }
 
-    // Get or extract document text
+    // Get or extract document text (handle both local and Google Drive files)
     let extractedText = await getCachedText(c.env, documentId);
     if (!extractedText) {
-      extractedText = await extractTextFromDocument(
-        c.env,
-        document.fileUrl as string,
-        document.fileType as string
-      );
+      // Check if this is a Google Drive file
+      if (document.source === 'google_drive' && document.externalFileId && document.driveConnectionId) {
+        try {
+          const connection = await getConnection(c.env, document.driveConnectionId);
+          if (connection && connection.isActive) {
+            const accessToken = await getValidAccessToken(c.env, connection);
+            extractedText = await extractTextFromDriveFile(
+              accessToken,
+              document.externalFileId,
+              document.externalMimeType || document.fileType
+            );
+          }
+        } catch (driveError) {
+          console.error('Error extracting text from Drive file:', driveError);
+        }
+      }
+
+      // Fallback to local R2 extraction
+      if (!extractedText) {
+        extractedText = await extractTextFromDocument(
+          c.env,
+          document.fileUrl as string,
+          document.fileType as string
+        );
+      }
 
       // Cache the extracted text if we had to extract it
       if (extractedText) {
@@ -915,6 +968,7 @@ function canAccessDocument(accessLevel: string, userId: string, userRole: string
 }
 
 // GET /documents/:id/view - View document (returns file for in-browser viewing)
+// Supports both local R2 files and Google Drive files
 documentsRoutes.get('/:id/view', async (c: AppContext) => {
   try {
     const { DB, DOCUMENTS } = c.env;
@@ -924,7 +978,16 @@ documentsRoutes.get('/:id/view', async (c: AppContext) => {
 
     const document = await DB.prepare(`
       SELECT * FROM documents WHERE id = ?
-    `).bind(documentId).first<{ fileUrl: string; fileName: string; fileType: string; accessLevel: string }>();
+    `).bind(documentId).first<{
+      fileUrl: string;
+      fileName: string;
+      fileType: string;
+      accessLevel: string;
+      source?: string;
+      externalFileId?: string;
+      externalMimeType?: string;
+      driveConnectionId?: string;
+    }>();
 
     if (!document) {
       return c.json({ error: 'Document not found' }, 404);
@@ -938,15 +1001,47 @@ documentsRoutes.get('/:id/view', async (c: AppContext) => {
       }, 403);
     }
 
-    // Get file from R2
-    const object = await DOCUMENTS.get(document.fileUrl);
-    if (!object) {
-      return c.json({ error: 'File not found' }, 404);
+    let responseBody: ReadableStream | ArrayBuffer | null = null;
+    let contentType = document.fileType;
+
+    // Handle Google Drive files
+    if (document.source === 'google_drive' && document.externalFileId && document.driveConnectionId) {
+      try {
+        const connection = await getConnection(c.env, document.driveConnectionId);
+        if (!connection || !connection.isActive) {
+          return c.json({ error: 'Drive connection not found or inactive' }, 404);
+        }
+
+        const accessToken = await getValidAccessToken(c.env, connection);
+        const mimeType = document.externalMimeType || document.fileType;
+        const response = await getFileContent(accessToken, document.externalFileId, mimeType);
+
+        // Update content type for Google Docs exports
+        if (GOOGLE_EXPORT_MIMES[mimeType]) {
+          contentType = GOOGLE_EXPORT_MIMES[mimeType];
+        }
+
+        responseBody = response.body;
+      } catch (driveError) {
+        console.error('Error fetching from Google Drive:', driveError);
+        return c.json({ error: 'Failed to fetch file from Google Drive' }, 500);
+      }
+    } else {
+      // Handle local R2 files
+      const object = await DOCUMENTS.get(document.fileUrl);
+      if (!object) {
+        return c.json({ error: 'File not found' }, 404);
+      }
+      responseBody = object.body;
+    }
+
+    if (!responseBody) {
+      return c.json({ error: 'File content not available' }, 404);
     }
 
     // Return file for in-browser viewing with proper headers for iframe embedding
     const headers = new Headers();
-    headers.set('Content-Type', document.fileType);
+    headers.set('Content-Type', contentType);
     headers.set('Content-Disposition', `inline; filename="${document.fileName}"`);
     headers.set('Cache-Control', 'private, max-age=3600'); // Private cache for authenticated content
 
@@ -965,7 +1060,7 @@ documentsRoutes.get('/:id/view', async (c: AppContext) => {
     }
     // Note: If origin is not allowed, we don't set CORS headers (browser will block)
 
-    return new Response(object.body, { headers });
+    return new Response(responseBody, { headers });
   } catch (error) {
     console.error('Error viewing document:', error);
     return c.json({ error: 'Failed to view document' }, 500);
@@ -973,6 +1068,7 @@ documentsRoutes.get('/:id/view', async (c: AppContext) => {
 });
 
 // GET /documents/:id/download - Download document
+// Supports both local R2 files and Google Drive files
 documentsRoutes.get('/:id/download', async (c: AppContext) => {
   try {
     const { DB, DOCUMENTS } = c.env;
@@ -982,7 +1078,17 @@ documentsRoutes.get('/:id/download', async (c: AppContext) => {
 
     const document = await DB.prepare(`
       SELECT * FROM documents WHERE id = ?
-    `).bind(documentId).first<{ fileUrl: string; fileName: string; fileType: string; isDownloadable: number; accessLevel: string }>();
+    `).bind(documentId).first<{
+      fileUrl: string;
+      fileName: string;
+      fileType: string;
+      isDownloadable: number;
+      accessLevel: string;
+      source?: string;
+      externalFileId?: string;
+      externalMimeType?: string;
+      driveConnectionId?: string;
+    }>();
 
     if (!document) {
       return c.json({ error: 'Document not found' }, 404);
@@ -1004,10 +1110,42 @@ documentsRoutes.get('/:id/download', async (c: AppContext) => {
       }, 403);
     }
 
-    // Get file from R2
-    const object = await DOCUMENTS.get(document.fileUrl);
-    if (!object) {
-      return c.json({ error: 'File not found' }, 404);
+    let responseBody: ReadableStream | ArrayBuffer | null = null;
+    let contentType = document.fileType;
+
+    // Handle Google Drive files
+    if (document.source === 'google_drive' && document.externalFileId && document.driveConnectionId) {
+      try {
+        const connection = await getConnection(c.env, document.driveConnectionId);
+        if (!connection || !connection.isActive) {
+          return c.json({ error: 'Drive connection not found or inactive' }, 404);
+        }
+
+        const accessToken = await getValidAccessToken(c.env, connection);
+        const mimeType = document.externalMimeType || document.fileType;
+        const response = await getFileContent(accessToken, document.externalFileId, mimeType);
+
+        // Update content type for Google Docs exports
+        if (GOOGLE_EXPORT_MIMES[mimeType]) {
+          contentType = GOOGLE_EXPORT_MIMES[mimeType];
+        }
+
+        responseBody = response.body;
+      } catch (driveError) {
+        console.error('Error fetching from Google Drive:', driveError);
+        return c.json({ error: 'Failed to fetch file from Google Drive' }, 500);
+      }
+    } else {
+      // Handle local R2 files
+      const object = await DOCUMENTS.get(document.fileUrl);
+      if (!object) {
+        return c.json({ error: 'File not found' }, 404);
+      }
+      responseBody = object.body;
+    }
+
+    if (!responseBody) {
+      return c.json({ error: 'File content not available' }, 404);
     }
 
     // Increment download count
@@ -1017,7 +1155,7 @@ documentsRoutes.get('/:id/download', async (c: AppContext) => {
 
     // Return file with proper CORS headers
     const headers = new Headers();
-    headers.set('Content-Type', document.fileType);
+    headers.set('Content-Type', contentType);
     headers.set('Content-Disposition', `attachment; filename="${document.fileName}"`);
 
     // CORS headers for download
@@ -1027,7 +1165,7 @@ documentsRoutes.get('/:id/download', async (c: AppContext) => {
       headers.set('Access-Control-Allow-Credentials', 'true');
     }
 
-    return new Response(object.body, { headers });
+    return new Response(responseBody, { headers });
   } catch (error) {
     console.error('Error downloading document:', error);
     return c.json({ error: 'Failed to download document' }, 500);
