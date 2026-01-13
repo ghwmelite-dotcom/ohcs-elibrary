@@ -165,7 +165,7 @@ export function KofiChat({ projectContext, className }: KofiChatProps) {
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className={cn(
-              'absolute bottom-16 right-0 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden',
+              'absolute bottom-16 right-0 bg-surface-50 dark:bg-surface-800 rounded-2xl shadow-2xl border border-surface-200 dark:border-surface-700 overflow-hidden',
               isMinimized ? 'w-80 h-14' : 'w-96 h-[32rem]'
             )}
           >
@@ -227,14 +227,14 @@ export function KofiChat({ projectContext, className }: KofiChatProps) {
                           'max-w-[75%] rounded-2xl px-4 py-2.5 text-sm',
                           message.role === 'user'
                             ? 'bg-primary-600 text-white rounded-tr-md'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-md'
+                            : 'bg-surface-100 dark:bg-surface-700 text-surface-800 dark:text-surface-200 rounded-tl-md'
                         )}
                       >
                         <p className="whitespace-pre-wrap">{message.content}</p>
                         <p
                           className={cn(
                             'text-xs mt-1',
-                            message.role === 'user' ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'
+                            message.role === 'user' ? 'text-white/70' : 'text-surface-500 dark:text-surface-400'
                           )}
                         >
                           {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -248,10 +248,10 @@ export function KofiChat({ projectContext, className }: KofiChatProps) {
                       <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 flex items-center justify-center">
                         <Bot className="w-4 h-4" />
                       </div>
-                      <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl rounded-tl-md px-4 py-3">
+                      <div className="bg-surface-100 dark:bg-surface-700 rounded-2xl rounded-tl-md px-4 py-3">
                         <div className="flex items-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin text-primary-600" />
-                          <span className="text-sm text-gray-600 dark:text-gray-300">Thinking...</span>
+                          <span className="text-sm text-surface-600 dark:text-surface-300">Thinking...</span>
                         </div>
                       </div>
                     </div>
@@ -263,13 +263,13 @@ export function KofiChat({ projectContext, className }: KofiChatProps) {
                 {/* Quick Prompts */}
                 {messages.length <= 2 && (
                   <div className="px-4 pb-2">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Quick questions:</p>
+                    <p className="text-xs text-surface-500 dark:text-surface-400 mb-2">Quick questions:</p>
                     <div className="flex flex-wrap gap-1.5">
                       {QUICK_PROMPTS.slice(0, 3).map((prompt, index) => (
                         <button
                           key={index}
                           onClick={() => handleQuickPrompt(prompt.prompt)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full text-gray-700 dark:text-gray-300 transition-colors"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 rounded-full text-surface-700 dark:text-surface-300 transition-colors"
                         >
                           <prompt.icon className="w-3 h-3" />
                           {prompt.label}
@@ -280,7 +280,7 @@ export function KofiChat({ projectContext, className }: KofiChatProps) {
                 )}
 
                 {/* Input */}
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="p-4 border-t border-surface-200 dark:border-surface-700">
                   <div className="flex items-end gap-2">
                     <textarea
                       ref={inputRef}
@@ -289,7 +289,7 @@ export function KofiChat({ projectContext, className }: KofiChatProps) {
                       onKeyDown={handleKeyDown}
                       placeholder="Ask Kofi anything..."
                       rows={1}
-                      className="flex-1 resize-none rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white placeholder-gray-400"
+                      className="flex-1 resize-none rounded-xl border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 dark:text-surface-50 placeholder-surface-400 dark:placeholder-surface-500"
                       style={{ maxHeight: '80px' }}
                     />
                     <button
@@ -315,7 +315,7 @@ export function KofiChat({ projectContext, className }: KofiChatProps) {
         className={cn(
           'w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-colors',
           isOpen
-            ? 'bg-gray-600 hover:bg-gray-700'
+            ? 'bg-surface-600 dark:bg-surface-500 hover:bg-surface-700 dark:hover:bg-surface-400'
             : 'bg-gradient-to-br from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800'
         )}
       >

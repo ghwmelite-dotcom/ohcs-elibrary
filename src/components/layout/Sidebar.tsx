@@ -373,7 +373,7 @@ function NavTag({ label, color, pulse }: { label: string; color: string; pulse?:
     teal: 'bg-gradient-to-r from-teal-500 to-emerald-500 shadow-teal-500/30',
   };
 
-  const tagColor = tagStyles[color] || `${colorMap[color]?.tag || 'bg-gray-500'} shadow-gray-500/20`;
+  const tagColor = tagStyles[color] || `${colorMap[color]?.tag || 'bg-surface-500 dark:bg-surface-600'} shadow-surface-500/20 dark:shadow-surface-600/20`;
 
   return (
     <motion.span

@@ -30,7 +30,7 @@ interface MilestonesPanelProps {
 const API_BASE = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
 
 const MILESTONE_STATUS_CONFIG: Record<MilestoneStatus, { label: string; icon: typeof CheckCircle2; color: string; bgColor: string }> = {
-  pending: { label: 'Pending', icon: Clock, color: 'text-gray-500', bgColor: 'bg-gray-100 dark:bg-gray-700' },
+  pending: { label: 'Pending', icon: Clock, color: 'text-surface-500 dark:text-surface-400', bgColor: 'bg-surface-100 dark:bg-surface-700' },
   in_progress: { label: 'In Progress', icon: Target, color: 'text-blue-500', bgColor: 'bg-blue-100 dark:bg-blue-900/30' },
   completed: { label: 'Completed', icon: CheckCircle2, color: 'text-green-500', bgColor: 'bg-green-100 dark:bg-green-900/30' },
   delayed: { label: 'Delayed', icon: AlertCircle, color: 'text-orange-500', bgColor: 'bg-orange-100 dark:bg-orange-900/30' },
@@ -183,11 +183,11 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
             <Flag className="w-5 h-5 text-primary-500" />
             Milestones
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
             {completedCount} of {milestones.length} completed ({progress}%)
           </p>
         </div>
@@ -203,12 +203,12 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-surface-800 rounded-xl p-4 border border-surface-200 dark:border-surface-700">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Overall Progress</span>
+          <span className="text-sm font-medium text-surface-700 dark:text-surface-300">Overall Progress</span>
           <span className="text-sm font-bold text-primary-600 dark:text-primary-400">{progress}%</span>
         </div>
-        <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-3 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
@@ -227,11 +227,11 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-primary-200 dark:border-primary-800">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add New Milestone</h3>
+            <div className="bg-white dark:bg-surface-800 rounded-xl p-6 border border-primary-200 dark:border-primary-800">
+              <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-50 mb-4">Add New Milestone</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                     Title *
                   </label>
                   <input
@@ -239,19 +239,19 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                     placeholder="e.g., Complete Literature Review"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                       Type
                     </label>
                     <select
                       value={formData.milestoneType}
                       onChange={(e) => setFormData(prev => ({ ...prev, milestoneType: e.target.value as MilestoneType }))}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
                       {Object.entries(MILESTONE_TYPES).map(([key, label]) => (
                         <option key={key} value={key}>{label}</option>
@@ -260,20 +260,20 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                       Target Date
                     </label>
                     <input
                       type="date"
                       value={formData.targetDate}
                       onChange={(e) => setFormData(prev => ({ ...prev, targetDate: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                     Description
                   </label>
                   <textarea
@@ -281,14 +281,14 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="Describe this milestone..."
                     rows={2}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                    className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                   />
                 </div>
 
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => setShowAddForm(false)}
-                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    className="px-4 py-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
                   >
                     Cancel
                   </button>
@@ -309,12 +309,12 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
 
       {/* Milestones Timeline */}
       {milestones.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
-          <Flag className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+        <div className="bg-white dark:bg-surface-800 rounded-xl p-12 text-center border border-surface-200 dark:border-surface-700">
+          <Flag className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-surface-900 dark:text-surface-50 mb-2">
             No milestones yet
           </h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-surface-500 dark:text-surface-400 mb-4">
             Add milestones to track your research progress.
           </p>
           {canEdit && (
@@ -330,7 +330,7 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
       ) : (
         <div className="relative">
           {/* Timeline line */}
-          <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700" />
+          <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-surface-200 dark:bg-surface-700" />
 
           <div className="space-y-4">
             {milestones.map((milestone, index) => {
@@ -349,10 +349,10 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
                 >
                   {/* Timeline dot */}
                   <div className={cn(
-                    'absolute left-4 w-5 h-5 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center',
+                    'absolute left-4 w-5 h-5 rounded-full border-2 border-white dark:border-surface-900 flex items-center justify-center',
                     milestone.status === 'completed' ? 'bg-green-500' :
                     milestone.status === 'in_progress' ? 'bg-blue-500' :
-                    isOverdue ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600'
+                    isOverdue ? 'bg-orange-500' : 'bg-surface-300 dark:bg-surface-600'
                   )}>
                     {milestone.status === 'completed' && (
                       <CheckCircle2 className="w-3 h-3 text-white" />
@@ -360,10 +360,10 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
                   </div>
 
                   <div className={cn(
-                    'bg-white dark:bg-gray-800 rounded-xl border transition-colors',
+                    'bg-white dark:bg-surface-800 rounded-xl border transition-colors',
                     milestone.status === 'completed' ? 'border-green-200 dark:border-green-800' :
                     isOverdue ? 'border-orange-200 dark:border-orange-800' :
-                    'border-gray-200 dark:border-gray-700'
+                    'border-surface-200 dark:border-surface-700'
                   )}>
                     <div
                       className="p-4 cursor-pointer"
@@ -374,7 +374,7 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className={cn(
                               'font-medium',
-                              milestone.status === 'completed' ? 'text-gray-500 line-through' : 'text-gray-900 dark:text-white'
+                              milestone.status === 'completed' ? 'text-surface-500 dark:text-surface-400 line-through' : 'text-surface-900 dark:text-surface-50'
                             )}>
                               {milestone.title}
                             </h4>
@@ -391,7 +391,7 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center gap-4 text-sm text-surface-500 dark:text-surface-400">
                             <span className="flex items-center gap-1">
                               <MilestoneIcon className="w-3.5 h-3.5" />
                               {MILESTONE_TYPES[milestone.milestoneType]}
@@ -434,9 +434,9 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
                             </button>
                           )}
                           {isExpanded ? (
-                            <ChevronDown className="w-5 h-5 text-gray-400" />
+                            <ChevronDown className="w-5 h-5 text-surface-400 dark:text-surface-500" />
                           ) : (
-                            <ChevronRight className="w-5 h-5 text-gray-400" />
+                            <ChevronRight className="w-5 h-5 text-surface-400 dark:text-surface-500" />
                           )}
                         </div>
                       </div>
@@ -450,22 +450,22 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <div className="px-4 pb-4 pt-0 border-t border-gray-100 dark:border-gray-700">
+                          <div className="px-4 pb-4 pt-0 border-t border-surface-100 dark:border-surface-700">
                             {milestone.description && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
+                              <p className="text-sm text-surface-600 dark:text-surface-400 mt-3">
                                 {milestone.description}
                               </p>
                             )}
 
                             {milestone.deliverables && milestone.deliverables.length > 0 && (
                               <div className="mt-3">
-                                <h5 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">
+                                <h5 className="text-xs font-medium text-surface-500 dark:text-surface-400 uppercase mb-2">
                                   Deliverables
                                 </h5>
                                 <ul className="space-y-1">
                                   {milestone.deliverables.map((d, i) => (
-                                    <li key={i} className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
+                                    <li key={i} className="text-sm text-surface-600 dark:text-surface-400 flex items-center gap-2">
+                                      <span className="w-1.5 h-1.5 bg-surface-400 dark:bg-surface-500 rounded-full" />
                                       {d}
                                     </li>
                                   ))}
@@ -485,12 +485,12 @@ export function MilestonesPanel({ projectId, canEdit }: MilestonesPanelProps) {
                             )}
 
                             {canEdit && (
-                              <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                              <div className="flex items-center gap-2 mt-4 pt-3 border-t border-surface-100 dark:border-surface-700">
                                 <select
                                   value={milestone.status}
                                   onChange={(e) => handleUpdateStatus(milestone.id, e.target.value as MilestoneStatus)}
                                   disabled={savingId === milestone.id}
-                                  className="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                  className="flex-1 px-3 py-1.5 text-sm border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-50"
                                 >
                                   {Object.entries(MILESTONE_STATUS_CONFIG).map(([key, config]) => (
                                     <option key={key} value={key}>{config.label}</option>

@@ -40,16 +40,16 @@ export function Podium({ users, currentUserId }: PodiumProps) {
   const getPodiumColor = (rank: number) => {
     switch (rank) {
       case 1: return 'from-yellow-400 via-yellow-500 to-yellow-600';
-      case 2: return 'from-gray-300 via-gray-400 to-gray-500';
+      case 2: return 'from-surface-300 via-surface-400 to-surface-500 dark:from-surface-400 dark:via-surface-500 dark:to-surface-600';
       case 3: return 'from-amber-600 via-amber-700 to-amber-800';
-      default: return 'from-gray-400 to-gray-500';
+      default: return 'from-surface-400 to-surface-500 dark:from-surface-500 dark:to-surface-600';
     }
   };
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1: return <Crown className="w-6 h-6 text-yellow-400" />;
-      case 2: return <Medal className="w-5 h-5 text-gray-300" />;
+      case 2: return <Medal className="w-5 h-5 text-surface-300 dark:text-surface-400" />;
       case 3: return <Medal className="w-5 h-5 text-amber-600" />;
       default: return null;
     }
@@ -134,7 +134,7 @@ export function Podium({ users, currentUserId }: PodiumProps) {
                 <div className={cn(
                   'relative rounded-full',
                   user.rank === 1 && 'ring-4 ring-yellow-400/50 shadow-lg shadow-yellow-400/30',
-                  user.rank === 2 && 'ring-2 ring-gray-300/50',
+                  user.rank === 2 && 'ring-2 ring-surface-300/50 dark:ring-surface-400/50',
                   user.rank === 3 && 'ring-2 ring-amber-600/50',
                   isCurrentUser && 'ring-4 ring-primary-500'
                 )}>

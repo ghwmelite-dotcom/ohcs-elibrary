@@ -43,12 +43,12 @@ const API_BASE = '/api/v1';
 
 // Note Types with colors
 const NOTE_TYPES = [
-  { value: 'general', label: 'General', color: 'bg-gray-100 text-gray-700' },
-  { value: 'methodology', label: 'Methodology', color: 'bg-purple-100 text-purple-700' },
-  { value: 'findings', label: 'Findings', color: 'bg-green-100 text-green-700' },
-  { value: 'discussion', label: 'Discussion', color: 'bg-blue-100 text-blue-700' },
-  { value: 'conclusion', label: 'Conclusion', color: 'bg-yellow-100 text-yellow-700' },
-  { value: 'appendix', label: 'Appendix', color: 'bg-gray-100 text-gray-600' },
+  { value: 'general', label: 'General', color: 'bg-surface-100 text-surface-700 dark:bg-surface-700 dark:text-surface-300' },
+  { value: 'methodology', label: 'Methodology', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
+  { value: 'findings', label: 'Findings', color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
+  { value: 'discussion', label: 'Discussion', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
+  { value: 'conclusion', label: 'Conclusion', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
+  { value: 'appendix', label: 'Appendix', color: 'bg-surface-100 text-surface-600 dark:bg-surface-700 dark:text-surface-400' },
 ];
 
 // Citation Types
@@ -222,10 +222,10 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100">
             Research Notes ({notes.length})
           </h3>
-          <p className="text-sm text-gray-500">Collaborative documents and findings</p>
+          <p className="text-sm text-surface-500 dark:text-surface-400">Collaborative documents and findings</p>
         </div>
         {canEdit && !showEditor && (
           <button
@@ -245,9 +245,9 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
+            className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-5"
           >
-            <h4 className="font-medium text-gray-900 dark:text-white mb-4">
+            <h4 className="font-medium text-surface-900 dark:text-surface-100 mb-4">
               {editingNote ? 'Edit Note' : 'New Note'}
             </h4>
             <div className="space-y-4">
@@ -257,12 +257,12 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Note title..."
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="flex-1 px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
                 />
                 <select
                   value={noteType}
                   onChange={(e) => setNoteType(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
                 >
                   {NOTE_TYPES.map((type) => (
                     <option key={type.value} value={type.value}>
@@ -276,12 +276,12 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Write your note content here... (Markdown supported)"
                 rows={8}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-y"
+                className="w-full px-4 py-3 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100 resize-y"
               />
               <div className="flex items-center justify-end gap-3">
                 <button
                   onClick={resetForm}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="px-4 py-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
@@ -301,10 +301,10 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
 
       {/* Notes List */}
       {notes.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
-          <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No notes yet</h4>
-          <p className="text-gray-500 mb-4">Create collaborative notes to document your research process.</p>
+        <div className="bg-white dark:bg-surface-800 rounded-xl p-12 text-center border border-surface-200 dark:border-surface-700">
+          <FileText className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+          <h4 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-2">No notes yet</h4>
+          <p className="text-surface-500 dark:text-surface-400 mb-4">Create collaborative notes to document your research process.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -315,7 +315,7 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
             return (
               <div
                 key={note.id}
-                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+                className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden"
               >
                 <div className="p-4">
                   <div className="flex items-start gap-3">
@@ -325,10 +325,10 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
                         <span className={cn('px-2 py-0.5 text-xs rounded-full', typeInfo.color)}>
                           {typeInfo.label}
                         </span>
-                        <span className="text-xs text-gray-400">v{note.version}</span>
+                        <span className="text-xs text-surface-400 dark:text-surface-500">v{note.version}</span>
                       </div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">{note.title}</h4>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                      <h4 className="font-medium text-surface-900 dark:text-surface-100">{note.title}</h4>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-surface-500 dark:text-surface-400">
                         <span className="flex items-center gap-1">
                           <User className="w-3 h-3" />
                           {note.createdBy?.displayName}
@@ -342,7 +342,7 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => setExpandedNote(isExpanded ? null : note.id)}
-                        className="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors"
+                        className="p-1.5 text-surface-400 hover:text-surface-600 dark:text-surface-500 dark:hover:text-surface-300 rounded transition-colors"
                       >
                         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </button>
@@ -352,20 +352,20 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
                             onClick={() => handlePin(note)}
                             className={cn(
                               'p-1.5 rounded transition-colors',
-                              note.isPinned ? 'text-primary-500' : 'text-gray-400 hover:text-gray-600'
+                              note.isPinned ? 'text-primary-500' : 'text-surface-400 hover:text-surface-600 dark:text-surface-500 dark:hover:text-surface-300'
                             )}
                           >
                             <Pin className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => startEdit(note)}
-                            className="p-1.5 text-gray-400 hover:text-primary-500 rounded transition-colors"
+                            className="p-1.5 text-surface-400 hover:text-primary-500 dark:text-surface-500 rounded transition-colors"
                           >
                             <Edit3 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(note.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"
+                            className="p-1.5 text-surface-400 hover:text-red-500 dark:text-surface-500 rounded transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -383,8 +383,8 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="px-4 pb-4 pt-2 border-t border-gray-100 dark:border-gray-700">
-                        <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-sans">
+                      <div className="px-4 pb-4 pt-2 border-t border-surface-100 dark:border-surface-700">
+                        <pre className="whitespace-pre-wrap text-sm text-surface-700 dark:text-surface-300 font-sans">
                           {note.content || 'No content yet.'}
                         </pre>
                       </div>
@@ -524,24 +524,24 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100">
             Citations ({citations.length})
           </h3>
-          <p className="text-sm text-gray-500">Bibliography and reference management</p>
+          <p className="text-sm text-surface-500 dark:text-surface-400">Bibliography and reference management</p>
         </div>
         <div className="flex items-center gap-2">
           {citations.length > 0 && (
             <div className="relative group">
-              <button className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <button className="inline-flex items-center gap-2 px-3 py-2 border border-surface-300 dark:border-surface-600 text-surface-700 dark:text-surface-300 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors">
                 <Download className="w-4 h-4" />
                 Export
               </button>
-              <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+              <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-surface-800 rounded-lg shadow-lg border border-surface-200 dark:border-surface-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
                 {['bibtex', 'apa', 'mla', 'chicago', 'harvard'].map((format) => (
                   <button
                     key={format}
                     onClick={() => handleExport(format)}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg"
+                    className="w-full px-4 py-2 text-left text-sm text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 first:rounded-t-lg last:rounded-b-lg"
                   >
                     {format.toUpperCase()}
                   </button>
@@ -564,7 +564,7 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
       {/* Format Selector */}
       {citations.length > 0 && (
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Format:</span>
+          <span className="text-sm text-surface-500 dark:text-surface-400">Format:</span>
           {(['apa', 'mla', 'chicago', 'harvard'] as const).map((format) => (
             <button
               key={format}
@@ -573,7 +573,7 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
                 'px-3 py-1 text-xs rounded-full transition-colors',
                 selectedFormat === format
                   ? 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300'
-                  : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  : 'bg-surface-100 text-surface-600 dark:bg-surface-700 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-600'
               )}
             >
               {format.toUpperCase()}
@@ -589,21 +589,21 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
+            className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-5"
           >
-            <h4 className="font-medium text-gray-900 dark:text-white mb-4">Add Citation</h4>
+            <h4 className="font-medium text-surface-900 dark:text-surface-100 mb-4">Add Citation</h4>
             <div className="grid grid-cols-2 gap-4">
               <input
                 type="text"
                 value={formData.citationKey}
                 onChange={(e) => setFormData({ ...formData, citationKey: e.target.value })}
                 placeholder="Citation key (e.g., Smith2023)"
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
               />
               <select
                 value={formData.citationType}
                 onChange={(e) => setFormData({ ...formData, citationType: e.target.value })}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
               >
                 {CITATION_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
@@ -616,28 +616,28 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Title *"
-                className="col-span-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="col-span-2 px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
               />
               <input
                 type="text"
                 value={formData.authors}
                 onChange={(e) => setFormData({ ...formData, authors: e.target.value })}
                 placeholder="Authors"
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
               />
               <input
                 type="text"
                 value={formData.year}
                 onChange={(e) => setFormData({ ...formData, year: e.target.value })}
                 placeholder="Year"
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
               />
               <input
                 type="text"
                 value={formData.journal}
                 onChange={(e) => setFormData({ ...formData, journal: e.target.value })}
                 placeholder="Journal/Publisher"
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
               />
               <div className="flex gap-2">
                 <input
@@ -645,14 +645,14 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
                   value={formData.volume}
                   onChange={(e) => setFormData({ ...formData, volume: e.target.value })}
                   placeholder="Volume"
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="flex-1 px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
                 />
                 <input
                   type="text"
                   value={formData.pages}
                   onChange={(e) => setFormData({ ...formData, pages: e.target.value })}
                   placeholder="Pages"
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="flex-1 px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
                 />
               </div>
               <input
@@ -660,20 +660,20 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
                 value={formData.doi}
                 onChange={(e) => setFormData({ ...formData, doi: e.target.value })}
                 placeholder="DOI"
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
               />
               <input
                 type="text"
                 value={formData.url}
                 onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                 placeholder="URL"
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
               />
             </div>
             <div className="flex items-center justify-end gap-3 mt-4">
               <button
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="px-4 py-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
               >
                 Cancel
               </button>
@@ -692,37 +692,37 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
 
       {/* Citations List */}
       {citations.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
-          <BookOpen className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No citations yet</h4>
-          <p className="text-gray-500 mb-4">Add citations to build your bibliography.</p>
+        <div className="bg-white dark:bg-surface-800 rounded-xl p-12 text-center border border-surface-200 dark:border-surface-700">
+          <BookOpen className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+          <h4 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-2">No citations yet</h4>
+          <p className="text-surface-500 dark:text-surface-400 mb-4">Add citations to build your bibliography.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {citations.map((citation) => (
             <div
               key={citation.id}
-              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+              className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-4"
             >
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                  <Quote className="w-4 h-4 text-gray-500" />
+                <div className="p-2 bg-surface-100 dark:bg-surface-700 rounded-lg">
+                  <Quote className="w-4 h-4 text-surface-500 dark:text-surface-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+                    <span className="font-mono text-xs bg-surface-100 dark:bg-surface-700 px-2 py-0.5 rounded text-surface-700 dark:text-surface-300">
                       {citation.citationKey}
                     </span>
-                    <span className="text-xs text-gray-400 capitalize">{citation.citationType}</span>
+                    <span className="text-xs text-surface-400 dark:text-surface-500 capitalize">{citation.citationType}</span>
                   </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <p className="text-sm text-surface-700 dark:text-surface-300">
                     {citation.formatted[selectedFormat] || citation.title}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handleCopy(citation)}
-                    className="p-1.5 text-gray-400 hover:text-primary-500 rounded transition-colors"
+                    className="p-1.5 text-surface-400 hover:text-primary-500 dark:text-surface-500 rounded transition-colors"
                     title="Copy citation"
                   >
                     {copiedId === citation.id ? (
@@ -734,7 +734,7 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
                   {canEdit && (
                     <button
                       onClick={() => handleDelete(citation.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"
+                      className="p-1.5 text-surface-400 hover:text-red-500 dark:text-surface-500 rounded transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -794,7 +794,7 @@ function ReviewsTab({ projectId, canEdit, authFetch }: ReviewsTabProps) {
       case 'in_progress':
         return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
       default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+        return 'bg-surface-100 text-surface-700 dark:bg-surface-700 dark:text-surface-300';
     }
   };
 
@@ -810,25 +810,25 @@ function ReviewsTab({ projectId, canEdit, authFetch }: ReviewsTabProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100">
             Peer Reviews ({reviews.length})
           </h3>
-          <p className="text-sm text-gray-500">Review feedback and approvals</p>
+          <p className="text-sm text-surface-500 dark:text-surface-400">Review feedback and approvals</p>
         </div>
       </div>
 
       {reviews.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
-          <CheckCircle2 className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No reviews yet</h4>
-          <p className="text-gray-500">Request peer reviews to get feedback on your research.</p>
+        <div className="bg-white dark:bg-surface-800 rounded-xl p-12 text-center border border-surface-200 dark:border-surface-700">
+          <CheckCircle2 className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+          <h4 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-2">No reviews yet</h4>
+          <p className="text-surface-500 dark:text-surface-400">Request peer reviews to get feedback on your research.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {reviews.map((review) => (
             <div
               key={review.id}
-              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+              className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden"
             >
               <div className="p-4">
                 <div className="flex items-center justify-between">
@@ -839,10 +839,10 @@ function ReviewsTab({ projectId, canEdit, authFetch }: ReviewsTabProps) {
                       </span>
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
+                      <p className="font-medium text-surface-900 dark:text-surface-100">
                         {review.reviewer?.displayName || 'Anonymous Reviewer'}
                       </p>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-2 text-xs text-surface-500 dark:text-surface-400">
                         <span className="capitalize">{review.reviewType} review</span>
                         <span>•</span>
                         <span>{new Date(review.createdAt).toLocaleDateString()}</span>
@@ -860,7 +860,7 @@ function ReviewsTab({ projectId, canEdit, authFetch }: ReviewsTabProps) {
                             key={star}
                             className={cn(
                               'w-4 h-4',
-                              star <= review.overallRating! ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
+                              star <= review.overallRating! ? 'text-yellow-400 fill-yellow-400' : 'text-surface-300 dark:text-surface-600'
                             )}
                           />
                         ))}
@@ -868,7 +868,7 @@ function ReviewsTab({ projectId, canEdit, authFetch }: ReviewsTabProps) {
                     )}
                     <button
                       onClick={() => setExpandedReview(expandedReview === review.id ? null : review.id)}
-                      className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                      className="p-1 text-surface-400 hover:text-surface-600 dark:text-surface-500 dark:hover:text-surface-300 rounded"
                     >
                       {expandedReview === review.id ? (
                         <ChevronUp className="w-4 h-4" />
@@ -888,29 +888,29 @@ function ReviewsTab({ projectId, canEdit, authFetch }: ReviewsTabProps) {
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-4 pb-4 pt-2 border-t border-gray-100 dark:border-gray-700 space-y-3">
+                    <div className="px-4 pb-4 pt-2 border-t border-surface-100 dark:border-surface-700 space-y-3">
                       {review.summary && (
                         <div>
-                          <h5 className="text-xs font-medium text-gray-500 uppercase mb-1">Summary</h5>
-                          <p className="text-sm text-gray-700 dark:text-gray-300">{review.summary}</p>
+                          <h5 className="text-xs font-medium text-surface-500 dark:text-surface-400 uppercase mb-1">Summary</h5>
+                          <p className="text-sm text-surface-700 dark:text-surface-300">{review.summary}</p>
                         </div>
                       )}
                       {review.strengths && (
                         <div>
-                          <h5 className="text-xs font-medium text-green-600 uppercase mb-1">Strengths</h5>
-                          <p className="text-sm text-gray-700 dark:text-gray-300">{review.strengths}</p>
+                          <h5 className="text-xs font-medium text-green-600 dark:text-green-400 uppercase mb-1">Strengths</h5>
+                          <p className="text-sm text-surface-700 dark:text-surface-300">{review.strengths}</p>
                         </div>
                       )}
                       {review.weaknesses && (
                         <div>
-                          <h5 className="text-xs font-medium text-red-600 uppercase mb-1">Weaknesses</h5>
-                          <p className="text-sm text-gray-700 dark:text-gray-300">{review.weaknesses}</p>
+                          <h5 className="text-xs font-medium text-red-600 dark:text-red-400 uppercase mb-1">Weaknesses</h5>
+                          <p className="text-sm text-surface-700 dark:text-surface-300">{review.weaknesses}</p>
                         </div>
                       )}
                       {review.recommendations && (
                         <div>
-                          <h5 className="text-xs font-medium text-blue-600 uppercase mb-1">Recommendations</h5>
-                          <p className="text-sm text-gray-700 dark:text-gray-300">{review.recommendations}</p>
+                          <h5 className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase mb-1">Recommendations</h5>
+                          <p className="text-sm text-surface-700 dark:text-surface-300">{review.recommendations}</p>
                         </div>
                       )}
                     </div>
@@ -1052,9 +1052,9 @@ function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) 
           ← Back to discussions
         </button>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-          <h3 className="font-medium text-gray-900 dark:text-white">{discussion?.title}</h3>
-          <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+        <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-4">
+          <h3 className="font-medium text-surface-900 dark:text-surface-100">{discussion?.title}</h3>
+          <div className="flex items-center gap-2 mt-1 text-xs text-surface-500 dark:text-surface-400">
             <span>Started by {discussion?.createdBy?.displayName}</span>
             <span>•</span>
             <span>{replies.length} replies</span>
@@ -1066,20 +1066,20 @@ function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) 
           {replies.map((reply) => (
             <div
               key={reply.id}
-              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+              className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-4"
             >
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                  <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                <div className="w-8 h-8 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center">
+                  <span className="text-xs font-medium text-surface-600 dark:text-surface-400">
                     {reply.createdBy?.displayName?.charAt(0) || 'U'}
                   </span>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-sm text-gray-900 dark:text-white">
+                    <span className="font-medium text-sm text-surface-900 dark:text-surface-100">
                       {reply.createdBy?.displayName}
                     </span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-surface-400 dark:text-surface-500">
                       {new Date(reply.createdAt).toLocaleString()}
                     </span>
                     {reply.isSolution && (
@@ -1088,7 +1088,7 @@ function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) 
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{reply.content}</p>
+                  <p className="text-sm text-surface-700 dark:text-surface-300">{reply.content}</p>
                 </div>
               </div>
             </div>
@@ -1103,7 +1103,7 @@ function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) 
               value={newReply}
               onChange={(e) => setNewReply(e.target.value)}
               placeholder="Write a reply..."
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="flex-1 px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
               onKeyDown={(e) => e.key === 'Enter' && handleSendReply()}
             />
             <button
@@ -1124,10 +1124,10 @@ function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100">
             Discussions ({discussions.length})
           </h3>
-          <p className="text-sm text-gray-500">Team conversations and questions</p>
+          <p className="text-sm text-surface-500 dark:text-surface-400">Team conversations and questions</p>
         </div>
         {canEdit && !showForm && (
           <button
@@ -1147,28 +1147,28 @@ function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
+            className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-5"
           >
-            <h4 className="font-medium text-gray-900 dark:text-white mb-4">Start Discussion</h4>
+            <h4 className="font-medium text-surface-900 dark:text-surface-100 mb-4">Start Discussion</h4>
             <div className="space-y-4">
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Discussion topic..."
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100"
               />
               <textarea
                 value={initialMessage}
                 onChange={(e) => setInitialMessage(e.target.value)}
                 placeholder="Initial message (optional)..."
                 rows={3}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100 resize-none"
               />
               <div className="flex items-center justify-end gap-3">
                 <button
                   onClick={() => setShowForm(false)}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="px-4 py-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
@@ -1188,10 +1188,10 @@ function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) 
 
       {/* Discussions List */}
       {discussions.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
-          <MessageSquare className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No discussions yet</h4>
-          <p className="text-gray-500">Start a discussion to collaborate with your team.</p>
+        <div className="bg-white dark:bg-surface-800 rounded-xl p-12 text-center border border-surface-200 dark:border-surface-700">
+          <MessageSquare className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+          <h4 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-2">No discussions yet</h4>
+          <p className="text-surface-500 dark:text-surface-400">Start a discussion to collaborate with your team.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -1199,27 +1199,27 @@ function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) 
             <button
               key={discussion.id}
               onClick={() => setSelectedDiscussion(discussion.id)}
-              className="w-full text-left bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:border-primary-300 dark:hover:border-primary-600 transition-colors"
+              className="w-full text-left bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-4 hover:border-primary-300 dark:hover:border-primary-600 transition-colors"
             >
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     {discussion.isPinned && <Pin className="w-3.5 h-3.5 text-primary-500" />}
-                    <h4 className="font-medium text-gray-900 dark:text-white">{discussion.title}</h4>
+                    <h4 className="font-medium text-surface-900 dark:text-surface-100">{discussion.title}</h4>
                     <span
                       className={cn(
                         'px-2 py-0.5 text-xs rounded-full',
                         discussion.status === 'open'
-                          ? 'bg-green-100 text-green-700'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
                           : discussion.status === 'resolved'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-gray-100 text-gray-600'
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                          : 'bg-surface-100 text-surface-600 dark:bg-surface-700 dark:text-surface-400'
                       )}
                     >
                       {discussion.status}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="flex items-center gap-2 text-xs text-surface-500 dark:text-surface-400">
                     <span>{discussion.createdBy?.displayName}</span>
                     <span>•</span>
                     <span>{discussion.replyCount} replies</span>
@@ -1231,7 +1231,7 @@ function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) 
                     )}
                   </div>
                 </div>
-                <ChevronDown className="w-4 h-4 text-gray-400" />
+                <ChevronDown className="w-4 h-4 text-surface-400 dark:text-surface-500" />
               </div>
             </button>
           ))}

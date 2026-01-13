@@ -60,7 +60,7 @@ export function ResourceCard({
     return (
       <motion.div
         onClick={onClick}
-        className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all cursor-pointer"
+        className="flex items-center gap-3 p-3 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 hover:shadow-md transition-all cursor-pointer"
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}
       >
@@ -72,10 +72,10 @@ export function ResourceCard({
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-900 dark:text-white truncate">
+          <h3 className="font-medium text-surface-900 dark:text-surface-50 truncate">
             {resource.title}
           </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-surface-500 dark:text-surface-400">
             {categoryLabels[resource.category] || resource.category}
             {resource.duration && ` · ${resource.duration} min`}
           </p>
@@ -87,12 +87,12 @@ export function ResourceCard({
               e.stopPropagation();
               onBookmark();
             }}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
           >
             {resource.isBookmarked ? (
               <BookmarkCheck className="w-5 h-5 text-teal-500" />
             ) : (
-              <Bookmark className="w-5 h-5 text-gray-400" />
+              <Bookmark className="w-5 h-5 text-surface-400 dark:text-surface-500" />
             )}
           </button>
         )}
@@ -103,7 +103,7 @@ export function ResourceCard({
   return (
     <motion.div
       onClick={onClick}
-      className="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all cursor-pointer"
+      className="group bg-surface-50 dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden hover:shadow-lg transition-all cursor-pointer"
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.99 }}
     >
@@ -152,7 +152,7 @@ export function ResourceCard({
       <div className="p-4">
         {/* Category & Difficulty */}
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-surface-500 dark:text-surface-400">
             {categoryLabels[resource.category] || resource.category}
           </span>
           <span className={cn(
@@ -164,19 +164,19 @@ export function ResourceCard({
         </div>
 
         {/* Title */}
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+        <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-2 line-clamp-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
           {resource.title}
         </h3>
 
         {/* Description */}
         {resource.description && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
+          <p className="text-sm text-surface-600 dark:text-surface-400 line-clamp-2 mb-3">
             {resource.description}
           </p>
         )}
 
         {/* Meta info */}
-        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-between text-xs text-surface-500 dark:text-surface-400">
           <div className="flex items-center gap-3">
             {resource.duration && (
               <span className="flex items-center gap-1">

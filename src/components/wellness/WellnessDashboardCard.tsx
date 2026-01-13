@@ -73,7 +73,7 @@ export function WellnessDashboardCard() {
   }, [moodStats]);
 
   const TrendIcon = moodTrend === 'improving' ? TrendingUp : moodTrend === 'declining' ? TrendingDown : Minus;
-  const trendColor = moodTrend === 'improving' ? 'text-green-500' : moodTrend === 'declining' ? 'text-red-500' : 'text-gray-400';
+  const trendColor = moodTrend === 'improving' ? 'text-green-500' : moodTrend === 'declining' ? 'text-red-500' : 'text-surface-400 dark:text-surface-500';
   const trendLabel = moodTrend === 'improving' ? 'Improving' : moodTrend === 'declining' ? 'Needs attention' : 'Stable';
 
   return (

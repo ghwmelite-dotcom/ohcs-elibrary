@@ -190,15 +190,15 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden bg-white dark:bg-gray-800 rounded-2xl shadow-xl"
+          className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden bg-white dark:bg-surface-800 rounded-2xl shadow-xl"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-surface-200 dark:border-surface-700">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-surface-900 dark:text-white">
                 {step === 'template' ? 'Choose a Template' : 'Create Research Project'}
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-surface-500 dark:text-surface-400">
                 {step === 'template'
                   ? 'Start with a template or create from scratch'
                   : 'Fill in the details for your research project'}
@@ -206,7 +206,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
             </div>
             <button
               onClick={handleClose}
-              className="p-2 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="p-2 text-surface-400 hover:text-surface-500 dark:hover:text-surface-300 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -219,17 +219,17 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                 {/* Skip template option */}
                 <button
                   onClick={handleSkipTemplate}
-                  className="w-full mb-4 p-4 text-left border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors group"
+                  className="w-full mb-4 p-4 text-left border-2 border-dashed border-surface-300 dark:border-surface-600 rounded-xl hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900 transition-colors">
-                      <Plus className="w-5 h-5 text-gray-500 group-hover:text-primary-600" />
+                    <div className="w-10 h-10 rounded-lg bg-surface-100 dark:bg-surface-700 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900 transition-colors">
+                      <Plus className="w-5 h-5 text-surface-500 group-hover:text-primary-600" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">
+                      <h3 className="font-medium text-surface-900 dark:text-white">
                         Start from Scratch
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-surface-500 dark:text-surface-400">
                         Create a blank project with custom settings
                       </p>
                     </div>
@@ -238,7 +238,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
 
                 {/* Templates */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <h3 className="text-sm font-medium text-surface-700 dark:text-surface-300 flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-primary-500" />
                     Official Templates
                   </h3>
@@ -246,7 +246,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                   {templatesLoading ? (
                     <div className="space-y-3">
                       {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-20 bg-gray-100 dark:bg-gray-700 rounded-xl animate-pulse" />
+                        <div key={i} className="h-20 bg-surface-100 dark:bg-surface-700 rounded-xl animate-pulse" />
                       ))}
                     </div>
                   ) : (
@@ -255,7 +255,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                         <button
                           key={template.id}
                           onClick={() => handleTemplateSelect(template)}
-                          className="w-full p-4 text-left border border-gray-200 dark:border-gray-700 rounded-xl hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+                          className="w-full p-4 text-left border border-surface-200 dark:border-surface-700 rounded-xl hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
                         >
                           <div className="flex items-start gap-3">
                             <div className={cn(
@@ -266,7 +266,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <h3 className="font-medium text-gray-900 dark:text-white">
+                                <h3 className="font-medium text-surface-900 dark:text-white">
                                   {template.name}
                                 </h3>
                                 {template.isOfficial && (
@@ -275,16 +275,16 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                                   </span>
                                 )}
                               </div>
-                              <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                              <p className="text-sm text-surface-500 dark:text-surface-400 line-clamp-2">
                                 {template.description}
                               </p>
-                              <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                              <div className="flex items-center gap-2 mt-2 text-xs text-surface-400 dark:text-surface-500">
                                 <span>{RESEARCH_METHODOLOGIES[template.methodology]}</span>
                                 <span>•</span>
                                 <span>{template.usageCount} uses</span>
                               </div>
                             </div>
-                            <ChevronRight className="w-5 h-5 text-gray-400" />
+                            <ChevronRight className="w-5 h-5 text-surface-400 dark:text-surface-500" />
                           </div>
                         </button>
                       ))}
@@ -313,7 +313,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
 
                 {/* Title */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                     Project Title <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -323,9 +323,9 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                     onChange={handleInputChange}
                     placeholder="e.g., Impact Assessment of Remote Work Policy"
                     className={cn(
-                      'w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white',
+                      'w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-surface-900 text-surface-900 dark:text-white',
                       'focus:ring-2 focus:ring-primary-500 focus:border-transparent',
-                      errors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                      errors.title ? 'border-red-500' : 'border-surface-300 dark:border-surface-600'
                     )}
                   />
                   {errors.title && (
@@ -335,7 +335,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
 
                 {/* Research Question */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                     Research Question <span className="text-red-500">*</span>
                   </label>
                   <textarea
@@ -345,9 +345,9 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                     rows={2}
                     placeholder="What specific question does this research aim to answer?"
                     className={cn(
-                      'w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none',
+                      'w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-surface-900 text-surface-900 dark:text-white resize-none',
                       'focus:ring-2 focus:ring-primary-500 focus:border-transparent',
-                      errors.researchQuestion ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                      errors.researchQuestion ? 'border-red-500' : 'border-surface-300 dark:border-surface-600'
                     )}
                   />
                   {errors.researchQuestion && (
@@ -357,7 +357,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                     Description
                   </label>
                   <textarea
@@ -366,21 +366,21 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                     onChange={handleInputChange}
                     rows={3}
                     placeholder="Brief overview of the research project..."
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-900 text-surface-900 dark:text-white resize-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
 
                 {/* Category & Methodology */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                       Category
                     </label>
                     <select
                       name="category"
                       value={formData.category}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-2.5 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-900 text-surface-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
                       {Object.entries(RESEARCH_CATEGORIES).map(([key, cat]) => (
                         <option key={key} value={key}>
@@ -390,14 +390,14 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                       Methodology
                     </label>
                     <select
                       name="methodology"
                       value={formData.methodology}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-2.5 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-900 text-surface-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
                       {Object.entries(RESEARCH_METHODOLOGIES).map(([key, label]) => (
                         <option key={key} value={key}>
@@ -410,25 +410,25 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
 
                 {/* Objectives */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                     Research Objectives
                   </label>
                   <div className="space-y-2">
                     {formData.objectives.map((objective, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500 w-6">{index + 1}.</span>
+                        <span className="text-sm text-surface-500 dark:text-surface-400 w-6">{index + 1}.</span>
                         <input
                           type="text"
                           value={objective}
                           onChange={(e) => handleObjectiveChange(index, e.target.value)}
                           placeholder="Enter an objective..."
-                          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          className="flex-1 px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-900 text-surface-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         />
                         {formData.objectives.length > 1 && (
                           <button
                             type="button"
                             onClick={() => removeObjective(index)}
-                            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                            className="p-2 text-surface-400 dark:text-surface-500 hover:text-red-500 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -449,7 +449,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                 {/* Dates */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                       Start Date
                     </label>
                     <input
@@ -457,11 +457,11 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                       name="startDate"
                       value={formData.startDate}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-2.5 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-900 text-surface-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                       Target End Date
                     </label>
                     <input
@@ -469,21 +469,21 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                       name="targetEndDate"
                       value={formData.targetEndDate}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-4 py-2.5 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-900 text-surface-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
                 </div>
 
                 {/* Tags */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                     Tags
                   </label>
                   <div className="flex flex-wrap gap-2 mb-2">
                     {formData.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300 rounded-full text-sm"
                       >
                         {tag}
                         <button
@@ -502,17 +502,17 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={handleAddTag}
                     placeholder="Type a tag and press Enter"
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-900 text-surface-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
 
                 {/* Public Toggle */}
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-900 rounded-lg">
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">
+                    <h4 className="font-medium text-surface-900 dark:text-white">
                       Public Project
                     </h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-surface-500 dark:text-surface-400">
                       Allow other civil servants to view this project
                     </p>
                   </div>
@@ -524,7 +524,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                       onChange={handleInputChange}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                    <div className="w-11 h-6 bg-surface-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-surface-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-surface-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-surface-600 peer-checked:bg-primary-600"></div>
                   </label>
                 </div>
               </form>
@@ -533,11 +533,11 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
 
           {/* Footer */}
           {step === 'details' && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900">
               <button
                 type="button"
                 onClick={() => setStep('template')}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                className="px-4 py-2 text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-lg transition-colors"
               >
                 Back
               </button>
@@ -545,7 +545,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  className="px-4 py-2 text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>

@@ -64,7 +64,7 @@ export function MoodSelector({
           key={value}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className={cn('text-gray-600 font-medium', sizes.label)}
+          className={cn('text-surface-600 dark:text-surface-300 font-medium', sizes.label)}
         >
           {moods.find(m => m.value === value)?.label}
         </motion.p>

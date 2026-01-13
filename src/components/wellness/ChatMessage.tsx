@@ -27,8 +27,8 @@ export function ChatMessage({ message, onRate, isLatestAI }: ChatMessageProps) {
       {/* Avatar */}
       <div className="shrink-0">
         {isUser ? (
-          <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-            <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          <div className="w-10 h-10 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center">
+            <User className="w-5 h-5 text-surface-500 dark:text-surface-400" />
           </div>
         ) : (
           <AyoAvatar size="md" mood="listening" isThinking={isTemp} />
@@ -44,7 +44,7 @@ export function ChatMessage({ message, onRate, isLatestAI }: ChatMessageProps) {
           'rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3',
           isUser
             ? 'bg-teal-600 text-white rounded-tr-sm'
-            : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-tl-sm',
+            : 'bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-white rounded-tl-sm',
           isTemp && 'opacity-70'
         )}>
           {/* Message text */}
@@ -68,7 +68,7 @@ export function ChatMessage({ message, onRate, isLatestAI }: ChatMessageProps) {
 
         {/* Timestamp and feedback */}
         <div className={cn(
-          'flex items-center gap-2 mt-1 text-xs text-gray-500',
+          'flex items-center gap-2 mt-1 text-xs text-surface-500 dark:text-surface-400',
           isUser ? 'flex-row-reverse' : ''
         )}>
           <span>
@@ -80,10 +80,10 @@ export function ChatMessage({ message, onRate, isLatestAI }: ChatMessageProps) {
           {/* Feedback buttons for AI messages */}
           {!isUser && onRate && isLatestAI && message.helpful === undefined && (
             <div className="flex items-center gap-0.5 sm:gap-1 ml-1 sm:ml-2">
-              <span className="text-gray-400 mr-0.5 sm:mr-1 text-[11px] sm:text-xs">Helpful?</span>
+              <span className="text-surface-400 dark:text-surface-500 mr-0.5 sm:mr-1 text-[11px] sm:text-xs">Helpful?</span>
               <motion.button
                 onClick={() => onRate(message.id, true)}
-                className="p-2 sm:p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-400 hover:text-green-600 active:bg-green-100 transition-colors"
+                className="p-2 sm:p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-surface-400 dark:text-surface-500 hover:text-green-600 active:bg-green-100 transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -91,7 +91,7 @@ export function ChatMessage({ message, onRate, isLatestAI }: ChatMessageProps) {
               </motion.button>
               <motion.button
                 onClick={() => onRate(message.id, false)}
-                className="p-2 sm:p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-600 active:bg-red-100 transition-colors"
+                className="p-2 sm:p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-surface-400 dark:text-surface-500 hover:text-red-600 active:bg-red-100 transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -106,7 +106,7 @@ export function ChatMessage({ message, onRate, isLatestAI }: ChatMessageProps) {
               'flex items-center gap-1 px-2 py-0.5 rounded-full text-xs',
               message.helpful
                 ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-                : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
+                : 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400'
             )}>
               {message.helpful ? (
                 <>

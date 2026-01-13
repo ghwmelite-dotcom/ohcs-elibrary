@@ -68,7 +68,7 @@ export function WelcomeCard({ onStartChat }: WelcomeCardProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-br from-teal-50 via-white to-purple-50 dark:from-teal-950/30 dark:via-gray-900 dark:to-purple-950/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border border-gray-200 dark:border-gray-800"
+      className="bg-gradient-to-br from-teal-50 via-white to-purple-50 dark:from-teal-950/30 dark:via-surface-900 dark:to-purple-950/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border border-surface-200 dark:border-surface-800"
     >
       {/* Header with Ayo */}
       <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
@@ -82,7 +82,7 @@ export function WelcomeCard({ onStartChat }: WelcomeCardProps) {
           <motion.h2
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white"
+            className="text-lg sm:text-xl md:text-2xl font-bold text-surface-900 dark:text-white"
           >
             {greeting}, {displayName}!
           </motion.h2>
@@ -90,7 +90,7 @@ export function WelcomeCard({ onStartChat }: WelcomeCardProps) {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-0.5 sm:mt-1"
+            className="text-sm sm:text-base text-surface-600 dark:text-surface-400 mt-0.5 sm:mt-1"
           >
             I'm Ayo, your wellness companion. How are you feeling today?
           </motion.p>
@@ -100,7 +100,7 @@ export function WelcomeCard({ onStartChat }: WelcomeCardProps) {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-[10px] sm:text-xs shrink-0"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 text-[10px] sm:text-xs shrink-0"
           >
             <Sparkles className="w-3 h-3" />
             <span className="hidden sm:inline">Anonymous</span>
@@ -139,7 +139,7 @@ export function WelcomeCard({ onStartChat }: WelcomeCardProps) {
                 'p-3 sm:p-4 rounded-xl text-left transition-all group',
                 action.primary
                   ? 'bg-teal-600 hover:bg-teal-700 active:bg-teal-700 text-white'
-                  : 'bg-white dark:bg-gray-800 hover:bg-gray-50 active:bg-gray-50 dark:hover:bg-gray-750 border border-gray-200 dark:border-gray-700'
+                  : 'bg-white dark:bg-surface-800 hover:bg-surface-50 active:bg-surface-50 dark:hover:bg-surface-750 border border-surface-200 dark:border-surface-700'
               )}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -163,13 +163,13 @@ export function WelcomeCard({ onStartChat }: WelcomeCardProps) {
                   <div className="min-w-0">
                     <h3 className={cn(
                       'font-semibold text-sm sm:text-base',
-                      action.primary ? 'text-white' : 'text-gray-900 dark:text-white'
+                      action.primary ? 'text-white' : 'text-surface-900 dark:text-white'
                     )}>
                       {action.label}
                     </h3>
                     <p className={cn(
                       'text-xs sm:text-sm truncate',
-                      action.primary ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'
+                      action.primary ? 'text-white/80' : 'text-surface-500 dark:text-surface-400'
                     )}>
                       {action.description}
                     </p>
@@ -177,7 +177,7 @@ export function WelcomeCard({ onStartChat }: WelcomeCardProps) {
                 </div>
                 <ChevronRight className={cn(
                   'w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1 shrink-0 ml-2',
-                  action.primary ? 'text-white/60' : 'text-gray-400'
+                  action.primary ? 'text-white/60' : 'text-surface-400'
                 )} />
               </div>
             </motion.button>

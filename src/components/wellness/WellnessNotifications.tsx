@@ -374,38 +374,38 @@ export function WeeklyWellnessSummary({ moodHistory, streak }: WeeklySummaryProp
       className="bg-gradient-to-br from-purple-500/10 to-teal-500/10 dark:from-purple-900/20 dark:to-teal-900/20 rounded-xl p-4 border border-purple-200/50 dark:border-purple-800/50"
     >
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+        <h3 className="font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
           <Calendar className="w-4 h-4 text-purple-500" />
           This Week's Wellness
         </h3>
-        <span className="text-xs text-gray-500">{thisWeekMoods.length} check-ins</span>
+        <span className="text-xs text-surface-500 dark:text-surface-400">{thisWeekMoods.length} check-ins</span>
       </div>
 
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-3">
+        <div className="bg-surface-50/50 dark:bg-surface-800/50 rounded-lg p-3">
           <span className="text-2xl">{getMoodEmoji(averageMood)}</span>
-          <p className="text-xs text-gray-500 mt-1">Average</p>
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <p className="text-xs text-surface-500 dark:text-surface-400 mt-1">Average</p>
+          <p className="text-sm font-medium text-surface-700 dark:text-surface-300">
             {averageMood ? moodLabels[Math.round(averageMood)] : 'N/A'}
           </p>
         </div>
 
-        <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-3">
+        <div className="bg-surface-50/50 dark:bg-surface-800/50 rounded-lg p-3">
           <div className="flex items-center justify-center gap-1">
             <Target className="w-5 h-5 text-teal-500" />
           </div>
-          <p className="text-xs text-gray-500 mt-1">Check-ins</p>
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <p className="text-xs text-surface-500 dark:text-surface-400 mt-1">Check-ins</p>
+          <p className="text-sm font-medium text-surface-700 dark:text-surface-300">
             {thisWeekMoods.length}/7
           </p>
         </div>
 
-        <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-3">
+        <div className="bg-surface-50/50 dark:bg-surface-800/50 rounded-lg p-3">
           <div className="flex items-center justify-center gap-1">
             <Sparkles className="w-5 h-5 text-orange-500" />
           </div>
-          <p className="text-xs text-gray-500 mt-1">Streak</p>
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <p className="text-xs text-surface-500 dark:text-surface-400 mt-1">Streak</p>
+          <p className="text-sm font-medium text-surface-700 dark:text-surface-300">
             {streak} day{streak !== 1 ? 's' : ''}
           </p>
         </div>

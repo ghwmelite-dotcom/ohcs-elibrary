@@ -160,19 +160,19 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+        <h2 className="text-xl font-semibold text-surface-900 dark:text-white flex items-center gap-2">
           <Download className="w-5 h-5 text-primary-500" />
           Export Research
         </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
           Generate and download your research in various formats
         </p>
       </div>
 
       {/* Export Generator */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden">
         <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-4">
             Generate New Export
           </h3>
 
@@ -193,22 +193,22 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
                     isActive
                       ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
                       : isSupported
-                        ? 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                        : 'border-gray-100 dark:border-gray-800 opacity-50 cursor-not-allowed'
+                        ? 'border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600'
+                        : 'border-surface-100 dark:border-surface-800 opacity-50 cursor-not-allowed'
                   )}
                 >
                   <Icon className={cn(
                     'w-6 h-6 mx-auto mb-2',
-                    isActive ? 'text-primary-500' : 'text-gray-400'
+                    isActive ? 'text-primary-500' : 'text-surface-400 dark:text-surface-500'
                   )} />
                   <p className={cn(
                     'text-sm font-medium',
-                    isActive ? 'text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-300'
+                    isActive ? 'text-primary-700 dark:text-primary-300' : 'text-surface-700 dark:text-surface-300'
                   )}>
                     {config.label}
                   </p>
                   {!isSupported && (
-                    <span className="text-xs text-gray-400 mt-1">Coming soon</span>
+                    <span className="text-xs text-surface-400 dark:text-surface-500 mt-1">Coming soon</span>
                   )}
                 </button>
               );
@@ -218,7 +218,7 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
           {/* Options Toggle */}
           <button
             onClick={() => setShowOptions(!showOptions)}
-            className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-500 mb-4"
+            className="flex items-center gap-2 text-sm text-surface-600 dark:text-surface-400 hover:text-primary-500 mb-4"
           >
             <Settings2 className="w-4 h-4" />
             Advanced Options
@@ -237,7 +237,7 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
                 <div className="space-y-4 pb-4">
                   {/* Citation Style */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
                       Citation Style
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -249,7 +249,7 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
                             'px-3 py-1.5 text-sm rounded-lg border transition-colors',
                             formatStyle === key
                               ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                              : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                              : 'border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-400 hover:border-surface-300 dark:hover:border-surface-600'
                           )}
                         >
                           {label}
@@ -260,7 +260,7 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
 
                   {/* Content Sections */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
                       Include Sections
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -272,7 +272,7 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
                             'px-3 py-1.5 text-sm rounded-lg border transition-colors',
                             selectedSections.includes(section.id)
                               ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                              : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                              : 'border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-400 hover:border-surface-300 dark:hover:border-surface-600'
                           )}
                         >
                           {section.label}
@@ -287,9 +287,9 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
                       type="checkbox"
                       checked={includeCitations}
                       onChange={(e) => setIncludeCitations(e.target.checked)}
-                      className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                      className="w-4 h-4 text-primary-600 border-surface-300 dark:border-surface-600 rounded focus:ring-primary-500"
                     />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                    <span className="text-sm text-surface-700 dark:text-surface-300">
                       Include References Section
                     </span>
                   </label>
@@ -334,16 +334,16 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl"
+              className="bg-white dark:bg-surface-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl"
             >
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <div className="flex items-center justify-between p-4 border-b border-surface-200 dark:border-surface-700">
+                <h3 className="text-lg font-semibold text-surface-900 dark:text-white">
                   Export Preview
                 </h3>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleCopyContent}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors"
                   >
                     {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                     {copied ? 'Copied!' : 'Copy'}
@@ -357,14 +357,14 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
                   </button>
                   <button
                     onClick={() => setShowPreview(null)}
-                    className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="p-1.5 text-surface-400 dark:text-surface-500 hover:text-surface-600 dark:hover:text-surface-300 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
               <div className="p-6 overflow-auto max-h-[calc(90vh-80px)]">
-                <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-mono bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+                <pre className="whitespace-pre-wrap text-sm text-surface-700 dark:text-surface-300 font-mono bg-surface-50 dark:bg-surface-900 p-4 rounded-lg">
                   {previewContent}
                 </pre>
               </div>
@@ -375,25 +375,25 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
 
       {/* Previous Exports */}
       {!loading && exports.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <Clock className="w-4 h-4 text-gray-400" />
+        <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700">
+          <div className="p-4 border-b border-surface-200 dark:border-surface-700">
+            <h3 className="font-semibold text-surface-900 dark:text-white flex items-center gap-2">
+              <Clock className="w-4 h-4 text-surface-400 dark:text-surface-500" />
               Export History
             </h3>
           </div>
-          <div className="divide-y divide-gray-100 dark:divide-gray-700">
+          <div className="divide-y divide-surface-100 dark:divide-surface-700">
             {exports.slice(0, 5).map((exp) => (
               <div key={exp.id} className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                    <FileText className="w-4 h-4 text-gray-500" />
+                  <div className="p-2 bg-surface-100 dark:bg-surface-700 rounded-lg">
+                    <FileText className="w-4 h-4 text-surface-500 dark:text-surface-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    <p className="text-sm font-medium text-surface-900 dark:text-white">
                       {exp.title}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-surface-500 dark:text-surface-400">
                       {exp.exportType.toUpperCase()} • {FORMAT_STYLES[exp.formatStyle]} •{' '}
                       {exp.generatedAt ? new Date(exp.generatedAt).toLocaleDateString('en-GB', {
                         day: 'numeric',
@@ -409,7 +409,7 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
                   'px-2 py-1 text-xs rounded-full',
                   exp.status === 'completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' :
                   exp.status === 'failed' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
-                  'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  'bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400'
                 )}>
                   {exp.status}
                 </span>

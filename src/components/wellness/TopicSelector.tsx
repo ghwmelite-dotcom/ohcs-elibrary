@@ -82,10 +82,10 @@ export function TopicSelector({ value, onChange, disabled = false }: TopicSelect
             onClick={() => onChange(topic.id)}
             className={cn(
               'relative p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 text-left transition-all',
-              'bg-white dark:bg-gray-800 hover:shadow-md active:shadow-md',
+              'bg-surface-50 dark:bg-surface-800 hover:shadow-md active:shadow-md',
               isSelected
                 ? 'border-teal-500 shadow-md ring-2 ring-teal-500/20'
-                : 'border-gray-200 dark:border-gray-700',
+                : 'border-surface-200 dark:border-surface-700',
               disabled && 'opacity-50 cursor-not-allowed'
             )}
             initial={{ opacity: 0, y: 20 }}
@@ -101,10 +101,10 @@ export function TopicSelector({ value, onChange, disabled = false }: TopicSelect
               <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
 
-            <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white mb-0.5 sm:mb-1">
+            <h3 className="font-semibold text-sm sm:text-base text-surface-900 dark:text-surface-50 mb-0.5 sm:mb-1">
               {topic.label}
             </h3>
-            <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+            <p className="text-[10px] sm:text-xs text-surface-500 dark:text-surface-400 line-clamp-2">
               {topic.description}
             </p>
 

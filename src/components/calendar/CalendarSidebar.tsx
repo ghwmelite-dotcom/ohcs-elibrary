@@ -138,13 +138,13 @@ export default function CalendarSidebar({
         initial={{ width: 0, opacity: 0 }}
         animate={{ width: 64, opacity: 1 }}
         exit={{ width: 0, opacity: 0 }}
-        className="h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col items-center py-4"
+        className="h-full bg-white dark:bg-surface-800 border-r border-surface-200 dark:border-surface-700 flex flex-col items-center py-4"
       >
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={onToggleCollapse}
-          className="w-12 h-12 rounded-xl bg-ghana-green hover:bg-ghana-green/90 text-white shadow-lg shadow-ghana-green/30 flex items-center justify-center transition-all"
+          className="w-12 h-12 rounded-xl bg-ghana-green hover:bg-ghana-green/90 dark:bg-ghana-green dark:hover:bg-ghana-green/80 text-white shadow-lg shadow-ghana-green/30 flex items-center justify-center transition-all"
           title="Expand sidebar (Ctrl+.)"
         >
           <ChevronRight className="w-6 h-6" />
@@ -152,12 +152,12 @@ export default function CalendarSidebar({
 
         {/* Mini indicators */}
         <div className="mt-6 flex flex-col items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-ghana-green/10 flex items-center justify-center" title={`${events.length} events`}>
-            <Calendar className="w-5 h-5 text-ghana-green" />
+          <div className="w-11 h-11 rounded-xl bg-ghana-green/10 dark:bg-ghana-green/20 flex items-center justify-center" title={`${events.length} events`}>
+            <Calendar className="w-5 h-5 text-ghana-green dark:text-ghana-green" />
           </div>
           {showHolidays && (
             <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center" title={`${holidays.length} holidays`}>
-              <Palmtree className="w-5 h-5 text-emerald-600" />
+              <Palmtree className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
           )}
         </div>
@@ -166,17 +166,17 @@ export default function CalendarSidebar({
   }
 
   return (
-    <div className={`${isMobile ? 'w-full' : 'w-full'} h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden`}>
+    <div className={`${isMobile ? 'w-full' : 'w-full'} h-full bg-white dark:bg-surface-800 border-r border-surface-200 dark:border-surface-700 flex flex-col overflow-hidden`}>
       {/* Mobile Header */}
       {isMobile && (
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-surface-200 dark:border-surface-700">
           <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-ghana-green" />
-            <span className="font-semibold text-gray-900 dark:text-white">Calendar</span>
+            <Calendar className="w-5 h-5 text-ghana-green dark:text-ghana-green" />
+            <span className="font-semibold text-surface-900 dark:text-surface-100">Calendar</span>
           </div>
           <button
             onClick={onClose}
-            className="p-2 -mr-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
+            className="p-2 -mr-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-500 dark:text-surface-400"
           >
             <X className="w-5 h-5" />
           </button>
@@ -186,16 +186,16 @@ export default function CalendarSidebar({
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 sm:space-y-6">
         {/* Mini Calendar */}
-        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl sm:rounded-2xl p-3 sm:p-4">
+        <div className="bg-surface-50 dark:bg-surface-900/50 rounded-xl sm:rounded-2xl p-3 sm:p-4">
           {/* Month Navigation */}
           <div className="flex items-center justify-between mb-3">
-            <button onClick={() => navigateMonth(-1)} className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500">
+            <button onClick={() => navigateMonth(-1)} className="p-1 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-700 text-surface-500 dark:text-surface-400">
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">
+            <span className="text-sm font-semibold text-surface-900 dark:text-surface-100">
               {selectedDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
             </span>
-            <button onClick={() => navigateMonth(1)} className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500">
+            <button onClick={() => navigateMonth(1)} className="p-1 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-700 text-surface-500 dark:text-surface-400">
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -203,7 +203,7 @@ export default function CalendarSidebar({
           {/* Day Headers */}
           <div className="grid grid-cols-7 gap-1 mb-1">
             {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
-              <div key={i} className="text-center text-[10px] font-medium text-gray-400 py-1">
+              <div key={i} className="text-center text-[10px] font-medium text-surface-400 dark:text-surface-500 py-1">
                 {day}
               </div>
             ))}
@@ -217,16 +217,16 @@ export default function CalendarSidebar({
                 onClick={() => setSelectedDate(day.date)}
                 className={`
                   relative aspect-square flex items-center justify-center text-xs rounded-lg transition-all
-                  ${!day.isCurrentMonth ? 'text-gray-300 dark:text-gray-600' : ''}
-                  ${isToday(day.date) ? 'bg-ghana-green text-white font-semibold' : ''}
-                  ${isSelected(day.date) && !isToday(day.date) ? 'bg-ghana-gold/20 text-ghana-gold ring-1 ring-ghana-gold/50' : ''}
-                  ${day.isCurrentMonth && !isToday(day.date) && !isSelected(day.date) ? 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300' : ''}
+                  ${!day.isCurrentMonth ? 'text-surface-300 dark:text-surface-600' : ''}
+                  ${isToday(day.date) ? 'bg-ghana-green dark:bg-ghana-green text-white font-semibold' : ''}
+                  ${isSelected(day.date) && !isToday(day.date) ? 'bg-ghana-gold/20 dark:bg-ghana-gold/30 text-ghana-gold dark:text-ghana-gold ring-1 ring-ghana-gold/50' : ''}
+                  ${day.isCurrentMonth && !isToday(day.date) && !isSelected(day.date) ? 'hover:bg-surface-200 dark:hover:bg-surface-700 text-surface-700 dark:text-surface-300' : ''}
                 `}
               >
                 {day.date.getDate()}
                 {/* Event/Holiday Indicator */}
                 {(hasEvents(day.date) || isHoliday(day.date)) && (
-                  <span className={`absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isHoliday(day.date) ? 'bg-emerald-500' : 'bg-ghana-green'}`} />
+                  <span className={`absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isHoliday(day.date) ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-ghana-green dark:bg-ghana-green'}`} />
                 )}
               </button>
             ))}
@@ -235,12 +235,12 @@ export default function CalendarSidebar({
 
         {/* Upcoming Events */}
         <div>
-          <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 sm:mb-3 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-ghana-gold" />
+          <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-2 sm:mb-3 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-ghana-gold dark:text-ghana-gold" />
             Upcoming Events
           </h3>
           {upcomingEvents.length === 0 ? (
-            <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">No upcoming events</p>
+            <p className="text-sm text-surface-400 dark:text-surface-500 text-center py-4">No upcoming events</p>
           ) : (
             <div className="space-y-2">
               {upcomingEvents.map((event) => (
@@ -249,7 +249,7 @@ export default function CalendarSidebar({
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                   onClick={() => onEventClick?.(event)}
-                  className="w-full text-left p-2.5 sm:p-3 rounded-xl bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors group"
+                  className="w-full text-left p-2.5 sm:p-3 rounded-xl bg-surface-50 dark:bg-surface-900/50 hover:bg-surface-100 dark:hover:bg-surface-700/50 transition-colors group"
                 >
                   <div className="flex items-start gap-2.5">
                     <div
@@ -257,17 +257,17 @@ export default function CalendarSidebar({
                       style={{ backgroundColor: event.category?.color || '#006B3F' }}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-ghana-green dark:group-hover:text-ghana-gold transition-colors">
+                      <p className="text-sm font-medium text-surface-900 dark:text-surface-100 truncate group-hover:text-ghana-green dark:group-hover:text-ghana-gold transition-colors">
                         {event.title}
                       </p>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center gap-2 mt-1 text-xs text-surface-500 dark:text-surface-400">
                         <Clock className="w-3 h-3 flex-shrink-0" />
                         <span>{formatEventTime(event.startDate)}</span>
-                        <span className="text-gray-300 dark:text-gray-600">•</span>
+                        <span className="text-surface-300 dark:text-surface-600">•</span>
                         <span>{new Date(event.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
                       </div>
                       {event.location && (
-                        <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-400">
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-surface-400 dark:text-surface-500">
                           <MapPin className="w-3 h-3 flex-shrink-0" />
                           <span className="truncate">{event.location}</span>
                         </div>
@@ -283,8 +283,8 @@ export default function CalendarSidebar({
         {/* Upcoming Holidays */}
         {showHolidays && upcomingHolidays.length > 0 && (
           <div>
-            <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 sm:mb-3 flex items-center gap-1.5">
-              <Palmtree className="w-3.5 h-3.5 text-emerald-500" />
+            <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-2 sm:mb-3 flex items-center gap-1.5">
+              <Palmtree className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
               Ghana Holidays
             </h3>
             <div className="space-y-2">
@@ -315,7 +315,7 @@ export default function CalendarSidebar({
 
         {/* Categories */}
         <div>
-          <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 sm:mb-3">
+          <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-2 sm:mb-3">
             Categories
           </h3>
           <div className="space-y-1.5">
@@ -325,13 +325,13 @@ export default function CalendarSidebar({
                 onClick={() => toggleCategory(category.id)}
                 className={`w-full flex items-center gap-2.5 p-2 rounded-lg transition-colors ${
                   selectedCategories.length === 0 || selectedCategories.includes(category.id)
-                    ? 'bg-gray-50 dark:bg-gray-900/50'
+                    ? 'bg-surface-50 dark:bg-surface-900/50'
                     : 'opacity-50'
-                } hover:bg-gray-100 dark:hover:bg-gray-700/50`}
+                } hover:bg-surface-100 dark:hover:bg-surface-700/50`}
               >
                 <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: category.color }} />
-                <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{category.name}</span>
-                <span className="ml-auto text-xs text-gray-400">
+                <span className="text-sm text-surface-700 dark:text-surface-300 truncate">{category.name}</span>
+                <span className="ml-auto text-xs text-surface-400 dark:text-surface-500">
                   {events.filter((e) => e.category?.id === category.id).length}
                 </span>
               </button>

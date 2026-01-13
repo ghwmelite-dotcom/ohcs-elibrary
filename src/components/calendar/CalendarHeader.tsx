@@ -122,27 +122,27 @@ export default function CalendarHeader({ onCreateEvent }: CalendarHeaderProps) {
   };
 
   return (
-    <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+    <div className="flex-shrink-0 bg-surface-50 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700">
       <div className="flex items-center justify-between gap-2 p-2 sm:p-3 lg:p-4">
         {/* Left: Navigation */}
         <div className="flex items-center gap-1 sm:gap-2">
           {/* Navigation Buttons */}
-          <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg sm:rounded-xl p-0.5 sm:p-1">
+          <div className="flex items-center bg-surface-100 dark:bg-surface-700 rounded-lg sm:rounded-xl p-0.5 sm:p-1">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={navigatePrevious}
-              className="p-1.5 sm:p-2 rounded-md sm:rounded-lg hover:bg-white dark:hover:bg-gray-600 transition-colors"
+              className="p-1.5 sm:p-2 rounded-md sm:rounded-lg hover:bg-surface-50 dark:hover:bg-surface-600 transition-colors"
               aria-label="Previous"
             >
-              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-300" />
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-surface-600 dark:text-surface-300" />
             </motion.button>
 
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={goToToday}
-              className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-600 rounded-md sm:rounded-lg transition-colors"
+              className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-surface-700 dark:text-surface-200 hover:bg-surface-50 dark:hover:bg-surface-600 rounded-md sm:rounded-lg transition-colors"
             >
               Today
             </motion.button>
@@ -151,15 +151,15 @@ export default function CalendarHeader({ onCreateEvent }: CalendarHeaderProps) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={navigateNext}
-              className="p-1.5 sm:p-2 rounded-md sm:rounded-lg hover:bg-white dark:hover:bg-gray-600 transition-colors"
+              className="p-1.5 sm:p-2 rounded-md sm:rounded-lg hover:bg-surface-50 dark:hover:bg-surface-600 transition-colors"
               aria-label="Next"
             >
-              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-300" />
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-surface-600 dark:text-surface-300" />
             </motion.button>
           </div>
 
           {/* Title */}
-          <h2 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white ml-1 sm:ml-2 truncate">
+          <h2 className="text-sm sm:text-base lg:text-lg font-semibold text-surface-900 dark:text-surface-50 ml-1 sm:ml-2 truncate">
             <span className="hidden sm:inline">{getHeaderTitle()}</span>
             <span className="sm:hidden">{getShortTitle()}</span>
           </h2>
@@ -168,7 +168,7 @@ export default function CalendarHeader({ onCreateEvent }: CalendarHeaderProps) {
         {/* Right: View Switcher */}
         <div className="flex items-center gap-1 sm:gap-2">
           {/* View Switcher */}
-          <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg sm:rounded-xl p-0.5 sm:p-1">
+          <div className="flex bg-surface-100 dark:bg-surface-700 rounded-lg sm:rounded-xl p-0.5 sm:p-1">
             {viewOptions.map((option) => (
               <motion.button
                 key={option.value}
@@ -178,8 +178,8 @@ export default function CalendarHeader({ onCreateEvent }: CalendarHeaderProps) {
                 className={`
                   flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium transition-all
                   ${currentView === option.value
-                    ? 'bg-white dark:bg-gray-600 text-ghana-green dark:text-ghana-gold shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-600/50'
+                    ? 'bg-surface-50 dark:bg-surface-600 text-ghana-green dark:text-ghana-gold shadow-sm'
+                    : 'text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 hover:bg-surface-50/50 dark:hover:bg-surface-600/50'
                   }
                 `}
                 title={option.label}

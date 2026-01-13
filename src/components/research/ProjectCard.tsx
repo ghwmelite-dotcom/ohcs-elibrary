@@ -44,7 +44,7 @@ export function ProjectCard({ project, variant = 'default', className }: Project
         <motion.div
           whileHover={{ scale: 1.01 }}
           className={cn(
-            'flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700',
+            'flex items-center gap-4 p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700',
             'hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all',
             className
           )}
@@ -53,10 +53,10 @@ export function ProjectCard({ project, variant = 'default', className }: Project
             {category.icon}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-gray-900 dark:text-white truncate">
+            <h3 className="font-medium text-surface-900 dark:text-surface-50 truncate">
               {project.title}
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-surface-500 dark:text-surface-400">
               {phase.label} • {project.progress}% complete
             </p>
           </div>
@@ -64,7 +64,7 @@ export function ProjectCard({ project, variant = 'default', className }: Project
             <span className={cn('px-2 py-1 text-xs font-medium text-white rounded-full', status.color)}>
               {status.label}
             </span>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <ChevronRight className="w-4 h-4 text-surface-400 dark:text-surface-500" />
           </div>
         </motion.div>
       </Link>
@@ -76,7 +76,7 @@ export function ProjectCard({ project, variant = 'default', className }: Project
       <motion.div
         whileHover={{ y: -4 }}
         className={cn(
-          'bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700',
+          'bg-surface-50 dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700',
           'hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-lg transition-all',
           'overflow-hidden group',
           className
@@ -88,7 +88,7 @@ export function ProjectCard({ project, variant = 'default', className }: Project
         <div className="p-5">
           {/* Category & Status */}
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
+            <span className="flex items-center gap-1.5 text-sm text-surface-600 dark:text-surface-400">
               <span>{category.icon}</span>
               {category.label}
             </span>
@@ -98,25 +98,25 @@ export function ProjectCard({ project, variant = 'default', className }: Project
           </div>
 
           {/* Title */}
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+          <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-50 mb-2 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
             {project.title}
           </h3>
 
           {/* Description */}
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-4">
+          <p className="text-sm text-surface-600 dark:text-surface-400 line-clamp-2 mb-4">
             {project.description || project.researchQuestion}
           </p>
 
           {/* Progress Bar */}
           <div className="mb-4">
-            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <div className="flex items-center justify-between text-xs text-surface-500 dark:text-surface-400 mb-1">
               <span className="flex items-center gap-1">
                 <Target className="w-3 h-3" />
                 {phase.label}
               </span>
               <span>{project.progress}%</span>
             </div>
-            <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-2 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${project.progress}%` }}
@@ -127,7 +127,7 @@ export function ProjectCard({ project, variant = 'default', className }: Project
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <div className="flex items-center gap-4 text-sm text-surface-500 dark:text-surface-400 mb-4">
             <span className="flex items-center gap-1">
               <Users className="w-4 h-4" />
               {project.teamMemberCount || 1}
@@ -147,7 +147,7 @@ export function ProjectCard({ project, variant = 'default', className }: Project
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between pt-4 border-t border-surface-100 dark:border-surface-700">
             {/* Team Lead */}
             <div className="flex items-center gap-2">
               {project.teamLead?.avatar ? (
@@ -163,14 +163,14 @@ export function ProjectCard({ project, variant = 'default', className }: Project
                   </span>
                 </div>
               )}
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-surface-600 dark:text-surface-400">
                 {project.teamLead?.displayName || 'Unknown'}
               </span>
             </div>
 
             {/* Date */}
             {project.targetEndDate && (
-              <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+              <span className="flex items-center gap-1 text-xs text-surface-500 dark:text-surface-400">
                 <Clock className="w-3 h-3" />
                 {formatDate(project.targetEndDate)}
               </span>
@@ -183,13 +183,13 @@ export function ProjectCard({ project, variant = 'default', className }: Project
               {project.tags.slice(0, 3).map((tag) => (
                 <span
                   key={tag}
-                  className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full"
+                  className="px-2 py-0.5 text-xs bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400 rounded-full"
                 >
                   {tag}
                 </span>
               ))}
               {project.tags.length > 3 && (
-                <span className="px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400">
+                <span className="px-2 py-0.5 text-xs text-surface-500 dark:text-surface-400">
                   +{project.tags.length - 3}
                 </span>
               )}

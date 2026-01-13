@@ -79,22 +79,22 @@ export function MoodChart({ entries, days = 7, showLabels = true }: MoodChartPro
   }, [chartData]);
 
   const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
-  const trendColor = trend === 'up' ? 'text-green-500' : trend === 'down' ? 'text-red-500' : 'text-gray-400';
+  const trendColor = trend === 'up' ? 'text-green-500' : trend === 'down' ? 'text-red-500' : 'text-surface-500 dark:text-surface-400';
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
+    <div className="bg-surface-50 dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-3 sm:p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3 sm:mb-4">
         <div>
-          <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white">Mood Tracker</h3>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Last {days} days</p>
+          <h3 className="font-semibold text-sm sm:text-base text-surface-900 dark:text-surface-50">Mood Tracker</h3>
+          <p className="text-xs sm:text-sm text-surface-500 dark:text-surface-400">Last {days} days</p>
         </div>
 
         {averageMood && (
           <div className="flex items-center gap-1.5 sm:gap-2">
             <span className="text-xl sm:text-2xl">{moodEmojis[Math.round(averageMood)]}</span>
             <div className="text-right">
-              <div className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+              <div className="text-base sm:text-lg font-bold text-surface-900 dark:text-surface-50">
                 {averageMood.toFixed(1)}
               </div>
               <div className={cn('flex items-center gap-1 text-[10px] sm:text-xs', trendColor)}>
@@ -113,9 +113,9 @@ export function MoodChart({ entries, days = 7, showLabels = true }: MoodChartPro
           {[5, 4, 3, 2, 1].map(level => (
             <div key={level} className="flex items-center">
               {showLabels && (
-                <span className="text-xs text-gray-400 w-4">{level}</span>
+                <span className="text-xs text-surface-500 dark:text-surface-400 w-4">{level}</span>
               )}
-              <div className="flex-1 h-px bg-gray-100 dark:bg-gray-700 ml-2" />
+              <div className="flex-1 h-px bg-surface-100 dark:bg-surface-700 ml-2" />
             </div>
           ))}
         </div>
@@ -142,7 +142,7 @@ export function MoodChart({ entries, days = 7, showLabels = true }: MoodChartPro
                   />
                 </motion.div>
               ) : (
-                <div className="w-3 h-3 rounded-full bg-gray-200 dark:bg-gray-700 opacity-30" />
+                <div className="w-3 h-3 rounded-full bg-surface-200 dark:bg-surface-700 opacity-30" />
               )}
             </div>
           ))}
@@ -153,7 +153,7 @@ export function MoodChart({ entries, days = 7, showLabels = true }: MoodChartPro
       <div className="flex justify-around mt-2" style={{ paddingLeft: showLabels ? '1.5rem' : 0 }}>
         {chartData.map((data, index) => (
           <div key={index} className="flex-1 text-center">
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-surface-500 dark:text-surface-400">
               {format(data.date, 'EEE')}
             </span>
           </div>
@@ -161,11 +161,11 @@ export function MoodChart({ entries, days = 7, showLabels = true }: MoodChartPro
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+      <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-surface-100 dark:border-surface-700">
         {[1, 3, 5].map(mood => (
           <div key={mood} className="flex items-center gap-1.5">
             <div className={cn('w-2.5 h-2.5 rounded-full', moodColors[mood])} />
-            <span className="text-xs text-gray-500">{moodEmojis[mood]}</span>
+            <span className="text-xs text-surface-500 dark:text-surface-400">{moodEmojis[mood]}</span>
           </div>
         ))}
       </div>

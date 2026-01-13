@@ -55,7 +55,7 @@ export function SessionCard({ session, onClick }: SessionCardProps) {
   return (
     <motion.div
       onClick={onClick}
-      className="group p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-teal-200 dark:hover:border-teal-800 transition-all cursor-pointer"
+      className="group p-4 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 hover:shadow-md hover:border-teal-200 dark:hover:border-teal-800 transition-all cursor-pointer"
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
     >
@@ -74,7 +74,7 @@ export function SessionCard({ session, onClick }: SessionCardProps) {
 
             {/* Topic badge */}
             {session.topic && (
-              <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+              <span className="px-2 py-0.5 rounded-full text-xs bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400">
                 {topicLabels[session.topic] || session.topic}
               </span>
             )}
@@ -88,12 +88,12 @@ export function SessionCard({ session, onClick }: SessionCardProps) {
           </div>
 
           {/* Title or first message preview */}
-          <h3 className="font-medium text-gray-900 dark:text-white mb-1 truncate group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+          <h3 className="font-medium text-surface-900 dark:text-surface-50 mb-1 truncate group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
             {session.title || `Session from ${timeAgo}`}
           </h3>
 
           {/* Meta info */}
-          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-4 text-sm text-surface-500 dark:text-surface-400">
             <span className="flex items-center gap-1">
               <MessageCircle className="w-4 h-4" />
               {session.messageCount} messages
@@ -109,7 +109,7 @@ export function SessionCard({ session, onClick }: SessionCardProps) {
               {moodEmojis[session.mood]}
             </span>
           )}
-          <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-500 group-hover:translate-x-1 transition-all" />
+          <ChevronRight className="w-5 h-5 text-surface-400 dark:text-surface-500 group-hover:text-teal-500 group-hover:translate-x-1 transition-all" />
         </div>
       </div>
     </motion.div>

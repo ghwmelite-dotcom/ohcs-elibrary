@@ -37,14 +37,14 @@ export function OnlineIndicator({
     md: 'w-3 h-3',
   };
 
-  const statusColor = presence ? getStatusColor(presence.status) : 'bg-gray-400';
+  const statusColor = presence ? getStatusColor(presence.status) : 'bg-surface-400 dark:bg-surface-500';
 
   return (
     <span
       className={cn(
         'block rounded-full ring-2 ring-white dark:ring-surface-800',
         sizeClasses[size],
-        online ? statusColor : 'bg-gray-400',
+        online ? statusColor : 'bg-surface-400 dark:bg-surface-500',
         className
       )}
       title={presence?.status || 'offline'}

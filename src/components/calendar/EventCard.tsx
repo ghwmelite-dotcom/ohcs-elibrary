@@ -63,7 +63,7 @@ export default function EventCard({ event, variant = 'default', onClick }: Event
         whileHover={{ scale: 1.01, y: -2 }}
         whileTap={{ scale: 0.99 }}
         onClick={onClick}
-        className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-md hover:shadow-xl transition-all cursor-pointer border border-gray-100 dark:border-gray-700 overflow-hidden group"
+        className="bg-surface-50 dark:bg-surface-800 rounded-xl sm:rounded-2xl shadow-md hover:shadow-xl transition-all cursor-pointer border border-surface-100 dark:border-surface-700 overflow-hidden group"
       >
         {/* Gradient top border */}
         <div
@@ -92,11 +92,11 @@ export default function EventCard({ event, variant = 'default', onClick }: Event
                   <Repeat className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-500" />
                 )}
               </div>
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white truncate group-hover:text-ghana-green dark:group-hover:text-ghana-gold transition-colors">
+              <h3 className="font-semibold text-sm sm:text-base text-surface-900 dark:text-surface-50 truncate group-hover:text-ghana-green dark:group-hover:text-ghana-gold transition-colors">
                 {event.title}
               </h3>
               {event.description && (
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1 line-clamp-2">
+                <p className="text-xs sm:text-sm text-surface-500 dark:text-surface-400 mt-0.5 sm:mt-1 line-clamp-2">
                   {event.description}
                 </p>
               )}
@@ -112,10 +112,10 @@ export default function EventCard({ event, variant = 'default', onClick }: Event
           </div>
 
           {/* Details */}
-          <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-surface-500 dark:text-surface-400">
             {/* Time */}
             <div className="flex items-center gap-1 sm:gap-1.5">
-              <div className="p-1 sm:p-1.5 rounded-md bg-gray-100 dark:bg-gray-700">
+              <div className="p-1 sm:p-1.5 rounded-md bg-surface-100 dark:bg-surface-700">
                 <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               </div>
               <span className="font-medium">
@@ -155,7 +155,7 @@ export default function EventCard({ event, variant = 'default', onClick }: Event
           </div>
 
           {/* Registration Status & Action */}
-          <div className="flex items-center justify-between mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-surface-100 dark:border-surface-700">
             {event.isRegistered ? (
               <span
                 className={`
@@ -163,7 +163,7 @@ export default function EventCard({ event, variant = 'default', onClick }: Event
                   ${event.myRsvpStatus === 'accepted' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : ''}
                   ${event.myRsvpStatus === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : ''}
                   ${event.myRsvpStatus === 'waitlisted' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : ''}
-                  ${event.myRsvpStatus === 'tentative' ? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' : ''}
+                  ${event.myRsvpStatus === 'tentative' ? 'bg-surface-100 text-surface-700 dark:bg-surface-700 dark:text-surface-300' : ''}
                 `}
               >
                 {event.myRsvpStatus === 'accepted' && 'Registered'}
@@ -172,7 +172,7 @@ export default function EventCard({ event, variant = 'default', onClick }: Event
                 {event.myRsvpStatus === 'tentative' && 'Tentative'}
               </span>
             ) : (
-              <span className="text-[10px] sm:text-xs text-gray-400">
+              <span className="text-[10px] sm:text-xs text-surface-400 dark:text-surface-500">
                 {event.registrationRequired ? 'Registration required' : 'Open event'}
               </span>
             )}
@@ -193,7 +193,7 @@ export default function EventCard({ event, variant = 'default', onClick }: Event
       whileHover={{ scale: 1.02, y: -1 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="w-full text-left p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all hover:shadow-md border border-transparent hover:border-gray-200 dark:hover:border-gray-600 group overflow-hidden"
+      className="w-full text-left p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all hover:shadow-md border border-transparent hover:border-surface-200 dark:hover:border-surface-600 group overflow-hidden"
       style={{
         background: `linear-gradient(135deg, ${categoryColor}08, ${categoryColor}15)`,
         borderLeft: `3px solid ${categoryColor}`,
@@ -202,20 +202,20 @@ export default function EventCard({ event, variant = 'default', onClick }: Event
       <div className="flex items-start justify-between gap-1.5 sm:gap-2">
         <div className="flex-1 min-w-0">
           {/* Title */}
-          <p className="font-medium text-[11px] sm:text-xs lg:text-sm text-gray-900 dark:text-white truncate group-hover:text-ghana-green dark:group-hover:text-ghana-gold transition-colors">
+          <p className="font-medium text-[11px] sm:text-xs lg:text-sm text-surface-900 dark:text-surface-50 truncate group-hover:text-ghana-green dark:group-hover:text-ghana-gold transition-colors">
             {event.title}
           </p>
 
           {/* Meta info */}
           <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
             {!event.isAllDay && (
-              <span className="text-[9px] sm:text-[10px] lg:text-xs text-gray-500 dark:text-gray-400 flex items-center gap-0.5 sm:gap-1">
+              <span className="text-[9px] sm:text-[10px] lg:text-xs text-surface-500 dark:text-surface-400 flex items-center gap-0.5 sm:gap-1">
                 <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 {formatTime(event.startDate)}
               </span>
             )}
             {event.isAllDay && (
-              <span className="text-[9px] sm:text-[10px] text-gray-400 dark:text-gray-500">All day</span>
+              <span className="text-[9px] sm:text-[10px] text-surface-400 dark:text-surface-500">All day</span>
             )}
 
             {/* Icons */}

@@ -77,8 +77,8 @@ export function AnalyticsPanel({ projectId }: AnalyticsPanelProps) {
   if (error || !analytics) {
     return (
       <div className="text-center py-12">
-        <BarChart3 className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-        <p className="text-gray-500 dark:text-gray-400">{error || 'No analytics data available'}</p>
+        <BarChart3 className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+        <p className="text-surface-500 dark:text-surface-400">{error || 'No analytics data available'}</p>
         <button
           onClick={fetchAnalytics}
           className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
@@ -109,17 +109,17 @@ export function AnalyticsPanel({ projectId }: AnalyticsPanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-primary-500" />
             Project Analytics
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
             Track progress and team contributions
           </p>
         </div>
         <button
           onClick={fetchAnalytics}
-          className="p-2 text-gray-400 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          className="p-2 text-surface-400 hover:text-primary-500 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
           title="Refresh"
         >
           <RefreshCw className="w-5 h-5" />
@@ -154,14 +154,14 @@ export function AnalyticsPanel({ projectId }: AnalyticsPanelProps) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700"
+          className="bg-surface-50 dark:bg-surface-800 rounded-xl p-5 border border-surface-200 dark:border-surface-700"
         >
           <div className="flex items-center justify-between mb-2">
-            <Calendar className="w-5 h-5 text-gray-400" />
+            <Calendar className="w-5 h-5 text-surface-400" />
             <TrendingUp className="w-4 h-4 text-green-500" />
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{metrics.daysActive}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Days Active</p>
+          <p className="text-2xl font-bold text-surface-900 dark:text-surface-50">{metrics.daysActive}</p>
+          <p className="text-sm text-surface-500 dark:text-surface-400">Days Active</p>
         </motion.div>
 
         {/* Recent Activity Card */}
@@ -169,16 +169,16 @@ export function AnalyticsPanel({ projectId }: AnalyticsPanelProps) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700"
+          className="bg-surface-50 dark:bg-surface-800 rounded-xl p-5 border border-surface-200 dark:border-surface-700"
         >
           <div className="flex items-center justify-between mb-2">
-            <Activity className="w-5 h-5 text-gray-400" />
+            <Activity className="w-5 h-5 text-surface-400" />
             <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full">
               7 days
             </span>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{metrics.recentActivity}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Recent Activities</p>
+          <p className="text-2xl font-bold text-surface-900 dark:text-surface-50">{metrics.recentActivity}</p>
+          <p className="text-sm text-surface-500 dark:text-surface-400">Recent Activities</p>
         </motion.div>
 
         {/* Milestones Card */}
@@ -186,17 +186,17 @@ export function AnalyticsPanel({ projectId }: AnalyticsPanelProps) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700"
+          className="bg-surface-50 dark:bg-surface-800 rounded-xl p-5 border border-surface-200 dark:border-surface-700"
         >
           <div className="flex items-center justify-between mb-2">
-            <Award className="w-5 h-5 text-gray-400" />
-            <span className="text-xs text-gray-400">
+            <Award className="w-5 h-5 text-surface-400" />
+            <span className="text-xs text-surface-400">
               {metrics.milestones.completed}/{metrics.milestones.total}
             </span>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{metrics.milestones.progress}%</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Milestones Done</p>
-          <div className="mt-2 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+          <p className="text-2xl font-bold text-surface-900 dark:text-surface-50">{metrics.milestones.progress}%</p>
+          <p className="text-sm text-surface-500 dark:text-surface-400">Milestones Done</p>
+          <div className="mt-2 h-1.5 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
             <div
               className="h-full bg-secondary-500 rounded-full transition-all"
               style={{ width: `${metrics.milestones.progress}%` }}
@@ -213,13 +213,13 @@ export function AnalyticsPanel({ projectId }: AnalyticsPanelProps) {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 * index }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
+            className="bg-surface-50 dark:bg-surface-800 rounded-xl p-4 border border-surface-200 dark:border-surface-700"
           >
             <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center mb-2', stat.color)}>
               <stat.icon className="w-4 h-4 text-white" />
             </div>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
+            <p className="text-xl font-bold text-surface-900 dark:text-surface-50">{stat.value}</p>
+            <p className="text-xs text-surface-500 dark:text-surface-400">{stat.label}</p>
           </motion.div>
         ))}
       </div>
@@ -229,9 +229,9 @@ export function AnalyticsPanel({ projectId }: AnalyticsPanelProps) {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700"
+          className="bg-surface-50 dark:bg-surface-800 rounded-xl p-6 border border-surface-200 dark:border-surface-700"
         >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-50 mb-4">
             Activity Timeline (Last 30 Days)
           </h3>
           <div className="h-40 flex items-end gap-1">
@@ -246,16 +246,16 @@ export function AnalyticsPanel({ projectId }: AnalyticsPanelProps) {
                   className="flex-1 bg-primary-500/80 hover:bg-primary-500 rounded-t cursor-pointer transition-colors group relative"
                   title={`${point.date}: ${point.count} activities`}
                 >
-                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-surface-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                     {point.count} activities
                     <br />
-                    <span className="text-gray-400">{new Date(point.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                    <span className="text-surface-400">{new Date(point.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
                   </div>
                 </motion.div>
               );
             })}
           </div>
-          <div className="flex justify-between mt-2 text-xs text-gray-400">
+          <div className="flex justify-between mt-2 text-xs text-surface-400">
             <span>{activityTimeline[0]?.date ? new Date(activityTimeline[0].date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}</span>
             <span>{activityTimeline[activityTimeline.length - 1]?.date ? new Date(activityTimeline[activityTimeline.length - 1].date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}</span>
           </div>
@@ -267,11 +267,11 @@ export function AnalyticsPanel({ projectId }: AnalyticsPanelProps) {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700"
+          className="bg-surface-50 dark:bg-surface-800 rounded-xl p-6 border border-surface-200 dark:border-surface-700"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-gray-400" />
+            <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
+              <Users className="w-5 h-5 text-surface-400" />
               Top Contributors
             </h3>
             {contributors.length > 5 && (
@@ -301,7 +301,7 @@ export function AnalyticsPanel({ projectId }: AnalyticsPanelProps) {
                     className="flex items-center gap-3"
                   >
                     <div className="flex items-center gap-3 w-40 flex-shrink-0">
-                      <span className="text-sm font-medium text-gray-400 w-5">{index + 1}</span>
+                      <span className="text-sm font-medium text-surface-400 w-5">{index + 1}</span>
                       {contributor.avatar ? (
                         <img
                           src={contributor.avatar}
@@ -315,22 +315,22 @@ export function AnalyticsPanel({ projectId }: AnalyticsPanelProps) {
                           </span>
                         </div>
                       )}
-                      <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      <span className="text-sm font-medium text-surface-900 dark:text-surface-50 truncate">
                         {contributor.displayName}
                       </span>
                     </div>
-                    <div className="flex-1 h-6 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className="flex-1 h-6 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${percentage}%` }}
                         transition={{ duration: 0.5, delay: 0.2 + index * 0.05 }}
                         className={cn(
                           'h-full rounded-full',
-                          index === 0 ? 'bg-secondary-500' : index === 1 ? 'bg-primary-500' : 'bg-gray-400 dark:bg-gray-500'
+                          index === 0 ? 'bg-secondary-500' : index === 1 ? 'bg-primary-500' : 'bg-surface-400 dark:bg-surface-500'
                         )}
                       />
                     </div>
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-16 text-right">
+                    <span className="text-sm font-medium text-surface-600 dark:text-surface-400 w-16 text-right">
                       {contributor.contributions}
                     </span>
                   </motion.div>

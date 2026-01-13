@@ -89,10 +89,10 @@ export default function EventModal({
             transition={{ type: 'spring', damping: 30, stiffness: 400 }}
             className="fixed inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 w-full sm:w-[95%] sm:max-w-lg"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col overflow-hidden">
+            <div className="bg-white dark:bg-surface-800 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col overflow-hidden">
               {/* Drag Handle - Mobile */}
               <div className="sm:hidden flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+                <div className="w-10 h-1 bg-surface-300 dark:bg-surface-600 rounded-full" />
               </div>
 
               {/* Header */}
@@ -112,38 +112,38 @@ export default function EventModal({
                 )}
 
                 {/* Title */}
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white pr-10 leading-tight">
+                <h2 className="text-lg sm:text-xl font-bold text-surface-900 dark:text-surface-50 pr-10 leading-tight">
                   {event.title}
                 </h2>
 
                 {/* Close Button */}
                 <button
                   onClick={onClose}
-                  className="absolute top-3 right-3 sm:top-5 sm:right-5 p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  className="absolute top-3 right-3 sm:top-5 sm:right-5 p-2 rounded-xl bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  <X className="w-5 h-5 text-surface-500 dark:text-surface-400" />
                 </button>
               </div>
 
               {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 space-y-4">
                 {/* Date & Time */}
-                <div className="flex items-start gap-3 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl sm:rounded-2xl">
-                  <div className="p-2 sm:p-2.5 bg-ghana-green/10 rounded-xl">
-                    <Calendar className="w-5 h-5 text-ghana-green" />
+                <div className="flex items-start gap-3 p-3 sm:p-4 bg-surface-50 dark:bg-surface-900/50 rounded-xl sm:rounded-2xl">
+                  <div className="p-2 sm:p-2.5 bg-ghana-green/10 dark:bg-ghana-green/20 rounded-xl">
+                    <Calendar className="w-5 h-5 text-ghana-green dark:text-ghana-green" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
+                    <p className="text-sm sm:text-base font-medium text-surface-900 dark:text-surface-50">
                       {formatDate(event.startDate)}
                     </p>
-                    <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-2 mt-1 text-sm text-surface-500 dark:text-surface-400">
                       <Clock className="w-4 h-4" />
                       <span>
                         {event.isAllDay ? 'All Day' : `${formatTime(event.startDate)} - ${formatTime(event.endDate)}`}
                       </span>
                       {!event.isAllDay && (
                         <>
-                          <span className="text-gray-300 dark:text-gray-600">•</span>
+                          <span className="text-surface-300 dark:text-surface-600">•</span>
                           <span>{getDuration()}</span>
                         </>
                       )}
@@ -153,7 +153,7 @@ export default function EventModal({
 
                 {/* Location */}
                 {(event.location || event.isVirtual) && (
-                  <div className="flex items-start gap-3 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl sm:rounded-2xl">
+                  <div className="flex items-start gap-3 p-3 sm:p-4 bg-surface-50 dark:bg-surface-900/50 rounded-xl sm:rounded-2xl">
                     <div className="p-2 sm:p-2.5 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
                       {event.isVirtual ? (
                         <Video className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -162,7 +162,7 @@ export default function EventModal({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
+                      <p className="text-sm sm:text-base font-medium text-surface-900 dark:text-surface-50">
                         {event.isVirtual ? 'Virtual Event' : event.location}
                       </p>
                       {event.meetingUrl && (
@@ -182,15 +182,15 @@ export default function EventModal({
 
                 {/* Capacity & Registration */}
                 {event.registrationRequired && (
-                  <div className="flex items-start gap-3 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl sm:rounded-2xl">
+                  <div className="flex items-start gap-3 p-3 sm:p-4 bg-surface-50 dark:bg-surface-900/50 rounded-xl sm:rounded-2xl">
                     <div className="p-2 sm:p-2.5 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
                       <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
+                      <p className="text-sm sm:text-base font-medium text-surface-900 dark:text-surface-50">
                         Registration Required
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                      <p className="text-sm text-surface-500 dark:text-surface-400 mt-0.5">
                         {event.attendeeCount || 0}{event.capacity ? ` / ${event.capacity}` : ''} registered
                         {event.waitlistEnabled && ' • Waitlist enabled'}
                       </p>
@@ -208,7 +208,7 @@ export default function EventModal({
                       <p className="text-sm sm:text-base font-semibold text-ghana-gold">
                         Earn {event.xpReward} XP
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-surface-500 dark:text-surface-400">
                         for attending this event
                       </p>
                     </div>
@@ -218,10 +218,10 @@ export default function EventModal({
                 {/* Description */}
                 {event.description && (
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                    <h3 className="text-sm font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-2">
                       About
                     </h3>
-                    <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+                    <p className="text-sm sm:text-base text-surface-700 dark:text-surface-300 leading-relaxed">
                       {event.description}
                     </p>
                   </div>
@@ -230,27 +230,27 @@ export default function EventModal({
                 {/* Organizer */}
                 {event.organizer && (
                   <div className="flex items-center gap-3 pt-2">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center overflow-hidden">
                       {event.organizer.avatar ? (
                         <img src={event.organizer.avatar} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+                        <span className="text-sm font-semibold text-surface-500 dark:text-surface-400">
                           {event.organizer.displayName?.charAt(0)}
                         </span>
                       )}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      <p className="text-sm font-medium text-surface-900 dark:text-surface-50">
                         {event.organizer.displayName}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Organizer</p>
+                      <p className="text-xs text-surface-500 dark:text-surface-400">Organizer</p>
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Actions */}
-              <div className="flex-shrink-0 p-4 sm:p-5 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+              <div className="flex-shrink-0 p-4 sm:p-5 border-t border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900/50">
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   {/* View Details */}
                   {onViewDetails && (
@@ -272,27 +272,27 @@ export default function EventModal({
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => onEdit(event)}
-                        className="flex-1 sm:flex-none p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors"
+                        className="flex-1 sm:flex-none p-3 bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 rounded-xl transition-colors"
                         title="Edit"
                       >
-                        <Edit2 className="w-5 h-5 text-gray-600 dark:text-gray-300 mx-auto" />
+                        <Edit2 className="w-5 h-5 text-surface-600 dark:text-surface-300 mx-auto" />
                       </motion.button>
                     )}
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="flex-1 sm:flex-none p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors"
+                      className="flex-1 sm:flex-none p-3 bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 rounded-xl transition-colors"
                       title="Set Reminder"
                     >
-                      <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300 mx-auto" />
+                      <Bell className="w-5 h-5 text-surface-600 dark:text-surface-300 mx-auto" />
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="flex-1 sm:flex-none p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors"
+                      className="flex-1 sm:flex-none p-3 bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 rounded-xl transition-colors"
                       title="Share"
                     >
-                      <Share2 className="w-5 h-5 text-gray-600 dark:text-gray-300 mx-auto" />
+                      <Share2 className="w-5 h-5 text-surface-600 dark:text-surface-300 mx-auto" />
                     </motion.button>
                     {onDelete && (
                       <motion.button
@@ -302,7 +302,7 @@ export default function EventModal({
                         className="flex-1 sm:flex-none p-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl transition-colors"
                         title="Delete"
                       >
-                        <Trash2 className="w-5 h-5 text-red-500 mx-auto" />
+                        <Trash2 className="w-5 h-5 text-red-500 dark:text-red-400 mx-auto" />
                       </motion.button>
                     )}
                   </div>

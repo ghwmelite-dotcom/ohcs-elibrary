@@ -106,14 +106,14 @@ export default function CalendarGrid({
     }, [selectedDate]);
 
     return (
-      <div className="flex flex-col h-full bg-white dark:bg-gray-800">
+      <div className="flex flex-col h-full bg-white dark:bg-surface-800">
         {/* Day Headers */}
-        <div className="grid grid-cols-7 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+        <div className="grid grid-cols-7 bg-surface-50 dark:bg-surface-900/50 border-b border-surface-200 dark:border-surface-700">
           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
             <div
               key={day}
               className={`py-2 sm:py-3 text-center text-[10px] sm:text-xs font-semibold uppercase tracking-wider ${
-                i >= 5 ? 'text-gray-400 dark:text-gray-500' : 'text-gray-600 dark:text-gray-400'
+                i >= 5 ? 'text-surface-400 dark:text-surface-500' : 'text-surface-600 dark:text-surface-400'
               }`}
             >
               <span className="hidden sm:inline">{day}</span>
@@ -137,9 +137,9 @@ export default function CalendarGrid({
                 whileHover={{ backgroundColor: 'rgba(0, 107, 63, 0.03)' }}
                 className={`
                   relative min-h-[60px] sm:min-h-[80px] md:min-h-[100px] lg:min-h-[110px]
-                  border-b border-r border-gray-100 dark:border-gray-700/50
-                  ${!day.isCurrentMonth ? 'bg-gray-50/50 dark:bg-gray-900/30' : ''}
-                  ${isWeekend && day.isCurrentMonth ? 'bg-gray-50/30 dark:bg-gray-900/20' : ''}
+                  border-b border-r border-surface-100 dark:border-surface-700/50
+                  ${!day.isCurrentMonth ? 'bg-surface-50/50 dark:bg-surface-900/30' : ''}
+                  ${isWeekend && day.isCurrentMonth ? 'bg-surface-50/30 dark:bg-surface-900/20' : ''}
                   ${isToday(day.date) ? 'bg-ghana-green/5 dark:bg-ghana-green/10' : ''}
                   cursor-pointer transition-colors group
                 `}
@@ -156,8 +156,8 @@ export default function CalendarGrid({
                         : isSelectedDate(day.date)
                           ? 'bg-ghana-gold/20 text-ghana-gold ring-1 ring-ghana-gold/30'
                           : !day.isCurrentMonth
-                            ? 'text-gray-300 dark:text-gray-600'
-                            : 'text-gray-700 dark:text-gray-300 group-hover:bg-gray-100 dark:group-hover:bg-gray-700'
+                            ? 'text-surface-300 dark:text-surface-600'
+                            : 'text-surface-700 dark:text-surface-300 group-hover:bg-surface-100 dark:group-hover:bg-surface-700'
                       }
                     `}
                   >
@@ -201,7 +201,7 @@ export default function CalendarGrid({
                       />
                     ))}
                     {dayEvents.length > 4 && (
-                      <span className="text-[8px] text-gray-400">+{dayEvents.length - 4}</span>
+                      <span className="text-[8px] text-surface-400 dark:text-surface-500">+{dayEvents.length - 4}</span>
                     )}
                   </div>
 
@@ -221,7 +221,7 @@ export default function CalendarGrid({
                           e.stopPropagation();
                           handleDateClick(day.date);
                         }}
-                        className="w-full text-center text-[10px] text-gray-500 dark:text-gray-400 hover:text-ghana-green dark:hover:text-ghana-gold py-0.5 transition-colors"
+                        className="w-full text-center text-[10px] text-surface-500 dark:text-surface-400 hover:text-ghana-green dark:hover:text-ghana-gold py-0.5 transition-colors"
                       >
                         +{dayEvents.length - 2} more
                       </button>
@@ -265,28 +265,28 @@ export default function CalendarGrid({
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
     return (
-      <div className="flex flex-col h-full bg-white dark:bg-gray-800 overflow-hidden">
+      <div className="flex flex-col h-full bg-white dark:bg-surface-800 overflow-hidden">
         {/* Header */}
-        <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+        <div className="flex-shrink-0 border-b border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900/50">
           <div className="grid grid-cols-8">
-            <div className="w-12 sm:w-16 border-r border-gray-200 dark:border-gray-700" />
+            <div className="w-12 sm:w-16 border-r border-surface-200 dark:border-surface-700" />
             {weekDays.map((day, i) => {
               const holiday = getHolidayForDate(day);
               const dayEvents = getEventsForDate(day);
               return (
                 <div
                   key={i}
-                  className={`text-center py-2 sm:py-3 border-r border-gray-200 dark:border-gray-700 ${
+                  className={`text-center py-2 sm:py-3 border-r border-surface-200 dark:border-surface-700 ${
                     isToday(day) ? 'bg-ghana-green/5 dark:bg-ghana-green/10' : ''
                   }`}
                 >
-                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase">
+                  <div className="text-[10px] sm:text-xs text-surface-500 dark:text-surface-400 uppercase">
                     {day.toLocaleDateString('en-GB', { weekday: 'short' }).slice(0, 3)}
                   </div>
                   <div
                     className={`
                       inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-sm font-semibold mt-0.5
-                      ${isToday(day) ? 'bg-ghana-green text-white' : 'text-gray-900 dark:text-white'}
+                      ${isToday(day) ? 'bg-ghana-green text-white' : 'text-surface-900 dark:text-white'}
                     `}
                   >
                     {day.getDate()}
@@ -317,7 +317,7 @@ export default function CalendarGrid({
               {hours.map((hour) => (
                 <div
                   key={hour}
-                  className="h-10 sm:h-12 border-b border-r border-gray-100 dark:border-gray-700/50 pr-1 sm:pr-2 py-0.5 text-right text-[10px] sm:text-xs text-gray-400"
+                  className="h-10 sm:h-12 border-b border-r border-surface-100 dark:border-surface-700/50 pr-1 sm:pr-2 py-0.5 text-right text-[10px] sm:text-xs text-surface-400 dark:text-surface-500"
                 >
                   {hour.toString().padStart(2, '0')}:00
                 </div>
@@ -332,7 +332,7 @@ export default function CalendarGrid({
                   {hours.map((hour) => (
                     <div
                       key={hour}
-                      className={`h-10 sm:h-12 border-b border-r border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer ${
+                      className={`h-10 sm:h-12 border-b border-r border-surface-100 dark:border-surface-700/50 hover:bg-surface-50 dark:hover:bg-surface-700/30 cursor-pointer ${
                         isToday(day) ? 'bg-ghana-green/[0.02]' : ''
                       }`}
                       onClick={() => {
@@ -379,13 +379,13 @@ export default function CalendarGrid({
     const holiday = getHolidayForDate(selectedDate);
 
     return (
-      <div className="flex flex-col h-full bg-white dark:bg-gray-800 overflow-hidden">
+      <div className="flex flex-col h-full bg-white dark:bg-surface-800 overflow-hidden">
         {/* Day Header */}
-        <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50">
+        <div className="flex-shrink-0 border-b border-surface-200 dark:border-surface-700 p-3 sm:p-4 bg-surface-50 dark:bg-surface-900/50">
           <div className="flex items-center gap-3 sm:gap-4">
             <div
               className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex flex-col items-center justify-center flex-shrink-0 ${
-                isToday(selectedDate) ? 'bg-ghana-green text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
+                isToday(selectedDate) ? 'bg-ghana-green text-white' : 'bg-surface-200 dark:bg-surface-700 text-surface-900 dark:text-white'
               }`}
             >
               <span className="text-[10px] sm:text-xs uppercase font-medium">
@@ -394,7 +394,7 @@ export default function CalendarGrid({
               <span className="text-xl sm:text-2xl font-bold leading-none">{selectedDate.getDate()}</span>
             </div>
             <div className="min-w-0">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
+              <h3 className="text-base sm:text-lg font-semibold text-surface-900 dark:text-white truncate">
                 {selectedDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
               </h3>
               {holiday && (
@@ -404,7 +404,7 @@ export default function CalendarGrid({
                 </div>
               )}
               {dayEvents.length > 0 && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">{dayEvents.length} event{dayEvents.length !== 1 ? 's' : ''}</p>
+                <p className="text-xs text-surface-500 dark:text-surface-400">{dayEvents.length} event{dayEvents.length !== 1 ? 's' : ''}</p>
               )}
             </div>
           </div>
@@ -415,11 +415,11 @@ export default function CalendarGrid({
           <div className="relative">
             {hours.map((hour) => (
               <div key={hour} className="flex">
-                <div className="w-14 sm:w-20 flex-shrink-0 h-12 sm:h-14 border-b border-r border-gray-100 dark:border-gray-700/50 pr-2 py-1 text-right text-xs text-gray-400">
+                <div className="w-14 sm:w-20 flex-shrink-0 h-12 sm:h-14 border-b border-r border-surface-100 dark:border-surface-700/50 pr-2 py-1 text-right text-xs text-surface-400 dark:text-surface-500">
                   {hour.toString().padStart(2, '0')}:00
                 </div>
                 <div
-                  className="flex-1 h-12 sm:h-14 border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer"
+                  className="flex-1 h-12 sm:h-14 border-b border-surface-100 dark:border-surface-700/50 hover:bg-surface-50 dark:hover:bg-surface-700/30 cursor-pointer"
                   onClick={() => {
                     const clickedDate = new Date(selectedDate);
                     clickedDate.setHours(hour, 0, 0, 0);
@@ -457,8 +457,8 @@ export default function CalendarGrid({
 
         {/* All Day Events */}
         {dayEvents.filter(e => e.isAllDay).length > 0 && (
-          <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-900/50">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">All Day</p>
+          <div className="flex-shrink-0 border-t border-surface-200 dark:border-surface-700 p-3 bg-surface-50 dark:bg-surface-900/50">
+            <p className="text-xs font-medium text-surface-500 dark:text-surface-400 mb-2">All Day</p>
             <div className="space-y-1">
               {dayEvents.filter(e => e.isAllDay).map((event) => (
                 <EventCard key={event.id} event={event} variant="compact" onClick={() => onEventClick?.(event)} />
@@ -488,13 +488,13 @@ export default function CalendarGrid({
 
     if (sortedEvents.length === 0) {
       return (
-        <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-white dark:bg-gray-800">
+        <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-white dark:bg-surface-800">
           <div className="text-center max-w-sm">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-2xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-              <CalendarIcon className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-2xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center">
+              <CalendarIcon className="w-8 h-8 sm:w-10 sm:h-10 text-surface-400 dark:text-surface-500" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Upcoming Events</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">You don't have any events scheduled for this period.</p>
+            <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-2">No Upcoming Events</h3>
+            <p className="text-sm text-surface-500 dark:text-surface-400 mb-4">You don't have any events scheduled for this period.</p>
             {onCreateEvent && (
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -512,7 +512,7 @@ export default function CalendarGrid({
     }
 
     return (
-      <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
+      <div className="flex-1 overflow-auto bg-surface-50 dark:bg-surface-900">
         <div className="max-w-3xl mx-auto p-3 sm:p-4 lg:p-6">
           <AnimatePresence>
             {Array.from(groupedEvents.entries()).map(([dateKey, dateEvents]) => {
@@ -528,10 +528,10 @@ export default function CalendarGrid({
                   className="mb-4 sm:mb-6"
                 >
                   {/* Date Header */}
-                  <div className="flex items-center gap-3 mb-2 sm:mb-3 sticky top-0 bg-gray-50 dark:bg-gray-900 py-2 z-10">
+                  <div className="flex items-center gap-3 mb-2 sm:mb-3 sticky top-0 bg-surface-50 dark:bg-surface-900 py-2 z-10">
                     <div
                       className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex flex-col items-center justify-center flex-shrink-0 ${
-                        isToday(date) ? 'bg-ghana-green text-white' : 'bg-white dark:bg-gray-800 shadow-sm'
+                        isToday(date) ? 'bg-ghana-green text-white' : 'bg-white dark:bg-surface-800 shadow-sm'
                       }`}
                     >
                       <span className="text-[9px] sm:text-[10px] uppercase font-medium opacity-80">
@@ -540,7 +540,7 @@ export default function CalendarGrid({
                       <span className="text-base sm:text-lg font-bold leading-none">{date.getDate()}</span>
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white truncate">
+                      <h3 className="font-semibold text-sm sm:text-base text-surface-900 dark:text-white truncate">
                         {isToday(date) ? 'Today' : date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
                       </h3>
                       {holiday && (
@@ -550,7 +550,7 @@ export default function CalendarGrid({
                         </span>
                       )}
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-400 ml-auto flex-shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-surface-400 dark:text-surface-500 ml-auto flex-shrink-0" />
                   </div>
 
                   {/* Events */}

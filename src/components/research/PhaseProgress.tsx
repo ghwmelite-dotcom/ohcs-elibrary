@@ -80,7 +80,7 @@ export function PhaseProgress({
                     'rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
                     isCompleted && 'bg-green-500 text-white',
                     isCurrent && 'bg-primary-500 text-white ring-4 ring-primary-100 dark:ring-primary-900',
-                    isUpcoming && 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                    isUpcoming && 'bg-surface-200 dark:bg-surface-700 text-surface-400 dark:text-surface-500'
                   )}
                 >
                   {isCompleted ? (
@@ -97,7 +97,7 @@ export function PhaseProgress({
                       'w-0.5 h-8 mt-1',
                       index < currentIndex
                         ? 'bg-green-500'
-                        : 'bg-gray-200 dark:bg-gray-700'
+                        : 'bg-surface-200 dark:bg-surface-700'
                     )}
                   />
                 )}
@@ -111,13 +111,13 @@ export function PhaseProgress({
                     'font-medium block',
                     isCompleted && 'text-green-600 dark:text-green-400',
                     isCurrent && 'text-primary-600 dark:text-primary-400',
-                    isUpcoming && 'text-gray-400 dark:text-gray-500'
+                    isUpcoming && 'text-surface-400 dark:text-surface-500'
                   )}
                 >
                   {phaseInfo.label}
                 </span>
                 {isCurrent && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-surface-500 dark:text-surface-400">
                     Current phase
                   </span>
                 )}
@@ -134,7 +134,7 @@ export function PhaseProgress({
     <div className={cn('w-full', className)}>
       {/* Progress Line */}
       <div className="relative">
-        <div className={cn('absolute top-4 left-0 right-0', sizes.line, 'bg-gray-200 dark:bg-gray-700 rounded-full')} />
+        <div className={cn('absolute top-4 left-0 right-0', sizes.line, 'bg-surface-200 dark:bg-surface-700 rounded-full')} />
         <div
           className={cn('absolute top-4 left-0', sizes.line, 'bg-primary-500 rounded-full transition-all duration-500')}
           style={{ width: `${(currentIndex / (phaseOrder.length - 1)) * 100}%` }}
@@ -159,7 +159,7 @@ export function PhaseProgress({
                     'rounded-full flex items-center justify-center z-10 transition-all',
                     isCompleted && 'bg-green-500 text-white',
                     isCurrent && 'bg-primary-500 text-white ring-4 ring-primary-100 dark:ring-primary-900',
-                    isUpcoming && 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                    isUpcoming && 'bg-surface-200 dark:bg-surface-700 text-surface-400 dark:text-surface-500'
                   )}
                 >
                   {isCompleted ? (
@@ -176,7 +176,7 @@ export function PhaseProgress({
                     sizes.text,
                     isCompleted && 'text-green-600 dark:text-green-400',
                     isCurrent && 'text-primary-600 dark:text-primary-400 font-medium',
-                    isUpcoming && 'text-gray-400 dark:text-gray-500'
+                    isUpcoming && 'text-surface-400 dark:text-surface-500'
                   )}
                 >
                   {phaseInfo.label}
@@ -189,10 +189,10 @@ export function PhaseProgress({
 
       {/* Progress Percentage */}
       <div className="mt-6 flex items-center justify-between text-sm">
-        <span className="text-gray-500 dark:text-gray-400">Overall Progress</span>
+        <span className="text-surface-500 dark:text-surface-400">Overall Progress</span>
         <span className="font-semibold text-primary-600 dark:text-primary-400">{progress}%</span>
       </div>
-      <div className="mt-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+      <div className="mt-1 h-2 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}

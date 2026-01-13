@@ -30,7 +30,7 @@ export function MDALeaderboard({ entries, userMdaId }: MDALeaderboardProps) {
         );
       case 2:
         return (
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-surface-300 to-surface-500 dark:from-surface-400 dark:to-surface-600 flex items-center justify-center">
             <span className="text-white font-bold text-sm">2</span>
           </div>
         );
@@ -117,7 +117,7 @@ export function MDALeaderboard({ entries, userMdaId }: MDALeaderboardProps) {
                   <div className={cn(
                     'w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white',
                     entry.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-orange-500' :
-                    entry.rank === 2 ? 'bg-gradient-to-br from-gray-400 to-gray-600' :
+                    entry.rank === 2 ? 'bg-gradient-to-br from-surface-400 to-surface-600 dark:from-surface-500 dark:to-surface-700' :
                     entry.rank === 3 ? 'bg-gradient-to-br from-amber-500 to-amber-700' :
                     'bg-gradient-to-br from-primary-400 to-primary-600'
                   )}>
@@ -149,7 +149,7 @@ export function MDALeaderboard({ entries, userMdaId }: MDALeaderboardProps) {
                 <span className={cn(
                   'font-bold',
                   entry.rank === 1 ? 'text-yellow-600 dark:text-yellow-400' :
-                  entry.rank === 2 ? 'text-gray-600 dark:text-gray-400' :
+                  entry.rank === 2 ? 'text-surface-600 dark:text-surface-400' :
                   entry.rank === 3 ? 'text-amber-600 dark:text-amber-400' :
                   'text-surface-700 dark:text-surface-300'
                 )}>

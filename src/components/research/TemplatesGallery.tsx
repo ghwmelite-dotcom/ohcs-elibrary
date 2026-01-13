@@ -109,18 +109,18 @@ export function TemplatesGallery({ onSelectTemplate, onClose }: TemplatesGallery
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
             <Layout className="w-5 h-5 text-primary-500" />
             Research Templates
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
             Start your research with a pre-built template
           </p>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 text-surface-400 dark:text-surface-500 hover:text-surface-600 dark:hover:text-surface-300 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -130,20 +130,20 @@ export function TemplatesGallery({ onSelectTemplate, onClose }: TemplatesGallery
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400 dark:text-surface-500" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search templates..."
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2.5 border border-surface-300 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div className="flex gap-2">
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value as ResearchCategory | 'all')}
-            className="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="px-4 py-2.5 border border-surface-300 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="all">All Categories</option>
             {Object.entries(RESEARCH_CATEGORIES).map(([key, cat]) => (
@@ -153,7 +153,7 @@ export function TemplatesGallery({ onSelectTemplate, onClose }: TemplatesGallery
           <select
             value={selectedMethodology}
             onChange={(e) => setSelectedMethodology(e.target.value as ResearchMethodology | 'all')}
-            className="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="px-4 py-2.5 border border-surface-300 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="all">All Methods</option>
             {Object.entries(RESEARCH_METHODOLOGIES).map(([key, label]) => (
@@ -169,11 +169,11 @@ export function TemplatesGallery({ onSelectTemplate, onClose }: TemplatesGallery
         </div>
       ) : filteredTemplates.length === 0 ? (
         <div className="text-center py-12">
-          <Layout className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          <Layout className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-surface-900 dark:text-surface-50 mb-2">
             No templates found
           </h3>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-surface-500 dark:text-surface-400">
             Try adjusting your filters or search query.
           </p>
         </div>
@@ -182,7 +182,7 @@ export function TemplatesGallery({ onSelectTemplate, onClose }: TemplatesGallery
           {/* Featured Templates */}
           {featuredTemplates.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Star className="w-4 h-4 text-secondary-500" />
                 Featured Templates
               </h3>
@@ -204,7 +204,7 @@ export function TemplatesGallery({ onSelectTemplate, onClose }: TemplatesGallery
           {otherTemplates.length > 0 && (
             <div>
               {featuredTemplates.length > 0 && (
-                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+                <h3 className="text-sm font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-4">
                   All Templates
                 </h3>
               )}
@@ -232,7 +232,7 @@ export function TemplatesGallery({ onSelectTemplate, onClose }: TemplatesGallery
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg z-50"
+            className="fixed bottom-0 left-0 right-0 bg-white dark:bg-surface-800 border-t border-surface-200 dark:border-surface-700 p-4 shadow-lg z-50"
           >
             <div className="max-w-7xl mx-auto flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -240,10 +240,10 @@ export function TemplatesGallery({ onSelectTemplate, onClose }: TemplatesGallery
                   <Layout className="w-6 h-6 text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">
+                  <p className="font-medium text-surface-900 dark:text-surface-50">
                     {selectedTemplate.name}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-surface-500 dark:text-surface-400">
                     {RESEARCH_METHODOLOGIES[selectedTemplate.methodology]} • {selectedTemplate.estimatedDurationDays} days
                   </p>
                 </div>
@@ -251,7 +251,7 @@ export function TemplatesGallery({ onSelectTemplate, onClose }: TemplatesGallery
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setSelectedTemplate(null)}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="px-4 py-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
@@ -289,10 +289,10 @@ function TemplateCard({ template, index, isSelected, onSelect, compact }: Templa
       transition={{ delay: index * 0.05 }}
       onClick={onSelect}
       className={cn(
-        'relative bg-white dark:bg-gray-800 rounded-xl border-2 cursor-pointer transition-all overflow-hidden group',
+        'relative bg-white dark:bg-surface-800 rounded-xl border-2 cursor-pointer transition-all overflow-hidden group',
         isSelected
           ? 'border-primary-500 ring-2 ring-primary-500/20'
-          : 'border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600'
+          : 'border-surface-200 dark:border-surface-700 hover:border-primary-300 dark:hover:border-primary-600'
       )}
     >
       {/* Featured badge */}
@@ -315,10 +315,10 @@ function TemplateCard({ template, index, isSelected, onSelect, compact }: Templa
             <Network className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-gray-900 dark:text-white truncate">
+            <h4 className="font-semibold text-surface-900 dark:text-surface-50 truncate">
               {template.name}
             </h4>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-surface-500 dark:text-surface-400">
               {category?.label || template.category}
             </p>
           </div>
@@ -326,7 +326,7 @@ function TemplateCard({ template, index, isSelected, onSelect, compact }: Templa
 
         {/* Description */}
         {!compact && template.description && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+          <p className="text-sm text-surface-600 dark:text-surface-400 mb-4 line-clamp-2">
             {template.description}
           </p>
         )}
@@ -339,12 +339,12 @@ function TemplateCard({ template, index, isSelected, onSelect, compact }: Templa
           )}>
             {DIFFICULTY_LABELS[template.difficultyLevel]}
           </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <span className="text-xs text-surface-500 dark:text-surface-400 flex items-center gap-1">
             <Clock className="w-3 h-3" />
             {template.estimatedDurationDays} days
           </span>
           {template.usageCount > 0 && (
-            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <span className="text-xs text-surface-500 dark:text-surface-400 flex items-center gap-1">
               <Users className="w-3 h-3" />
               {template.usageCount} uses
             </span>
@@ -353,13 +353,13 @@ function TemplateCard({ template, index, isSelected, onSelect, compact }: Templa
 
         {/* Objectives Preview */}
         {!compact && template.defaultObjectives && template.defaultObjectives.length > 0 && (
-          <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+          <div className="border-t border-surface-100 dark:border-surface-700 pt-3 mt-3">
+            <p className="text-xs font-medium text-surface-500 dark:text-surface-400 mb-2">
               Objectives:
             </p>
             <ul className="space-y-1">
               {template.defaultObjectives.slice(0, 2).map((obj, i) => (
-                <li key={i} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-2">
+                <li key={i} className="text-xs text-surface-600 dark:text-surface-400 flex items-start gap-2">
                   <span className="w-1 h-1 bg-primary-500 rounded-full mt-1.5 flex-shrink-0" />
                   <span className="line-clamp-1">{obj}</span>
                 </li>
@@ -375,21 +375,21 @@ function TemplateCard({ template, index, isSelected, onSelect, compact }: Templa
 
         {/* Milestones Preview */}
         {!compact && template.structure?.milestones && (
-          <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+          <div className="border-t border-surface-100 dark:border-surface-700 pt-3 mt-3">
+            <p className="text-xs font-medium text-surface-500 dark:text-surface-400 mb-2">
               Milestones:
             </p>
             <div className="flex flex-wrap gap-1">
               {template.structure.milestones.slice(0, 3).map((milestone, i) => (
                 <span
                   key={i}
-                  className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded"
+                  className="px-2 py-0.5 bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400 text-xs rounded"
                 >
                   {milestone}
                 </span>
               ))}
               {template.structure.milestones.length > 3 && (
-                <span className="px-2 py-0.5 text-xs text-gray-400">
+                <span className="px-2 py-0.5 text-xs text-surface-400 dark:text-surface-500">
                   +{template.structure.milestones.length - 3}
                 </span>
               )}

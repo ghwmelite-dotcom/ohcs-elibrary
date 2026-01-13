@@ -46,7 +46,7 @@ export function RecognitionLeaderboard({
       case 1:
         return <Trophy className="w-5 h-5 text-yellow-500" />;
       case 2:
-        return <Medal className="w-5 h-5 text-gray-400" />;
+        return <Medal className="w-5 h-5 text-surface-400 dark:text-surface-500" />;
       case 3:
         return <Medal className="w-5 h-5 text-amber-600" />;
       default:
@@ -59,7 +59,7 @@ export function RecognitionLeaderboard({
       case 1:
         return 'bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-yellow-200 dark:border-yellow-800';
       case 2:
-        return 'bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20 border-gray-200 dark:border-gray-700';
+        return 'bg-gradient-to-r from-surface-50 to-surface-100 dark:from-surface-800/50 dark:to-surface-700/50 border-surface-200 dark:border-surface-600';
       case 3:
         return 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800';
       default:

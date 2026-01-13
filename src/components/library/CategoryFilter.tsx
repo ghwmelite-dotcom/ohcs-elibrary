@@ -194,7 +194,7 @@ export function CategoryFilter() {
       </div>
 
       {/* Desktop: Collapsible card with beautiful animations */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block min-w-[280px]">
         <motion.div
           initial={false}
           className="bg-white dark:bg-surface-800 rounded-2xl shadow-xl overflow-hidden border border-surface-200/50 dark:border-surface-700/50"
@@ -294,7 +294,7 @@ export function CategoryFilter() {
                             : 'text-surface-500'
                         )} />
                       </div>
-                      <div className="text-left">
+                      <div className="text-left min-w-0 flex-1">
                         <span className={cn(
                           'text-sm font-bold block',
                           !selectedCategory
@@ -306,9 +306,9 @@ export function CategoryFilter() {
                         <span className="text-xs text-surface-500">Browse everything</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <span className={cn(
-                        'text-sm font-bold px-3 py-1.5 rounded-full transition-all',
+                        'text-sm font-bold px-2.5 py-1 rounded-full transition-all tabular-nums',
                         !selectedCategory
                           ? 'bg-primary-500 text-white shadow-md'
                           : 'bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400'
@@ -371,9 +371,9 @@ export function CategoryFilter() {
                                 style={{ color: isSelected ? 'white' : category.color }}
                               />
                             </div>
-                            <div className="text-left">
+                            <div className="text-left min-w-0 flex-1">
                               <span className={cn(
-                                'text-sm font-semibold block transition-colors',
+                                'text-sm font-semibold block transition-colors leading-tight',
                                 isSelected ? '' : 'text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-50'
                               )}
                               style={{ color: isSelected ? category.color : undefined }}
@@ -391,10 +391,10 @@ export function CategoryFilter() {
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-shrink-0">
                             <span
                               className={cn(
-                                'text-sm font-bold px-3 py-1.5 rounded-full transition-all',
+                                'text-sm font-bold px-2.5 py-1 rounded-full transition-all tabular-nums',
                                 !isSelected && 'bg-surface-100 dark:bg-surface-700 text-surface-500'
                               )}
                               style={{
@@ -406,7 +406,7 @@ export function CategoryFilter() {
                             </span>
                             <ChevronRight
                               className={cn(
-                                'w-4 h-4 transition-all opacity-0 group-hover:opacity-100',
+                                'w-4 h-4 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0',
                                 isSelected && 'opacity-100'
                               )}
                               style={{ color: isSelected ? category.color : undefined }}
