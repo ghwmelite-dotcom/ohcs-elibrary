@@ -159,20 +159,24 @@ interface SimpleTabsProps {
 
 export function Tabs({ tabs, activeTab, onChange, className }: SimpleTabsProps) {
   return (
-    <div className={cn('flex gap-1 p-1 bg-surface-100 dark:bg-surface-800 rounded-lg', className)}>
+    <div className={cn(
+      'flex gap-1 p-1 bg-surface-100 dark:bg-surface-800 rounded-lg',
+      'overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-1',
+      className
+    )}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onChange(tab.id)}
           className={cn(
-            'relative flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all rounded-md',
+            'relative flex items-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium transition-all rounded-md flex-shrink-0',
             activeTab === tab.id
               ? 'bg-white dark:bg-surface-700 text-primary-600 dark:text-primary-400 shadow-sm'
               : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100'
           )}
         >
-          {tab.icon && <span className="flex-shrink-0">{tab.icon}</span>}
-          {tab.label}
+          {tab.icon && <span className="flex-shrink-0 hidden sm:block">{tab.icon}</span>}
+          <span className="whitespace-nowrap">{tab.label}</span>
         </button>
       ))}
     </div>

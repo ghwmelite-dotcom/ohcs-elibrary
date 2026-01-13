@@ -434,7 +434,7 @@ export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
                   Category
