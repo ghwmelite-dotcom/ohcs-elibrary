@@ -196,3 +196,78 @@ export function formatCurrency(amount: number, currency: string = 'GHS'): string
     maximumFractionDigits: 2,
   }).format(amount);
 }
+
+/**
+ * Format file type/MIME type to user-friendly string
+ */
+export function formatFileType(mimeType: string): string {
+  if (!mimeType) return 'File';
+
+  // Common MIME type mappings
+  const mimeMap: Record<string, string> = {
+    // Documents
+    'application/pdf': 'PDF',
+    'application/msword': 'DOC',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+    'application/vnd.ms-excel': 'XLS',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX',
+    'application/vnd.ms-powerpoint': 'PPT',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PPTX',
+    // Google formats
+    'application/vnd.google-apps.document': 'Google Doc',
+    'application/vnd.google-apps.spreadsheet': 'Google Sheet',
+    'application/vnd.google-apps.presentation': 'Google Slides',
+    // Text
+    'text/plain': 'TXT',
+    'text/html': 'HTML',
+    'text/css': 'CSS',
+    'text/csv': 'CSV',
+    'application/json': 'JSON',
+    'application/xml': 'XML',
+    // Images
+    'image/jpeg': 'JPEG',
+    'image/png': 'PNG',
+    'image/gif': 'GIF',
+    'image/webp': 'WEBP',
+    'image/svg+xml': 'SVG',
+    // Audio
+    'audio/mpeg': 'MP3',
+    'audio/wav': 'WAV',
+    'audio/ogg': 'OGG',
+    'audio/mp4': 'M4A',
+    'audio/aac': 'AAC',
+    // Video
+    'video/mp4': 'MP4',
+    'video/webm': 'WEBM',
+    'video/ogg': 'OGG',
+    'video/quicktime': 'MOV',
+    'video/x-msvideo': 'AVI',
+    // Archives
+    'application/zip': 'ZIP',
+    'application/x-rar-compressed': 'RAR',
+    'application/gzip': 'GZIP',
+  };
+
+  // Check exact match first
+  if (mimeMap[mimeType]) {
+    return mimeMap[mimeType];
+  }
+
+  // Try to extract from MIME type
+  if (mimeType.startsWith('audio/')) return 'Audio';
+  if (mimeType.startsWith('video/')) return 'Video';
+  if (mimeType.startsWith('image/')) return 'Image';
+  if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'PPT';
+  if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'Excel';
+  if (mimeType.includes('document') || mimeType.includes('word')) return 'Doc';
+  if (mimeType.includes('pdf')) return 'PDF';
+
+  // Last resort: try to get extension from MIME type
+  const parts = mimeType.split('/');
+  if (parts.length === 2) {
+    const subtype = parts[1].split('.').pop() || parts[1];
+    return subtype.toUpperCase().slice(0, 6);
+  }
+
+  return 'File';
+}
