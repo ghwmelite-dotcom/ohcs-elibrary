@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, Lock, AlertCircle, BadgeCheck, Shield, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, AlertCircle, BadgeCheck, Shield, ArrowLeft, Play } from 'lucide-react';
 import {
   loginSchema,
   staffIdLoginSchema,
@@ -19,7 +19,7 @@ type LoginMode = 'email' | 'staffId';
 
 export function LoginForm() {
   const navigate = useNavigate();
-  const { login, verify2FA, cancel2FA, twoFA } = useAuthStore();
+  const { login, loginDemo, verify2FA, cancel2FA, twoFA } = useAuthStore();
   const toast = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
   const [loginMode, setLoginMode] = useState<LoginMode>('email');
@@ -155,6 +155,12 @@ export function LoginForm() {
     setServerError(null);
     emailForm.reset();
     staffIdForm.reset();
+  };
+
+  const handleDemoLogin = () => {
+    loginDemo();
+    toast.success('Welcome!', 'Signed in with demo account.');
+    navigate('/dashboard');
   };
 
   // Show 2FA verification screen
@@ -394,6 +400,33 @@ export function LoginForm() {
           </Button>
         </form>
       )}
+
+      {/* Demo Login Option */}
+      <div className="mt-6">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-surface-200 dark:border-surface-700" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-white dark:bg-surface-900 text-surface-500">
+              Or try the demo
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <Button
+            type="button"
+            variant="outline"
+            fullWidth
+            size="lg"
+            onClick={handleDemoLogin}
+            leftIcon={<Play className="w-5 h-5" />}
+          >
+            Demo Login
+          </Button>
+        </div>
+      </div>
 
       <div className="mt-8">
         <div className="relative">

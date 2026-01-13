@@ -20,6 +20,7 @@ interface PendingVerification {
 
 interface AuthActions {
   login: (credentials: LoginCredentials) => Promise<{ requires2FA: boolean }>;
+  loginDemo: () => void; // Demo login for development
   verify2FA: (code: string) => Promise<void>;
   cancel2FA: () => void;
   register: (data: RegisterData) => Promise<{ requiresVerification: boolean; email?: string }>;
@@ -208,6 +209,64 @@ export const useAuthStore = create<AuthStore>()(
         } catch (error) {
           throw error;
         }
+      },
+
+      // Demo login for development - bypasses API
+      // Regular user access only, data expires after 24 hours
+      loginDemo: () => {
+        // Set 24-hour expiry timestamp
+        const expiryTime = Date.now() + (24 * 60 * 60 * 1000); // 24 hours from now
+
+        const demoUser: User = {
+          id: 'demo-user-001',
+          email: 'demo@ohcs.gov.gh',
+          staffId: 'OHCS-2024-001',
+          firstName: 'Kwame',
+          lastName: 'Asante',
+          displayName: 'Kwame Asante',
+          avatar: undefined,
+          role: 'civil_servant', // Regular user access only
+          status: 'active',
+          mdaId: 'mda-001',
+          department: 'Administrative Services',
+          title: 'Administrative Officer',
+          skills: ['Policy Analysis', 'Project Management', 'Strategic Planning'],
+          interests: ['Leadership Development', 'Digital Transformation'],
+          emailVerified: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        const permissions = rolePermissions.civil_servant || rolePermissions.user;
+
+        set({
+          user: demoUser,
+          token: 'demo-token-' + Date.now(),
+          refreshToken: 'demo-refresh-' + Date.now(),
+          isAuthenticated: true,
+          isLoading: false,
+          permissions,
+          twoFA: {
+            requires2FA: false,
+            tempToken: null,
+            email: null,
+          },
+        });
+
+        // Store with 24-hour expiry
+        localStorage.setItem('auth_token', 'demo-token');
+        localStorage.setItem('auth_user', JSON.stringify(demoUser));
+        localStorage.setItem('demo_expiry', expiryTime.toString());
+
+        // Clear demo data after 24 hours
+        setTimeout(() => {
+          const currentExpiry = localStorage.getItem('demo_expiry');
+          if (currentExpiry && parseInt(currentExpiry) <= Date.now()) {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_user');
+            localStorage.removeItem('demo_expiry');
+          }
+        }, 24 * 60 * 60 * 1000);
       },
 
       verify2FA: async (code: string) => {

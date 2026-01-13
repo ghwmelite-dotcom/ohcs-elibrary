@@ -60,6 +60,7 @@ import {
   SearchCheck,
   KeyRound,
   Server,
+  Play,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useThemeStore, useEffectiveTheme } from '@/stores/themeStore';
@@ -931,10 +932,17 @@ function AuthModal({
 // ============================================================================
 function LoginFormContent({ isDark, onClose }: { isDark: boolean; onClose: () => void }) {
   const navigate = useNavigate();
-  const { login } = useAuthStore();
+  const { login, loginDemo } = useAuthStore();
   const toast = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
   const [loginMode, setLoginMode] = useState<'email' | 'staffId'>('email');
+
+  const handleDemoLogin = () => {
+    loginDemo();
+    toast.success('Welcome!', 'Signed in with demo account (24hr access).');
+    onClose();
+    navigate('/dashboard');
+  };
 
   const emailForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -1509,6 +1517,65 @@ function LoginFormContent({ isDark, onClose }: { isDark: boolean; onClose: () =>
           </motion.button>
         </form>
       )}
+
+      {/* Demo Login Divider */}
+      <div className="relative my-5">
+        <div
+          className="absolute inset-0 flex items-center"
+          aria-hidden="true"
+        >
+          <div
+            className="w-full border-t"
+            style={{
+              borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+            }}
+          />
+        </div>
+        <div className="relative flex justify-center">
+          <span
+            className={cn(
+              'px-3 text-xs font-medium',
+              isDark ? 'bg-[#171310] text-amber-50/40' : 'bg-[#faf8f5] text-surface-400'
+            )}
+          >
+            Or try the demo
+          </span>
+        </div>
+      </div>
+
+      {/* Demo Login Button */}
+      <motion.button
+        type="button"
+        onClick={handleDemoLogin}
+        className={cn(
+          'relative w-full h-11 rounded-xl font-medium overflow-hidden group',
+          isDark
+            ? 'bg-white/5 border border-white/10 text-amber-50/80 hover:text-amber-50'
+            : 'bg-surface-100 border border-surface-200 text-surface-600 hover:text-surface-900'
+        )}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+      >
+        {/* Hover glow effect */}
+        <motion.div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{
+            background: isDark
+              ? 'linear-gradient(135deg, rgba(252, 209, 22, 0.1), transparent)'
+              : 'linear-gradient(135deg, rgba(0, 107, 63, 0.08), transparent)',
+          }}
+        />
+        <span className="relative z-10 flex items-center justify-center gap-2">
+          <Play className="w-4 h-4" />
+          Demo Login
+          <span className={cn(
+            'text-xs px-1.5 py-0.5 rounded-md',
+            isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-primary-100 text-primary-600'
+          )}>
+            24hr
+          </span>
+        </span>
+      </motion.button>
     </div>
   );
 }

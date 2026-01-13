@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -15,6 +15,7 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   LogOut,
   Mail,
   UserPlus,
@@ -29,6 +30,12 @@ import {
   Calendar,
   ShoppingBag,
   UserCircle,
+  Briefcase,
+  Route,
+  Target,
+  TrendingUp,
+  ClipboardList,
+  Map,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
@@ -49,9 +56,18 @@ interface NavItem {
   hasBadge?: boolean;
 }
 
+interface NavSubSection {
+  id: string;
+  title: string;
+  icon: LucideIcon;
+  color: string;
+  items: NavItem[];
+}
+
 interface NavSection {
   title?: string;
-  items: NavItem[];
+  items?: NavItem[];
+  subSections?: NavSubSection[];
   requiresInstructor?: boolean;
 }
 
@@ -61,6 +77,7 @@ const navSections: NavSection[] = [
     items: [
       { path: '/feed', label: 'Home', icon: Home, color: 'primary' },
       { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'slate' },
+      { path: '/library', label: 'Document Library', icon: Library, color: 'amber', tag: { label: 'CORE', color: 'amber' } },
     ],
   },
   {
@@ -73,14 +90,43 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    title: 'Learn',
-    items: [
-      { path: '/courses', label: 'Course Catalog', icon: Compass, color: 'indigo', tag: { label: 'LMS', color: 'indigo' } },
-      { path: '/my-courses', label: 'My Learning', icon: BookOpen, color: 'sky' },
-      { path: '/calendar', label: 'Calendar', icon: Calendar, color: 'green', tag: { label: 'NEW', color: 'green' } },
-      { path: '/certificates', label: 'Certificates', icon: BadgeCheck, color: 'emerald' },
-      { path: '/peer-reviews', label: 'Peer Reviews', icon: Users, color: 'violet' },
-      { path: '/library', label: 'Library', icon: Library, color: 'amber', tag: { label: 'HOT', color: 'amber' } },
+    title: 'Career Development',
+    subSections: [
+      {
+        id: 'learning',
+        title: 'Learning & Training',
+        icon: GraduationCap,
+        color: 'indigo',
+        items: [
+          { path: '/courses', label: 'Course Catalog', icon: Compass, color: 'indigo', tag: { label: 'LMS', color: 'indigo' } },
+          { path: '/my-courses', label: 'My Learning', icon: BookOpen, color: 'sky' },
+          { path: '/certificates', label: 'Certificates', icon: BadgeCheck, color: 'emerald' },
+          { path: '/calendar', label: 'Calendar', icon: Calendar, color: 'green' },
+        ],
+      },
+      {
+        id: 'career-growth',
+        title: 'Career Growth',
+        icon: TrendingUp,
+        color: 'emerald',
+        items: [
+          { path: '/career-paths', label: 'Career Paths', icon: Route, color: 'emerald' },
+          { path: '/skill-gap', label: 'Skill Gap', icon: Target, color: 'blue' },
+          { path: '/promotion', label: 'Promotion', icon: TrendingUp, color: 'purple' },
+          { path: '/competencies', label: 'Competencies', icon: ClipboardList, color: 'teal' },
+          { path: '/my-plan', label: 'My Plan', icon: Map, color: 'cyan' },
+        ],
+      },
+      {
+        id: 'collaboration',
+        title: 'Collaboration',
+        icon: Users,
+        color: 'violet',
+        items: [
+          { path: '/mentorship', label: 'Mentorship', icon: Users, color: 'violet', tag: { label: 'HOT', color: 'violet' } },
+          { path: '/peer-reviews', label: 'Peer Reviews', icon: Users, color: 'pink' },
+        ],
+      },
     ],
   },
   {
@@ -379,7 +425,21 @@ export function Sidebar() {
   const { unreadCount: dmUnreadCount, fetchUnreadCount } = useDMStore();
   const location = useLocation();
 
+  // State for expanded sub-sections (default: first sub-section expanded)
+  const [expandedSubSections, setExpandedSubSections] = useState<Record<string, boolean>>({
+    'learning': true,
+    'career-growth': false,
+    'collaboration': false,
+  });
+
   const isCollapsed = sidebar.isCollapsed;
+
+  const toggleSubSection = (id: string) => {
+    setExpandedSubSections(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
 
   useEffect(() => {
     checkForNewArticles();
@@ -524,9 +584,79 @@ export function Sidebar() {
               {section.title && isCollapsed && (
                 <div className="h-px bg-surface-200 dark:bg-surface-800 mx-2 my-2" />
               )}
-              <ul className="space-y-0.5">
-                {section.items.map(renderNavItem)}
-              </ul>
+
+              {/* Regular items */}
+              {section.items && (
+                <ul className="space-y-0.5">
+                  {section.items.map(renderNavItem)}
+                </ul>
+              )}
+
+              {/* Collapsible sub-sections */}
+              {section.subSections && (
+                <div className="space-y-1">
+                  {section.subSections.map((subSection) => {
+                    const isExpanded = expandedSubSections[subSection.id];
+                    const SubIcon = subSection.icon;
+                    const subColors = colorMap[subSection.color] || colorMap.slate;
+
+                    // Check if any item in this sub-section is active
+                    const hasActiveItem = subSection.items.some(
+                      item => location.pathname === item.path || location.pathname.startsWith(item.path + '/')
+                    );
+
+                    return (
+                      <div key={subSection.id}>
+                        {/* Sub-section header */}
+                        {!isCollapsed ? (
+                          <button
+                            onClick={() => toggleSubSection(subSection.id)}
+                            className={cn(
+                              'w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200',
+                              'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800',
+                              hasActiveItem && 'text-surface-900 dark:text-surface-200 font-medium'
+                            )}
+                          >
+                            <SubIcon
+                              className="w-4 h-4"
+                              style={{ color: colorMap[subSection.color]?.icon?.replace('text-', '') }}
+                            />
+                            <span className="flex-1 text-left text-xs font-medium">
+                              {subSection.title}
+                            </span>
+                            <motion.div
+                              animate={{ rotate: isExpanded ? 180 : 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <ChevronDown className="w-3.5 h-3.5 text-surface-400" />
+                            </motion.div>
+                          </button>
+                        ) : (
+                          <div className="h-px bg-surface-200 dark:bg-surface-800 mx-2 my-1" />
+                        )}
+
+                        {/* Sub-section items */}
+                        <AnimatePresence initial={false}>
+                          {(isExpanded || isCollapsed) && (
+                            <motion.ul
+                              initial={isCollapsed ? false : { height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className={cn(
+                                'space-y-0.5 overflow-hidden',
+                                !isCollapsed && 'ml-2 pl-2 border-l border-surface-200 dark:border-surface-700'
+                              )}
+                            >
+                              {subSection.items.map(renderNavItem)}
+                            </motion.ul>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}

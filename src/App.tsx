@@ -87,6 +87,14 @@ const PeerReviews = lazy(() => import('@/pages/lms/PeerReviews'));
 const PeerReviewForm = lazy(() => import('@/pages/lms/PeerReviewForm'));
 const CourseReviews = lazy(() => import('@/pages/lms/CourseReviews'));
 
+// Career Development Portal pages (integrated with LMS)
+const CareerPaths = lazy(() => import('@/pages/career/CareerPaths'));
+const SkillGap = lazy(() => import('@/pages/career/SkillGap'));
+const Promotion = lazy(() => import('@/pages/career/Promotion'));
+const Mentorship = lazy(() => import('@/pages/career/Mentorship'));
+const DevelopmentPlan = lazy(() => import('@/pages/career/DevelopmentPlan'));
+const Competencies = lazy(() => import('@/pages/career/Competencies'));
+
 // Instructor pages
 const InstructorDashboard = lazy(() => import('@/pages/instructor/InstructorDashboard'));
 const CourseBuilder = lazy(() => import('@/pages/instructor/CourseBuilder'));
@@ -443,6 +451,14 @@ export default function App() {
             <Route path="/certificates" element={<Certificates />} />
             <Route path="/peer-reviews" element={<PeerReviews />} />
             <Route path="/peer-reviews/:reviewId" element={<PeerReviewForm />} />
+
+            {/* Career Development Portal routes (integrated with LMS) */}
+            <Route path="/career-paths" element={<CareerPaths />} />
+            <Route path="/skill-gap" element={<SkillGap />} />
+            <Route path="/promotion" element={<Promotion />} />
+            <Route path="/mentorship" element={<Mentorship />} />
+            <Route path="/my-plan" element={<DevelopmentPlan />} />
+            <Route path="/competencies" element={<Competencies />} />
 
             {/* Research Hub routes */}
             <Route path="/research-hub" element={<ResearchLab />} />
