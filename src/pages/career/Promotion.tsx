@@ -73,8 +73,8 @@ function ProgressRing({ progress, size = 120 }: { progress: number; size?: numbe
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-3xl font-bold text-gray-900">{progress}%</span>
-        <span className="text-xs text-gray-500">Complete</span>
+        <span className="text-3xl font-bold text-surface-900 dark:text-surface-100">{progress}%</span>
+        <span className="text-xs text-surface-500 dark:text-surface-400">Complete</span>
       </div>
     </motion.div>
   );
@@ -118,46 +118,46 @@ function CriteriaItem({ criteria, index }: CriteriaItemProps) {
       className={cn(
         'p-5 rounded-2xl border transition-all',
         criteria.met
-          ? 'border-green-200 bg-green-50'
-          : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-md'
+          ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/30'
+          : 'border-surface-100 dark:border-surface-700 bg-white dark:bg-surface-800 hover:border-surface-200 dark:hover:border-surface-600 hover:shadow-md'
       )}
     >
       <div className="flex items-start gap-4">
         <div
           className={cn(
             'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0',
-            criteria.met ? 'bg-green-100' : 'bg-gray-100'
+            criteria.met ? 'bg-green-100 dark:bg-green-900/50' : 'bg-surface-100 dark:bg-surface-700'
           )}
         >
-          <Icon className={cn('w-6 h-6', criteria.met ? 'text-green-600' : 'text-gray-500')} />
+          <Icon className={cn('w-6 h-6', criteria.met ? 'text-green-600 dark:text-green-400' : 'text-surface-500 dark:text-surface-400')} />
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h4 className="font-semibold text-gray-900">{criteria.criteriaName}</h4>
+            <h4 className="font-semibold text-surface-900 dark:text-surface-100">{criteria.criteriaName}</h4>
             {criteria.met && (
               <CheckCircle2 className="w-4 h-4 text-green-500" />
             )}
           </div>
-          <p className="text-sm text-gray-500 mb-3">{criteria.details}</p>
+          <p className="text-sm text-surface-500 dark:text-surface-400 mb-3">{criteria.details}</p>
 
           {/* Progress bar */}
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="flex-1 h-2 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={isInView ? { width: `${criteria.progress}%` } : {}}
                 transition={{ delay: 0.3 + index * 0.1, duration: 0.8, ease: 'easeOut' }}
                 className={cn(
                   'h-full rounded-full',
-                  criteria.met ? 'bg-green-500' : criteria.progress >= 50 ? 'bg-amber-500' : 'bg-gray-400'
+                  criteria.met ? 'bg-green-500' : criteria.progress >= 50 ? 'bg-amber-500' : 'bg-surface-400 dark:bg-surface-500'
                 )}
               />
             </div>
             <span
               className={cn(
                 'text-sm font-medium',
-                criteria.met ? 'text-green-600' : 'text-gray-600'
+                criteria.met ? 'text-green-600 dark:text-green-400' : 'text-surface-600 dark:text-surface-300'
               )}
             >
               {criteria.progress}%
@@ -184,7 +184,7 @@ export default function Promotion() {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading Promotion Status...</p>
+          <p className="text-surface-600 dark:text-surface-300">Loading Promotion Status...</p>
         </div>
       </div>
     );
@@ -194,9 +194,9 @@ export default function Promotion() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
-          <TrendingUp className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">No Promotion Data</h2>
-          <p className="text-gray-500">Your promotion status will appear here.</p>
+          <TrendingUp className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-surface-900 dark:text-surface-100 mb-2">No Promotion Data</h2>
+          <p className="text-surface-500 dark:text-surface-400">Your promotion status will appear here.</p>
         </div>
       </div>
     );
@@ -215,12 +215,12 @@ export default function Promotion() {
         className="mb-8"
       >
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center">
-            <TrendingUp className="w-6 h-6 text-purple-600" />
+          <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 rounded-2xl flex items-center justify-center">
+            <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Promotion Tracker</h1>
-            <p className="text-gray-500">Track your eligibility and criteria completion</p>
+            <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-100">Promotion Tracker</h1>
+            <p className="text-surface-500 dark:text-surface-400">Track your eligibility and criteria completion</p>
           </div>
         </div>
       </motion.div>
@@ -289,16 +289,16 @@ export default function Promotion() {
           transition={{ delay: 0.2, duration: 0.5 }}
           className="lg:col-span-1"
         >
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center sticky top-6">
-            <h3 className="font-semibold text-gray-900 mb-6">Overall Progress</h3>
+          <div className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-100 dark:border-surface-700 p-6 text-center sticky top-6">
+            <h3 className="font-semibold text-surface-900 dark:text-surface-100 mb-6">Overall Progress</h3>
             <div className="flex justify-center mb-6">
               <ProgressRing progress={promotionStatus.overallProgress} size={160} />
             </div>
 
             <div className="space-y-3 text-left">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <span className="text-sm text-gray-600">Criteria Met</span>
-                <span className="font-bold text-gray-900">
+              <div className="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-800 rounded-xl">
+                <span className="text-sm text-surface-600 dark:text-surface-300">Criteria Met</span>
+                <span className="font-bold text-surface-900 dark:text-surface-100">
                   {metCriteria}/{totalCriteria}
                 </span>
               </div>
@@ -306,7 +306,7 @@ export default function Promotion() {
               <div
                 className={cn(
                   'flex items-center gap-3 p-3 rounded-xl',
-                  promotionStatus.isEligible ? 'bg-green-50' : 'bg-amber-50'
+                  promotionStatus.isEligible ? 'bg-green-50 dark:bg-green-900/30' : 'bg-amber-50 dark:bg-amber-900/30'
                 )}
               >
                 {promotionStatus.isEligible ? (
@@ -317,7 +317,7 @@ export default function Promotion() {
                 <span
                   className={cn(
                     'text-sm font-medium',
-                    promotionStatus.isEligible ? 'text-green-700' : 'text-amber-700'
+                    promotionStatus.isEligible ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'
                   )}
                 >
                   {promotionStatus.isEligible ? 'Eligible for Promotion' : 'Not Yet Eligible'}
@@ -331,7 +331,7 @@ export default function Promotion() {
         <div className="lg:col-span-2 space-y-6">
           {/* Criteria */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-4">Promotion Criteria</h3>
+            <h3 className="font-semibold text-surface-900 dark:text-surface-100 mb-4">Promotion Criteria</h3>
             <div className="space-y-4">
               {promotionStatus.criteriaProgress.map((criteria, index) => (
                 <CriteriaItem key={criteria.criteriaId} criteria={criteria} index={index} />
@@ -345,15 +345,15 @@ export default function Promotion() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.5 }}
-              className="bg-red-50 border border-red-100 rounded-2xl p-6"
+              className="bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800 rounded-2xl p-6"
             >
               <div className="flex items-center gap-2 mb-4">
                 <AlertCircle className="w-5 h-5 text-red-500" />
-                <h3 className="font-semibold text-gray-900">Current Blockers</h3>
+                <h3 className="font-semibold text-surface-900 dark:text-surface-100">Current Blockers</h3>
               </div>
               <ul className="space-y-2">
                 {promotionStatus.blockers.map((blocker, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
+                  <li key={index} className="flex items-start gap-2 text-sm text-surface-700 dark:text-surface-200">
                     <Circle className="w-2 h-2 mt-1.5 text-red-400 fill-current flex-shrink-0" />
                     {blocker}
                   </li>
@@ -368,19 +368,19 @@ export default function Promotion() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.5 }}
-              className="bg-blue-50 border border-blue-100 rounded-2xl p-6"
+              className="bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 rounded-2xl p-6"
             >
               <div className="flex items-center gap-2 mb-4">
                 <Zap className="w-5 h-5 text-blue-500" />
-                <h3 className="font-semibold text-gray-900">Recommended Next Steps</h3>
+                <h3 className="font-semibold text-surface-900 dark:text-surface-100">Recommended Next Steps</h3>
               </div>
               <ul className="space-y-3">
                 {promotionStatus.nextSteps.map((step, index) => (
                   <li
                     key={index}
-                    className="flex items-start gap-3 text-sm text-gray-700 p-3 bg-white rounded-xl"
+                    className="flex items-start gap-3 text-sm text-surface-700 dark:text-surface-200 p-3 bg-white dark:bg-surface-800 rounded-xl"
                   >
-                    <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    <span className="w-6 h-6 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
                       {index + 1}
                     </span>
                     {step}

@@ -282,10 +282,10 @@ function CompetencyCard({ competency, categoryColor, index }: CompetencyCardProp
   const isInView = useInView(ref, { once: true });
 
   const colorMap: Record<string, { bg: string; text: string; border: string }> = {
-    emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' },
-    blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
-    purple: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200' },
-    amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
+    emerald: { bg: 'bg-emerald-100 dark:bg-emerald-900/50', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-700' },
+    blue: { bg: 'bg-blue-100 dark:bg-blue-900/50', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-700' },
+    purple: { bg: 'bg-purple-100 dark:bg-purple-900/50', text: 'text-purple-600 dark:text-purple-400', border: 'border-purple-200 dark:border-purple-700' },
+    amber: { bg: 'bg-amber-100 dark:bg-amber-900/50', text: 'text-amber-600 dark:text-amber-400', border: 'border-amber-200 dark:border-amber-700' },
   };
 
   const colors = colorMap[categoryColor] || colorMap.blue;
@@ -296,7 +296,7 @@ function CompetencyCard({ competency, categoryColor, index }: CompetencyCardProp
       initial={{ opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay: index * 0.05, duration: 0.4 }}
-      className={cn('bg-white rounded-xl border transition-all duration-300', isExpanded ? colors.border : 'border-gray-100')}
+      className={cn('bg-white dark:bg-surface-800 rounded-xl border transition-all duration-300', isExpanded ? colors.border : 'border-surface-100 dark:border-surface-700')}
     >
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -310,21 +310,21 @@ function CompetencyCard({ competency, categoryColor, index }: CompetencyCardProp
                   key={level}
                   className={cn(
                     'w-3 h-3 rounded-full',
-                    level <= competency.userLevel ? colors.bg.replace('50', '500') : 'bg-gray-200'
+                    level <= competency.userLevel ? colors.bg.replace('50', '500') : 'bg-surface-200 dark:bg-surface-600'
                   )}
                   style={level <= competency.userLevel ? { backgroundColor: categoryColor === 'emerald' ? '#10B981' : categoryColor === 'blue' ? '#3B82F6' : categoryColor === 'purple' ? '#8B5CF6' : '#F59E0B' } : {}}
                 />
               ))}
             </div>
             <div>
-              <h4 className="font-medium text-gray-900">{competency.name}</h4>
-              <p className="text-sm text-gray-500">Level {competency.userLevel}/4</p>
+              <h4 className="font-medium text-surface-900 dark:text-surface-100">{competency.name}</h4>
+              <p className="text-sm text-surface-500 dark:text-surface-400">Level {competency.userLevel}/4</p>
             </div>
           </div>
           {isExpanded ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
+            <ChevronUp className="w-5 h-5 text-surface-400 dark:text-surface-500" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
+            <ChevronDown className="w-5 h-5 text-surface-400 dark:text-surface-500" />
           )}
         </div>
       </button>
@@ -336,32 +336,32 @@ function CompetencyCard({ competency, categoryColor, index }: CompetencyCardProp
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="border-t border-gray-100"
+            className="border-t border-surface-100 dark:border-surface-700"
           >
             <div className="p-4 space-y-4">
-              <p className="text-sm text-gray-600">{competency.description}</p>
+              <p className="text-sm text-surface-600 dark:text-surface-300">{competency.description}</p>
 
               {/* Levels */}
               <div className="space-y-2">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Proficiency Levels</p>
+                <p className="text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wider">Proficiency Levels</p>
                 {competency.levels.map((level) => (
                   <div
                     key={level.level}
                     className={cn(
                       'flex items-start gap-3 p-2 rounded-lg',
-                      level.level === competency.userLevel ? colors.bg : 'bg-gray-50'
+                      level.level === competency.userLevel ? colors.bg : 'bg-surface-50 dark:bg-surface-800'
                     )}
                   >
                     {level.level <= competency.userLevel ? (
                       <CheckCircle2 className={cn('w-4 h-4 mt-0.5', colors.text)} />
                     ) : (
-                      <Circle className="w-4 h-4 mt-0.5 text-gray-300" />
+                      <Circle className="w-4 h-4 mt-0.5 text-surface-300 dark:text-surface-600" />
                     )}
                     <div>
-                      <p className={cn('text-sm font-medium', level.level === competency.userLevel ? colors.text : 'text-gray-700')}>
+                      <p className={cn('text-sm font-medium', level.level === competency.userLevel ? colors.text : 'text-surface-700 dark:text-surface-200')}>
                         Level {level.level}: {level.title}
                       </p>
-                      <p className="text-xs text-gray-500">{level.description}</p>
+                      <p className="text-xs text-surface-500 dark:text-surface-400">{level.description}</p>
                     </div>
                   </div>
                 ))}
@@ -370,7 +370,7 @@ function CompetencyCard({ competency, categoryColor, index }: CompetencyCardProp
               {/* Related Courses */}
               {competency.relatedCourses.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Recommended Courses</p>
+                  <p className="text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-2">Recommended Courses</p>
                   <div className="flex flex-wrap gap-2">
                     {competency.relatedCourses.map((course) => (
                       <Link
@@ -411,12 +411,12 @@ export default function Competencies() {
         className="mb-8"
       >
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-teal-100 rounded-2xl flex items-center justify-center">
-            <ClipboardList className="w-6 h-6 text-teal-600" />
+          <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/50 rounded-2xl flex items-center justify-center">
+            <ClipboardList className="w-6 h-6 text-teal-600 dark:text-teal-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Competency Framework</h1>
-            <p className="text-gray-500">Ghana Civil Service competencies for career advancement</p>
+            <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-100">Competency Framework</h1>
+            <p className="text-surface-500 dark:text-surface-400">Ghana Civil Service competencies for career advancement</p>
           </div>
         </div>
       </motion.div>
@@ -462,27 +462,27 @@ export default function Competencies() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: catIndex * 0.1, duration: 0.5 }}
-              className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-100 dark:border-surface-700 overflow-hidden"
             >
               <button
                 onClick={() => setActiveCategory(activeCategory === category.id ? null : category.id)}
-                className="w-full p-5 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                className="w-full p-5 flex items-center justify-between hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', `bg-${category.color}-100`)}>
-                    <Icon className={cn('w-6 h-6', `text-${category.color}-600`)} />
+                  <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', `bg-${category.color}-100 dark:bg-${category.color}-900/50`)}>
+                    <Icon className={cn('w-6 h-6', `text-${category.color}-600 dark:text-${category.color}-400`)} />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-semibold text-gray-900">{category.category}</h3>
-                    <p className="text-sm text-gray-500">{category.description}</p>
+                    <h3 className="font-semibold text-surface-900 dark:text-surface-100">{category.category}</h3>
+                    <p className="text-sm text-surface-500 dark:text-surface-400">{category.description}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-500">{category.competencies.length} competencies</span>
+                  <span className="text-sm text-surface-500 dark:text-surface-400">{category.competencies.length} competencies</span>
                   {isActive ? (
-                    <ChevronUp className="w-5 h-5 text-gray-400" />
+                    <ChevronUp className="w-5 h-5 text-surface-400 dark:text-surface-500" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                    <ChevronDown className="w-5 h-5 text-surface-400 dark:text-surface-500" />
                   )}
                 </div>
               </button>
@@ -494,7 +494,7 @@ export default function Competencies() {
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="border-t border-gray-100"
+                    className="border-t border-surface-100 dark:border-surface-700"
                   >
                     <div className="p-5 space-y-3">
                       {category.competencies.map((competency, index) => (
@@ -519,16 +519,16 @@ export default function Competencies() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.5 }}
-        className="mt-8 bg-blue-50 border border-blue-100 rounded-2xl p-6"
+        className="mt-8 bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 rounded-2xl p-6"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Target className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center">
+              <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Want a detailed analysis?</h3>
-              <p className="text-sm text-gray-600">View your skill gaps compared to your target role</p>
+              <h3 className="font-semibold text-surface-900 dark:text-surface-100">Want a detailed analysis?</h3>
+              <p className="text-sm text-surface-600 dark:text-surface-300">View your skill gaps compared to your target role</p>
             </div>
           </div>
           <Link

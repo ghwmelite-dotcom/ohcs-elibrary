@@ -55,8 +55,8 @@ function PathCard({ path, isSelected, onClick, index }: PathCardProps) {
         className={cn(
           'w-full text-left p-6 rounded-2xl border-2 transition-all duration-300',
           isSelected
-            ? 'border-purple-500 bg-purple-50 shadow-lg'
-            : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-md'
+            ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30 shadow-lg'
+            : 'border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 hover:border-surface-300 dark:hover:border-surface-600 hover:shadow-md'
         )}
       >
         <div className="flex items-start gap-4">
@@ -67,9 +67,9 @@ function PathCard({ path, isSelected, onClick, index }: PathCardProps) {
             <Icon className="w-7 h-7" style={{ color: path.color }} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 mb-1">{path.name}</h3>
-            <p className="text-sm text-gray-500 line-clamp-2">{path.description}</p>
-            <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+            <h3 className="font-semibold text-surface-900 dark:text-surface-100 mb-1">{path.name}</h3>
+            <p className="text-sm text-surface-500 dark:text-surface-400 line-clamp-2">{path.description}</p>
+            <div className="flex items-center gap-4 mt-3 text-xs text-surface-500 dark:text-surface-400">
               <span className="flex items-center gap-1">
                 <TrendingUp className="w-3.5 h-3.5" />
                 {path.grades.length} Grades
@@ -83,7 +83,7 @@ function PathCard({ path, isSelected, onClick, index }: PathCardProps) {
           <ChevronRight
             className={cn(
               'w-5 h-5 transition-transform',
-              isSelected ? 'text-purple-500 rotate-90' : 'text-gray-400'
+              isSelected ? 'text-purple-500' : 'text-surface-400 dark:text-surface-500'
             )}
           />
         </div>
@@ -116,7 +116,7 @@ function GradeTimeline({ grades, pathColor }: GradeTimelineProps) {
       className="relative"
     >
       {/* Timeline line */}
-      <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200" />
+      <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-surface-200 dark:bg-surface-700" />
 
       <div className="space-y-4">
         {grades.map((grade, index) => {
@@ -138,18 +138,18 @@ function GradeTimeline({ grades, pathColor }: GradeTimelineProps) {
                   className={cn(
                     'w-16 h-16 rounded-2xl flex items-center justify-center border-2',
                     isCurrent
-                      ? 'border-purple-500 bg-purple-100'
+                      ? 'border-purple-500 bg-purple-100 dark:bg-purple-900/50'
                       : isPast
-                      ? 'border-green-500 bg-green-100'
-                      : 'border-gray-200 bg-white'
+                      ? 'border-green-500 bg-green-100 dark:bg-green-900/50'
+                      : 'border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800'
                   )}
                 >
                   {isPast ? (
-                    <CheckCircle2 className="w-7 h-7 text-green-600" />
+                    <CheckCircle2 className="w-7 h-7 text-green-600 dark:text-green-400" />
                   ) : isCurrent ? (
-                    <Star className="w-7 h-7 text-purple-600" />
+                    <Star className="w-7 h-7 text-purple-600 dark:text-purple-400" />
                   ) : (
-                    <span className="text-lg font-bold text-gray-400">{index + 1}</span>
+                    <span className="text-lg font-bold text-surface-400 dark:text-surface-500">{index + 1}</span>
                   )}
                 </div>
               </div>
@@ -159,10 +159,10 @@ function GradeTimeline({ grades, pathColor }: GradeTimelineProps) {
                 className={cn(
                   'flex-1 p-5 rounded-2xl border transition-all',
                   isCurrent
-                    ? 'border-purple-200 bg-purple-50 shadow-md'
+                    ? 'border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/30 shadow-md'
                     : isPast
-                    ? 'border-green-100 bg-green-50/50'
-                    : 'border-gray-100 bg-white'
+                    ? 'border-green-100 dark:border-green-900 bg-green-50/50 dark:bg-green-900/20'
+                    : 'border-surface-100 dark:border-surface-700 bg-white dark:bg-surface-800'
                 )}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -183,23 +183,23 @@ function GradeTimeline({ grades, pathColor }: GradeTimelineProps) {
                         </span>
                       )}
                     </div>
-                    <h4 className="font-semibold text-gray-900 mb-1">{grade.title}</h4>
-                    <p className="text-sm text-gray-500">{grade.description}</p>
+                    <h4 className="font-semibold text-surface-900 dark:text-surface-100 mb-1">{grade.title}</h4>
+                    <p className="text-sm text-surface-500 dark:text-surface-400">{grade.description}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-sm text-gray-500">Years Required</p>
-                    <p className="text-lg font-bold text-gray-900">{grade.yearsRequired}+</p>
+                    <p className="text-sm text-surface-500 dark:text-surface-400">Years Required</p>
+                    <p className="text-lg font-bold text-surface-900 dark:text-surface-100">{grade.yearsRequired}+</p>
                   </div>
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-4 text-sm">
-                  <div className="flex items-center gap-1.5 text-gray-600">
+                  <div className="flex items-center gap-1.5 text-surface-600 dark:text-surface-300">
                     <DollarSign className="w-4 h-4" />
                     <span>
                       GHS {grade.salaryBand.min.toLocaleString()} - {grade.salaryBand.max.toLocaleString()}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-gray-600">
+                  <div className="flex items-center gap-1.5 text-surface-600 dark:text-surface-300">
                     <Building2 className="w-4 h-4" />
                     <span className="capitalize">{grade.level.replace('_', ' ')} Level</span>
                   </div>
@@ -207,12 +207,12 @@ function GradeTimeline({ grades, pathColor }: GradeTimelineProps) {
 
                 {/* Responsibilities */}
                 <div className="mt-4">
-                  <p className="text-xs font-medium text-gray-500 mb-2">Key Responsibilities</p>
+                  <p className="text-xs font-medium text-surface-500 dark:text-surface-400 mb-2">Key Responsibilities</p>
                   <div className="flex flex-wrap gap-1.5">
                     {grade.responsibilities.map((resp, i) => (
                       <span
                         key={i}
-                        className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-lg"
+                        className="px-2 py-1 bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-300 text-xs rounded-lg"
                       >
                         {resp}
                       </span>
@@ -258,7 +258,7 @@ export default function CareerPaths() {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading Career Paths...</p>
+          <p className="text-surface-600 dark:text-surface-400">Loading Career Paths...</p>
         </div>
       </div>
     );
@@ -274,12 +274,12 @@ export default function CareerPaths() {
         className="mb-8"
       >
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
-            <Route className="w-6 h-6 text-emerald-600" />
+          <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 rounded-2xl flex items-center justify-center">
+            <Route className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Career Paths</h1>
-            <p className="text-gray-500">Explore progression routes in the Ghana Civil Service</p>
+            <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-100">Career Paths</h1>
+            <p className="text-surface-500 dark:text-surface-400">Explore progression routes in the Ghana Civil Service</p>
           </div>
         </div>
       </motion.div>
@@ -287,7 +287,7 @@ export default function CareerPaths() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Path Selection */}
         <div className="lg:col-span-1 space-y-4">
-          <h2 className="font-semibold text-gray-900 mb-4">Select a Path</h2>
+          <h2 className="font-semibold text-surface-900 dark:text-surface-100 mb-4">Select a Path</h2>
           {careerPaths.map((path, index) => (
             <PathCard
               key={path.id}
@@ -310,14 +310,14 @@ export default function CareerPaths() {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
+                <div className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-100 dark:border-surface-700 p-6 mb-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900">{selectedPath.name}</h2>
-                      <p className="text-gray-500">{selectedPath.description}</p>
+                      <h2 className="text-xl font-bold text-surface-900 dark:text-surface-100">{selectedPath.name}</h2>
+                      <p className="text-surface-500 dark:text-surface-400">{selectedPath.description}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-500">Total Journey</p>
+                      <p className="text-sm text-surface-500 dark:text-surface-400">Total Journey</p>
                       <p className="text-2xl font-bold" style={{ color: selectedPath.color }}>
                         {selectedPath.totalYearsToTop} Years
                       </p>
@@ -325,7 +325,7 @@ export default function CareerPaths() {
                   </div>
                 </div>
 
-                <h3 className="font-semibold text-gray-900 mb-4">Grade Progression</h3>
+                <h3 className="font-semibold text-surface-900 dark:text-surface-100 mb-4">Grade Progression</h3>
                 <GradeTimeline grades={selectedPath.grades} pathColor={selectedPath.color} />
               </motion.div>
             )}

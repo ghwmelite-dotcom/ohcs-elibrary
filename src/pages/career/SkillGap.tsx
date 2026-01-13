@@ -44,12 +44,12 @@ const skillToCourses: Record<string, { id: string; title: string; duration: stri
 // SKILL CATEGORY BADGE
 // ============================================================================
 const categoryConfig: Record<SkillCategory, { color: string; bg: string; label: string }> = {
-  technical: { color: 'text-blue-700', bg: 'bg-blue-100', label: 'Technical' },
-  soft: { color: 'text-pink-700', bg: 'bg-pink-100', label: 'Soft Skills' },
-  leadership: { color: 'text-purple-700', bg: 'bg-purple-100', label: 'Leadership' },
-  digital: { color: 'text-cyan-700', bg: 'bg-cyan-100', label: 'Digital' },
-  language: { color: 'text-orange-700', bg: 'bg-orange-100', label: 'Language' },
-  domain: { color: 'text-emerald-700', bg: 'bg-emerald-100', label: 'Domain' },
+  technical: { color: 'text-blue-700 dark:text-blue-300', bg: 'bg-blue-100 dark:bg-blue-900/50', label: 'Technical' },
+  soft: { color: 'text-pink-700 dark:text-pink-300', bg: 'bg-pink-100 dark:bg-pink-900/50', label: 'Soft Skills' },
+  leadership: { color: 'text-purple-700 dark:text-purple-300', bg: 'bg-purple-100 dark:bg-purple-900/50', label: 'Leadership' },
+  digital: { color: 'text-cyan-700 dark:text-cyan-300', bg: 'bg-cyan-100 dark:bg-cyan-900/50', label: 'Digital' },
+  language: { color: 'text-orange-700 dark:text-orange-300', bg: 'bg-orange-100 dark:bg-orange-900/50', label: 'Language' },
+  domain: { color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-100 dark:bg-emerald-900/50', label: 'Domain' },
 };
 
 function CategoryBadge({ category }: { category: SkillCategory }) {
@@ -92,7 +92,7 @@ function ReadinessGauge({ value }: { value: number }) {
           cx="96"
           cy="96"
           r={radius}
-          stroke="#E5E7EB"
+          className="stroke-surface-200 dark:stroke-surface-700"
           strokeWidth="12"
           fill="none"
         />
@@ -117,11 +117,11 @@ function ReadinessGauge({ value }: { value: number }) {
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ delay: 0.5, duration: 0.5 }}
-          className="text-4xl font-bold text-gray-900"
+          className="text-4xl font-bold text-surface-900 dark:text-surface-100"
         >
           {value}%
         </motion.span>
-        <span className="text-sm text-gray-500">Ready</span>
+        <span className="text-sm text-surface-500 dark:text-surface-400">Ready</span>
       </div>
     </motion.div>
   );
@@ -144,23 +144,23 @@ function SkillCard({ skill, type, index }: SkillCardProps) {
     switch (type) {
       case 'critical':
         return {
-          border: 'border-red-200',
-          bg: 'bg-red-50',
-          icon: <AlertTriangle className="w-5 h-5 text-red-500" />,
+          border: 'border-red-200 dark:border-red-800',
+          bg: 'bg-red-50 dark:bg-red-900/30',
+          icon: <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400" />,
           progressColor: 'bg-red-500',
         };
       case 'moderate':
         return {
-          border: 'border-amber-200',
-          bg: 'bg-amber-50',
-          icon: <TrendingUp className="w-5 h-5 text-amber-500" />,
+          border: 'border-amber-200 dark:border-amber-800',
+          bg: 'bg-amber-50 dark:bg-amber-900/30',
+          icon: <TrendingUp className="w-5 h-5 text-amber-500 dark:text-amber-400" />,
           progressColor: 'bg-amber-500',
         };
       case 'strength':
         return {
-          border: 'border-green-200',
-          bg: 'bg-green-50',
-          icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
+          border: 'border-green-200 dark:border-green-800',
+          bg: 'bg-green-50 dark:bg-green-900/30',
+          icon: <CheckCircle2 className="w-5 h-5 text-green-500 dark:text-green-400" />,
           progressColor: 'bg-green-500',
         };
     }
@@ -180,13 +180,13 @@ function SkillCard({ skill, type, index }: SkillCardProps) {
         <div className="flex items-center gap-3">
           {config.icon}
           <div>
-            <h4 className="font-semibold text-gray-900">{skill.skillName}</h4>
+            <h4 className="font-semibold text-surface-900 dark:text-surface-100">{skill.skillName}</h4>
             <CategoryBadge category={skill.category} />
           </div>
         </div>
         <div className="text-right">
-          <p className="text-sm text-gray-500">Gap</p>
-          <p className={cn('text-lg font-bold', skill.gap > 0 ? 'text-red-600' : 'text-green-600')}>
+          <p className="text-sm text-surface-500 dark:text-surface-400">Gap</p>
+          <p className={cn('text-lg font-bold', skill.gap > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400')}>
             {skill.gap > 0 ? `-${skill.gap}` : 'None'}
           </p>
         </div>
@@ -194,28 +194,28 @@ function SkillCard({ skill, type, index }: SkillCardProps) {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600">Current Level</span>
+          <span className="text-surface-600 dark:text-surface-300">Current Level</span>
           <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5].map((level) => (
               <div
                 key={level}
                 className={cn(
                   'w-4 h-4 rounded-full',
-                  level <= skill.currentLevel ? config.progressColor : 'bg-gray-200'
+                  level <= skill.currentLevel ? config.progressColor : 'bg-surface-200 dark:bg-surface-600'
                 )}
               />
             ))}
           </div>
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600">Target Level</span>
+          <span className="text-surface-600 dark:text-surface-300">Target Level</span>
           <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5].map((level) => (
               <div
                 key={level}
                 className={cn(
                   'w-4 h-4 rounded-full border-2',
-                  level <= skill.targetLevel ? 'border-purple-500 bg-purple-100' : 'border-gray-200 bg-white'
+                  level <= skill.targetLevel ? 'border-purple-500 bg-purple-100 dark:bg-purple-900/50' : 'border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800'
                 )}
               />
             ))}
@@ -225,10 +225,10 @@ function SkillCard({ skill, type, index }: SkillCardProps) {
 
       <div className="mt-4">
         <div className="flex items-center justify-between text-sm mb-1">
-          <span className="text-gray-600">Progress</span>
-          <span className="font-medium text-gray-900">{skill.progress}%</span>
+          <span className="text-surface-600 dark:text-surface-300">Progress</span>
+          <span className="font-medium text-surface-900 dark:text-surface-100">{skill.progress}%</span>
         </div>
-        <div className="h-2 bg-white rounded-full overflow-hidden">
+        <div className="h-2 bg-white dark:bg-surface-700 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={isInView ? { width: `${skill.progress}%` } : {}}
@@ -256,7 +256,7 @@ export default function SkillGap() {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Analyzing Skills...</p>
+          <p className="text-surface-600 dark:text-surface-400">Analyzing Skills...</p>
         </div>
       </div>
     );
@@ -266,9 +266,9 @@ export default function SkillGap() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
-          <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">No Assessment Available</h2>
-          <p className="text-gray-500">Complete a skill assessment to see your gap analysis.</p>
+          <Target className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-surface-900 dark:text-surface-100 mb-2">No Assessment Available</h2>
+          <p className="text-surface-500 dark:text-surface-400">Complete a skill assessment to see your gap analysis.</p>
         </div>
       </div>
     );
@@ -284,12 +284,12 @@ export default function SkillGap() {
         className="mb-8"
       >
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
-            <Target className="w-6 h-6 text-blue-600" />
+          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center">
+            <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Skill Gap Analysis</h1>
-            <p className="text-gray-500">Identify areas for development to reach your target role</p>
+            <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-100">Skill Gap Analysis</h1>
+            <p className="text-surface-500 dark:text-surface-400">Identify areas for development to reach your target role</p>
           </div>
         </div>
       </motion.div>
@@ -301,12 +301,12 @@ export default function SkillGap() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-white rounded-2xl border border-gray-100 p-6"
+          className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-100 dark:border-surface-700 p-6"
         >
-          <h3 className="font-semibold text-gray-900 text-center mb-4">Overall Readiness</h3>
+          <h3 className="font-semibold text-surface-900 dark:text-surface-100 text-center mb-4">Overall Readiness</h3>
           <ReadinessGauge value={skillGapReport.overallReadiness} />
-          <p className="text-center text-sm text-gray-500 mt-4">
-            for <span className="font-medium text-gray-900">{skillGapReport.targetRoleName}</span>
+          <p className="text-center text-sm text-surface-500 dark:text-surface-400 mt-4">
+            for <span className="font-medium text-surface-900 dark:text-surface-100">{skillGapReport.targetRoleName}</span>
           </p>
         </motion.div>
 
@@ -315,30 +315,30 @@ export default function SkillGap() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
-          className="bg-white rounded-2xl border border-gray-100 p-6"
+          className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-100 dark:border-surface-700 p-6"
         >
-          <h3 className="font-semibold text-gray-900 mb-4">Gap Summary</h3>
+          <h3 className="font-semibold text-surface-900 dark:text-surface-100 mb-4">Gap Summary</h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-red-50 rounded-xl">
+            <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/30 rounded-xl">
               <div className="flex items-center gap-3">
-                <AlertTriangle className="w-5 h-5 text-red-500" />
-                <span className="text-gray-700">Critical Gaps</span>
+                <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400" />
+                <span className="text-surface-700 dark:text-surface-200">Critical Gaps</span>
               </div>
-              <span className="text-lg font-bold text-red-600">{skillGapReport.criticalGaps.length}</span>
+              <span className="text-lg font-bold text-red-600 dark:text-red-400">{skillGapReport.criticalGaps.length}</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-amber-50 rounded-xl">
+            <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl">
               <div className="flex items-center gap-3">
-                <TrendingUp className="w-5 h-5 text-amber-500" />
-                <span className="text-gray-700">Moderate Gaps</span>
+                <TrendingUp className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+                <span className="text-surface-700 dark:text-surface-200">Moderate Gaps</span>
               </div>
-              <span className="text-lg font-bold text-amber-600">{skillGapReport.moderateGaps.length}</span>
+              <span className="text-lg font-bold text-amber-600 dark:text-amber-400">{skillGapReport.moderateGaps.length}</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
+            <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/30 rounded-xl">
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
-                <span className="text-gray-700">Strengths</span>
+                <CheckCircle2 className="w-5 h-5 text-green-500 dark:text-green-400" />
+                <span className="text-surface-700 dark:text-surface-200">Strengths</span>
               </div>
-              <span className="text-lg font-bold text-green-600">{skillGapReport.strengths.length}</span>
+              <span className="text-lg font-bold text-green-600 dark:text-green-400">{skillGapReport.strengths.length}</span>
             </div>
           </div>
         </motion.div>
@@ -375,9 +375,9 @@ export default function SkillGap() {
           className="mb-8"
         >
           <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-5 h-5 text-red-500" />
-            <h2 className="text-lg font-bold text-gray-900">Critical Gaps</h2>
-            <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+            <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400" />
+            <h2 className="text-lg font-bold text-surface-900 dark:text-surface-100">Critical Gaps</h2>
+            <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs font-medium rounded-full">
               Priority
             </span>
           </div>
@@ -398,8 +398,8 @@ export default function SkillGap() {
           className="mb-8"
         >
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-amber-500" />
-            <h2 className="text-lg font-bold text-gray-900">Areas for Improvement</h2>
+            <TrendingUp className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+            <h2 className="text-lg font-bold text-surface-900 dark:text-surface-100">Areas for Improvement</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             {skillGapReport.moderateGaps.map((skill, index) => (
@@ -418,8 +418,8 @@ export default function SkillGap() {
           className="mb-8"
         >
           <div className="flex items-center gap-2 mb-4">
-            <Star className="w-5 h-5 text-green-500" />
-            <h2 className="text-lg font-bold text-gray-900">Your Strengths</h2>
+            <Star className="w-5 h-5 text-green-500 dark:text-green-400" />
+            <h2 className="text-lg font-bold text-surface-900 dark:text-surface-100">Your Strengths</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             {skillGapReport.strengths.map((skill, index) => (
@@ -434,21 +434,21 @@ export default function SkillGap() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.5 }}
-        className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6"
+        className="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-2xl p-6"
       >
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-              <GraduationCap className="w-5 h-5 text-indigo-600" />
+            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl flex items-center justify-center">
+              <GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Recommended Courses</h2>
-              <p className="text-sm text-gray-600">Based on your skill gaps</p>
+              <h2 className="text-lg font-bold text-surface-900 dark:text-surface-100">Recommended Courses</h2>
+              <p className="text-sm text-surface-600 dark:text-surface-300">Based on your skill gaps</p>
             </div>
           </div>
           <Link
             to="/courses"
-            className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1"
+            className="text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1"
           >
             View All Courses <ArrowRight className="w-4 h-4" />
           </Link>
@@ -461,26 +461,26 @@ export default function SkillGap() {
               <Link
                 key={course.id}
                 to="/courses"
-                className="bg-white rounded-xl p-4 border border-indigo-100 hover:shadow-md hover:border-indigo-200 transition-all group"
+                className="bg-white dark:bg-surface-800 rounded-xl p-4 border border-indigo-100 dark:border-indigo-800 hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-700 transition-all group"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                    <Play className="w-5 h-5 text-indigo-600" />
+                  <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 dark:group-hover:bg-indigo-800 transition-colors">
+                    <Play className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
+                    <h4 className="font-medium text-surface-900 dark:text-surface-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                       {course.title}
                     </h4>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                    <div className="flex items-center gap-3 mt-1 text-sm text-surface-500 dark:text-surface-400">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5" />
                         {course.duration}
                       </span>
-                      <span className="px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                      <span className="px-2 py-0.5 bg-surface-100 dark:bg-surface-700 rounded-full text-xs">
                         {course.level}
                       </span>
                     </div>
-                    <p className="text-xs text-indigo-600 mt-2">
+                    <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-2">
                       Addresses: {skill.skillName}
                     </p>
                   </div>
@@ -490,8 +490,8 @@ export default function SkillGap() {
           })}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-indigo-200 flex items-center justify-between">
-          <p className="text-sm text-gray-600">
+        <div className="mt-4 pt-4 border-t border-indigo-200 dark:border-indigo-800 flex items-center justify-between">
+          <p className="text-sm text-surface-600 dark:text-surface-300">
             Complete these courses to close your skill gaps faster
           </p>
           <Link
