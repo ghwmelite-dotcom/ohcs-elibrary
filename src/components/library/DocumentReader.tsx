@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   ZoomIn,
@@ -10,8 +10,6 @@ import {
   ChevronRight,
   Maximize2,
   Minimize2,
-  FileText,
-  BookOpen,
   Play,
   Pause,
   Volume2,
@@ -25,6 +23,7 @@ import {
   Image as ImageIcon,
   ExternalLink,
   HardDrive,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
 import { cn } from '@/utils/cn';
@@ -34,6 +33,11 @@ const API_BASE = import.meta.env.PROD
   ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
   : '/api/v1';
 
+// Get auth token from localStorage
+function getAuthToken(): string | null {
+  return localStorage.getItem('auth_token');
+}
+
 interface DocumentReaderProps {
   documentId: string;
   fileUrl: string;
@@ -42,27 +46,68 @@ interface DocumentReaderProps {
   totalPages?: number;
   onDownload?: () => void;
   source?: 'local' | 'google_drive';
+  externalFileId?: string;
   externalUrl?: string;
 }
 
 // Helper to determine content type category
-function getContentCategory(fileType: string): 'pdf' | 'document' | 'audio' | 'video' | 'image' | 'other' {
+function getContentCategory(fileType: string): 'pdf' | 'office' | 'google-native' | 'audio' | 'video' | 'image' | 'other' {
   if (fileType.includes('pdf')) return 'pdf';
   if (fileType.startsWith('audio/')) return 'audio';
   if (fileType.startsWith('video/')) return 'video';
   if (fileType.startsWith('image/')) return 'image';
+
+  // Google native formats (Docs, Sheets, Slides)
   if (
+    fileType.includes('google-apps.document') ||
+    fileType.includes('google-apps.spreadsheet') ||
+    fileType.includes('google-apps.presentation')
+  ) {
+    return 'google-native';
+  }
+
+  // Microsoft Office formats
+  if (
+    fileType.includes('presentation') ||
+    fileType.includes('powerpoint') ||
     fileType.includes('document') ||
     fileType.includes('word') ||
     fileType.includes('spreadsheet') ||
     fileType.includes('excel') ||
-    fileType.includes('presentation') ||
-    fileType.includes('powerpoint') ||
-    fileType.includes('text/')
+    fileType.includes('msword') ||
+    fileType.includes('ms-powerpoint') ||
+    fileType.includes('ms-excel')
   ) {
-    return 'document';
+    return 'office';
   }
+
   return 'other';
+}
+
+// Check if file type is an Office document
+function isOfficeFormat(fileType: string): boolean {
+  const officeTypes = [
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation', // pptx
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+    'application/vnd.ms-powerpoint', // ppt
+    'application/msword', // doc
+    'application/vnd.ms-excel', // xls
+  ];
+  return officeTypes.includes(fileType) ||
+         fileType.includes('presentation') ||
+         fileType.includes('powerpoint') ||
+         fileType.includes('word') ||
+         fileType.includes('document') ||
+         fileType.includes('spreadsheet') ||
+         fileType.includes('excel');
+}
+
+// Check if file type is a Google native format
+function isGoogleNativeFormat(fileType: string): boolean {
+  return fileType.includes('google-apps.document') ||
+         fileType.includes('google-apps.spreadsheet') ||
+         fileType.includes('google-apps.presentation');
 }
 
 // Format time for media player
@@ -80,6 +125,7 @@ export function DocumentReader({
   totalPages = 1,
   onDownload,
   source = 'local',
+  externalFileId,
   externalUrl,
 }: DocumentReaderProps) {
   const contentCategory = getContentCategory(fileType);
@@ -87,7 +133,6 @@ export function DocumentReader({
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [viewMode, setViewMode] = useState<'single' | 'continuous'>('single');
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -99,10 +144,89 @@ export function DocumentReader({
   const [volume, setVolume] = useState(1);
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement>(null);
 
-  // Get the view URL for the document
-  const viewUrl = `${API_BASE}/documents/${documentId}/view`;
+  // Get the Google Drive file ID
+  const getGoogleDriveFileId = (): string | null => {
+    if (externalFileId) return externalFileId;
+    if (externalUrl) {
+      const fileIdMatch = externalUrl.match(/\/file\/d\/([^/]+)/) ||
+                          externalUrl.match(/\/document\/d\/([^/]+)/) ||
+                          externalUrl.match(/\/spreadsheets\/d\/([^/]+)/) ||
+                          externalUrl.match(/\/presentation\/d\/([^/]+)/);
+      if (fileIdMatch) return fileIdMatch[1];
+    }
+    return null;
+  };
 
-  // Handle media playback
+  const googleDriveFileId = source === 'google_drive' ? getGoogleDriveFileId() : null;
+
+  // Check if this is an Office file from Google Drive that needs special handling
+  // Google's embed doesn't work well for Office files in compatibility mode
+  const isOfficeFileFromDrive = source === 'google_drive' && googleDriveFileId && isOfficeFormat(fileType);
+
+  // Determine the best view URL based on file type and source
+  const getViewUrl = (): string => {
+    // For Google Drive files
+    if (source === 'google_drive' && googleDriveFileId) {
+      // For Office files, use Google Drive's generic preview
+      // This works better than docs.google.com URLs for non-converted files
+      if (isOfficeFormat(fileType)) {
+        return `https://drive.google.com/file/d/${googleDriveFileId}/preview`;
+      }
+
+      // For Google native formats, use their specific embed URLs
+      if (externalUrl) {
+        // Google Slides (native)
+        if (fileType.includes('google-apps.presentation')) {
+          return `https://docs.google.com/presentation/d/${googleDriveFileId}/embed?start=false&loop=false&delayms=3000`;
+        }
+        // Google Docs (native)
+        if (fileType.includes('google-apps.document')) {
+          return `https://docs.google.com/document/d/${googleDriveFileId}/preview`;
+        }
+        // Google Sheets (native)
+        if (fileType.includes('google-apps.spreadsheet')) {
+          return `https://docs.google.com/spreadsheets/d/${googleDriveFileId}/preview`;
+        }
+      }
+
+      // For PDFs and other files from Google Drive, use the generic preview
+      return `https://drive.google.com/file/d/${googleDriveFileId}/preview`;
+    }
+
+    // For local files or as fallback, use our API endpoint
+    const baseUrl = `${API_BASE}/documents/${documentId}/view`;
+    const token = getAuthToken();
+    if (token) {
+      return `${baseUrl}?token=${encodeURIComponent(token)}`;
+    }
+    return baseUrl;
+  };
+
+  // Get view URL for media files (audio/video) - always use API streaming
+  const getMediaUrl = (): string => {
+    const baseUrl = `${API_BASE}/documents/${documentId}/view`;
+    const token = getAuthToken();
+    if (token) {
+      return `${baseUrl}?token=${encodeURIComponent(token)}`;
+    }
+    return baseUrl;
+  };
+
+  const viewUrl = getViewUrl();
+  const mediaUrl = getMediaUrl();
+
+  // Get the direct Google Drive link for "Open in new tab" fallback
+  const getDriveViewLink = (): string | null => {
+    if (googleDriveFileId) {
+      return `https://drive.google.com/file/d/${googleDriveFileId}/view`;
+    }
+    if (externalUrl) return externalUrl;
+    return null;
+  };
+
+  const driveViewLink = source === 'google_drive' ? getDriveViewLink() : null;
+
+  // Media controls
   const togglePlay = useCallback(() => {
     if (mediaRef.current) {
       if (isPlaying) {
@@ -194,6 +318,12 @@ export function DocumentReader({
     window.print();
   }, []);
 
+  // Handle iframe load error with retry
+  const handleIframeError = useCallback(() => {
+    setLoadError('Failed to load document. The file may not be shared or accessible.');
+    setIsLoading(false);
+  }, []);
+
   // Render audio player
   if (contentCategory === 'audio') {
     return (
@@ -233,7 +363,7 @@ export function DocumentReader({
         <div className="p-6 bg-gradient-to-br from-surface-800 to-surface-900">
           <audio
             ref={mediaRef as React.RefObject<HTMLAudioElement>}
-            src={viewUrl}
+            src={mediaUrl}
             onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
             onLoadedMetadata={(e) => {
               setDuration(e.currentTarget.duration);
@@ -325,9 +455,9 @@ export function DocumentReader({
               <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
               <p className="text-white text-lg mb-2">Failed to load video</p>
               <p className="text-surface-400">{loadError}</p>
-              {externalUrl && (
+              {driveViewLink && (
                 <a
-                  href={externalUrl}
+                  href={driveViewLink}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 flex items-center gap-2 text-primary-400 hover:text-primary-300"
@@ -340,7 +470,7 @@ export function DocumentReader({
           )}
           <video
             ref={mediaRef as React.RefObject<HTMLVideoElement>}
-            src={viewUrl}
+            src={mediaUrl}
             className="w-full h-full object-contain"
             onClick={togglePlay}
             onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
@@ -501,6 +631,134 @@ export function DocumentReader({
     );
   }
 
+  // Determine if we're using Google Drive's viewer
+  const isUsingGoogleViewer = source === 'google_drive' && googleDriveFileId &&
+    (isOfficeFormat(fileType) || isGoogleNativeFormat(fileType) || fileType.includes('pdf'));
+
+  // For Office files from Google Drive, show a dedicated viewer with "Open in Google Drive" option
+  // This is more reliable than iframe embedding which often fails for Office files
+  if (isOfficeFileFromDrive) {
+    const driveOpenUrl = externalUrl || `https://drive.google.com/file/d/${googleDriveFileId}/view`;
+    const fileExtension = fileName.split('.').pop()?.toUpperCase() || 'FILE';
+
+    return (
+      <div
+        className={cn(
+          'flex flex-col bg-surface-100 dark:bg-surface-900 rounded-xl overflow-hidden',
+          isFullscreen ? 'fixed inset-0 z-50' : 'h-[700px]'
+        )}
+      >
+        {/* Toolbar */}
+        <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-surface-800 border-b border-surface-200 dark:border-surface-700">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-surface-400" />
+            <span className="font-medium text-surface-900 dark:text-surface-50 truncate max-w-[200px]" title={fileName}>
+              {fileName}
+            </span>
+            <span className="flex items-center gap-1 text-xs text-blue-500 ml-2 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-full">
+              <HardDrive className="w-3 h-3" />
+              Google Drive
+            </span>
+            <span className="text-xs text-surface-500 bg-surface-100 dark:bg-surface-700 px-2 py-1 rounded">
+              {fileExtension}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleFullscreen}
+              className="p-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+              title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+            >
+              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
+            {onDownload && (
+              <button
+                onClick={onDownload}
+                className="p-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                title="Download"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Main content - Try iframe first, but provide prominent fallback */}
+        <div className="flex-1 relative bg-surface-200 dark:bg-surface-800">
+          {/* Iframe for Google Drive preview */}
+          <iframe
+            src={viewUrl}
+            title={fileName}
+            className="w-full h-full border-0"
+            onLoad={() => setIsLoading(false)}
+            onError={() => setLoadError('Preview not available')}
+            allow="autoplay"
+          />
+
+          {/* Loading overlay */}
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-surface-100/90 dark:bg-surface-900/90 z-10">
+              <div className="text-center">
+                <Loader2 className="w-12 h-12 text-primary-500 animate-spin mx-auto" />
+                <p className="mt-4 text-surface-600 dark:text-surface-400">Loading from Google Drive...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Floating "Open in Drive" button - always visible for Office files */}
+          <div className="absolute bottom-4 right-4 z-20">
+            <a
+              href={driveOpenUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-surface-800 text-surface-700 dark:text-surface-200 rounded-lg shadow-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors border border-surface-200 dark:border-surface-600"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Open in Google Drive
+            </a>
+          </div>
+
+          {/* Error fallback - show if preview fails */}
+          {loadError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface-100 dark:bg-surface-900 z-30">
+              <div className="text-center max-w-md px-6">
+                <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FileText className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-surface-900 dark:text-surface-50 mb-2">
+                  {fileExtension} Document
+                </h3>
+                <p className="text-surface-500 dark:text-surface-400 mb-6">
+                  This document can be viewed directly in Google Drive with full editing capabilities.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <a
+                    href={driveOpenUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    <ExternalLink className="w-5 h-5" />
+                    Open in Google Drive
+                  </a>
+                  {onDownload && (
+                    <button
+                      onClick={onDownload}
+                      className="flex items-center justify-center gap-2 px-6 py-3 bg-surface-200 dark:bg-surface-700 text-surface-700 dark:text-surface-200 rounded-lg hover:bg-surface-300 dark:hover:bg-surface-600 transition-colors font-medium"
+                    >
+                      <Download className="w-5 h-5" />
+                      Download
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   // Render PDF/Document viewer (iframe-based)
   return (
     <div
@@ -512,35 +770,10 @@ export function DocumentReader({
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-surface-800 border-b border-surface-200 dark:border-surface-700">
         <div className="flex items-center gap-2">
-          {/* Zoom Controls */}
-          <div className="flex items-center bg-surface-100 dark:bg-surface-700 rounded-lg">
-            <button
-              onClick={handleZoomOut}
-              disabled={scale <= 0.5}
-              className="p-2 text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-600 rounded-l-lg transition-colors disabled:opacity-50"
-            >
-              <ZoomOut className="w-4 h-4" />
-            </button>
-            <span className="px-3 text-sm font-medium text-surface-700 dark:text-surface-300 min-w-[60px] text-center">
-              {Math.round(scale * 100)}%
-            </span>
-            <button
-              onClick={handleZoomIn}
-              disabled={scale >= 3}
-              className="p-2 text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-600 rounded-r-lg transition-colors disabled:opacity-50"
-            >
-              <ZoomIn className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Rotate */}
-          <button
-            onClick={handleRotate}
-            className="p-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
-            title="Rotate"
-          >
-            <RotateCw className="w-4 h-4" />
-          </button>
+          <FileText className="w-5 h-5 text-surface-400" />
+          <span className="font-medium text-surface-900 dark:text-surface-50 truncate max-w-[200px]" title={fileName}>
+            {fileName}
+          </span>
 
           {/* Source indicator */}
           {source === 'google_drive' && (
@@ -549,55 +782,34 @@ export function DocumentReader({
               Google Drive
             </span>
           )}
-        </div>
 
-        {/* Page Navigation - for PDFs */}
-        {contentCategory === 'pdf' && totalPages > 1 && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrevPage}
-              disabled={currentPage <= 1}
-              className="p-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors disabled:opacity-50"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <div className="flex items-center gap-2 text-sm">
-              <input
-                type="number"
-                value={currentPage}
-                onChange={handlePageInput}
-                min={1}
-                max={totalPages}
-                className="w-12 px-2 py-1 text-center bg-white dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded text-surface-900 dark:text-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              <span className="text-surface-500">/ {totalPages}</span>
-            </div>
-            <button
-              onClick={handleNextPage}
-              disabled={currentPage >= totalPages}
-              className="p-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors disabled:opacity-50"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+          {/* File type indicator for Office files */}
+          {(contentCategory === 'office' || contentCategory === 'google-native') && (
+            <span className="text-xs text-surface-500 bg-surface-100 dark:bg-surface-700 px-2 py-1 rounded">
+              {fileType.includes('presentation') || fileType.includes('powerpoint') || fileType.includes('google-apps.presentation')
+                ? 'Presentation'
+                : fileType.includes('spreadsheet') || fileType.includes('excel') || fileType.includes('google-apps.spreadsheet')
+                ? 'Spreadsheet'
+                : 'Document'}
+            </span>
+          )}
+        </div>
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={handlePrint}
-            className="p-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
-            title="Print"
-          >
-            <Printer className="w-4 h-4" />
-          </button>
-          <button
-            onClick={onDownload}
-            className="p-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
-            title="Download"
-          >
-            <Download className="w-4 h-4" />
-          </button>
+          {/* Open in new tab */}
+          {driveViewLink && (
+            <a
+              href={driveViewLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+              title="Open in Google Drive"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          )}
+
           <button
             onClick={toggleFullscreen}
             className="p-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
@@ -605,56 +817,65 @@ export function DocumentReader({
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
+
+          {onDownload && (
+            <button
+              onClick={onDownload}
+              className="p-2 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+              title="Download"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Document View */}
-      <div className="flex-1 overflow-auto p-4 flex justify-center bg-surface-200 dark:bg-surface-800">
+      <div className="flex-1 overflow-hidden bg-surface-200 dark:bg-surface-800 relative">
+        {/* Loading overlay */}
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-surface-100/80 dark:bg-surface-900/80 z-10">
             <div className="text-center">
               <Loader2 className="w-12 h-12 text-primary-500 animate-spin mx-auto" />
-              <p className="mt-4 text-surface-600 dark:text-surface-400">Loading document...</p>
+              <p className="mt-4 text-surface-600 dark:text-surface-400">
+                {isUsingGoogleViewer ? 'Loading from Google Drive...' : 'Loading document...'}
+              </p>
             </div>
           </div>
         )}
-        {loadError && (
-          <div className="flex flex-col items-center justify-center py-12">
+
+        {loadError ? (
+          /* Error state */
+          <div className="flex flex-col items-center justify-center py-12 w-full h-full">
             <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
             <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-50 mb-2">
               Unable to load document
             </h3>
-            <p className="text-surface-500 mb-4">{loadError}</p>
-            {externalUrl && (
+            <p className="text-surface-500 mb-4 text-center max-w-md">{loadError}</p>
+            {driveViewLink && (
               <a
-                href={externalUrl}
+                href={driveViewLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-primary-600 hover:text-primary-700"
+                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
               >
                 <ExternalLink className="w-4 h-4" />
-                Open in new tab
+                Open in Google Drive
               </a>
             )}
           </div>
-        )}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          style={{
-            transform: `scale(${scale}) rotate(${rotation}deg)`,
-            transformOrigin: 'top center',
-          }}
-          className="bg-white shadow-elevation-3 rounded-lg w-full h-full"
-        >
+        ) : (
+          /* Document preview iframe */
           <iframe
             src={viewUrl}
             title={fileName}
-            className="w-full h-full rounded-lg"
+            className="w-full h-full border-0"
             onLoad={() => setIsLoading(false)}
-            onError={() => setLoadError('Failed to load document')}
+            onError={handleIframeError}
+            allow="autoplay"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
           />
-        </motion.div>
+        )}
       </div>
     </div>
   );

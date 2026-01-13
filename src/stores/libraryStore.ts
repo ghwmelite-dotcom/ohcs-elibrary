@@ -10,16 +10,19 @@ export interface CategoryItem {
   count: number;
 }
 
-// Static category definitions (these are constants, not demo data)
+// Static category definitions - matches Document Library folder structure
 export const DOCUMENT_CATEGORIES: CategoryItem[] = [
-  { id: 'circulars', name: 'Circulars & Directives', color: '#006B3F', count: 0 },
+  { id: 'administrative', name: 'Administrative Instruments', color: '#006B3F', count: 0 },
+  { id: 'compliance', name: 'Compliance & Legal', color: '#10B981', count: 0 },
+  { id: 'induction', name: 'Induction Materials', color: '#3B82F6', count: 0 },
+  { id: 'newsletters', name: 'Newsletters & Bulletins', color: '#F59E0B', count: 0 },
+  { id: 'performance', name: 'Performance Management', color: '#CE1126', count: 0 },
   { id: 'policies', name: 'Policies & Guidelines', color: '#FCD116', count: 0 },
-  { id: 'training', name: 'Training Materials', color: '#3B82F6', count: 0 },
-  { id: 'reports', name: 'Reports & Publications', color: '#CE1126', count: 0 },
-  { id: 'forms', name: 'Forms & Templates', color: '#8B5CF6', count: 0 },
-  { id: 'legal', name: 'Legal Documents', color: '#10B981', count: 0 },
-  { id: 'research', name: 'Research Papers', color: '#F59E0B', count: 0 },
-  { id: 'general', name: 'General Resources', color: '#6B7280', count: 0 },
+  { id: 'recruitment', name: 'Recruitment & Examination', color: '#8B5CF6', count: 0 },
+  { id: 'research', name: 'Research & Surveys', color: '#EC4899', count: 0 },
+  { id: 'strategic', name: 'Strategic Planning', color: '#14B8A6', count: 0 },
+  { id: 'templates', name: 'Templates & Forms', color: '#6366F1', count: 0 },
+  { id: 'training', name: 'Training & Development', color: '#EF4444', count: 0 },
 ];
 
 // Library statistics interface
@@ -131,7 +134,7 @@ type LibraryStore = LibraryState & LibraryActions;
 
 const defaultFilter: DocumentFilter = {
   page: 1,
-  limit: 12,
+  limit: 100,
   sortBy: 'createdAt',
   sortOrder: 'desc',
 };
@@ -458,7 +461,8 @@ export const useLibraryStore = create<LibraryStore>()(
         });
 
         try {
-          const response = await fetch(`${API_BASE}/documents/categories`, {
+          // Use the new category-counts endpoint that groups by actual category values
+          const response = await fetch(`${API_BASE}/documents/category-counts`, {
             headers: getAuthHeaders(),
           });
 
@@ -486,6 +490,7 @@ export const useLibraryStore = create<LibraryStore>()(
           const data = await response.json();
 
           // Merge API counts + local counts with static category definitions
+          // The API returns {id: 'general', name: 'general', count: 47}
           const categoriesWithCounts = DOCUMENT_CATEGORIES.map((cat) => ({
             ...cat,
             count: (data.find((d: { id: string; count: number }) => d.id === cat.id)?.count || 0) + (localCounts[cat.id] || 0),

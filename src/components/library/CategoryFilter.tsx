@@ -7,100 +7,130 @@ import {
   ChevronRight,
   ChevronDown,
   FileText,
-  Filter,
   BookOpen,
-  FileCheck,
+  Shield,
   GraduationCap,
+  Newspaper,
   BarChart3,
-  FileSpreadsheet,
-  Scale,
+  FileCheck,
+  Users,
   Microscope,
-  Files,
+  Target,
+  FileSpreadsheet,
+  Award,
+  Sparkles,
+  Filter,
+  X,
 } from 'lucide-react';
 import type { DocumentCategory } from '@/types';
 
-// Map category IDs to icons
+// Map category IDs to icons - matches new folder-based categories
 const categoryIcons: Record<DocumentCategory, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
-  circulars: FileText,
+  administrative: FileText,
+  compliance: Shield,
+  induction: GraduationCap,
+  newsletters: Newspaper,
+  performance: BarChart3,
   policies: FileCheck,
-  training: GraduationCap,
-  reports: BarChart3,
-  forms: FileSpreadsheet,
-  legal: Scale,
+  recruitment: Users,
   research: Microscope,
-  general: Files,
+  strategic: Target,
+  templates: FileSpreadsheet,
+  training: Award,
 };
 
 export function CategoryFilter() {
-  const { categories, selectedCategory, setSelectedCategory, documents } = useLibraryStore();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const { categories, selectedCategory, setSelectedCategory, stats } = useLibraryStore();
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
 
   const getCategoryCount = (categoryId: DocumentCategory | null) => {
-    if (!categoryId) return documents.length;
-    return documents.filter((doc) => doc.category === categoryId).length;
+    if (!categoryId) return stats.totalDocuments;
+    const category = categories.find((c) => c.id === categoryId);
+    return category?.count || 0;
   };
 
-  const totalDocuments = documents.length;
+  const totalDocuments = stats.totalDocuments;
   const selectedCategoryData = selectedCategory
     ? categories.find((c) => c.id === selectedCategory)
     : null;
 
   return (
     <>
-      {/* Mobile: Beautiful horizontal scrollable cards */}
+      {/* Mobile: Horizontal scrollable cards */}
       <div className="lg:hidden">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-            <Filter className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/25">
+              <Filter className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-surface-900 dark:text-surface-50">
+                Browse Categories
+              </h3>
+              <p className="text-xs text-surface-500">{totalDocuments} documents available</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-surface-900 dark:text-surface-50">
-              Browse Categories
-            </h3>
-            <p className="text-xs text-surface-500">{totalDocuments} documents available</p>
-          </div>
+          {selectedCategory && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setSelectedCategory(null)}
+              className="p-2 rounded-lg bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors"
+            >
+              <X className="w-4 h-4 text-surface-500" />
+            </motion.button>
+          )}
         </div>
 
         <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {/* All Documents Card */}
           <motion.button
-            whileTap={{ scale: 0.98 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setSelectedCategory(null)}
             className={cn(
-              'flex-shrink-0 w-28 p-3 rounded-xl transition-all duration-200',
-              'border-2',
+              'flex-shrink-0 w-[120px] p-4 rounded-2xl transition-all duration-300',
+              'border-2 relative overflow-hidden',
               !selectedCategory
-                ? 'bg-primary-500 border-primary-500 text-white shadow-lg shadow-primary-500/30'
-                : 'bg-white dark:bg-surface-800 border-surface-200 dark:border-surface-700 hover:border-primary-300 dark:hover:border-primary-700'
+                ? 'bg-gradient-to-br from-primary-500 to-primary-600 border-primary-400 text-white shadow-xl shadow-primary-500/30'
+                : 'bg-white dark:bg-surface-800 border-surface-200 dark:border-surface-700 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-lg'
             )}
           >
+            {!selectedCategory && (
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+                animate={{ x: ['-100%', '100%'] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+              />
+            )}
             <div className={cn(
-              'w-10 h-10 rounded-lg flex items-center justify-center mb-2',
+              'w-12 h-12 rounded-xl flex items-center justify-center mb-3 relative',
               !selectedCategory
-                ? 'bg-white/20'
+                ? 'bg-white/20 backdrop-blur-sm'
                 : 'bg-primary-100 dark:bg-primary-900/30'
             )}>
               <BookOpen className={cn(
-                'w-5 h-5',
+                'w-6 h-6',
                 !selectedCategory ? 'text-white' : 'text-primary-600 dark:text-primary-400'
               )} />
             </div>
             <p className={cn(
-              'text-xs font-semibold truncate',
+              'text-sm font-bold',
               !selectedCategory ? 'text-white' : 'text-surface-900 dark:text-surface-50'
             )}>
               All Docs
             </p>
             <p className={cn(
-              'text-xs mt-0.5',
+              'text-xs mt-1 font-medium',
               !selectedCategory ? 'text-white/80' : 'text-surface-500'
             )}>
-              {getCategoryCount(null)}
+              {getCategoryCount(null)} items
             </p>
           </motion.button>
 
           {/* Category Cards */}
-          {categories.map((category) => {
+          {categories.map((category, index) => {
             const count = getCategoryCount(category.id);
             const Icon = categoryIcons[category.id] || Folder;
             const isSelected = selectedCategory === category.id;
@@ -108,42 +138,54 @@ export function CategoryFilter() {
             return (
               <motion.button
                 key={category.id}
-                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setSelectedCategory(category.id)}
                 className={cn(
-                  'flex-shrink-0 w-28 p-3 rounded-xl transition-all duration-200',
-                  'border-2',
+                  'flex-shrink-0 w-[120px] p-4 rounded-2xl transition-all duration-300',
+                  'border-2 relative overflow-hidden',
                   isSelected
-                    ? 'border-transparent shadow-lg'
-                    : 'bg-white dark:bg-surface-800 border-surface-200 dark:border-surface-700 hover:border-primary-300 dark:hover:border-primary-700'
+                    ? 'border-transparent shadow-xl'
+                    : 'bg-white dark:bg-surface-800 border-surface-200 dark:border-surface-700 hover:shadow-lg'
                 )}
                 style={{
-                  backgroundColor: isSelected ? category.color : undefined,
-                  boxShadow: isSelected ? `0 10px 25px -5px ${category.color}40` : undefined,
+                  background: isSelected
+                    ? `linear-gradient(135deg, ${category.color}, ${category.color}dd)`
+                    : undefined,
+                  boxShadow: isSelected ? `0 20px 40px -10px ${category.color}50` : undefined,
                 }}
               >
+                {isSelected && (
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+                    animate={{ x: ['-100%', '100%'] }}
+                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                  />
+                )}
                 <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center mb-2"
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 relative"
                   style={{
-                    backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : `${category.color}20`,
+                    backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : `${category.color}15`,
                   }}
                 >
                   <Icon
-                    className="w-5 h-5"
+                    className="w-6 h-6"
                     style={{ color: isSelected ? 'white' : category.color }}
                   />
                 </div>
                 <p className={cn(
-                  'text-xs font-semibold truncate',
+                  'text-sm font-bold truncate',
                   isSelected ? 'text-white' : 'text-surface-900 dark:text-surface-50'
                 )}>
                   {category.name.split(' ')[0]}
                 </p>
                 <p className={cn(
-                  'text-xs mt-0.5',
+                  'text-xs mt-1 font-medium',
                   isSelected ? 'text-white/80' : 'text-surface-500'
                 )}>
-                  {count} docs
+                  {count} items
                 </p>
               </motion.button>
             );
@@ -151,276 +193,390 @@ export function CategoryFilter() {
         </div>
       </div>
 
-      {/* Desktop: Enhanced card layout */}
-      <div className="hidden lg:block bg-white dark:bg-surface-800 rounded-2xl shadow-elevation-2 overflow-hidden border border-surface-200 dark:border-surface-700">
-        {/* Header with gradient */}
-        <div className="p-4 bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-              <Folder className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="font-bold text-white">Categories</h3>
-              <p className="text-xs text-primary-100">{totalDocuments} total documents</p>
-            </div>
-          </div>
-        </div>
-
-        <nav className="p-3 space-y-2">
-          {/* All Documents */}
+      {/* Desktop: Collapsible card with beautiful animations */}
+      <div className="hidden lg:block">
+        <motion.div
+          initial={false}
+          className="bg-white dark:bg-surface-800 rounded-2xl shadow-xl overflow-hidden border border-surface-200/50 dark:border-surface-700/50"
+        >
+          {/* Header - Always visible, clickable to collapse */}
           <motion.button
-            whileHover={{ x: 4 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setSelectedCategory(null)}
-            className={cn(
-              'w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200',
-              !selectedCategory
-                ? 'bg-primary-50 dark:bg-primary-900/30 border-2 border-primary-200 dark:border-primary-800'
-                : 'hover:bg-surface-50 dark:hover:bg-surface-700/50 border-2 border-transparent'
-            )}
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full p-5 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 dark:from-primary-600 dark:via-primary-700 dark:to-primary-800 relative overflow-hidden group"
           >
-            <div className="flex items-center gap-3">
-              <div className={cn(
-                'w-10 h-10 rounded-xl flex items-center justify-center',
-                !selectedCategory
-                  ? 'bg-primary-100 dark:bg-primary-800'
-                  : 'bg-surface-100 dark:bg-surface-700'
-              )}>
-                <BookOpen className={cn(
-                  'w-5 h-5',
-                  !selectedCategory
-                    ? 'text-primary-600 dark:text-primary-400'
-                    : 'text-surface-500'
-                )} />
-              </div>
-              <div className="text-left">
-                <span className={cn(
-                  'text-sm font-semibold block',
-                  !selectedCategory
-                    ? 'text-primary-700 dark:text-primary-300'
-                    : 'text-surface-900 dark:text-surface-50'
-                )}>
-                  All Documents
-                </span>
-                <span className="text-xs text-surface-500">Browse everything</span>
-              </div>
+            {/* Animated background pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0" style={{
+                backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px)',
+                backgroundSize: '20px 20px'
+              }} />
             </div>
-            <div className="flex items-center gap-2">
-              <span className={cn(
-                'text-sm font-bold px-3 py-1 rounded-full',
-                !selectedCategory
-                  ? 'bg-primary-200 dark:bg-primary-700 text-primary-700 dark:text-primary-200'
-                  : 'bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400'
-              )}>
-                {getCategoryCount(null)}
-              </span>
-              <ChevronRight className={cn(
-                'w-4 h-4 transition-colors',
-                !selectedCategory ? 'text-primary-500' : 'text-surface-400'
-              )} />
+
+            {/* Shimmer effect on hover */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
+            />
+
+            <div className="flex items-center justify-between relative">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
+                  <Folder className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-bold text-white text-lg">Categories</h3>
+                  <p className="text-sm text-primary-100">{totalDocuments} total documents</p>
+                </div>
+              </div>
+              <motion.div
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center"
+              >
+                <ChevronDown className="w-5 h-5 text-white" />
+              </motion.div>
             </div>
+
+            {/* Selected category indicator when collapsed */}
+            <AnimatePresence>
+              {!isExpanded && selectedCategoryData && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mt-3 flex items-center gap-2"
+                >
+                  <div
+                    className="px-3 py-1.5 rounded-full text-xs font-semibold text-white flex items-center gap-2"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+                  >
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedCategoryData.color }} />
+                    Filtered: {selectedCategoryData.name}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.button>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 py-2">
-            <div className="h-px flex-1 bg-surface-200 dark:bg-surface-700" />
-            <span className="text-xs font-medium text-surface-400 uppercase tracking-wider">By Type</span>
-            <div className="h-px flex-1 bg-surface-200 dark:bg-surface-700" />
-          </div>
-
-          {/* Categories */}
-          <div className="space-y-1.5">
-            {categories.map((category) => {
-              const count = getCategoryCount(category.id);
-              const Icon = categoryIcons[category.id] || Folder;
-              const isSelected = selectedCategory === category.id;
-
-              return (
-                <motion.button
-                  key={category.id}
-                  whileHover={{ x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={cn(
-                    'w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200',
-                    isSelected
-                      ? 'border-2'
-                      : 'hover:bg-surface-50 dark:hover:bg-surface-700/50 border-2 border-transparent'
-                  )}
-                  style={{
-                    backgroundColor: isSelected ? `${category.color}10` : undefined,
-                    borderColor: isSelected ? `${category.color}40` : undefined,
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center transition-all"
-                      style={{
-                        backgroundColor: isSelected ? `${category.color}20` : `${category.color}10`,
-                      }}
-                    >
-                      <Icon className="w-5 h-5" style={{ color: category.color }} />
-                    </div>
-                    <div className="text-left">
-                      <span className={cn(
-                        'text-sm font-semibold block',
-                        isSelected ? 'text-surface-900 dark:text-surface-50' : 'text-surface-700 dark:text-surface-300'
+          {/* Expandable content */}
+          <AnimatePresence initial={false}>
+            {isExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="overflow-hidden"
+              >
+                <nav className="p-4 space-y-2">
+                  {/* All Documents */}
+                  <motion.button
+                    whileHover={{ x: 6, transition: { duration: 0.2 } }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setSelectedCategory(null)}
+                    className={cn(
+                      'w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-200',
+                      !selectedCategory
+                        ? 'bg-gradient-to-r from-primary-50 to-primary-100/50 dark:from-primary-900/40 dark:to-primary-900/20 border-2 border-primary-200 dark:border-primary-800 shadow-sm'
+                        : 'hover:bg-surface-50 dark:hover:bg-surface-700/50 border-2 border-transparent'
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        'w-11 h-11 rounded-xl flex items-center justify-center transition-all',
+                        !selectedCategory
+                          ? 'bg-primary-500 shadow-lg shadow-primary-500/30'
+                          : 'bg-surface-100 dark:bg-surface-700'
                       )}>
-                        {category.name}
-                      </span>
-                      {isSelected && (
-                        <span className="text-xs" style={{ color: category.color }}>
-                          {count} documents available
+                        <BookOpen className={cn(
+                          'w-5 h-5',
+                          !selectedCategory
+                            ? 'text-white'
+                            : 'text-surface-500'
+                        )} />
+                      </div>
+                      <div className="text-left">
+                        <span className={cn(
+                          'text-sm font-bold block',
+                          !selectedCategory
+                            ? 'text-primary-700 dark:text-primary-300'
+                            : 'text-surface-900 dark:text-surface-50'
+                        )}>
+                          All Documents
                         </span>
-                      )}
+                        <span className="text-xs text-surface-500">Browse everything</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="text-sm font-bold px-3 py-1 rounded-full"
-                      style={{
-                        backgroundColor: isSelected ? `${category.color}20` : undefined,
-                        color: isSelected ? category.color : undefined,
-                      }}
-                    >
-                      {count}
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        'text-sm font-bold px-3 py-1.5 rounded-full transition-all',
+                        !selectedCategory
+                          ? 'bg-primary-500 text-white shadow-md'
+                          : 'bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400'
+                      )}>
+                        {getCategoryCount(null)}
+                      </span>
+                    </div>
+                  </motion.button>
+
+                  {/* Divider */}
+                  <div className="flex items-center gap-3 py-3">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-surface-200 dark:via-surface-700 to-transparent" />
+                    <span className="text-xs font-semibold text-surface-400 uppercase tracking-wider flex items-center gap-2">
+                      <Sparkles className="w-3 h-3" />
+                      By Type
                     </span>
-                    <ChevronRight
-                      className="w-4 h-4 transition-transform"
-                      style={{
-                        color: isSelected ? category.color : undefined,
-                        transform: isSelected ? 'translateX(2px)' : undefined,
-                      }}
-                    />
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-surface-200 dark:via-surface-700 to-transparent" />
                   </div>
-                </motion.button>
-              );
-            })}
-          </div>
-        </nav>
+
+                  {/* Categories */}
+                  <div className="space-y-1.5">
+                    {categories.map((category, index) => {
+                      const count = getCategoryCount(category.id);
+                      const Icon = categoryIcons[category.id] || Folder;
+                      const isSelected = selectedCategory === category.id;
+
+                      return (
+                        <motion.button
+                          key={category.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                          whileHover={{ x: 6, transition: { duration: 0.2 } }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setSelectedCategory(category.id)}
+                          className={cn(
+                            'w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group',
+                            isSelected
+                              ? 'border-2 shadow-md'
+                              : 'hover:bg-surface-50 dark:hover:bg-surface-700/50 border-2 border-transparent'
+                          )}
+                          style={{
+                            backgroundColor: isSelected ? `${category.color}10` : undefined,
+                            borderColor: isSelected ? `${category.color}50` : undefined,
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={cn(
+                                'w-11 h-11 rounded-xl flex items-center justify-center transition-all',
+                                isSelected ? 'shadow-lg' : 'group-hover:scale-105'
+                              )}
+                              style={{
+                                backgroundColor: isSelected ? category.color : `${category.color}15`,
+                                boxShadow: isSelected ? `0 8px 20px -4px ${category.color}40` : undefined,
+                              }}
+                            >
+                              <Icon
+                                className="w-5 h-5 transition-colors"
+                                style={{ color: isSelected ? 'white' : category.color }}
+                              />
+                            </div>
+                            <div className="text-left">
+                              <span className={cn(
+                                'text-sm font-semibold block transition-colors',
+                                isSelected ? '' : 'text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-50'
+                              )}
+                              style={{ color: isSelected ? category.color : undefined }}
+                              >
+                                {category.name}
+                              </span>
+                              {isSelected && (
+                                <motion.span
+                                  initial={{ opacity: 0, y: -5 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="text-xs text-surface-500"
+                                >
+                                  {count} documents
+                                </motion.span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={cn(
+                                'text-sm font-bold px-3 py-1.5 rounded-full transition-all',
+                                !isSelected && 'bg-surface-100 dark:bg-surface-700 text-surface-500'
+                              )}
+                              style={{
+                                backgroundColor: isSelected ? `${category.color}20` : undefined,
+                                color: isSelected ? category.color : undefined,
+                              }}
+                            >
+                              {count}
+                            </span>
+                            <ChevronRight
+                              className={cn(
+                                'w-4 h-4 transition-all opacity-0 group-hover:opacity-100',
+                                isSelected && 'opacity-100'
+                              )}
+                              style={{ color: isSelected ? category.color : undefined }}
+                            />
+                          </div>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </nav>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
 
       {/* Tablet: Collapsible dropdown with enhanced styling */}
       <div className="hidden md:block lg:hidden">
         <motion.button
           whileTap={{ scale: 0.99 }}
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={() => setIsMobileExpanded(!isMobileExpanded)}
           className={cn(
-            'w-full flex items-center justify-between p-4 rounded-xl transition-all duration-200',
+            'w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300',
             'bg-white dark:bg-surface-800 border-2',
-            isExpanded
-              ? 'border-primary-300 dark:border-primary-700 shadow-lg'
-              : 'border-surface-200 dark:border-surface-700 shadow-elevation-1'
+            isMobileExpanded
+              ? 'border-primary-300 dark:border-primary-700 shadow-xl'
+              : 'border-surface-200 dark:border-surface-700 shadow-lg'
           )}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              className="w-14 h-14 rounded-xl flex items-center justify-center shadow-lg"
               style={{
-                backgroundColor: selectedCategoryData
-                  ? `${selectedCategoryData.color}15`
-                  : 'rgb(var(--color-primary-100))',
+                background: selectedCategoryData
+                  ? `linear-gradient(135deg, ${selectedCategoryData.color}, ${selectedCategoryData.color}cc)`
+                  : 'linear-gradient(135deg, rgb(var(--color-primary-500)), rgb(var(--color-primary-600)))',
               }}
             >
               {selectedCategoryData ? (
                 (() => {
                   const Icon = categoryIcons[selectedCategoryData.id] || Folder;
-                  return <Icon className="w-6 h-6" style={{ color: selectedCategoryData.color }} />;
+                  return <Icon className="w-7 h-7 text-white" />;
                 })()
               ) : (
-                <BookOpen className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                <BookOpen className="w-7 h-7 text-white" />
               )}
             </div>
             <div className="text-left">
-              <p className="text-base font-semibold text-surface-900 dark:text-surface-50">
+              <p className="text-base font-bold text-surface-900 dark:text-surface-50">
                 {selectedCategoryData ? selectedCategoryData.name : 'All Categories'}
               </p>
               <p className="text-sm text-surface-500">
-                {getCategoryCount(selectedCategory)} documents
+                {getCategoryCount(selectedCategory)} documents available
               </p>
             </div>
           </div>
           <motion.div
-            animate={{ rotate: isExpanded ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
+            animate={{ rotate: isMobileExpanded ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
+            className="w-10 h-10 rounded-xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center"
           >
-            <ChevronDown className="w-5 h-5 text-surface-400" />
+            <ChevronDown className="w-5 h-5 text-surface-500" />
           </motion.div>
         </motion.button>
 
         <AnimatePresence>
-          {isExpanded && (
+          {isMobileExpanded && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0, height: 0, y: -10 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
               className="overflow-hidden"
             >
-              <div className="mt-2 bg-white dark:bg-surface-800 rounded-xl shadow-elevation-2 border border-surface-200 dark:border-surface-700 p-2">
+              <div className="mt-3 bg-white dark:bg-surface-800 rounded-2xl shadow-xl border border-surface-200 dark:border-surface-700 p-3">
                 {/* All Documents Option */}
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     setSelectedCategory(null);
-                    setIsExpanded(false);
+                    setIsMobileExpanded(false);
                   }}
                   className={cn(
-                    'w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-colors',
+                    'w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-sm transition-all',
                     !selectedCategory
-                      ? 'bg-primary-50 dark:bg-primary-900/30'
+                      ? 'bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-900/20 shadow-sm'
                       : 'hover:bg-surface-50 dark:hover:bg-surface-700'
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <BookOpen className={cn(
-                      'w-5 h-5',
-                      !selectedCategory ? 'text-primary-600' : 'text-surface-500'
-                    )} />
+                    <div className={cn(
+                      'w-10 h-10 rounded-xl flex items-center justify-center',
+                      !selectedCategory ? 'bg-primary-500' : 'bg-surface-100 dark:bg-surface-700'
+                    )}>
+                      <BookOpen className={cn(
+                        'w-5 h-5',
+                        !selectedCategory ? 'text-white' : 'text-surface-500'
+                      )} />
+                    </div>
                     <span className={cn(
-                      'font-medium',
-                      !selectedCategory ? 'text-primary-700 dark:text-primary-300' : ''
+                      'font-semibold',
+                      !selectedCategory ? 'text-primary-700 dark:text-primary-300' : 'text-surface-700 dark:text-surface-300'
                     )}>
                       All Documents
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-surface-500">
+                  <span className={cn(
+                    'text-sm font-bold px-3 py-1 rounded-full',
+                    !selectedCategory ? 'bg-primary-500 text-white' : 'bg-surface-100 dark:bg-surface-700 text-surface-500'
+                  )}>
                     {getCategoryCount(null)}
                   </span>
-                </button>
+                </motion.button>
 
                 {/* Categories */}
-                <div className="mt-1 space-y-1">
-                  {categories.map((category) => {
+                <div className="mt-2 space-y-1">
+                  {categories.map((category, index) => {
                     const Icon = categoryIcons[category.id] || Folder;
                     const isSelected = selectedCategory === category.id;
 
                     return (
-                      <button
+                      <motion.button
                         key={category.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           setSelectedCategory(category.id);
-                          setIsExpanded(false);
+                          setIsMobileExpanded(false);
                         }}
                         className={cn(
-                          'w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-colors',
+                          'w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-all',
                           isSelected
-                            ? 'bg-primary-50 dark:bg-primary-900/30'
+                            ? 'shadow-sm'
                             : 'hover:bg-surface-50 dark:hover:bg-surface-700'
                         )}
+                        style={{
+                          backgroundColor: isSelected ? `${category.color}10` : undefined,
+                        }}
                       >
                         <div className="flex items-center gap-3">
-                          <Icon className="w-5 h-5" style={{ color: category.color }} />
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center"
+                            style={{ backgroundColor: isSelected ? category.color : `${category.color}15` }}
+                          >
+                            <Icon
+                              className="w-5 h-5"
+                              style={{ color: isSelected ? 'white' : category.color }}
+                            />
+                          </div>
                           <span className={cn(
-                            'font-medium',
-                            isSelected ? 'text-primary-700 dark:text-primary-300' : ''
-                          )}>
+                            'font-semibold',
+                            isSelected ? '' : 'text-surface-700 dark:text-surface-300'
+                          )}
+                          style={{ color: isSelected ? category.color : undefined }}
+                          >
                             {category.name}
                           </span>
                         </div>
-                        <span className="text-sm font-semibold text-surface-500">
+                        <span
+                          className="text-sm font-bold px-3 py-1 rounded-full"
+                          style={{
+                            backgroundColor: isSelected ? `${category.color}20` : undefined,
+                            color: isSelected ? category.color : undefined,
+                          }}
+                        >
                           {getCategoryCount(category.id)}
                         </span>
-                      </button>
+                      </motion.button>
                     );
                   })}
                 </div>

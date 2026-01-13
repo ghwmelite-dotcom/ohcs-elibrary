@@ -77,9 +77,24 @@ export function DocumentViewerModal({
   const [authenticatedBlobUrl, setAuthenticatedBlobUrl] = useState<string | null>(null);
   const totalPages = 10; // Would come from actual PDF metadata
 
+  // Check if document is from Google Drive
+  const isGoogleDriveDocument = document?.source === 'google_drive' && document?.externalFileId;
+
+  // Get Google Drive preview URL for Office documents
+  const getGoogleDrivePreviewUrl = useCallback(() => {
+    if (!document?.externalFileId) return null;
+    return `https://drive.google.com/file/d/${document.externalFileId}/preview`;
+  }, [document?.externalFileId]);
+
   // Get the document URL - handle local vs API documents
-  const getDocumentUrl = useCallback(() => {
+  const getDocumentUrl = useCallback((forExternalViewer = false) => {
     if (!document) return '';
+
+    // For Google Drive documents, use Google Drive's preview URL directly
+    // This is more reliable than fetching via our API
+    if (isGoogleDriveDocument) {
+      return getGoogleDrivePreviewUrl() || '';
+    }
 
     // Check if fileUrl is a blob URL (local file) or data URL
     if (document.fileUrl?.startsWith('blob:') || document.fileUrl?.startsWith('data:')) {
@@ -94,6 +109,14 @@ export function DocumentViewerModal({
       return '';
     }
 
+    // For external viewers (like Google Docs Viewer), we need a publicly accessible URL
+    // with the auth token as a query parameter (backend supports this)
+    if (forExternalViewer) {
+      const token = getAuthToken();
+      const baseUrl = `${API_BASE}/documents/${document.id}/view`;
+      return token ? `${baseUrl}?token=${encodeURIComponent(token)}` : baseUrl;
+    }
+
     // For API documents, prefer the authenticated blob URL if available
     // This is fetched via authenticated fetch and converted to blob URL
     if (authenticatedBlobUrl) {
@@ -102,7 +125,7 @@ export function DocumentViewerModal({
 
     // Fallback to direct API URL (won't work for authenticated endpoints)
     return `${API_BASE}/documents/${document.id}/view`;
-  }, [document, authenticatedBlobUrl]);
+  }, [document, authenticatedBlobUrl, isGoogleDriveDocument, getGoogleDrivePreviewUrl]);
 
   // Check if document can be viewed
   const canViewDocument = useCallback(() => {
@@ -121,12 +144,35 @@ export function DocumentViewerModal({
   // Determine file type for rendering
   const getFileCategory = useCallback((fileType: string) => {
     const type = fileType?.toLowerCase() || '';
+
+    // PDF files
     if (type === 'pdf' || type.includes('pdf')) return 'pdf';
+
+    // Image files - check both extensions and MIME types
     if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(type)) return 'image';
+    if (type.startsWith('image/')) return 'image';
+
+    // Word documents - check extensions and MIME types (docx, doc)
     if (['doc', 'docx'].includes(type)) return 'document';
+    if (type.includes('wordprocessingml') || type.includes('msword')) return 'document';
+
+    // Excel spreadsheets - check extensions and MIME types
     if (['xls', 'xlsx'].includes(type)) return 'spreadsheet';
+    if (type.includes('spreadsheetml') || type.includes('ms-excel') || type.includes('excel')) return 'spreadsheet';
+
+    // PowerPoint presentations - check extensions and MIME types
     if (['ppt', 'pptx'].includes(type)) return 'presentation';
+    if (type.includes('presentationml') || type.includes('powerpoint') || type.includes('ms-powerpoint')) return 'presentation';
+
+    // Google native formats
+    if (type.includes('google-apps.document')) return 'document';
+    if (type.includes('google-apps.spreadsheet')) return 'spreadsheet';
+    if (type.includes('google-apps.presentation')) return 'presentation';
+
+    // Text files
     if (['txt', 'md', 'rtf'].includes(type)) return 'text';
+    if (type.startsWith('text/')) return 'text';
+
     return 'other';
   }, []);
 
@@ -146,6 +192,12 @@ export function DocumentViewerModal({
   useEffect(() => {
     if (!document || !isOpen) return;
 
+    // Skip for Google Drive documents - we use Google Drive's preview URL directly
+    if (isGoogleDriveDocument) {
+      setIsLoading(false);
+      return;
+    }
+
     // Skip for local documents with valid blob URLs
     if (document.fileUrl?.startsWith('blob:') || document.fileUrl?.startsWith('data:')) {
       setIsLoading(false);
@@ -158,7 +210,24 @@ export function DocumentViewerModal({
       return;
     }
 
-    // Fetch the document with authentication
+    // Skip blob URL fetch for Office documents - they use Google Docs Viewer with direct API URL
+    const fileType = document.fileType?.toLowerCase() || '';
+    const isOfficeDocument =
+      fileType.includes('wordprocessingml') ||
+      fileType.includes('spreadsheetml') ||
+      fileType.includes('presentationml') ||
+      fileType.includes('msword') ||
+      fileType.includes('ms-excel') ||
+      fileType.includes('ms-powerpoint') ||
+      fileType.includes('powerpoint') ||
+      ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(fileType);
+
+    if (isOfficeDocument) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Fetch the document with authentication (for PDFs and other files)
     const fetchDocumentWithAuth = async () => {
       try {
         setIsLoading(true);
@@ -646,8 +715,23 @@ export function DocumentViewerModal({
                     return null;
                   }
 
-                  // PDF Viewer - use object tag for better cross-origin support
+                  // PDF Viewer - use Google Drive preview for Drive files, object tag for others
                   if (fileCategory === 'pdf') {
+                    // For Google Drive PDFs, use Google Drive's preview directly
+                    if (isGoogleDriveDocument) {
+                      return (
+                        <iframe
+                          src={documentUrl}
+                          className="w-full h-full border-0"
+                          title={document.title}
+                          onLoad={handleIframeLoad}
+                          onError={handleIframeError}
+                          allow="autoplay"
+                        />
+                      );
+                    }
+
+                    // For local/API PDFs, use object tag for better cross-origin support
                     return (
                       <div className="w-full h-full flex flex-col">
                         {/* Primary: object tag which handles PDFs better cross-origin */}
@@ -685,9 +769,27 @@ export function DocumentViewerModal({
                     );
                   }
 
-                  // Office Documents - use Google Docs Viewer or Office Online
+                  // Office Documents - handle differently for Google Drive vs local files
                   if (['document', 'spreadsheet', 'presentation'].includes(fileCategory)) {
-                    const googleDocsUrl = `https://docs.google.com/gview?url=${encodeURIComponent(documentUrl)}&embedded=true`;
+                    // For Google Drive documents, use Google Drive's preview directly
+                    if (isGoogleDriveDocument) {
+                      return (
+                        <iframe
+                          src={documentUrl}
+                          className="w-full h-full border-0"
+                          title={document.title}
+                          onLoad={handleIframeLoad}
+                          onError={handleIframeError}
+                          allow="autoplay"
+                        />
+                      );
+                    }
+
+                    // For API documents, use Google Docs Viewer with the public API URL
+                    // (includes auth token as query parameter)
+                    const publicUrl = getDocumentUrl(true); // Get URL for external viewer
+                    const googleDocsUrl = `https://docs.google.com/gview?url=${encodeURIComponent(publicUrl)}&embedded=true`;
+
                     return (
                       <iframe
                         src={googleDocsUrl}

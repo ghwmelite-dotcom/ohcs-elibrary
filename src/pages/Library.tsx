@@ -1,12 +1,27 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Upload, BookOpen, Bookmark, Clock, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react';
+import { motion, useInView } from 'framer-motion';
+import { useRef } from 'react';
+import {
+  Upload,
+  BookOpen,
+  Bookmark,
+  Clock,
+  TrendingUp,
+  AlertCircle,
+  RefreshCw,
+  Sparkles,
+  FileText,
+  Search,
+  Zap,
+  ArrowRight,
+} from 'lucide-react';
 import { useLibraryStore } from '@/stores/libraryStore';
 import { useAuthStore } from '@/stores/authStore';
 import { CategoryFilter, DocumentGrid, DocumentUpload, DocumentViewerModal } from '@/components/library';
 import { Button } from '@/components/shared/Button';
 import { Tabs } from '@/components/shared/Tabs';
 import { formatRelativeTime } from '@/utils/formatters';
+import { cn } from '@/utils/cn';
 import type { Document } from '@/types';
 
 type LibraryTab = 'all' | 'bookmarked' | 'recent' | 'trending';
@@ -26,6 +41,8 @@ export default function Library() {
 
   const { hasRole } = useAuthStore();
   const isAdmin = hasRole(['admin', 'super_admin']);
+  const statsRef = useRef(null);
+  const isStatsInView = useInView(statsRef, { once: true, margin: '-50px' });
 
   const [showUpload, setShowUpload] = useState(false);
   const [activeTab, setActiveTab] = useState<LibraryTab>('all');
@@ -39,7 +56,6 @@ export default function Library() {
 
   const handleCloseViewer = () => {
     setShowViewer(false);
-    // Delay clearing the document for exit animation
     setTimeout(() => setSelectedDocument(null), 300);
   };
 
@@ -62,7 +78,6 @@ export default function Library() {
   };
 
   useEffect(() => {
-    // Fetch initial data
     fetchDocuments();
     fetchCategories();
     fetchStats();
@@ -71,13 +86,10 @@ export default function Library() {
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId as LibraryTab);
-    // Update filter based on tab
     switch (tabId) {
       case 'bookmarked':
-        // Filter will be applied in DocumentGrid based on bookmarks
         break;
       case 'recent':
-        // Show recently viewed documents
         break;
       case 'trending':
         fetchDocuments({ sortBy: 'views', sortOrder: 'desc' });
@@ -101,147 +113,296 @@ export default function Library() {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-heading font-bold text-surface-900 dark:text-surface-50">
-            Document Library
-          </h1>
-          <p className="mt-1 text-surface-600 dark:text-surface-400">
-            Access official documents, policies, and training materials
-          </p>
-        </div>
-        {isAdmin && (
-          <Button
-            onClick={() => setShowUpload(true)}
-            leftIcon={<Upload className="w-5 h-5" />}
-          >
-            Upload Document
-          </Button>
-        )}
-      </div>
-
-      {/* Error State */}
-      {error && (
+    <div className="relative min-h-screen">
+      {/* Animated Background */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        {/* Gradient orbs */}
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.03] dark:opacity-[0.05]"
+          style={{
+            background: 'radial-gradient(circle, rgb(var(--color-primary-500)) 0%, transparent 70%)',
+          }}
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+        <motion.div
+          className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full opacity-[0.03] dark:opacity-[0.05]"
+          style={{
+            background: 'radial-gradient(circle, rgb(var(--color-secondary-500)) 0%, transparent 70%)',
+          }}
+          animate={{
+            scale: [1.2, 1, 1.2],
+            x: [0, -30, 0],
+            y: [0, -50, 0],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+        {/* Subtle grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
+            backgroundSize: '40px 40px',
+          }}
+        />
+      </div>
+
+      <div className="space-y-6 relative">
+        {/* Page Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-xl p-4 flex items-center justify-between"
+          transition={{ duration: 0.5 }}
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
         >
-          <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-error-500" />
-            <p className="text-error-700 dark:text-error-300">{error}</p>
-          </div>
-          <Button variant="ghost" size="sm" onClick={handleRetry}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retry
-          </Button>
-        </motion.div>
-      )}
-
-      {/* Quick Stats */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4"
-      >
-        <StatCard
-          label="Total Documents"
-          value={stats.totalDocuments}
-          subtitle={stats.monthlyUploads > 0 ? `+${stats.monthlyUploads} this month` : 'No uploads this month'}
-          icon={BookOpen}
-          color="primary"
-          isLoading={isLoading}
-        />
-        <StatCard
-          label="Your Bookmarks"
-          value={bookmarks.length}
-          subtitle={bookmarks.length > 0 ? `${bookmarks.length} saved` : 'No bookmarks yet'}
-          icon={Bookmark}
-          color="secondary"
-          isLoading={isLoading}
-        />
-        <StatCard
-          label="Recently Viewed"
-          value={recentlyViewed.length}
-          subtitle={stats.lastViewedAt ? `Last viewed ${formatRelativeTime(stats.lastViewedAt)}` : 'No recent activity'}
-          icon={Clock}
-          color="accent"
-          isLoading={isLoading}
-        />
-        <StatCard
-          label="Trending Now"
-          value={stats.trendingCount}
-          subtitle="Most popular today"
-          icon={TrendingUp}
-          color="success"
-          isLoading={isLoading}
-        />
-      </motion.div>
-
-      {/* Tabs */}
-      <Tabs
-        tabs={tabs}
-        activeTab={activeTab}
-        onChange={handleTabChange}
-      />
-
-      {/* Category Filter - Mobile/Tablet */}
-      <div className="lg:hidden">
-        <CategoryFilter />
-      </div>
-
-      {/* Main Content */}
-      <div className="grid lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Sidebar - Desktop Only */}
-        <div className="hidden lg:block lg:col-span-1 space-y-6">
-          <CategoryFilter />
-
-          {/* AI Assistant Promo */}
-          <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl p-4 text-white">
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3">
-              <span className="text-xl">✨</span>
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-xl shadow-primary-500/25">
+              <BookOpen className="w-7 h-7 text-white" />
             </div>
-            <h4 className="font-semibold mb-2">AI Document Analysis</h4>
-            <p className="text-sm text-primary-100 mb-4">
-              Get instant summaries, key points, and insights from any document using
-              our AI assistant.
-            </p>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="w-full"
-              onClick={() => window.location.href = '/help#ai-features'}
-            >
-              Learn More
-            </Button>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-heading font-bold text-surface-900 dark:text-surface-50">
+                Document Library
+              </h1>
+              <p className="mt-0.5 text-surface-600 dark:text-surface-400">
+                Access official documents, policies, and training materials
+              </p>
+            </div>
           </div>
-        </div>
+          {isAdmin && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Button
+                onClick={() => setShowUpload(true)}
+                leftIcon={<Upload className="w-5 h-5" />}
+                className="shadow-lg shadow-primary-500/20 hover:shadow-xl hover:shadow-primary-500/30 transition-shadow"
+              >
+                Upload Document
+              </Button>
+            </motion.div>
+          )}
+        </motion.div>
 
-        {/* Document Grid */}
-        <div className="lg:col-span-3">
-          <DocumentGrid
+        {/* Error State */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-xl p-4 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-error-500" />
+              <p className="text-error-700 dark:text-error-300">{error}</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleRetry}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Retry
+            </Button>
+          </motion.div>
+        )}
+
+        {/* Quick Stats */}
+        <motion.div
+          ref={statsRef}
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+        >
+          {[
+            {
+              label: 'Total Documents',
+              value: stats.totalDocuments,
+              subtitle: stats.monthlyUploads > 0 ? `+${stats.monthlyUploads} this month` : 'Browse all documents',
+              icon: FileText,
+              color: 'primary',
+              gradient: 'from-primary-500 to-primary-600',
+            },
+            {
+              label: 'Your Bookmarks',
+              value: bookmarks.length,
+              subtitle: bookmarks.length > 0 ? `${bookmarks.length} saved` : 'Save for quick access',
+              icon: Bookmark,
+              color: 'secondary',
+              gradient: 'from-secondary-500 to-secondary-600',
+            },
+            {
+              label: 'Recently Viewed',
+              value: recentlyViewed.length,
+              subtitle: stats.lastViewedAt ? `Last: ${formatRelativeTime(stats.lastViewedAt)}` : 'Start exploring',
+              icon: Clock,
+              color: 'accent',
+              gradient: 'from-accent-500 to-accent-600',
+            },
+            {
+              label: 'Trending Now',
+              value: stats.trendingCount,
+              subtitle: 'Most popular today',
+              icon: TrendingUp,
+              color: 'success',
+              gradient: 'from-success-500 to-success-600',
+            },
+          ].map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={isStatsInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+              transition={{
+                delay: index * 0.1,
+                type: 'spring',
+                stiffness: 100,
+                damping: 15,
+              }}
+            >
+              <StatCard
+                label={stat.label}
+                value={stat.value}
+                subtitle={stat.subtitle}
+                icon={stat.icon}
+                color={stat.color as 'primary' | 'secondary' | 'accent' | 'success'}
+                gradient={stat.gradient}
+                isLoading={isLoading}
+              />
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Tabs
+            tabs={tabs}
             activeTab={activeTab}
-            bookmarkedIds={bookmarks.map((b) => b.documentId)}
-            recentlyViewedDocs={recentlyViewed}
-            onViewDocument={handleViewDocument}
+            onChange={handleTabChange}
           />
+        </motion.div>
+
+        {/* Category Filter - Mobile/Tablet */}
+        <div className="lg:hidden">
+          <CategoryFilter />
         </div>
+
+        {/* Main Content */}
+        <div className="grid lg:grid-cols-4 gap-4 sm:gap-6">
+          {/* Sidebar - Desktop Only */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="hidden lg:block lg:col-span-1 space-y-6"
+          >
+            <CategoryFilter />
+
+            {/* AI Assistant Promo */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="relative overflow-hidden bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-2xl p-5 text-white shadow-xl shadow-primary-500/20"
+            >
+              {/* Animated background pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: 'radial-gradient(circle at 30% 70%, white 1px, transparent 1px)',
+                  backgroundSize: '24px 24px'
+                }} />
+              </div>
+
+              {/* Floating sparkles */}
+              <motion.div
+                className="absolute top-4 right-4"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+              >
+                <Sparkles className="w-5 h-5 text-white/30" />
+              </motion.div>
+
+              <div className="relative">
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 shadow-lg">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <h4 className="font-bold text-lg mb-2">AI Document Analysis</h4>
+                <p className="text-sm text-primary-100 mb-4 leading-relaxed">
+                  Get instant summaries, key insights, and smart search powered by AI.
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="w-full bg-white/20 hover:bg-white/30 border-white/20 text-white backdrop-blur-sm"
+                  onClick={() => window.location.href = '/help#ai-features'}
+                >
+                  <span>Learn More</span>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* Quick Search Tip */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="bg-surface-50 dark:bg-surface-800/50 rounded-2xl p-4 border border-surface-200 dark:border-surface-700"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center flex-shrink-0">
+                  <Search className="w-5 h-5 text-surface-500" />
+                </div>
+                <div>
+                  <h5 className="font-semibold text-surface-900 dark:text-surface-50 text-sm">
+                    Quick Tip
+                  </h5>
+                  <p className="text-xs text-surface-500 mt-1 leading-relaxed">
+                    Use the search bar above to find documents by title, content, or keywords.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Document Grid */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="lg:col-span-3"
+          >
+            <DocumentGrid
+              activeTab={activeTab}
+              bookmarkedIds={bookmarks.map((b) => b.documentId)}
+              recentlyViewedDocs={recentlyViewed}
+              onViewDocument={handleViewDocument}
+            />
+          </motion.div>
+        </div>
+
+        {/* Upload Modal */}
+        <DocumentUpload isOpen={showUpload} onClose={() => setShowUpload(false)} />
+
+        {/* Document Viewer Modal */}
+        <DocumentViewerModal
+          document={selectedDocument}
+          isOpen={showViewer}
+          onClose={handleCloseViewer}
+          onBookmark={handleBookmarkDocument}
+          onDownload={handleDownloadDocument}
+          isBookmarked={selectedDocument ? bookmarks.some((b) => b.documentId === selectedDocument.id) : false}
+        />
       </div>
-
-      {/* Upload Modal */}
-      <DocumentUpload isOpen={showUpload} onClose={() => setShowUpload(false)} />
-
-      {/* Document Viewer Modal */}
-      <DocumentViewerModal
-        document={selectedDocument}
-        isOpen={showViewer}
-        onClose={handleCloseViewer}
-        onBookmark={handleBookmarkDocument}
-        onDownload={handleDownloadDocument}
-        isBookmarked={selectedDocument ? bookmarks.some((b) => b.documentId === selectedDocument.id) : false}
-      />
     </div>
   );
 }
@@ -252,33 +413,75 @@ interface StatCardProps {
   subtitle: string;
   icon: React.ComponentType<{ className?: string }>;
   color: 'primary' | 'secondary' | 'accent' | 'success';
+  gradient: string;
   isLoading?: boolean;
 }
 
-function StatCard({ label, value, subtitle, icon: Icon, color, isLoading }: StatCardProps) {
-  const colors = {
-    primary: 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400',
-    secondary: 'bg-secondary-50 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400',
-    accent: 'bg-accent-50 dark:bg-accent-900/30 text-accent-600 dark:text-accent-400',
-    success: 'bg-success-50 dark:bg-success-900/30 text-success-600 dark:text-success-400',
+function StatCard({ label, value, subtitle, icon: Icon, color, gradient, isLoading }: StatCardProps) {
+  const colorClasses = {
+    primary: {
+      iconBg: 'bg-primary-500',
+      shadow: 'shadow-primary-500/30',
+      text: 'text-primary-600 dark:text-primary-400',
+    },
+    secondary: {
+      iconBg: 'bg-secondary-500',
+      shadow: 'shadow-secondary-500/30',
+      text: 'text-secondary-600 dark:text-secondary-400',
+    },
+    accent: {
+      iconBg: 'bg-accent-500',
+      shadow: 'shadow-accent-500/30',
+      text: 'text-accent-600 dark:text-accent-400',
+    },
+    success: {
+      iconBg: 'bg-success-500',
+      shadow: 'shadow-success-500/30',
+      text: 'text-success-600 dark:text-success-400',
+    },
   };
 
+  const colors = colorClasses[color];
+
   return (
-    <div className="bg-surface-50 dark:bg-surface-800 rounded-xl shadow-elevation-1 p-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-surface-500 dark:text-surface-400">{label}</p>
-          {isLoading ? (
-            <div className="h-8 w-16 bg-surface-200 dark:bg-surface-700 rounded animate-pulse mt-1" />
-          ) : (
-            <p className="text-2xl font-bold text-surface-900 dark:text-surface-50 mt-1">
-              {value.toLocaleString()}
-            </p>
+    <div className="relative group">
+      <div className="bg-white dark:bg-surface-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 sm:p-5 border border-surface-100 dark:border-surface-700 overflow-hidden">
+        {/* Subtle gradient overlay on hover */}
+        <div
+          className={cn(
+            'absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300',
+            `bg-gradient-to-br ${gradient}`
           )}
-          <p className="text-xs text-surface-400 mt-1">{subtitle}</p>
-        </div>
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colors[color]}`}>
-          <Icon className="w-5 h-5" />
+        />
+
+        <div className="relative flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm font-medium text-surface-500 dark:text-surface-400 truncate">
+              {label}
+            </p>
+            {isLoading ? (
+              <div className="h-8 w-16 bg-surface-200 dark:bg-surface-700 rounded-lg animate-pulse mt-2" />
+            ) : (
+              <motion.p
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                className="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-surface-50 mt-1"
+              >
+                {value.toLocaleString()}
+              </motion.p>
+            )}
+            <p className="text-xs text-surface-400 mt-1 truncate">{subtitle}</p>
+          </div>
+          <div
+            className={cn(
+              'w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0',
+              colors.iconBg,
+              colors.shadow
+            )}
+          >
+            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          </div>
         </div>
       </div>
     </div>

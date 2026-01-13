@@ -38,13 +38,20 @@ interface Variables {
 type AppContext = Context<{ Bindings: Env; Variables: Variables }>;
 
 // Optional auth middleware - sets user if token provided, but doesn't require it
+// Supports both Authorization header and query parameter (for iframe/embed use cases)
 async function optionalAuth(c: AppContext, next: Next) {
   const authHeader = c.req.header('Authorization');
+  const url = new URL(c.req.url);
+  const queryToken = url.searchParams.get('token');
 
-  if (authHeader?.startsWith('Bearer ')) {
+  // Try Authorization header first, then query parameter
+  const token = authHeader?.startsWith('Bearer ')
+    ? authHeader.substring(7)
+    : queryToken;
+
+  if (token) {
     try {
       const { verify } = await import('hono/jwt');
-      const token = authHeader.substring(7);
       const payload = await verify(token, c.env.JWT_SECRET);
 
       if (payload?.sub) {
@@ -208,6 +215,30 @@ documentsRoutes.get('/categories', async (c: AppContext) => {
     return c.json(results || []);
   } catch (error) {
     console.error('Error fetching categories:', error);
+    return c.json([]);
+  }
+});
+
+// GET /documents/category-counts - Get document counts grouped by category field
+documentsRoutes.get('/category-counts', async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+
+    // Count documents grouped by their actual category field value
+    const { results } = await DB.prepare(`
+      SELECT
+        category as id,
+        category as name,
+        COUNT(*) as count
+      FROM documents
+      WHERE status = 'published'
+      GROUP BY category
+      ORDER BY count DESC
+    `).all();
+
+    return c.json(results || []);
+  } catch (error) {
+    console.error('Error fetching category counts:', error);
     return c.json([]);
   }
 });
@@ -1014,13 +1045,15 @@ documentsRoutes.get('/:id/view', async (c: AppContext) => {
 
         const accessToken = await getValidAccessToken(c.env, connection);
         const mimeType = document.externalMimeType || document.fileType;
-        const response = await getFileContent(accessToken, document.externalFileId, mimeType);
+        // Export Office files as PDF for viewing in browser
+        const { response, contentType: exportedContentType } = await getFileContent(
+          accessToken,
+          document.externalFileId,
+          mimeType,
+          true // Export Office files as PDF for viewing
+        );
 
-        // Update content type for Google Docs exports
-        if (GOOGLE_EXPORT_MIMES[mimeType]) {
-          contentType = GOOGLE_EXPORT_MIMES[mimeType];
-        }
-
+        contentType = exportedContentType;
         responseBody = response.body;
       } catch (driveError) {
         console.error('Error fetching from Google Drive:', driveError);
@@ -1123,13 +1156,15 @@ documentsRoutes.get('/:id/download', async (c: AppContext) => {
 
         const accessToken = await getValidAccessToken(c.env, connection);
         const mimeType = document.externalMimeType || document.fileType;
-        const response = await getFileContent(accessToken, document.externalFileId, mimeType);
+        // Download original format (not exported as PDF)
+        const { response, contentType: downloadContentType } = await getFileContent(
+          accessToken,
+          document.externalFileId,
+          mimeType,
+          false // Keep original format for downloads
+        );
 
-        // Update content type for Google Docs exports
-        if (GOOGLE_EXPORT_MIMES[mimeType]) {
-          contentType = GOOGLE_EXPORT_MIMES[mimeType];
-        }
-
+        contentType = downloadContentType;
         responseBody = response.body;
       } catch (driveError) {
         console.error('Error fetching from Google Drive:', driveError);

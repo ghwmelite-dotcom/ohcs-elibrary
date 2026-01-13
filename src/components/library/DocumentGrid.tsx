@@ -14,7 +14,7 @@ type SortOption = 'newest' | 'oldest' | 'popular' | 'rating' | 'title';
 type ViewMode = 'grid' | 'list';
 type LibraryTab = 'all' | 'bookmarked' | 'recent' | 'trending';
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 16;
 
 interface DocumentGridProps {
   activeTab?: LibraryTab;
@@ -162,11 +162,11 @@ export function DocumentGrid({
           className={cn(
             'grid gap-6',
             viewMode === 'grid'
-              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+              ? 'grid-cols-1 sm:grid-cols-2'
               : 'grid-cols-1'
           )}
         >
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} variant="rounded" className="h-64" />
           ))}
         </div>
@@ -269,7 +269,7 @@ export function DocumentGrid({
           className={cn(
             'grid gap-6',
             viewMode === 'grid'
-              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+              ? 'grid-cols-1 sm:grid-cols-2'
               : 'grid-cols-1'
           )}
         >

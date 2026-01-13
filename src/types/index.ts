@@ -151,14 +151,17 @@ export interface RolePermission {
 // ============================================================================
 
 export type DocumentCategory =
-  | 'circulars'
-  | 'policies'
-  | 'training'
-  | 'reports'
-  | 'forms'
-  | 'legal'
-  | 'research'
-  | 'general';
+  | 'administrative'    // Administrative Instruments
+  | 'compliance'        // Compliance & Legal
+  | 'induction'         // Induction Materials
+  | 'newsletters'       // Newsletters & Bulletins
+  | 'performance'       // Performance Management
+  | 'policies'          // Policies & Guidelines
+  | 'recruitment'       // Recruitment & Examination
+  | 'research'          // Research & Surveys
+  | 'strategic'         // Strategic Planning
+  | 'templates'         // Templates & Forms
+  | 'training';         // Training & Development
 
 export type DocumentAccessLevel =
   | 'public'
@@ -204,6 +207,10 @@ export interface Document {
   publishedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  // Google Drive integration
+  source?: 'local' | 'google_drive';
+  externalFileId?: string;
+  externalUrl?: string;
 }
 
 export interface DocumentVersion {

@@ -21,7 +21,7 @@ import { useLibraryStore } from '@/stores/libraryStore';
 import { useAuthStore } from '@/stores/authStore';
 import { Dropdown } from '@/components/shared/Dropdown';
 import { cn } from '@/utils/cn';
-import { formatRelativeTime, formatFileSize } from '@/utils/formatters';
+import { formatRelativeTime, formatFileSize, formatFileType } from '@/utils/formatters';
 
 interface CategoryInfo {
   id: string;
@@ -326,7 +326,7 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
 
         {/* File Info */}
         <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex items-center justify-between text-xs text-surface-400">
-          <span className="uppercase">{document.fileType}</span>
+          <span className="uppercase font-medium">{formatFileType(document.fileType)}</span>
           <span>{formatFileSize(document.fileSize)}</span>
         </div>
       </div>
