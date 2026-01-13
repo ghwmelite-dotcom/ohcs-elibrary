@@ -46,7 +46,7 @@ function MentorCard({ mentor, onRequest, hasActiveRequest }: MentorCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5 }}
-      className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300"
+      className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-100 dark:border-surface-700 overflow-hidden hover:shadow-xl transition-all duration-300"
     >
       {/* Header */}
       <div className="bg-gradient-to-r from-violet-500 to-purple-600 p-6 text-white">
@@ -75,29 +75,29 @@ function MentorCard({ mentor, onRequest, hasActiveRequest }: MentorCardProps) {
 
       {/* Body */}
       <div className="p-6">
-        <p className="text-sm text-gray-600 mb-4 line-clamp-3">{mentor.bio}</p>
+        <p className="text-sm text-surface-600 dark:text-surface-300 mb-4 line-clamp-3">{mentor.bio}</p>
 
         <div className="space-y-3 mb-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Building2 className="w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-2 text-sm text-surface-600 dark:text-surface-300">
+            <Building2 className="w-4 h-4 text-surface-400 dark:text-surface-500" />
             <span>{mentor.ministry}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Briefcase className="w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-2 text-sm text-surface-600 dark:text-surface-300">
+            <Briefcase className="w-4 h-4 text-surface-400 dark:text-surface-500" />
             <span>{mentor.yearsOfService} years of service</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Users className="w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-2 text-sm text-surface-600 dark:text-surface-300">
+            <Users className="w-4 h-4 text-surface-400 dark:text-surface-500" />
             <span>{mentor.totalMentees} mentees ({mentor.activeMentees} active)</span>
           </div>
         </div>
 
         {/* Expertise */}
         <div className="mb-4">
-          <p className="text-xs font-medium text-gray-500 mb-2">Expertise</p>
+          <p className="text-xs font-medium text-surface-500 dark:text-surface-400 mb-2">Expertise</p>
           <div className="flex flex-wrap gap-1.5">
             {mentor.expertise.slice(0, 4).map((exp) => (
-              <span key={exp} className="px-2 py-1 bg-purple-50 text-purple-700 text-xs rounded-lg">
+              <span key={exp} className="px-2 py-1 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs rounded-lg">
                 {exp}
               </span>
             ))}
@@ -106,12 +106,12 @@ function MentorCard({ mentor, onRequest, hasActiveRequest }: MentorCardProps) {
 
         {/* Available For */}
         <div className="mb-6">
-          <p className="text-xs font-medium text-gray-500 mb-2">Available For</p>
+          <p className="text-xs font-medium text-surface-500 dark:text-surface-400 mb-2">Available For</p>
           <div className="flex flex-wrap gap-1.5">
             {mentor.availableFor.map((item) => (
               <span
                 key={item}
-                className="px-2 py-1 bg-emerald-50 text-emerald-700 text-xs rounded-lg capitalize"
+                className="px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs rounded-lg capitalize"
               >
                 {item.replace('_', ' ')}
               </span>
@@ -126,10 +126,10 @@ function MentorCard({ mentor, onRequest, hasActiveRequest }: MentorCardProps) {
           className={cn(
             'w-full py-3 rounded-xl font-medium transition-all duration-200',
             hasActiveRequest
-              ? 'bg-amber-100 text-amber-700 cursor-not-allowed'
+              ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 cursor-not-allowed'
               : mentor.isAvailable
               ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg hover:shadow-xl'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-surface-100 dark:bg-surface-700 text-surface-400 dark:text-surface-500 cursor-not-allowed'
           )}
         >
           {hasActiveRequest ? 'Request Pending' : mentor.isAvailable ? 'Request Mentorship' : 'Currently Unavailable'}
@@ -177,21 +177,21 @@ function RequestModal({ mentor, onClose, onSubmit }: RequestModalProps) {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+        className="bg-white dark:bg-surface-800 rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl"
       >
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Request Mentorship</h2>
-          <p className="text-gray-500">Connect with {mentor.name}</p>
+        <div className="p-6 border-b border-surface-100 dark:border-surface-700">
+          <h2 className="text-xl font-bold text-surface-900 dark:text-surface-100">Request Mentorship</h2>
+          <p className="text-surface-500 dark:text-surface-400">Connect with {mentor.name}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Purpose</label>
+            <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-2">Purpose</label>
             <select
               value={purpose}
               onChange={(e) => setPurpose(e.target.value)}
               required
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none"
             >
               <option value="">Select purpose...</option>
               <option value="career_guidance">Career Guidance</option>
@@ -202,7 +202,7 @@ function RequestModal({ mentor, onClose, onSubmit }: RequestModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-2">
               Your Goals (one per line)
             </label>
             <textarea
@@ -211,18 +211,18 @@ function RequestModal({ mentor, onClose, onSubmit }: RequestModalProps) {
               required
               rows={3}
               placeholder="What do you hope to achieve?"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none resize-none"
+              className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none resize-none"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-2">
               Preferred Duration
             </label>
             <select
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none"
             >
               <option value="3_months">3 Months</option>
               <option value="6_months">6 Months</option>
@@ -231,7 +231,7 @@ function RequestModal({ mentor, onClose, onSubmit }: RequestModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-2">
               Personal Message (Optional)
             </label>
             <textarea
@@ -239,7 +239,7 @@ function RequestModal({ mentor, onClose, onSubmit }: RequestModalProps) {
               onChange={(e) => setMessage(e.target.value)}
               rows={3}
               placeholder="Introduce yourself and explain why you'd like this mentor..."
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none resize-none"
+              className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none resize-none"
             />
           </div>
 
@@ -247,7 +247,7 @@ function RequestModal({ mentor, onClose, onSubmit }: RequestModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              className="flex-1 py-3 rounded-xl border border-surface-200 dark:border-surface-600 text-surface-700 dark:text-surface-200 font-medium hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
             >
               Cancel
             </button>
@@ -287,33 +287,33 @@ function RequestHistory({ requests }: RequestHistoryProps) {
       case 'pending':
         return {
           icon: Clock,
-          color: 'text-amber-600',
-          bg: 'bg-amber-50',
-          border: 'border-amber-200',
+          color: 'text-amber-600 dark:text-amber-400',
+          bg: 'bg-amber-50 dark:bg-amber-900/30',
+          border: 'border-amber-200 dark:border-amber-700',
           label: 'Pending',
         };
       case 'accepted':
         return {
           icon: CheckCircle2,
-          color: 'text-green-600',
-          bg: 'bg-green-50',
-          border: 'border-green-200',
+          color: 'text-green-600 dark:text-green-400',
+          bg: 'bg-green-50 dark:bg-green-900/30',
+          border: 'border-green-200 dark:border-green-700',
           label: 'Accepted',
         };
       case 'rejected':
         return {
           icon: XCircle,
-          color: 'text-red-600',
-          bg: 'bg-red-50',
-          border: 'border-red-200',
+          color: 'text-red-600 dark:text-red-400',
+          bg: 'bg-red-50 dark:bg-red-900/30',
+          border: 'border-red-200 dark:border-red-700',
           label: 'Declined',
         };
       case 'completed':
         return {
           icon: Award,
-          color: 'text-purple-600',
-          bg: 'bg-purple-50',
-          border: 'border-purple-200',
+          color: 'text-purple-600 dark:text-purple-400',
+          bg: 'bg-purple-50 dark:bg-purple-900/30',
+          border: 'border-purple-200 dark:border-purple-700',
           label: 'Completed',
         };
     }
@@ -335,26 +335,26 @@ function RequestHistory({ requests }: RequestHistoryProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5 }}
-      className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+      className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-100 dark:border-surface-700 overflow-hidden"
     >
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-6 py-5 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        className="w-full px-6 py-5 flex items-center justify-between hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
-            <History className="w-5 h-5 text-violet-600" />
+          <div className="w-10 h-10 bg-violet-100 dark:bg-violet-900/50 rounded-xl flex items-center justify-center">
+            <History className="w-5 h-5 text-violet-600 dark:text-violet-400" />
           </div>
           <div className="text-left">
-            <h3 className="font-semibold text-gray-900">Request History</h3>
-            <p className="text-sm text-gray-500">{requests.length} total requests</p>
+            <h3 className="font-semibold text-surface-900 dark:text-surface-100">Request History</h3>
+            <p className="text-sm text-surface-500 dark:text-surface-400">{requests.length} total requests</p>
           </div>
         </div>
         {isExpanded ? (
-          <ChevronUp className="w-5 h-5 text-gray-400" />
+          <ChevronUp className="w-5 h-5 text-surface-400 dark:text-surface-500" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-gray-400" />
+          <ChevronDown className="w-5 h-5 text-surface-400 dark:text-surface-500" />
         )}
       </button>
 
@@ -367,8 +367,8 @@ function RequestHistory({ requests }: RequestHistoryProps) {
             transition={{ duration: 0.3 }}
           >
             {/* Filter */}
-            <div className="px-6 py-3 border-t border-gray-100 flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-400" />
+            <div className="px-6 py-3 border-t border-surface-100 dark:border-surface-700 flex items-center gap-2">
+              <Filter className="w-4 h-4 text-surface-400 dark:text-surface-500" />
               <div className="flex gap-2">
                 {(['all', 'pending', 'accepted', 'rejected'] as const).map((f) => (
                   <button
@@ -377,8 +377,8 @@ function RequestHistory({ requests }: RequestHistoryProps) {
                     className={cn(
                       'px-3 py-1 text-sm font-medium rounded-full transition-colors capitalize',
                       filter === f
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300'
+                        : 'bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-600'
                     )}
                   >
                     {f}
@@ -390,8 +390,8 @@ function RequestHistory({ requests }: RequestHistoryProps) {
             {/* Request List */}
             <div className="px-6 pb-6">
               {filteredRequests.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <History className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <div className="text-center py-8 text-surface-500 dark:text-surface-400">
+                  <History className="w-12 h-12 mx-auto mb-3 text-surface-300 dark:text-surface-600" />
                   <p>No {filter === 'all' ? '' : filter} requests found</p>
                 </div>
               ) : (
@@ -414,14 +414,14 @@ function RequestHistory({ requests }: RequestHistoryProps) {
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                              <User className="w-5 h-5 text-gray-600" />
+                            <div className="w-10 h-10 bg-white dark:bg-surface-800 rounded-xl flex items-center justify-center shadow-sm">
+                              <User className="w-5 h-5 text-surface-600 dark:text-surface-300" />
                             </div>
                             <div>
-                              <h4 className="font-medium text-gray-900">
+                              <h4 className="font-medium text-surface-900 dark:text-surface-100">
                                 {request.mentorName || 'Mentor'}
                               </h4>
-                              <p className="text-sm text-gray-600 capitalize">
+                              <p className="text-sm text-surface-600 dark:text-surface-300 capitalize">
                                 {request.purpose.replace('_', ' ')}
                               </p>
                             </div>
@@ -437,11 +437,11 @@ function RequestHistory({ requests }: RequestHistoryProps) {
                         {/* Goals */}
                         {request.goals.length > 0 && (
                           <div className="mt-3 ml-13">
-                            <p className="text-xs font-medium text-gray-500 mb-1">Goals:</p>
-                            <ul className="text-sm text-gray-600 space-y-1">
+                            <p className="text-xs font-medium text-surface-500 dark:text-surface-400 mb-1">Goals:</p>
+                            <ul className="text-sm text-surface-600 dark:text-surface-300 space-y-1">
                               {request.goals.map((goal, i) => (
                                 <li key={i} className="flex items-start gap-2">
-                                  <Target className="w-3 h-3 mt-1 text-gray-400" />
+                                  <Target className="w-3 h-3 mt-1 text-surface-400 dark:text-surface-500" />
                                   {goal}
                                 </li>
                               ))}
@@ -451,14 +451,14 @@ function RequestHistory({ requests }: RequestHistoryProps) {
 
                         {/* Mentor Response */}
                         {request.mentorResponse && (
-                          <div className="mt-3 p-3 bg-white rounded-lg border border-gray-200">
-                            <p className="text-xs font-medium text-gray-500 mb-1">Mentor Response:</p>
-                            <p className="text-sm text-gray-700">{request.mentorResponse}</p>
+                          <div className="mt-3 p-3 bg-white dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-600">
+                            <p className="text-xs font-medium text-surface-500 dark:text-surface-400 mb-1">Mentor Response:</p>
+                            <p className="text-sm text-surface-700 dark:text-surface-200">{request.mentorResponse}</p>
                           </div>
                         )}
 
                         {/* Timeline */}
-                        <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
+                        <div className="mt-3 flex items-center gap-4 text-xs text-surface-500 dark:text-surface-400">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             Requested: {formatDate(request.createdAt)}
@@ -536,7 +536,7 @@ export default function Mentorship() {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading Mentors...</p>
+          <p className="text-surface-600 dark:text-surface-300">Loading Mentors...</p>
         </div>
       </div>
     );
@@ -552,17 +552,17 @@ export default function Mentorship() {
         className="mb-8"
       >
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-violet-100 rounded-2xl flex items-center justify-center">
-            <Users className="w-6 h-6 text-violet-600" />
+          <div className="w-12 h-12 bg-violet-100 dark:bg-violet-900/50 rounded-2xl flex items-center justify-center">
+            <Users className="w-6 h-6 text-violet-600 dark:text-violet-400" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-gray-900">Find a Mentor</h1>
-              <span className="px-2 py-0.5 bg-violet-100 text-violet-700 text-xs font-medium rounded-full flex items-center gap-1">
+              <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-100">Find a Mentor</h1>
+              <span className="px-2 py-0.5 bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300 text-xs font-medium rounded-full flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> Popular
               </span>
             </div>
-            <p className="text-gray-500">Connect with experienced officers for career guidance</p>
+            <p className="text-surface-500 dark:text-surface-400">Connect with experienced officers for career guidance</p>
           </div>
         </div>
       </motion.div>
@@ -576,7 +576,7 @@ export default function Mentorship() {
 
       {/* Available Mentors */}
       <div>
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Available Mentors</h2>
+        <h2 className="text-lg font-bold text-surface-900 dark:text-surface-100 mb-4">Available Mentors</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mentors.map((mentor) => (
             <MentorCard
@@ -592,9 +592,9 @@ export default function Mentorship() {
       {/* Empty State */}
       {mentors.length === 0 && (
         <div className="text-center py-16">
-          <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">No Mentors Available</h2>
-          <p className="text-gray-500">Check back later for available mentors.</p>
+          <Users className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-surface-900 dark:text-surface-100 mb-2">No Mentors Available</h2>
+          <p className="text-surface-500 dark:text-surface-400">Check back later for available mentors.</p>
         </div>
       )}
 

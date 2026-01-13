@@ -29,10 +29,10 @@ import { cn } from '@/utils/cn';
 // STATUS BADGE
 // ============================================================================
 const statusConfig: Record<GoalStatus, { color: string; bg: string; label: string; icon: React.ComponentType<{ className?: string }> }> = {
-  not_started: { color: 'text-gray-600', bg: 'bg-gray-100', label: 'Not Started', icon: Circle },
-  in_progress: { color: 'text-blue-600', bg: 'bg-blue-100', label: 'In Progress', icon: Play },
-  completed: { color: 'text-green-600', bg: 'bg-green-100', label: 'Completed', icon: CheckCircle2 },
-  on_hold: { color: 'text-amber-600', bg: 'bg-amber-100', label: 'On Hold', icon: Pause },
+  not_started: { color: 'text-surface-600 dark:text-surface-300', bg: 'bg-surface-100 dark:bg-surface-700', label: 'Not Started', icon: Circle },
+  in_progress: { color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/50', label: 'In Progress', icon: Play },
+  completed: { color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/50', label: 'Completed', icon: CheckCircle2 },
+  on_hold: { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/50', label: 'On Hold', icon: Pause },
 };
 
 function StatusBadge({ status }: { status: GoalStatus }) {
@@ -50,9 +50,9 @@ function StatusBadge({ status }: { status: GoalStatus }) {
 // PRIORITY BADGE
 // ============================================================================
 const priorityConfig = {
-  high: { color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
-  medium: { color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
-  low: { color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+  high: { color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/30', border: 'border-red-200' },
+  medium: { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/30', border: 'border-amber-200' },
+  low: { color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/30', border: 'border-blue-200' },
 };
 
 // ============================================================================
@@ -97,8 +97,8 @@ function GoalCard({ goal, onUpdateProgress, index }: GoalCardProps) {
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay: index * 0.1, duration: 0.5 }}
       className={cn(
-        'bg-white rounded-2xl border overflow-hidden transition-all duration-300',
-        goal.status === 'completed' ? 'border-green-200' : 'border-gray-100 hover:shadow-lg'
+        'bg-white dark:bg-surface-800 rounded-2xl border overflow-hidden transition-all duration-300',
+        goal.status === 'completed' ? 'border-green-200' : 'border-surface-100 dark:border-surface-700 hover:shadow-lg'
       )}
     >
       {/* Header */}
@@ -113,18 +113,18 @@ function GoalCard({ goal, onUpdateProgress, index }: GoalCardProps) {
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-gray-900 truncate">{goal.title}</h3>
+              <h3 className="font-semibold text-surface-900 dark:text-surface-100 truncate">{goal.title}</h3>
               {goal.priority === 'high' && (
-                <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded">
+                <span className="px-1.5 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs font-medium rounded">
                   Priority
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-500 line-clamp-1">{goal.description}</p>
+            <p className="text-sm text-surface-500 dark:text-surface-400 line-clamp-1">{goal.description}</p>
 
             <div className="flex items-center gap-4 mt-3">
               <StatusBadge status={goal.status} />
-              <span className="text-sm text-gray-500 flex items-center gap-1">
+              <span className="text-sm text-surface-500 dark:text-surface-400 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
                 Due: {new Date(goal.targetDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
               </span>
@@ -132,17 +132,17 @@ function GoalCard({ goal, onUpdateProgress, index }: GoalCardProps) {
           </div>
 
           <div className="flex flex-col items-end gap-2">
-            <span className="text-2xl font-bold text-gray-900">{goal.progress}%</span>
+            <span className="text-2xl font-bold text-surface-900 dark:text-surface-100">{goal.progress}%</span>
             {isExpanded ? (
-              <ChevronUp className="w-5 h-5 text-gray-400" />
+              <ChevronUp className="w-5 h-5 text-surface-400 dark:text-surface-500" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-gray-400" />
+              <ChevronDown className="w-5 h-5 text-surface-400 dark:text-surface-500" />
             )}
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="mt-4 h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="mt-4 h-2 bg-surface-100 dark:bg-surface-700 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={isInView ? { width: `${goal.progress}%` } : {}}
@@ -163,14 +163,14 @@ function GoalCard({ goal, onUpdateProgress, index }: GoalCardProps) {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="border-t border-gray-100"
+            className="border-t border-surface-100 dark:border-surface-700"
           >
             <div className="p-5 space-y-5">
               {/* Milestones */}
               {goal.milestones.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-medium text-gray-700">
+                    <h4 className="text-sm font-medium text-surface-700 dark:text-surface-200">
                       Milestones ({completedMilestones}/{totalMilestones})
                     </h4>
                   </div>
@@ -180,18 +180,18 @@ function GoalCard({ goal, onUpdateProgress, index }: GoalCardProps) {
                         key={milestone.id}
                         className={cn(
                           'flex items-center gap-3 p-3 rounded-xl transition-colors',
-                          milestone.completed ? 'bg-green-50' : 'bg-gray-50'
+                          milestone.completed ? 'bg-green-50 dark:bg-green-900/30' : 'bg-surface-50 dark:bg-surface-700'
                         )}
                       >
                         {milestone.completed ? (
                           <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
                         ) : (
-                          <Circle className="w-5 h-5 text-gray-300 flex-shrink-0" />
+                          <Circle className="w-5 h-5 text-surface-300 dark:text-surface-600 flex-shrink-0" />
                         )}
                         <span
                           className={cn(
                             'text-sm',
-                            milestone.completed ? 'text-green-700 line-through' : 'text-gray-700'
+                            milestone.completed ? 'text-green-700 dark:text-green-400 line-through' : 'text-surface-700 dark:text-surface-200'
                           )}
                         >
                           {milestone.title}
@@ -205,12 +205,12 @@ function GoalCard({ goal, onUpdateProgress, index }: GoalCardProps) {
               {/* Linked Skills */}
               {goal.linkedSkills.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Linked Skills</h4>
+                  <h4 className="text-sm font-medium text-surface-700 dark:text-surface-200 mb-2">Linked Skills</h4>
                   <div className="flex flex-wrap gap-2">
                     {goal.linkedSkills.map((skillId) => (
                       <span
                         key={skillId}
-                        className="px-3 py-1 bg-purple-50 text-purple-700 text-sm rounded-lg"
+                        className="px-3 py-1 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm rounded-lg"
                       >
                         {skillId.replace('skill-', 'Skill ')}
                       </span>
@@ -224,14 +224,14 @@ function GoalCard({ goal, onUpdateProgress, index }: GoalCardProps) {
                 <div className="flex gap-3">
                   <button
                     onClick={() => onUpdateProgress(goal.id, Math.min(100, goal.progress + 10))}
-                    className="flex-1 py-2.5 bg-purple-50 text-purple-700 rounded-xl text-sm font-medium hover:bg-purple-100 transition-colors"
+                    className="flex-1 py-2.5 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-xl text-sm font-medium hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
                   >
                     +10% Progress
                   </button>
                   {goal.progress >= 90 && (
                     <button
                       onClick={() => onUpdateProgress(goal.id, 100)}
-                      className="flex-1 py-2.5 bg-green-50 text-green-700 rounded-xl text-sm font-medium hover:bg-green-100 transition-colors"
+                      className="flex-1 py-2.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl text-sm font-medium hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
                     >
                       Mark Complete
                     </button>
@@ -261,7 +261,7 @@ export default function DevelopmentPlan() {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading Development Plan...</p>
+          <p className="text-surface-600 dark:text-surface-300">Loading Development Plan...</p>
         </div>
       </div>
     );
@@ -271,9 +271,9 @@ export default function DevelopmentPlan() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
-          <Map className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">No Development Plan</h2>
-          <p className="text-gray-500 mb-6">Create a personalized development plan to track your goals.</p>
+          <Map className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-surface-900 dark:text-surface-100 mb-2">No Development Plan</h2>
+          <p className="text-surface-500 dark:text-surface-400 mb-6">Create a personalized development plan to track your goals.</p>
           <button className="px-6 py-3 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors shadow-lg">
             Create Plan
           </button>
@@ -296,12 +296,12 @@ export default function DevelopmentPlan() {
         className="mb-8"
       >
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-teal-100 rounded-2xl flex items-center justify-center">
-            <Map className="w-6 h-6 text-teal-600" />
+          <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/50 rounded-2xl flex items-center justify-center">
+            <Map className="w-6 h-6 text-teal-600 dark:text-teal-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">My Development Plan</h1>
-            <p className="text-gray-500">Track your personal growth objectives</p>
+            <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-100">My Development Plan</h1>
+            <p className="text-surface-500 dark:text-surface-400">Track your personal growth objectives</p>
           </div>
         </div>
       </motion.div>
@@ -383,7 +383,7 @@ export default function DevelopmentPlan() {
       {/* Goals List */}
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-gray-900">Development Goals</h2>
+          <h2 className="text-lg font-bold text-surface-900 dark:text-surface-100">Development Goals</h2>
         </div>
 
         <div className="space-y-4">
@@ -403,25 +403,25 @@ export default function DevelopmentPlan() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.5 }}
-        className="mt-8 bg-blue-50 border border-blue-100 rounded-2xl p-6"
+        className="mt-8 bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 rounded-2xl p-6"
       >
         <div className="flex items-start gap-4">
-          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Zap className="w-5 h-5 text-blue-600" />
+          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 mb-2">Tips for Success</h3>
-            <ul className="space-y-2 text-sm text-gray-600">
+            <h3 className="font-semibold text-surface-900 dark:text-surface-100 mb-2">Tips for Success</h3>
+            <ul className="space-y-2 text-sm text-surface-600 dark:text-surface-300">
               <li className="flex items-start gap-2">
-                <ChevronRight className="w-4 h-4 mt-0.5 text-blue-500" />
+                <ChevronRight className="w-4 h-4 mt-0.5 text-blue-500 dark:text-blue-400" />
                 Focus on high-priority goals first to maximize your promotion readiness
               </li>
               <li className="flex items-start gap-2">
-                <ChevronRight className="w-4 h-4 mt-0.5 text-blue-500" />
+                <ChevronRight className="w-4 h-4 mt-0.5 text-blue-500 dark:text-blue-400" />
                 Update your progress regularly to stay motivated and track achievements
               </li>
               <li className="flex items-start gap-2">
-                <ChevronRight className="w-4 h-4 mt-0.5 text-blue-500" />
+                <ChevronRight className="w-4 h-4 mt-0.5 text-blue-500 dark:text-blue-400" />
                 Connect with a mentor to get guidance on achieving your goals faster
               </li>
             </ul>
