@@ -66,7 +66,7 @@ export default function WellnessResource() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-50 dark:bg-surface-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
       </div>
     );
@@ -74,9 +74,9 @@ export default function WellnessResource() {
 
   if (error || !currentResource) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-50 dark:bg-surface-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-surface-500 dark:text-surface-400 mb-4">
             {error || 'Resource not found'}
           </p>
           <Button onClick={() => navigate('/wellness')}>
@@ -92,7 +92,7 @@ export default function WellnessResource() {
   const color = typeColors[currentResource.type];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
       {/* Hero header */}
       <div className={cn('bg-gradient-to-br relative', color)}>
         <div className="absolute inset-0 bg-black/20" />
@@ -177,10 +177,10 @@ export default function WellnessResource() {
             transition={{ delay: 0.3 }}
             className="lg:col-span-3 order-2 lg:order-1"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 md:p-8">
+            <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-4 sm:p-6 md:p-8">
               {/* Video/Audio player placeholder */}
               {(currentResource.type === 'video' || currentResource.type === 'audio') && currentResource.mediaUrl && (
-                <div className="mb-6 rounded-lg overflow-hidden bg-gray-900 aspect-video flex items-center justify-center">
+                <div className="mb-6 rounded-lg overflow-hidden bg-surface-900 aspect-video flex items-center justify-center">
                   {currentResource.type === 'video' ? (
                     <video
                       src={currentResource.mediaUrl}
@@ -199,14 +199,14 @@ export default function WellnessResource() {
 
               {/* Article content */}
               {currentResource.content && (
-                <div className="prose prose-gray dark:prose-invert max-w-none">
+                <div className="prose prose-surface dark:prose-invert max-w-none">
                   <ReactMarkdown>{currentResource.content}</ReactMarkdown>
                 </div>
               )}
 
               {/* Exercise instructions placeholder */}
               {currentResource.type === 'exercise' && !currentResource.content && (
-                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-12 text-surface-500 dark:text-surface-400">
                   <Dumbbell className="w-12 h-12 mx-auto mb-4 opacity-30" />
                   <p>Exercise instructions coming soon</p>
                 </div>
@@ -222,7 +222,7 @@ export default function WellnessResource() {
             className="space-y-3 sm:space-y-4 order-1 lg:order-2"
           >
             {/* Actions */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 flex lg:flex-col gap-2 sm:gap-3">
+            <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-3 sm:p-4 flex lg:flex-col gap-2 sm:gap-3">
               <Button
                 variant="outline"
                 className="w-full justify-start"
@@ -256,11 +256,11 @@ export default function WellnessResource() {
             </div>
 
             {/* Related info */}
-            <div className="bg-teal-50 dark:bg-teal-950/30 rounded-xl border border-teal-200 dark:border-teal-800 p-4">
-              <h3 className="font-medium text-gray-900 dark:text-white mb-2">
+            <div className="bg-teal-50 dark:bg-teal-900/30 rounded-xl border border-teal-200 dark:border-teal-800 p-4">
+              <h3 className="font-medium text-surface-900 dark:text-surface-100 mb-2">
                 Need more support?
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              <p className="text-sm text-surface-600 dark:text-surface-400 mb-3">
                 Chat with Ayo for personalized guidance on this topic.
               </p>
               <Button

@@ -52,18 +52,18 @@ class WellnessErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-900">
+        <div className="min-h-screen flex items-center justify-center p-8 bg-surface-50 dark:bg-surface-900">
           <div className="text-center max-w-md">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20 mb-6">
               <AlertTriangle className="w-8 h-8 text-red-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-100 mb-2">
               Wellness Page Error
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-surface-600 dark:text-surface-400 mb-4">
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
-            <pre className="text-left text-xs bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-auto max-h-40 mb-6">
+            <pre className="text-left text-xs bg-surface-100 dark:bg-surface-800 p-4 rounded-lg overflow-auto max-h-40 mb-6">
               {this.state.error?.stack}
             </pre>
             <Button onClick={() => window.location.reload()}>
@@ -138,7 +138,7 @@ export default function Wellness() {
 
   return (
     <WellnessErrorBoundary>
-    <div className="min-h-screen bg-gradient-to-b from-teal-50/50 via-white to-purple-50/30 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-teal-50/50 via-white to-purple-50/30 dark:from-surface-900 dark:via-surface-900 dark:to-surface-900">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8">
           {/* Page header */}
           <motion.div
@@ -150,11 +150,11 @@ export default function Wellness() {
               <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-teal-100 dark:bg-teal-900/30">
                 <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600 dark:text-teal-400" />
               </div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-surface-900 dark:text-surface-100">
                 Wellness Center
               </h1>
             </div>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl">
+            <p className="text-sm sm:text-base text-surface-600 dark:text-surface-400 max-w-2xl">
               Your safe space for mental wellness support. Chat with Ayo, our AI wellness companion,
               or explore self-help resources curated for Ghana's civil servants.
             </p>
@@ -165,7 +165,7 @@ export default function Wellness() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-5 sm:mb-8"
+              className="bg-white dark:bg-surface-800 rounded-xl sm:rounded-2xl border border-surface-200 dark:border-surface-700 p-4 sm:p-6 mb-5 sm:mb-8"
             >
               <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <div className="hidden sm:block">
@@ -175,10 +175,10 @@ export default function Wellness() {
                   <AyoAvatar size="md" mood="happy" />
                 </div>
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                  <h2 className="text-lg sm:text-xl font-bold text-surface-900 dark:text-surface-100">
                     Start a New Conversation
                   </h2>
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                  <p className="text-sm sm:text-base text-surface-600 dark:text-surface-400">
                     What would you like to talk about today?
                   </p>
                 </div>
@@ -186,14 +186,14 @@ export default function Wellness() {
 
               {/* Anonymous mode toggle */}
               {!isAuthenticated && (
-                <div className="mb-6 p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
+                <div className="mb-6 p-4 rounded-xl bg-purple-50 dark:bg-purple-900/50 border border-purple-200 dark:border-purple-800">
                   <div className="flex items-start gap-3">
                     <Shield className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5" />
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+                      <h3 className="font-medium text-surface-900 dark:text-surface-100 mb-1">
                         Anonymous Mode
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      <p className="text-sm text-surface-600 dark:text-surface-400 mb-3">
                         Your conversations are private and won't be linked to any account.
                         Session will end when you close your browser.
                       </p>
@@ -203,15 +203,15 @@ export default function Wellness() {
               )}
 
               {isAuthenticated && (
-                <div className="mb-6 p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700">
+                <div className="mb-6 p-4 rounded-xl bg-surface-50 dark:bg-surface-900/50 border border-surface-200 dark:border-surface-700">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                       <div>
-                        <h3 className="font-medium text-gray-900 dark:text-white">
+                        <h3 className="font-medium text-surface-900 dark:text-surface-100">
                           Anonymous Mode
                         </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-surface-500 dark:text-surface-400">
                           {isAnonymous ? 'Session won\'t be saved' : 'Session will be saved to your history'}
                         </p>
                       </div>
@@ -220,7 +220,7 @@ export default function Wellness() {
                       onClick={() => isAnonymous ? disableAnonymousMode() : enableAnonymousMode()}
                       className={cn(
                         'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                        isAnonymous ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'
+                        isAnonymous ? 'bg-purple-600' : 'bg-surface-300 dark:bg-surface-600'
                       )}
                     >
                       <span
@@ -236,7 +236,7 @@ export default function Wellness() {
 
               {/* Topic selection */}
               <div className="mb-6">
-                <h3 className="font-medium text-gray-900 dark:text-white mb-3">
+                <h3 className="font-medium text-surface-900 dark:text-surface-100 mb-3">
                   Choose a topic (optional)
                 </h3>
                 <TopicSelector
@@ -287,8 +287,8 @@ export default function Wellness() {
                   transition={{ delay: 0.2 }}
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                      <History className="w-5 h-5 text-gray-400" />
+                    <h2 className="text-lg font-semibold text-surface-900 dark:text-surface-100 flex items-center gap-2">
+                      <History className="w-5 h-5 text-surface-400 dark:text-surface-500" />
                       Recent Sessions
                     </h2>
                     <Button
@@ -327,8 +327,8 @@ export default function Wellness() {
                 transition={{ delay: 0.3 }}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-gray-400" />
+                  <h2 className="text-lg font-semibold text-surface-900 dark:text-surface-100 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-surface-400 dark:text-surface-500" />
                     Self-Help Resources
                   </h2>
                   <Button
@@ -359,7 +359,7 @@ export default function Wellness() {
                 </div>
 
                 {featuredResources.length === 0 && (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <div className="text-center py-8 text-surface-500 dark:text-surface-400">
                     <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p>Resources coming soon!</p>
                   </div>
@@ -385,18 +385,18 @@ export default function Wellness() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="bg-gradient-to-br from-teal-50 to-purple-50 dark:from-teal-950/30 dark:to-purple-950/30 rounded-xl p-5 border border-gray-200 dark:border-gray-700"
+                className="bg-gradient-to-br from-teal-50 to-purple-50 dark:from-teal-950/30 dark:to-purple-950/30 rounded-xl p-5 border border-surface-200 dark:border-surface-700"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <AyoAvatar size="sm" mood="neutral" />
-                  <h3 className="font-semibold text-gray-900 dark:text-white">About Ayo</h3>
+                  <h3 className="font-semibold text-surface-900 dark:text-surface-100">About Ayo</h3>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-sm text-surface-600 dark:text-surface-400 mb-4">
                   Ayo (meaning "joy" in Yoruba) is your AI wellness companion.
                   Trained to provide supportive conversations and coping strategies,
                   Ayo is available 24/7 to listen and help.
                 </p>
-                <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex items-start gap-2 text-xs text-surface-500 dark:text-surface-400">
                   <Info className="w-4 h-4 shrink-0 mt-0.5" />
                   <p>
                     Ayo is not a replacement for professional mental health care.
@@ -410,12 +410,12 @@ export default function Wellness() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-surface-800 rounded-xl p-5 border border-surface-200 dark:border-surface-700"
               >
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+                <h3 className="font-semibold text-surface-900 dark:text-surface-100 mb-3">
                   Quick Wellness Tips
                 </h3>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <ul className="space-y-2 text-sm text-surface-600 dark:text-surface-400">
                   <li className="flex items-start gap-2">
                     <span className="text-teal-500">•</span>
                     Take short breaks every 90 minutes
@@ -454,11 +454,11 @@ export default function Wellness() {
 
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-800/40">
+                    <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/50">
                       <Heart className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-sm">
+                      <h3 className="font-bold text-surface-900 dark:text-surface-100 text-sm">
                         CSEAP
                       </h3>
                       <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium tracking-wide">
@@ -467,7 +467,7 @@ export default function Wellness() {
                     </div>
                   </div>
 
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  <p className="text-sm text-surface-600 dark:text-surface-400 mb-4">
                     Professional counselors ready to support you with confidential assistance.
                   </p>
 
@@ -500,12 +500,12 @@ export default function Wellness() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 100, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative bg-white dark:bg-gray-800 w-full sm:max-w-md sm:mx-4 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col overflow-hidden"
+              className="relative bg-white dark:bg-surface-800 w-full sm:max-w-md sm:mx-4 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Mobile drag indicator */}
               <div className="sm:hidden flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+                <div className="w-10 h-1 rounded-full bg-surface-300 dark:bg-surface-600" />
               </div>
 
               {/* Decorative Header Banner */}
@@ -550,7 +550,7 @@ export default function Wellness() {
               {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto overscroll-contain">
                 <div className="p-4 sm:p-6">
-                  <p className="text-center text-gray-600 dark:text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">
+                  <p className="text-center text-surface-600 dark:text-surface-400 text-sm sm:text-base mb-4 sm:mb-6">
                     Confidential support for Ghana's civil servants. We're here to help.
                   </p>
 
@@ -566,7 +566,7 @@ export default function Wellness() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] sm:text-xs font-medium text-teal-600 dark:text-teal-400 uppercase tracking-wider">Counseling Hotline</p>
-                        <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
+                        <p className="text-base sm:text-lg font-bold text-surface-900 dark:text-surface-100 truncate">
                           +233 50 333 7119
                         </p>
                       </div>
@@ -580,12 +580,12 @@ export default function Wellness() {
                       href="mailto:cseap@ohcs.gov.gh"
                       className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border border-purple-200/50 dark:border-purple-800/50 hover:shadow-md active:scale-[0.98] transition-all group touch-manipulation"
                     >
-                      <div className="p-2.5 sm:p-3 rounded-xl bg-purple-500 shadow-lg shadow-purple-500/30 group-hover:scale-110 group-active:scale-95 transition-transform shrink-0">
+                      <div className="p-2.5 sm:p-3 rounded-xl bg-purple-500 dark:bg-purple-600 shadow-lg shadow-purple-500/30 group-hover:scale-110 group-active:scale-95 transition-transform shrink-0">
                         <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] sm:text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wider">Email Support</p>
-                        <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
+                        <p className="text-base sm:text-lg font-bold text-surface-900 dark:text-surface-100 truncate">
                           cseap@ohcs.gov.gh
                         </p>
                       </div>
@@ -601,7 +601,7 @@ export default function Wellness() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] sm:text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider">Visit Us</p>
-                        <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
+                        <p className="text-sm sm:text-base font-semibold text-surface-900 dark:text-surface-100">
                           OHCS Headquarters, Accra
                         </p>
                       </div>
@@ -609,18 +609,18 @@ export default function Wellness() {
                   </div>
 
                   {/* Hours Card */}
-                  <div className="p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 mb-4 sm:mb-6">
+                  <div className="p-3 sm:p-4 rounded-xl bg-surface-50 dark:bg-surface-900/50 border border-surface-200 dark:border-surface-700 mb-4 sm:mb-6">
                     <div className="flex items-center gap-2 mb-2 sm:mb-3">
                       <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                      <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">Available Now</span>
+                      <span className="text-xs sm:text-sm font-medium text-surface-900 dark:text-surface-100">Available Now</span>
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
                       <div>
-                        <p className="text-gray-500 dark:text-gray-400">Weekdays</p>
-                        <p className="font-medium text-gray-900 dark:text-white">8:00 AM - 5:00 PM</p>
+                        <p className="text-surface-500 dark:text-surface-400">Weekdays</p>
+                        <p className="font-medium text-surface-900 dark:text-surface-100">8:00 AM - 5:00 PM</p>
                       </div>
                       <div>
-                        <p className="text-gray-500 dark:text-gray-400">Crisis Support</p>
+                        <p className="text-surface-500 dark:text-surface-400">Crisis Support</p>
                         <p className="font-medium text-teal-600 dark:text-teal-400">24/7 Available</p>
                       </div>
                     </div>
@@ -651,7 +651,7 @@ export default function Wellness() {
               </div>
 
               {/* Fixed Bottom CTA */}
-              <div className="shrink-0 p-4 sm:p-6 pt-0 bg-white dark:bg-gray-800">
+              <div className="shrink-0 p-4 sm:p-6 pt-0 bg-white dark:bg-surface-800">
                 <Button
                   onClick={() => setShowContactModal(false)}
                   className="w-full py-3 sm:py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:from-amber-700 active:to-orange-700 text-white font-semibold shadow-lg shadow-amber-500/25 text-sm sm:text-base touch-manipulation"

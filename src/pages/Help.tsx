@@ -152,7 +152,7 @@ export default function Help() {
     { icon: Users, label: 'Join a Group', description: 'Connect with your MDA', link: '/groups', color: 'bg-orange-500' },
     { icon: Trophy, label: 'View Leaderboard', description: 'See top contributors', link: '/leaderboard', color: 'bg-yellow-500' },
     { icon: Bell, label: 'Manage Notifications', description: 'Customize your alerts', link: '/notifications', color: 'bg-pink-500' },
-    { icon: Settings, label: 'Account Settings', description: 'Update your profile', link: '/settings', color: 'bg-gray-500' },
+    { icon: Settings, label: 'Account Settings', description: 'Update your profile', link: '/settings', color: 'bg-surface-500 dark:bg-surface-600' },
   ];
 
   // Featured guides

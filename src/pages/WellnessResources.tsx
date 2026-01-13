@@ -77,7 +77,7 @@ export default function WellnessResources() {
   const hasActiveFilters = resourceFilter.category || resourceFilter.type || resourceFilter.search;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8">
         {/* Header */}
         <motion.div
@@ -87,21 +87,21 @@ export default function WellnessResources() {
         >
           <button
             onClick={() => navigate('/wellness')}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-3 sm:mb-4 transition-colors text-sm sm:text-base"
+            className="flex items-center gap-2 text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 mb-3 sm:mb-4 transition-colors text-sm sm:text-base"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             Back to Wellness
           </button>
 
           <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
-            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-teal-100 dark:bg-teal-900/30">
+            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-teal-100 dark:bg-teal-900/50">
               <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600 dark:text-teal-400" />
             </div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-surface-900 dark:text-surface-100">
               Self-Help Resources
             </h1>
           </div>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-surface-600 dark:text-surface-400">
             Explore articles, videos, and exercises to support your mental wellness journey.
           </p>
         </motion.div>
@@ -111,18 +111,18 @@ export default function WellnessResources() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 mb-4 sm:mb-6"
+          className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-3 sm:p-4 mb-4 sm:mb-6"
         >
           {/* Search bar */}
           <form onSubmit={handleSearch} className="flex gap-2 sm:gap-3 mb-3 sm:mb-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+              <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-surface-400 dark:text-surface-500" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search resources..."
-                className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm sm:text-base"
+                className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 rounded-lg border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-700 text-surface-900 dark:text-surface-100 placeholder-surface-500 dark:placeholder-surface-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm sm:text-base"
               />
             </div>
             <Button type="submit" className="px-3 sm:px-4">
@@ -133,7 +133,7 @@ export default function WellnessResources() {
               type="button"
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className={cn('px-2.5 sm:px-3', showFilters && 'bg-gray-100 dark:bg-gray-700')}
+              className={cn('px-2.5 sm:px-3', showFilters && 'bg-surface-100 dark:bg-surface-700')}
             >
               <Filter className="w-4 h-4" />
             </Button>
@@ -145,11 +145,11 @@ export default function WellnessResources() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3 sm:space-y-4"
+              className="pt-3 sm:pt-4 border-t border-surface-200 dark:border-surface-700 space-y-3 sm:space-y-4"
             >
               {/* Category filter */}
               <div>
-                <label className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2 block">
+                <label className="text-xs sm:text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5 sm:mb-2 block">
                   Category
                 </label>
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -161,7 +161,7 @@ export default function WellnessResources() {
                         'px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors',
                         resourceFilter.category === cat.value || (!resourceFilter.category && !cat.value)
                           ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300'
-                          : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 active:bg-gray-200'
+                          : 'bg-surface-100 text-surface-600 dark:bg-surface-700 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-600 active:bg-surface-200'
                       )}
                     >
                       {cat.label}
@@ -172,7 +172,7 @@ export default function WellnessResources() {
 
               {/* Type filter */}
               <div>
-                <label className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2 block">
+                <label className="text-xs sm:text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5 sm:mb-2 block">
                   Type
                 </label>
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -186,7 +186,7 @@ export default function WellnessResources() {
                           'px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-2',
                           resourceFilter.type === type.value || (!resourceFilter.type && !type.value)
                             ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300'
-                            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 active:bg-gray-200'
+                            : 'bg-surface-100 text-surface-600 dark:bg-surface-700 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-600 active:bg-surface-200'
                         )}
                       >
                         <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -201,8 +201,8 @@ export default function WellnessResources() {
 
           {/* Active filters */}
           {hasActiveFilters && (
-            <div className="flex flex-wrap items-center gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Active filters:</span>
+            <div className="flex flex-wrap items-center gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-surface-200 dark:border-surface-700">
+              <span className="text-sm text-surface-500 dark:text-surface-400">Active filters:</span>
               <div className="flex flex-wrap gap-2">
                 {resourceFilter.category && (
                   <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300 text-xs">
@@ -267,11 +267,11 @@ export default function WellnessResources() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <BookOpen className="w-12 h-12 mx-auto mb-4 text-surface-300 dark:text-surface-600" />
+            <h3 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-2">
               No resources found
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
+            <p className="text-surface-500 dark:text-surface-400 mb-4">
               {hasActiveFilters
                 ? 'Try adjusting your filters or search terms.'
                 : 'Check back soon for new wellness resources.'}

@@ -155,7 +155,7 @@ export default function ResetPassword() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md relative z-10"
       >
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-surface-800 rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-green-600 to-green-700 p-6 text-white text-center relative">
             <button
@@ -205,21 +205,21 @@ export default function ResetPassword() {
                   onSubmit={requestForm.handleSubmit(handleRequestReset)}
                   className="space-y-4"
                 >
-                  <p className="text-sm text-gray-600 dark:text-gray-400 text-center mb-4">
+                  <p className="text-sm text-surface-600 dark:text-surface-400 text-center mb-4">
                     Enter your email address and we'll send you a code to reset your password.
                   </p>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                       Email Address
                     </label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400 dark:text-surface-500" />
                       <input
                         type="email"
                         {...requestForm.register('email')}
                         placeholder="your.email@mda.gov.gh"
-                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-700 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                       />
                     </div>
                     {requestForm.formState.errors.email && (
@@ -242,7 +242,7 @@ export default function ResetPassword() {
                     )}
                   </button>
 
-                  <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-center text-sm text-surface-600 dark:text-surface-400">
                     Remember your password?{' '}
                     <button
                       type="button"
@@ -275,7 +275,7 @@ export default function ResetPassword() {
                         {displayedCode.split('').map((digit, i) => (
                           <span
                             key={i}
-                            className="w-10 h-12 flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg text-2xl font-bold text-green-700 dark:text-green-400 border border-green-300 dark:border-green-600 shadow-sm"
+                            className="w-10 h-12 flex items-center justify-center bg-white dark:bg-surface-800 rounded-lg text-2xl font-bold text-green-700 dark:text-green-400 border border-green-300 dark:border-green-600 shadow-sm"
                           >
                             {digit}
                           </span>
@@ -287,14 +287,14 @@ export default function ResetPassword() {
                     </div>
                   )}
 
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center mb-2">
+                  <div className="bg-blue-100 dark:bg-blue-900/50 rounded-lg p-3 text-center mb-2">
                     <p className="text-sm text-blue-700 dark:text-blue-400">
                       Resetting password for <strong>{email}</strong>
                     </p>
                   </div>
 
                   {error && (
-                    <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 flex items-center gap-2 text-red-700 dark:text-red-400">
+                    <div className="bg-red-100 dark:bg-red-900/50 rounded-lg p-3 flex items-center gap-2 text-red-700 dark:text-red-400">
                       <AlertCircle className="w-5 h-5 flex-shrink-0" />
                       <p className="text-sm">{error}</p>
                     </div>
@@ -303,17 +303,17 @@ export default function ResetPassword() {
                   {/* Code Input - only show if code wasn't auto-filled */}
                   {!displayedCode && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                         Reset Code
                       </label>
                       <div className="relative">
-                        <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400 dark:text-surface-500" />
                         <input
                           type="text"
                           {...resetForm.register('code')}
                           placeholder="Enter 6-digit code"
                           maxLength={6}
-                          className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-center text-xl tracking-widest font-mono"
+                          className="w-full pl-10 pr-4 py-3 rounded-lg border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-700 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-center text-xl tracking-widest font-mono"
                         />
                       </div>
                       {resetForm.formState.errors.code && (
@@ -324,21 +324,21 @@ export default function ResetPassword() {
 
                   {/* New Password */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                       New Password
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400 dark:text-surface-500" />
                       <input
                         type={showPassword ? 'text' : 'password'}
                         {...resetForm.register('password')}
                         placeholder="Create a strong password"
-                        className="w-full pl-10 pr-12 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        className="w-full pl-10 pr-12 py-3 rounded-lg border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-700 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 dark:text-surface-500 hover:text-surface-600 dark:hover:text-surface-400"
                       >
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
@@ -352,12 +352,12 @@ export default function ResetPassword() {
                             <div
                               key={i}
                               className={`h-1 flex-1 rounded-full transition-colors ${
-                                i < passwordStrength ? strengthColors[passwordStrength - 1] : 'bg-gray-200 dark:bg-gray-600'
+                                i < passwordStrength ? strengthColors[passwordStrength - 1] : 'bg-surface-200 dark:bg-surface-600'
                               }`}
                             />
                           ))}
                         </div>
-                        <p className={`text-xs ${passwordStrength >= 4 ? 'text-green-600' : 'text-gray-500'}`}>
+                        <p className={`text-xs ${passwordStrength >= 4 ? 'text-green-600 dark:text-green-400' : 'text-surface-500 dark:text-surface-400'}`}>
                           {strengthLabels[passwordStrength - 1] || 'Enter a password'}
                         </p>
                       </div>
@@ -370,21 +370,21 @@ export default function ResetPassword() {
 
                   {/* Confirm Password */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
                       Confirm Password
                     </label>
                     <div className="relative">
-                      <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400 dark:text-surface-500" />
                       <input
                         type={showConfirmPassword ? 'text' : 'password'}
                         {...resetForm.register('confirmPassword')}
                         placeholder="Confirm your password"
-                        className="w-full pl-10 pr-12 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        className="w-full pl-10 pr-12 py-3 rounded-lg border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-700 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 dark:text-surface-500 hover:text-surface-600 dark:hover:text-surface-400"
                       >
                         {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
@@ -416,7 +416,7 @@ export default function ResetPassword() {
                         type="button"
                         onClick={handleResendCode}
                         disabled={resendCooldown > 0 || isLoading}
-                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-green-600 disabled:opacity-50"
+                        className="text-sm text-surface-600 dark:text-surface-400 hover:text-green-600 dark:hover:text-green-400 disabled:opacity-50"
                       >
                         {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Didn't receive code? Resend"}
                       </button>
@@ -437,15 +437,15 @@ export default function ResetPassword() {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', delay: 0.2 }}
-                    className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4"
+                    className="w-20 h-20 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center mx-auto mb-4"
                   >
                     <CheckCircle2 className="w-10 h-10 text-green-600" />
                   </motion.div>
 
-                  <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+                  <h2 className="text-xl font-bold text-surface-800 dark:text-white mb-2">
                     Password Updated!
                   </h2>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  <p className="text-surface-600 dark:text-surface-400 mb-6">
                     Your password has been successfully reset. You can now sign in with your new password.
                   </p>
 
@@ -462,7 +462,7 @@ export default function ResetPassword() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+        <p className="text-center text-sm text-surface-500 dark:text-surface-400 mt-6">
           © {new Date().getFullYear()} OHCS E-Library. Office of the Head of Civil Service, Ghana.
         </p>
       </motion.div>

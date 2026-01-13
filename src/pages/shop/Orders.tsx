@@ -84,9 +84,9 @@ const ORDER_STATUSES = {
   refunded: {
     label: 'Refunded',
     icon: XCircle,
-    color: 'text-gray-600 dark:text-gray-400',
-    bgColor: 'bg-gray-100 dark:bg-gray-900/30',
-    borderColor: 'border-gray-200 dark:border-gray-800',
+    color: 'text-surface-600 dark:text-surface-400',
+    bgColor: 'bg-surface-100 dark:bg-surface-900/30',
+    borderColor: 'border-surface-200 dark:border-surface-700',
   },
 };
 
@@ -95,7 +95,7 @@ const PAYMENT_STATUSES = {
   paid: { label: 'Paid', color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-100 dark:bg-green-900/30' },
   completed: { label: 'Paid', color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-100 dark:bg-green-900/30' },
   failed: { label: 'Failed', color: 'text-red-600 dark:text-red-400', bgColor: 'bg-red-100 dark:bg-red-900/30' },
-  refunded: { label: 'Refunded', color: 'text-gray-600 dark:text-gray-400', bgColor: 'bg-gray-100 dark:bg-gray-900/30' },
+  refunded: { label: 'Refunded', color: 'text-surface-600 dark:text-surface-400', bgColor: 'bg-surface-100 dark:bg-surface-900/30' },
 };
 
 export default function Orders() {

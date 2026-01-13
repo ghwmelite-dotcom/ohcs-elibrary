@@ -76,10 +76,10 @@ export default function EventDetailPage() {
 
   if (isLoading && !event) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-50 dark:bg-surface-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-ghana-green border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">Loading event...</p>
+          <p className="text-surface-500 dark:text-surface-400">Loading event...</p>
         </div>
       </div>
     );
@@ -87,13 +87,13 @@ export default function EventDetailPage() {
 
   if (error || !event) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-50 dark:bg-surface-900 flex items-center justify-center">
         <div className="text-center">
-          <Calendar className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <Calendar className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-surface-900 dark:text-white mb-2">
             Event Not Found
           </h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-surface-500 dark:text-surface-400 mb-4">
             {error || "The event you're looking for doesn't exist or has been removed."}
           </p>
           <Link
@@ -158,7 +158,7 @@ export default function EventDetailPage() {
   const waitlistedCount = attendees.filter(a => a.status === 'waitlisted').length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
       {/* Header */}
       <div
         className="h-48 sm:h-64 relative"
@@ -229,10 +229,10 @@ export default function EventDetailPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+              className="bg-white dark:bg-surface-800 rounded-2xl shadow-sm border border-surface-200 dark:border-surface-700 overflow-hidden"
             >
               <div className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-lg font-semibold text-surface-900 dark:text-white mb-4">
                   Event Details
                 </h2>
 
@@ -243,10 +243,10 @@ export default function EventDetailPage() {
                       <Calendar className="w-5 h-5 text-ghana-green" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
+                      <p className="font-medium text-surface-900 dark:text-white">
                         {formatDate(event.startDate)}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-surface-500 dark:text-surface-400">
                         {event.isAllDay
                           ? 'All day'
                           : `${formatTime(event.startDate)} - ${formatTime(event.endDate)}`}
@@ -257,15 +257,15 @@ export default function EventDetailPage() {
                   {/* Location */}
                   {(event.location || event.isVirtual) && (
                     <div className="flex items-start gap-4">
-                      <div className={`p-2.5 rounded-xl ${event.isVirtual ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                      <div className={`p-2.5 rounded-xl ${event.isVirtual ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-surface-100 dark:bg-surface-700'}`}>
                         {event.isVirtual ? (
                           <Video className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         ) : (
-                          <MapPin className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                          <MapPin className="w-5 h-5 text-surface-600 dark:text-surface-400" />
                         )}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                        <p className="font-medium text-surface-900 dark:text-white">
                           {event.isVirtual ? 'Virtual Event' : event.location}
                         </p>
                         {event.meetingUrl && (
@@ -285,11 +285,11 @@ export default function EventDetailPage() {
                   {/* Organizer */}
                   {event.organizer && (
                     <div className="flex items-start gap-4">
-                      <div className="p-2.5 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
+                      <div className="p-2.5 bg-purple-100 dark:bg-purple-900/50 rounded-xl">
                         <User className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                        <p className="font-medium text-surface-900 dark:text-white">
                           Organized by
                         </p>
                         <div className="flex items-center gap-2 mt-1">
@@ -304,7 +304,7 @@ export default function EventDetailPage() {
                               {event.organizer.displayName?.charAt(0) || 'O'}
                             </div>
                           )}
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-surface-600 dark:text-surface-400">
                             {event.organizer.displayName}
                             {event.organizer.title && ` - ${event.organizer.title}`}
                           </span>
@@ -316,11 +316,11 @@ export default function EventDetailPage() {
 
                 {/* Description */}
                 {event.description && (
-                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <div className="mt-6 pt-6 border-t border-surface-200 dark:border-surface-700">
+                    <h3 className="text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
                       About This Event
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                    <p className="text-surface-600 dark:text-surface-400 whitespace-pre-wrap">
                       {event.description}
                     </p>
                   </div>
@@ -332,7 +332,7 @@ export default function EventDetailPage() {
                     {event.tags.map(tag => (
                       <span
                         key={tag}
-                        className="px-2.5 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs text-gray-600 dark:text-gray-400"
+                        className="px-2.5 py-1 bg-surface-100 dark:bg-surface-700 rounded-full text-xs text-surface-600 dark:text-surface-400"
                       >
                         #{tag}
                       </span>
@@ -348,11 +348,11 @@ export default function EventDetailPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+                className="bg-white dark:bg-surface-800 rounded-2xl shadow-sm border border-surface-200 dark:border-surface-700 overflow-hidden"
               >
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <h2 className="text-lg font-semibold text-surface-900 dark:text-white">
                       Attendees
                     </h2>
                     <div className="flex items-center gap-3 text-sm">
@@ -370,14 +370,14 @@ export default function EventDetailPage() {
                   {event.capacity && (
                     <div className="mb-4">
                       <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="text-gray-600 dark:text-gray-400">
+                        <span className="text-surface-600 dark:text-surface-400">
                           {event.attendeeCount} / {event.capacity} spots filled
                         </span>
-                        <span className="text-gray-500 dark:text-gray-500">
+                        <span className="text-surface-500 dark:text-surface-500">
                           {Math.round((event.attendeeCount / event.capacity) * 100)}%
                         </span>
                       </div>
-                      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div className="h-2 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
                         <div
                           className={`h-full transition-all ${
                             event.attendeeCount >= event.capacity
@@ -399,7 +399,7 @@ export default function EventDetailPage() {
                         {displayedAttendees.map(attendee => (
                           <div
                             key={attendee.id}
-                            className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-700/50"
+                            className="flex items-center gap-2 p-2 rounded-lg bg-surface-50 dark:bg-surface-700/50"
                           >
                             {attendee.user.avatar ? (
                               <img
@@ -413,13 +413,13 @@ export default function EventDetailPage() {
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                              <p className="text-sm font-medium text-surface-900 dark:text-white truncate">
                                 {attendee.user.displayName}
                               </p>
                               <p className={`text-xs ${
                                 attendee.status === 'accepted' ? 'text-green-600 dark:text-green-400' :
                                 attendee.status === 'waitlisted' ? 'text-orange-600 dark:text-orange-400' :
-                                'text-gray-500 dark:text-gray-400'
+                                'text-surface-500 dark:text-surface-400'
                               }`}>
                                 {attendee.status}
                               </p>
@@ -448,7 +448,7 @@ export default function EventDetailPage() {
                       )}
                     </>
                   ) : (
-                    <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+                    <p className="text-center text-surface-500 dark:text-surface-400 py-4">
                       No attendees yet. Be the first to register!
                     </p>
                   )}
@@ -464,7 +464,7 @@ export default function EventDetailPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden sticky top-6"
+              className="bg-white dark:bg-surface-800 rounded-2xl shadow-sm border border-surface-200 dark:border-surface-700 overflow-hidden sticky top-6"
             >
               <div className="p-6">
                 {event.registrationRequired ? (
@@ -474,11 +474,11 @@ export default function EventDetailPage() {
                         <div className="text-center">
                           <div className={`
                             inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium
-                            ${event.myRsvpStatus === 'accepted' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : ''}
-                            ${event.myRsvpStatus === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : ''}
-                            ${event.myRsvpStatus === 'waitlisted' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : ''}
-                            ${event.myRsvpStatus === 'tentative' ? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' : ''}
-                            ${event.myRsvpStatus === 'declined' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : ''}
+                            ${event.myRsvpStatus === 'accepted' ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400' : ''}
+                            ${event.myRsvpStatus === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400' : ''}
+                            ${event.myRsvpStatus === 'waitlisted' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400' : ''}
+                            ${event.myRsvpStatus === 'tentative' ? 'bg-surface-100 text-surface-700 dark:bg-surface-700 dark:text-surface-300' : ''}
+                            ${event.myRsvpStatus === 'declined' ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400' : ''}
                           `}>
                             {event.myRsvpStatus === 'accepted' && <><Check className="w-4 h-4" /> You're registered!</>}
                             {event.myRsvpStatus === 'pending' && <><Clock className="w-4 h-4" /> Pending confirmation</>}
@@ -522,7 +522,7 @@ export default function EventDetailPage() {
                         className={`
                           flex items-center justify-center gap-2 w-full py-3 rounded-xl font-medium transition-all
                           ${isCapacityFull && !event.waitlistEnabled
-                            ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+                            ? 'bg-surface-200 dark:bg-surface-700 text-surface-500 cursor-not-allowed'
                             : 'bg-ghana-green hover:bg-ghana-green/90 text-white'
                           }
                           disabled:opacity-50
@@ -543,19 +543,19 @@ export default function EventDetailPage() {
                     )}
                   </>
                 ) : (
-                  <div className="text-center text-gray-500 dark:text-gray-400">
+                  <div className="text-center text-surface-500 dark:text-surface-400">
                     <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     <p>No registration required</p>
                   </div>
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center justify-center gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-center gap-4 mt-6 pt-6 border-t border-surface-200 dark:border-surface-700">
                   <button
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
                     title="Set reminder"
                   >
-                    <Bell className="w-5 h-5 text-gray-500" />
+                    <Bell className="w-5 h-5 text-surface-500 dark:text-surface-400" />
                   </button>
                   <button
                     onClick={() => {
@@ -565,10 +565,10 @@ export default function EventDetailPage() {
                         url: window.location.href,
                       });
                     }}
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
                     title="Share event"
                   >
-                    <Share2 className="w-5 h-5 text-gray-500" />
+                    <Share2 className="w-5 h-5 text-surface-500 dark:text-surface-400" />
                   </button>
                 </div>
               </div>

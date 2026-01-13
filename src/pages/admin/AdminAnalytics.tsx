@@ -354,7 +354,7 @@ function HeatMap({ data }: { data: number[][] }) {
 function MDALeaderboardRow({ mda, index }: { mda: MDAStats; index: number }) {
   const getRankStyle = (rank: number) => {
     if (rank === 1) return 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white';
-    if (rank === 2) return 'bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800';
+    if (rank === 2) return 'bg-gradient-to-r from-surface-300 to-surface-400 dark:from-surface-400 dark:to-surface-500 text-surface-800 dark:text-surface-900';
     if (rank === 3) return 'bg-gradient-to-r from-amber-600 to-amber-700 text-white';
     return 'bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400';
   };
@@ -438,7 +438,7 @@ function TopContentCard({ item, rank }: { item: TopContentType; rank: number }) 
       <div className={cn(
         'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-sm',
         rank === 1 && 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white',
-        rank === 2 && 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800',
+        rank === 2 && 'bg-gradient-to-br from-surface-300 to-surface-400 dark:from-surface-400 dark:to-surface-500 text-surface-800 dark:text-surface-900',
         rank === 3 && 'bg-gradient-to-br from-amber-600 to-amber-700 text-white',
         rank > 3 && 'bg-surface-100 dark:bg-surface-700 text-surface-500'
       )}>

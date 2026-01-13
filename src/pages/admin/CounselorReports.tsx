@@ -386,7 +386,7 @@ export default function CounselorReports() {
                               'w-5 h-5',
                               userReport.summary.moodTrend === 'improving' && 'text-green-500',
                               userReport.summary.moodTrend === 'declining' && 'text-red-500',
-                              userReport.summary.moodTrend === 'stable' && 'text-gray-400'
+                              userReport.summary.moodTrend === 'stable' && 'text-surface-400 dark:text-surface-500'
                             )} />
                           )}
                         </p>
@@ -435,7 +435,7 @@ export default function CounselorReports() {
                                 <span className={cn(
                                   'px-2 py-0.5 rounded text-xs font-medium',
                                   s.status === 'active' && 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-                                  s.status === 'completed' && 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400',
+                                  s.status === 'completed' && 'bg-surface-100 text-surface-700 dark:bg-surface-700 dark:text-surface-400',
                                   s.status === 'escalated' && 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                                 )}>
                                   {s.status}
@@ -553,11 +553,11 @@ export default function CounselorReports() {
                     </p>
                     <p className="text-xs text-red-600 dark:text-red-400">Escalation Rate</p>
                   </div>
-                  <div className="p-4 bg-gray-50 dark:bg-gray-900/20 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                  <div className="p-4 bg-surface-100 dark:bg-surface-700/50 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-surface-700 dark:text-surface-300">
                       {aggregateReport.overview.anonymousSessionRate.toFixed(1)}%
                     </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Anonymous</p>
+                    <p className="text-xs text-surface-600 dark:text-surface-400">Anonymous</p>
                   </div>
                 </div>
 

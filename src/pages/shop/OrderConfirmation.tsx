@@ -114,7 +114,7 @@ export default function OrderConfirmation() {
       case 'failed':
         return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
+        return 'bg-surface-100 text-surface-800 dark:bg-surface-900/30 dark:text-surface-400';
     }
   };
 

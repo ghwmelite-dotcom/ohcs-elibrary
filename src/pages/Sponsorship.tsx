@@ -226,11 +226,11 @@ function SponsorTierCard({
       bg: 'from-yellow-900/30 to-amber-900/50',
     },
     silver: {
-      gradient: 'from-gray-400 via-gray-300 to-gray-400',
-      border: 'border-gray-400/50',
-      glow: 'shadow-gray-400/20',
-      icon: 'text-gray-300',
-      bg: 'from-gray-800/50 to-gray-900/80',
+      gradient: 'from-surface-400 via-surface-300 to-surface-400 dark:from-surface-300 dark:via-surface-200 dark:to-surface-300',
+      border: 'border-surface-400/50 dark:border-surface-300/50',
+      glow: 'shadow-surface-400/20 dark:shadow-surface-300/20',
+      icon: 'text-surface-300 dark:text-surface-200',
+      bg: 'from-surface-800/50 to-surface-900/80',
     },
     bronze: {
       gradient: 'from-amber-600 via-orange-400 to-amber-600',

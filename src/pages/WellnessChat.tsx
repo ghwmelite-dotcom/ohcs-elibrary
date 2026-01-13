@@ -45,7 +45,6 @@ export default function WellnessChat() {
   const [selectedTopic, setSelectedTopic] = useState<CounselorTopic | undefined>();
   const [isCreating, setIsCreating] = useState(false);
 
-  // Fetch existing session or prepare for new one
   useEffect(() => {
     if (sessionId) {
       fetchSession(sessionId);
@@ -56,12 +55,10 @@ export default function WellnessChat() {
     }
   }, [sessionId, fetchSession, setCurrentSession]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
@@ -120,20 +117,17 @@ export default function WellnessChat() {
     }
   };
 
-  // Find the latest AI message for rating prompt
   const latestAIMessageId = messages
     .filter(m => m.role === 'assistant' && !m.id.startsWith('temp-'))
     .slice(-1)[0]?.id;
 
-  // Show topic selector for new sessions
   if (isNewSession) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-teal-50/50 via-white to-purple-50/30 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+      <div className="min-h-screen bg-gradient-to-b from-teal-50/50 via-white to-purple-50/30 dark:from-surface-900 dark:via-surface-900 dark:to-surface-900">
           <div className="max-w-2xl mx-auto px-4 py-8">
-            {/* Back button */}
             <button
               onClick={() => navigate('/wellness')}
-              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6"
+              className="flex items-center gap-2 text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 mb-6"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>Back to Wellness</span>
@@ -142,22 +136,22 @@ export default function WellnessChat() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6"
+              className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 p-6"
             >
               <div className="flex items-center gap-4 mb-6">
                 <AyoAvatar size="lg" mood="happy" />
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                  <h1 className="text-xl font-bold text-surface-900 dark:text-surface-100">
                     Start a Conversation
                   </h1>
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <p className="text-surface-600 dark:text-surface-400">
                     I'm Ayo, here to listen and support you.
                   </p>
                 </div>
               </div>
 
               {isAnonymous && (
-                <div className="mb-6 p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 flex items-center gap-2">
+                <div className="mb-6 p-3 rounded-lg bg-purple-50 dark:bg-purple-900/50 border border-purple-200 dark:border-purple-800 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   <span className="text-sm text-purple-700 dark:text-purple-300">
                     Anonymous mode is on. Your conversation won't be saved.
@@ -166,7 +160,7 @@ export default function WellnessChat() {
               )}
 
               <div className="mb-6">
-                <h2 className="font-medium text-gray-900 dark:text-white mb-3">
+                <h2 className="font-medium text-surface-900 dark:text-surface-100 mb-3">
                   What would you like to talk about?
                 </h2>
                 <TopicSelector
@@ -197,14 +191,13 @@ export default function WellnessChat() {
   }
 
   return (
-    <div className="h-[100dvh] md:h-[calc(100vh-4rem)] flex flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-        <div className="shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-4 py-2 sm:py-3 safe-area-top">
+    <div className="h-[100dvh] md:h-[calc(100vh-4rem)] flex flex-col bg-surface-50 dark:bg-surface-900">
+        <div className="shrink-0 bg-white dark:bg-surface-800 border-b border-surface-200 dark:border-surface-700 px-3 sm:px-4 py-2 sm:py-3 safe-area-top">
           <div className="max-w-3xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate('/wellness')}
-                className="p-2 -ml-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                className="p-2 -ml-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-400"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -212,10 +205,10 @@ export default function WellnessChat() {
               <AyoAvatar size="sm" mood="listening" isThinking={isSending} />
 
               <div>
-                <h1 className="font-semibold text-gray-900 dark:text-white">
+                <h1 className="font-semibold text-surface-900 dark:text-surface-100">
                   Ayo
                 </h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-surface-500 dark:text-surface-400">
                   {currentSession?.topic
                     ? topicLabels[currentSession.topic]
                     : 'Wellness Companion'}
@@ -227,7 +220,7 @@ export default function WellnessChat() {
             <div className="relative">
               <button
                 onClick={() => setShowMenu(!showMenu)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-400"
               >
                 <MoreVertical className="w-5 h-5" />
               </button>
@@ -238,14 +231,14 @@ export default function WellnessChat() {
                     initial={{ opacity: 0, scale: 0.95, y: -10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                    className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50"
+                    className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-surface-800 rounded-xl shadow-lg border border-surface-200 dark:border-surface-700 py-2 z-50"
                   >
                     <button
                       onClick={() => {
                         setShowEscalation(true);
                         setShowMenu(false);
                       }}
-                      className="w-full px-4 py-2 text-left flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                      className="w-full px-4 py-2 text-left flex items-center gap-3 hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-700 dark:text-surface-300"
                     >
                       <PhoneCall className="w-4 h-4" />
                       <span>Request CSEAP Counselor</span>
@@ -255,7 +248,7 @@ export default function WellnessChat() {
                         handleEndSession();
                         setShowMenu(false);
                       }}
-                      className="w-full px-4 py-2 text-left flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                      className="w-full px-4 py-2 text-left flex items-center gap-3 hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-700 dark:text-surface-300"
                     >
                       <XCircle className="w-4 h-4" />
                       <span>End Session</span>
@@ -267,20 +260,17 @@ export default function WellnessChat() {
           </div>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
           <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-3 sm:space-y-4">
-            {/* Session started indicator */}
             {currentSession && (
               <div className="text-center">
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-100 dark:bg-surface-800 text-xs text-surface-500 dark:text-surface-400">
                   <Info className="w-3 h-3" />
                   Session started
                 </span>
               </div>
             )}
 
-            {/* Messages list */}
             {messages.map((message) => (
               <ChatMessage
                 key={message.id}
@@ -290,16 +280,15 @@ export default function WellnessChat() {
               />
             ))}
 
-            {/* Typing indicator */}
             {isSending && (
               <div className="flex items-center gap-3">
                 <AyoAvatar size="md" mood="listening" isThinking />
-                <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-sm px-4 py-3">
+                <div className="bg-surface-100 dark:bg-surface-800 rounded-2xl rounded-tl-sm px-4 py-3">
                   <div className="flex items-center gap-1">
                     {[0, 1, 2].map((i) => (
                       <motion.div
                         key={i}
-                        className="w-2 h-2 rounded-full bg-gray-400"
+                        className="w-2 h-2 rounded-full bg-surface-400 dark:bg-surface-500"
                         animate={{ opacity: [0.3, 1, 0.3] }}
                         transition={{
                           duration: 0.8,
@@ -313,12 +302,11 @@ export default function WellnessChat() {
               </div>
             )}
 
-            {/* Escalated session notice */}
             {currentSession?.status === 'escalated' && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800"
+                className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/50 border border-amber-200 dark:border-amber-800"
               >
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
@@ -339,9 +327,8 @@ export default function WellnessChat() {
           </div>
         </div>
 
-        {/* Input area */}
         {currentSession?.status !== 'completed' && (
-          <div className="shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 sm:px-4 py-2 sm:py-3 safe-area-bottom">
+          <div className="shrink-0 bg-white dark:bg-surface-800 border-t border-surface-200 dark:border-surface-700 px-3 sm:px-4 py-2 sm:py-3 safe-area-bottom">
             <div className="max-w-3xl mx-auto">
               <div className="flex items-end gap-2">
                 <div className="flex-1 relative">
@@ -354,9 +341,9 @@ export default function WellnessChat() {
                     rows={1}
                     disabled={isSending}
                     className={cn(
-                      'w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 dark:border-gray-700',
-                      'bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm sm:text-base',
-                      'placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500',
+                      'w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-surface-200 dark:border-surface-700',
+                      'bg-surface-50 dark:bg-surface-900 text-surface-900 dark:text-surface-100 text-sm sm:text-base',
+                      'placeholder-surface-400 dark:placeholder-surface-500 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500',
                       'disabled:opacity-50 disabled:cursor-not-allowed'
                     )}
                   />
@@ -371,14 +358,13 @@ export default function WellnessChat() {
                 </Button>
               </div>
 
-              <p className="text-xs text-gray-400 mt-1.5 sm:mt-2 text-center hidden sm:block">
+              <p className="text-xs text-surface-400 dark:text-surface-500 mt-1.5 sm:mt-2 text-center hidden sm:block">
                 Press Enter to send, Shift+Enter for new line
               </p>
             </div>
           </div>
         )}
 
-        {/* Escalation modal - Fully Responsive */}
         <AnimatePresence>
           {showEscalation && (
             <motion.div
@@ -394,38 +380,35 @@ export default function WellnessChat() {
                 exit={{ opacity: 0, y: 100, scale: 0.95 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:mx-4 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden"
+                className="bg-white dark:bg-surface-800 w-full sm:max-w-md sm:mx-4 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden"
               >
-                {/* Mobile drag indicator */}
                 <div className="sm:hidden flex justify-center pt-3 pb-1">
-                  <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+                  <div className="w-10 h-1 rounded-full bg-surface-300 dark:bg-surface-600" />
                 </div>
 
-                {/* Header */}
-                <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-gray-100 dark:border-gray-700/50">
+                <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-surface-100 dark:border-surface-700/50">
                   <div className="flex items-center gap-3">
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-                      className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/30 shadow-inner shrink-0"
+                      className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/50 dark:to-orange-900/50 shadow-inner shrink-0"
                     >
                       <PhoneCall className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 dark:text-amber-400" />
                     </motion.div>
                     <div className="min-w-0">
-                      <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                      <h2 className="text-base sm:text-lg font-semibold text-surface-900 dark:text-surface-100">
                         Request CSEAP Counselor
                       </h2>
-                      <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 font-medium truncate">
+                      <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 font-medium truncate">
                         Civil Service Employee Assistance Programme
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-4">
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">
+                  <p className="text-sm sm:text-base text-surface-600 dark:text-surface-400 mb-4">
                     Our trained CSEAP counselors are here to provide confidential support.
                     Please share what you'd like help with (optional):
                   </p>
@@ -435,19 +418,17 @@ export default function WellnessChat() {
                     onChange={(e) => setEscalationReason(e.target.value)}
                     placeholder="Tell us briefly what you need help with..."
                     rows={4}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm sm:text-base touch-manipulation"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900 text-surface-900 dark:text-surface-100 placeholder-surface-400 dark:placeholder-surface-500 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm sm:text-base touch-manipulation"
                   />
 
-                  {/* Info note */}
-                  <div className="mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/50">
+                  <div className="mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/50 border border-amber-200/50 dark:border-amber-800/50">
                     <p className="text-xs text-amber-700 dark:text-amber-400">
                       <span className="font-semibold">Confidential:</span> Your request will be handled privately by our professional counselors.
                     </p>
                   </div>
                 </div>
 
-                {/* Fixed Bottom Actions */}
-                <div className="shrink-0 px-4 sm:px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700/50">
+                <div className="shrink-0 px-4 sm:px-6 py-4 bg-surface-50 dark:bg-surface-800/50 border-t border-surface-100 dark:border-surface-700/50">
                   <div className="flex gap-3">
                     <Button
                       variant="outline"
@@ -463,7 +444,6 @@ export default function WellnessChat() {
                       Contact CSEAP
                     </Button>
                   </div>
-                  {/* Safe area padding for notched devices */}
                   <div className="h-safe-area-inset-bottom" />
                 </div>
               </motion.div>

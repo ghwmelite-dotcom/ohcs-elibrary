@@ -193,10 +193,10 @@ export default function ResearchProject() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-50 dark:bg-surface-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">Loading project...</p>
+          <p className="text-surface-500 dark:text-surface-400">Loading project...</p>
         </div>
       </div>
     );
@@ -204,10 +204,10 @@ export default function ResearchProject() {
 
   if (error || !currentProject) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-50 dark:bg-surface-900 flex items-center justify-center">
         <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <AlertCircle className="w-16 h-16 text-red-500 dark:text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-100 mb-2">
             {error || 'Project not found'}
           </h2>
           <Link
@@ -247,9 +247,9 @@ export default function ResearchProject() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
       {/* Header */}
-      <div className={cn('border-b border-gray-200 dark:border-gray-700', category.color.replace('bg-', 'bg-gradient-to-r from-') + ' to-primary-700')}>
+      <div className={cn('border-b border-surface-200 dark:border-surface-700', category.color.replace('bg-', 'bg-gradient-to-r from-') + ' to-primary-700')}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-white/70 mb-4">
@@ -307,7 +307,7 @@ export default function ResearchProject() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+      <div className="bg-white dark:bg-surface-800 border-b border-surface-200 dark:border-surface-700 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-1 overflow-x-auto py-1">
             {tabs.map((tab) => (
@@ -318,7 +318,7 @@ export default function ResearchProject() {
                   'flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-lg whitespace-nowrap transition-colors',
                   activeTab === tab.id
                     ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+                    : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:bg-surface-50 dark:hover:bg-surface-700'
                 )}
               >
                 <tab.icon className="w-4 h-4" />
@@ -328,7 +328,7 @@ export default function ResearchProject() {
                     'px-2 py-0.5 text-xs rounded-full',
                     activeTab === tab.id
                       ? 'bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                      : 'bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400'
                   )}>
                     {tab.count}
                   </span>
@@ -353,8 +353,8 @@ export default function ResearchProject() {
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Phase Progress */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm border border-surface-100 dark:border-surface-700">
+                  <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-4">
                     Research Progress
                   </h3>
                   <PhaseProgress
@@ -367,11 +367,11 @@ export default function ResearchProject() {
 
                 {/* Description */}
                 {currentProject.description && (
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm border border-surface-100 dark:border-surface-700">
+                    <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-3">
                       Description
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                    <p className="text-surface-600 dark:text-surface-400 whitespace-pre-wrap">
                       {currentProject.description}
                     </p>
                   </div>
@@ -379,17 +379,17 @@ export default function ResearchProject() {
 
                 {/* Objectives */}
                 {currentProject.objectives && currentProject.objectives.length > 0 && (
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm border border-surface-100 dark:border-surface-700">
+                    <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-3">
                       Research Objectives
                     </h3>
                     <ul className="space-y-2">
                       {currentProject.objectives.map((objective, index) => (
                         <li key={index} className="flex items-start gap-3">
-                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 flex items-center justify-center text-sm font-medium">
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 flex items-center justify-center text-sm font-medium">
                             {index + 1}
                           </span>
-                          <span className="text-gray-600 dark:text-gray-400">{objective}</span>
+                          <span className="text-surface-600 dark:text-surface-400">{objective}</span>
                         </li>
                       ))}
                     </ul>
@@ -398,12 +398,12 @@ export default function ResearchProject() {
 
                 {/* Hypothesis */}
                 {currentProject.hypothesis && (
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                      <Lightbulb className="w-5 h-5 text-secondary-500" />
+                  <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm border border-surface-100 dark:border-surface-700">
+                    <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-3 flex items-center gap-2">
+                      <Lightbulb className="w-5 h-5 text-secondary-500 dark:text-secondary-400" />
                       Hypothesis
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400 italic">
+                    <p className="text-surface-600 dark:text-surface-400 italic">
                       "{currentProject.hypothesis}"
                     </p>
                   </div>
@@ -413,19 +413,19 @@ export default function ResearchProject() {
               {/* Sidebar */}
               <div className="space-y-6">
                 {/* Quick Info */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm border border-surface-100 dark:border-surface-700">
+                  <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-4">
                     Project Info
                   </h3>
                   <dl className="space-y-4">
                     <div>
-                      <dt className="text-sm text-gray-500 dark:text-gray-400">Methodology</dt>
-                      <dd className="mt-1 text-gray-900 dark:text-white font-medium">
+                      <dt className="text-sm text-surface-500 dark:text-surface-400">Methodology</dt>
+                      <dd className="mt-1 text-surface-900 dark:text-surface-100 font-medium">
                         {RESEARCH_METHODOLOGIES[currentProject.methodology]}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500 dark:text-gray-400">Team Lead</dt>
+                      <dt className="text-sm text-surface-500 dark:text-surface-400">Team Lead</dt>
                       <dd className="mt-1 flex items-center gap-2">
                         {currentProject.teamLead?.avatar ? (
                           <img
@@ -434,22 +434,22 @@ export default function ResearchProject() {
                             className="w-8 h-8 rounded-full"
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center">
                             <span className="text-sm font-medium text-primary-600 dark:text-primary-400">
                               {currentProject.teamLead?.displayName?.charAt(0) || 'U'}
                             </span>
                           </div>
                         )}
-                        <span className="text-gray-900 dark:text-white">
+                        <span className="text-surface-900 dark:text-surface-100">
                           {currentProject.teamLead?.displayName || 'Unknown'}
                         </span>
                       </dd>
                     </div>
                     {currentProject.startDate && (
                       <div>
-                        <dt className="text-sm text-gray-500 dark:text-gray-400">Start Date</dt>
-                        <dd className="mt-1 text-gray-900 dark:text-white flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-gray-400" />
+                        <dt className="text-sm text-surface-500 dark:text-surface-400">Start Date</dt>
+                        <dd className="mt-1 text-surface-900 dark:text-surface-100 flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-surface-400 dark:text-surface-500" />
                           {new Date(currentProject.startDate).toLocaleDateString('en-GB', {
                             day: 'numeric',
                             month: 'long',
@@ -460,9 +460,9 @@ export default function ResearchProject() {
                     )}
                     {currentProject.targetEndDate && (
                       <div>
-                        <dt className="text-sm text-gray-500 dark:text-gray-400">Target End Date</dt>
-                        <dd className="mt-1 text-gray-900 dark:text-white flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-gray-400" />
+                        <dt className="text-sm text-surface-500 dark:text-surface-400">Target End Date</dt>
+                        <dd className="mt-1 text-surface-900 dark:text-surface-100 flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-surface-400 dark:text-surface-500" />
                           {new Date(currentProject.targetEndDate).toLocaleDateString('en-GB', {
                             day: 'numeric',
                             month: 'long',
@@ -472,8 +472,8 @@ export default function ResearchProject() {
                       </div>
                     )}
                     <div>
-                      <dt className="text-sm text-gray-500 dark:text-gray-400">Visibility</dt>
-                      <dd className="mt-1 text-gray-900 dark:text-white">
+                      <dt className="text-sm text-surface-500 dark:text-surface-400">Visibility</dt>
+                      <dd className="mt-1 text-surface-900 dark:text-surface-100">
                         {currentProject.isPublic ? 'Public' : 'Private'}
                       </dd>
                     </div>
@@ -482,15 +482,15 @@ export default function ResearchProject() {
 
                 {/* Tags */}
                 {currentProject.tags && currentProject.tags.length > 0 && (
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  <div className="bg-white dark:bg-surface-800 rounded-xl p-6 shadow-sm border border-surface-100 dark:border-surface-700">
+                    <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-3">
                       Tags
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {currentProject.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm"
+                          className="px-3 py-1 bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300 rounded-full text-sm"
                         >
                           {tag}
                         </span>
@@ -537,7 +537,7 @@ export default function ResearchProject() {
               exit={{ opacity: 0, y: -10 }}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-100">
                   Literature ({literature.length})
                 </h2>
                 {canEdit && (
@@ -551,16 +551,16 @@ export default function ResearchProject() {
               {literatureLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-24 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
+                    <div key={i} className="h-24 bg-surface-100 dark:bg-surface-800 rounded-xl animate-pulse" />
                   ))}
                 </div>
               ) : literature.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
-                  <BookOpen className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                <div className="bg-white dark:bg-surface-800 rounded-xl p-12 text-center border border-surface-200 dark:border-surface-700">
+                  <BookOpen className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-2">
                     No literature added yet
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-surface-500 dark:text-surface-400 mb-4">
                     Add documents from the library or external sources to build your literature review.
                   </p>
                 </div>
@@ -569,30 +569,30 @@ export default function ResearchProject() {
                   {literature.map((lit) => (
                     <div
                       key={lit.id}
-                      className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700"
+                      className="bg-white dark:bg-surface-800 rounded-xl p-5 border border-surface-200 dark:border-surface-700"
                     >
                       <div className="flex items-start gap-4">
-                        <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                          <BookOpen className="w-5 h-5 text-gray-500" />
+                        <div className="p-2 bg-surface-100 dark:bg-surface-700 rounded-lg">
+                          <BookOpen className="w-5 h-5 text-surface-500 dark:text-surface-400" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 dark:text-white">
+                          <h4 className="font-medium text-surface-900 dark:text-surface-100">
                             {lit.document?.title || lit.externalTitle || 'Untitled'}
                           </h4>
                           {lit.externalAuthors && (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
                               {lit.externalAuthors} {lit.externalYear && `(${lit.externalYear})`}
                             </p>
                           )}
                           {lit.notes && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 whitespace-pre-wrap">
+                            <p className="text-sm text-surface-600 dark:text-surface-400 mt-2 whitespace-pre-wrap">
                               {lit.notes}
                             </p>
                           )}
                           <div className="flex items-center gap-2 mt-2">
-                            <span className="text-xs text-gray-400">{lit.citationKey}</span>
+                            <span className="text-xs text-surface-400 dark:text-surface-500">{lit.citationKey}</span>
                             {lit.relevanceScore && (
-                              <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded">
+                              <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded">
                                 {Math.round(lit.relevanceScore * 100)}% relevant
                               </span>
                             )}
@@ -603,7 +603,7 @@ export default function ResearchProject() {
                             <button
                               onClick={() => handleSummarizeLiterature(lit.id)}
                               disabled={summarizingLitId === lit.id}
-                              className="p-2 text-gray-400 hover:text-primary-500 transition-colors disabled:opacity-50"
+                              className="p-2 text-surface-400 dark:text-surface-500 hover:text-primary-500 dark:hover:text-primary-400 transition-colors disabled:opacity-50"
                               title="AI Summarize"
                             >
                               {summarizingLitId === lit.id ? (
@@ -618,7 +618,7 @@ export default function ResearchProject() {
                               href={lit.externalUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-2 text-gray-400 hover:text-primary-500 transition-colors"
+                              className="p-2 text-surface-400 dark:text-surface-500 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
                             >
                               <ExternalLink className="w-4 h-4" />
                             </a>
@@ -693,11 +693,11 @@ export default function ResearchProject() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Brain className="w-5 h-5 text-primary-500" />
+                  <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-100 flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-primary-500 dark:text-primary-400" />
                     AI Insights ({insights.length})
                   </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
                     AI-generated research insights and recommendations
                   </p>
                 </div>
@@ -725,16 +725,16 @@ export default function ResearchProject() {
               {insightsLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
+                    <div key={i} className="h-32 bg-surface-100 dark:bg-surface-800 rounded-xl animate-pulse" />
                   ))}
                 </div>
               ) : insights.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
-                  <Brain className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                <div className="bg-white dark:bg-surface-800 rounded-xl p-12 text-center border border-surface-200 dark:border-surface-700">
+                  <Brain className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-2">
                     No insights yet
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-surface-500 dark:text-surface-400 mb-4">
                     Generate AI-powered insights to help guide your research.
                   </p>
                   {canEdit && (
@@ -763,11 +763,11 @@ export default function ResearchProject() {
                     <div
                       key={insight.id}
                       className={cn(
-                        'bg-white dark:bg-gray-800 rounded-xl p-5 border-l-4',
-                        insight.confidence >= 0.7 && 'border-l-green-500',
-                        insight.confidence >= 0.4 && insight.confidence < 0.7 && 'border-l-yellow-500',
-                        insight.confidence < 0.4 && 'border-l-red-500',
-                        'border border-gray-200 dark:border-gray-700'
+                        'bg-white dark:bg-surface-800 rounded-xl p-5 border-l-4',
+                        insight.confidence >= 0.7 && 'border-l-green-500 dark:border-l-green-400',
+                        insight.confidence >= 0.4 && insight.confidence < 0.7 && 'border-l-yellow-500 dark:border-l-yellow-400',
+                        insight.confidence < 0.4 && 'border-l-red-500 dark:border-l-red-400',
+                        'border border-surface-200 dark:border-surface-700'
                       )}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -775,36 +775,36 @@ export default function ResearchProject() {
                           <div className="flex items-center gap-2 mb-2">
                             <span className={cn(
                               'px-2 py-0.5 text-xs rounded-full capitalize',
-                              insight.type === 'recommendation' && 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300',
-                              insight.type === 'key_finding' && 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300',
-                              insight.type === 'gap' && 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300',
-                              insight.type === 'contradiction' && 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300',
-                              insight.type === 'synthesis' && 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300',
-                              insight.type === 'opportunity' && 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300',
-                              insight.type === 'trend' && 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                              insight.type === 'recommendation' && 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300',
+                              insight.type === 'key_finding' && 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300',
+                              insight.type === 'gap' && 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300',
+                              insight.type === 'contradiction' && 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300',
+                              insight.type === 'synthesis' && 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300',
+                              insight.type === 'opportunity' && 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300',
+                              insight.type === 'trend' && 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
                             )}>
                               {insight.type.replace('_', ' ')}
                             </span>
                             {insight.isAIGenerated && (
-                              <span className="text-xs text-gray-400 flex items-center gap-1">
+                              <span className="text-xs text-surface-400 dark:text-surface-500 flex items-center gap-1">
                                 <Sparkles className="w-3 h-3" /> AI
                               </span>
                             )}
                           </div>
-                          <h4 className="font-medium text-gray-900 dark:text-white">
+                          <h4 className="font-medium text-surface-900 dark:text-surface-100">
                             {insight.title}
                           </h4>
                         </div>
                         {canEdit && (
                           <button
                             onClick={() => id && deleteInsight(id, insight.id)}
-                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                            className="p-1 text-surface-400 dark:text-surface-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                           >
                             <X className="w-4 h-4" />
                           </button>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                      <p className="text-sm text-surface-600 dark:text-surface-400 mt-2">
                         {insight.content}
                       </p>
                       <div className="flex items-center gap-2 mt-3">
@@ -835,11 +835,11 @@ export default function ResearchProject() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-primary-500" />
+                  <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-100 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-primary-500 dark:text-primary-400" />
                     Policy Briefs ({briefs.length})
                   </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
                     AI-generated policy briefs and executive summaries
                   </p>
                 </div>
@@ -867,16 +867,16 @@ export default function ResearchProject() {
               {briefsLoading ? (
                 <div className="space-y-4">
                   {[1, 2].map((i) => (
-                    <div key={i} className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
+                    <div key={i} className="h-48 bg-surface-100 dark:bg-surface-800 rounded-xl animate-pulse" />
                   ))}
                 </div>
               ) : briefs.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
-                  <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                <div className="bg-white dark:bg-surface-800 rounded-xl p-12 text-center border border-surface-200 dark:border-surface-700">
+                  <FileText className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-2">
                     No briefs yet
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-surface-500 dark:text-surface-400 mb-4">
                     Generate AI-powered policy briefs from your research insights.
                   </p>
                   {canEdit && (
@@ -904,47 +904,47 @@ export default function ResearchProject() {
                   {briefs.map((brief) => (
                     <div
                       key={brief.id}
-                      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+                      className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden"
                     >
                       <div className="p-5">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-full capitalize">
+                              <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 rounded-full capitalize">
                                 Policy Brief
                               </span>
                               <span className={cn(
                                 'px-2 py-0.5 text-xs rounded-full',
-                                brief.status === 'published' && 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300',
-                                brief.status === 'draft' && 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
-                                brief.status === 'review' && 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300',
-                                brief.status === 'approved' && 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                                brief.status === 'published' && 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300',
+                                brief.status === 'draft' && 'bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400',
+                                brief.status === 'review' && 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300',
+                                brief.status === 'approved' && 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
                               )}>
                                 {brief.status}
                               </span>
                             </div>
-                            <h4 className="font-medium text-gray-900 dark:text-white">
+                            <h4 className="font-medium text-surface-900 dark:text-surface-100">
                               {brief.title}
                             </h4>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            <p className="text-xs text-surface-500 dark:text-surface-400 mt-1">
                               Version {brief.version} • Created: {new Date(brief.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => setSelectedBrief(selectedBrief === brief.id ? null : brief.id)}
-                              className="p-2 text-gray-400 hover:text-primary-500 transition-colors"
+                              className="p-2 text-surface-400 dark:text-surface-500 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
                               title="View Brief"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleCopyBrief(brief.id, brief.executiveSummary)}
-                              className="p-2 text-gray-400 hover:text-primary-500 transition-colors"
+                              className="p-2 text-surface-400 dark:text-surface-500 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
                               title="Copy to Clipboard"
                             >
                               {copiedBriefId === brief.id ? (
-                                <Check className="w-4 h-4 text-green-500" />
+                                <Check className="w-4 h-4 text-green-500 dark:text-green-400" />
                               ) : (
                                 <Copy className="w-4 h-4" />
                               )}
@@ -952,7 +952,7 @@ export default function ResearchProject() {
                             {canEdit && (
                               <button
                                 onClick={() => id && deleteBrief(id, brief.id)}
-                                className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                className="p-2 text-surface-400 dark:text-surface-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                                 title="Delete Brief"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -970,9 +970,9 @@ export default function ResearchProject() {
                             exit={{ height: 0, opacity: 0 }}
                             className="overflow-hidden"
                           >
-                            <div className="p-5 pt-0 border-t border-gray-100 dark:border-gray-700 mt-4">
+                            <div className="p-5 pt-0 border-t border-surface-100 dark:border-surface-700 mt-4">
                               <div className="prose prose-sm dark:prose-invert max-w-none">
-                                <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-auto max-h-96">
+                                <pre className="whitespace-pre-wrap text-sm text-surface-700 dark:text-surface-300 bg-surface-50 dark:bg-surface-900 p-4 rounded-lg overflow-auto max-h-96">
                                   {brief.executiveSummary}
                                 </pre>
                               </div>
@@ -995,7 +995,7 @@ export default function ResearchProject() {
               exit={{ opacity: 0, y: -10 }}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-100">
                   Team Members ({(currentProject.teamMembers?.length || 0) + 1})
                 </h2>
                 {(isOwner || isLead) && (
@@ -1008,7 +1008,7 @@ export default function ResearchProject() {
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Team Lead */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-primary-200 dark:border-primary-800">
+                <div className="bg-white dark:bg-surface-800 rounded-xl p-5 border-2 border-primary-200 dark:border-primary-700">
                   <div className="flex items-center gap-4">
                     {currentProject.teamLead?.avatar ? (
                       <img
@@ -1017,14 +1017,14 @@ export default function ResearchProject() {
                         className="w-12 h-12 rounded-full"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center">
                         <span className="text-lg font-medium text-primary-600 dark:text-primary-400">
                           {currentProject.teamLead?.displayName?.charAt(0) || 'U'}
                         </span>
                       </div>
                     )}
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">
+                      <h4 className="font-medium text-surface-900 dark:text-surface-100">
                         {currentProject.teamLead?.displayName || 'Unknown'}
                       </h4>
                       <span className="text-sm text-primary-600 dark:text-primary-400 font-medium">
@@ -1038,7 +1038,7 @@ export default function ResearchProject() {
                 {currentProject.teamMembers?.map((member) => (
                   <div
                     key={member.id}
-                    className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700"
+                    className="bg-white dark:bg-surface-800 rounded-xl p-5 border border-surface-200 dark:border-surface-700"
                   >
                     <div className="flex items-center gap-4">
                       {member.user?.avatar ? (
@@ -1048,17 +1048,17 @@ export default function ResearchProject() {
                           className="w-12 h-12 rounded-full"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                          <span className="text-lg font-medium text-gray-600 dark:text-gray-400">
+                        <div className="w-12 h-12 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center">
+                          <span className="text-lg font-medium text-surface-600 dark:text-surface-400">
                             {member.user?.displayName?.charAt(0) || 'U'}
                           </span>
                         </div>
                       )}
                       <div>
-                        <h4 className="font-medium text-gray-900 dark:text-white">
+                        <h4 className="font-medium text-surface-900 dark:text-surface-100">
                           {member.user?.displayName || 'Unknown'}
                         </h4>
-                        <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                        <span className="text-sm text-surface-500 dark:text-surface-400 capitalize">
                           {member.role}
                         </span>
                       </div>
@@ -1076,7 +1076,7 @@ export default function ResearchProject() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
             >
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+              <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-100 mb-6">
                 Activity Log
               </h2>
 
@@ -1084,26 +1084,26 @@ export default function ResearchProject() {
                 <div className="space-y-4">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div key={i} className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full animate-pulse" />
+                      <div className="w-10 h-10 bg-surface-100 dark:bg-surface-700 rounded-full animate-pulse" />
                       <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-3/4 animate-pulse" />
-                        <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded w-1/2 animate-pulse" />
+                        <div className="h-4 bg-surface-100 dark:bg-surface-700 rounded w-3/4 animate-pulse" />
+                        <div className="h-3 bg-surface-100 dark:bg-surface-700 rounded w-1/2 animate-pulse" />
                       </div>
                     </div>
                   ))}
                 </div>
               ) : activities.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
-                  <Activity className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                <div className="bg-white dark:bg-surface-800 rounded-xl p-12 text-center border border-surface-200 dark:border-surface-700">
+                  <Activity className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-2">
                     No activity yet
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-surface-500 dark:text-surface-400">
                     Activity will appear here as the project progresses.
                   </p>
                 </div>
               ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
+                <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 divide-y divide-surface-100 dark:divide-surface-700">
                   {activities.map((activity) => (
                     <div key={activity.id} className="flex items-center gap-4 p-4">
                       {activity.user?.avatar ? (
@@ -1113,24 +1113,24 @@ export default function ResearchProject() {
                           className="w-10 h-10 rounded-full"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        <div className="w-10 h-10 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center">
+                          <span className="text-sm font-medium text-surface-600 dark:text-surface-400">
                             {activity.user?.displayName?.charAt(0) || 'U'}
                           </span>
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900 dark:text-white">
+                        <p className="text-sm text-surface-900 dark:text-surface-100">
                           <span className="font-medium">{activity.user?.displayName || 'Someone'}</span>
                           {' '}
-                          <span className="text-gray-500 dark:text-gray-400">
+                          <span className="text-surface-500 dark:text-surface-400">
                             {activity.action.replace(/_/g, ' ')}
                           </span>
                           {activity.details && (
-                            <span className="text-gray-600 dark:text-gray-300"> - {activity.details}</span>
+                            <span className="text-surface-600 dark:text-surface-300"> - {activity.details}</span>
                           )}
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-xs text-surface-400 dark:text-surface-500 mt-0.5">
                           {new Date(activity.createdAt).toLocaleDateString('en-GB', {
                             day: 'numeric',
                             month: 'short',
@@ -1154,20 +1154,20 @@ export default function ResearchProject() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
             >
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+              <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-100 mb-6">
                 Discussion ({comments.length})
               </h2>
 
               {/* Comment Form */}
               {isMember && (
                 <form onSubmit={handleCommentSubmit} className="mb-6">
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="bg-white dark:bg-surface-800 rounded-xl p-4 border border-surface-200 dark:border-surface-700">
                     <textarea
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                       placeholder="Add a comment..."
                       rows={3}
-                      className="w-full px-0 py-0 border-0 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-0 resize-none"
+                      className="w-full px-0 py-0 border-0 bg-transparent text-surface-900 dark:text-surface-100 placeholder-surface-400 dark:placeholder-surface-500 focus:ring-0 resize-none"
                     />
                     <div className="flex justify-end mt-3">
                       <button
@@ -1187,25 +1187,25 @@ export default function ResearchProject() {
               {commentsLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-5 animate-pulse">
+                    <div key={i} className="bg-white dark:bg-surface-800 rounded-xl p-5 animate-pulse">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full" />
+                        <div className="w-10 h-10 bg-surface-200 dark:bg-surface-700 rounded-full" />
                         <div className="flex-1">
-                          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-2" />
-                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/6" />
+                          <div className="h-4 bg-surface-200 dark:bg-surface-700 rounded w-1/4 mb-2" />
+                          <div className="h-3 bg-surface-200 dark:bg-surface-700 rounded w-1/6" />
                         </div>
                       </div>
-                      <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded" />
+                      <div className="h-16 bg-surface-200 dark:bg-surface-700 rounded" />
                     </div>
                   ))}
                 </div>
               ) : comments.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
-                  <MessageSquare className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                <div className="bg-white dark:bg-surface-800 rounded-xl p-12 text-center border border-surface-200 dark:border-surface-700">
+                  <MessageSquare className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-2">
                     No comments yet
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-surface-500 dark:text-surface-400">
                     Start the discussion by adding the first comment.
                   </p>
                 </div>
@@ -1214,7 +1214,7 @@ export default function ResearchProject() {
                   {comments.map((comment) => (
                     <div
                       key={comment.id}
-                      className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700"
+                      className="bg-white dark:bg-surface-800 rounded-xl p-5 border border-surface-200 dark:border-surface-700"
                     >
                       <div className="flex items-start gap-3">
                         {comment.user?.avatar ? (
@@ -1224,18 +1224,18 @@ export default function ResearchProject() {
                             className="w-10 h-10 rounded-full"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                          <div className="w-10 h-10 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center">
+                            <span className="text-sm font-medium text-surface-600 dark:text-surface-400">
                               {comment.user?.displayName?.charAt(0) || 'U'}
                             </span>
                           </div>
                         )}
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-gray-900 dark:text-white">
+                            <span className="font-medium text-surface-900 dark:text-surface-100">
                               {comment.user?.displayName || 'Unknown'}
                             </span>
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-surface-400 dark:text-surface-500">
                               {new Date(comment.createdAt).toLocaleDateString('en-GB', {
                                 day: 'numeric',
                                 month: 'short',
@@ -1244,7 +1244,7 @@ export default function ResearchProject() {
                               })}
                             </span>
                           </div>
-                          <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                          <p className="text-surface-600 dark:text-surface-400 whitespace-pre-wrap">
                             {comment.content}
                           </p>
                         </div>
@@ -1252,7 +1252,7 @@ export default function ResearchProject() {
 
                       {/* Replies */}
                       {comment.replies && comment.replies.length > 0 && (
-                        <div className="ml-12 mt-4 space-y-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <div className="ml-12 mt-4 space-y-3 pt-4 border-t border-surface-100 dark:border-surface-700">
                           {comment.replies.map((reply) => (
                             <div key={reply.id} className="flex items-start gap-3">
                               {reply.user?.avatar ? (
@@ -1262,25 +1262,25 @@ export default function ResearchProject() {
                                   className="w-8 h-8 rounded-full"
                                 />
                               ) : (
-                                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                  <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                <div className="w-8 h-8 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center">
+                                  <span className="text-xs font-medium text-surface-600 dark:text-surface-400">
                                     {reply.user?.displayName?.charAt(0) || 'U'}
                                   </span>
                                 </div>
                               )}
                               <div>
                                 <div className="flex items-center gap-2 mb-0.5">
-                                  <span className="font-medium text-sm text-gray-900 dark:text-white">
+                                  <span className="font-medium text-sm text-surface-900 dark:text-surface-100">
                                     {reply.user?.displayName || 'Unknown'}
                                   </span>
-                                  <span className="text-xs text-gray-400">
+                                  <span className="text-xs text-surface-400 dark:text-surface-500">
                                     {new Date(reply.createdAt).toLocaleDateString('en-GB', {
                                       day: 'numeric',
                                       month: 'short',
                                     })}
                                   </span>
                                 </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                <p className="text-sm text-surface-600 dark:text-surface-400">
                                   {reply.content}
                                 </p>
                               </div>
@@ -1312,24 +1312,24 @@ export default function ResearchProject() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full shadow-xl"
+              className="relative bg-white dark:bg-surface-800 rounded-xl p-6 max-w-md w-full shadow-xl"
             >
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">
                 Delete Project?
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6">
+              <p className="text-surface-500 dark:text-surface-400 mb-6">
                 Are you sure you want to delete "{currentProject.title}"? This action cannot be undone.
               </p>
               <div className="flex items-center justify-end gap-3">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="px-4 py-2 text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 transition-colors"
                 >
                   Delete Project
                 </button>

@@ -78,11 +78,11 @@ const PAYMENT_METHODS = [
     shortName: 'Card',
     icon: '/images/card.png',
     iconFallback: '💳',
-    color: 'from-gray-600 to-gray-700',
-    bgColor: 'bg-gray-50 dark:bg-gray-800/50',
-    borderColor: 'border-gray-200 dark:border-gray-700',
+    color: 'from-surface-600 to-surface-700',
+    bgColor: 'bg-surface-50 dark:bg-surface-800/50',
+    borderColor: 'border-surface-200 dark:border-surface-700',
     selectedBorder: 'ring-2 ring-primary-500 border-primary-500',
-    textColor: 'text-gray-700 dark:text-gray-300',
+    textColor: 'text-surface-700 dark:text-surface-300',
   },
 ];
 

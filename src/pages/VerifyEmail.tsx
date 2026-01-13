@@ -141,7 +141,7 @@ export default function VerifyEmail() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md relative z-10"
       >
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-surface-800 rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-green-600 to-green-700 p-6 text-white text-center relative">
             <button
@@ -202,7 +202,7 @@ export default function VerifyEmail() {
                     transition={{ type: 'spring', delay: 0.3 }}
                     className="relative inline-block"
                   >
-                    <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
                       <CheckCircle2 className="w-10 h-10 text-green-600" />
                     </div>
                     <motion.div
@@ -215,10 +215,10 @@ export default function VerifyEmail() {
                     </motion.div>
                   </motion.div>
 
-                  <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+                  <h2 className="text-xl font-bold text-surface-800 dark:text-surface-100 mb-2">
                     You're All Set!
                   </h2>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  <p className="text-surface-600 dark:text-surface-400 mb-4">
                     Your email has been verified. Redirecting to your dashboard...
                   </p>
 
@@ -235,11 +235,11 @@ export default function VerifyEmail() {
                   exit={{ opacity: 0 }}
                 >
                   {/* Email display */}
-                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-6 text-center">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="bg-surface-50 dark:bg-surface-700/50 rounded-lg p-4 mb-6 text-center">
+                    <p className="text-sm text-surface-600 dark:text-surface-400">
                       We sent a code to
                     </p>
-                    <p className="font-medium text-gray-800 dark:text-white">
+                    <p className="font-medium text-surface-800 dark:text-surface-100">
                       {email}
                     </p>
                   </div>
@@ -274,10 +274,10 @@ export default function VerifyEmail() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         className={`w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 transition-all
-                          ${digit ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'}
+                          ${digit ? 'border-green-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-700'}
                           focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none
                           disabled:opacity-50 disabled:cursor-not-allowed
-                          text-gray-900 dark:text-white
+                          text-surface-900 dark:text-surface-100
                         `}
                       />
                     ))}
@@ -301,14 +301,14 @@ export default function VerifyEmail() {
 
                   {/* Resend code */}
                   <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    <p className="text-sm text-surface-600 dark:text-surface-400 mb-2">
                       Didn't receive the code?
                     </p>
                     <button
                       onClick={handleResend}
                       disabled={resendCooldown > 0 || isResending}
                       className={`inline-flex items-center gap-2 text-sm font-medium transition-colors
-                        ${resendCooldown > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-green-600 hover:text-green-700'}
+                        ${resendCooldown > 0 ? 'text-surface-400 dark:text-surface-500 cursor-not-allowed' : 'text-green-600 hover:text-green-700'}
                       `}
                     >
                       <RefreshCw className={`w-4 h-4 ${isResending ? 'animate-spin' : ''}`} />
@@ -317,8 +317,8 @@ export default function VerifyEmail() {
                   </div>
 
                   {/* Tips */}
-                  <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                    <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                  <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/50 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
                       <strong>Don't see the email?</strong> Check your spam/junk folder. Government email servers may filter external messages.
                     </p>
                   </div>
@@ -329,7 +329,7 @@ export default function VerifyEmail() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+        <p className="text-center text-sm text-surface-500 dark:text-surface-400 mt-6">
           © {new Date().getFullYear()} OHCS E-Library. Office of the Head of Civil Service, Ghana.
         </p>
       </motion.div>

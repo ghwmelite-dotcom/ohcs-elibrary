@@ -625,7 +625,7 @@ export default function CourseAnalytics() {
                 {analytics.topPerformers.map((student, idx) => (
                   <div key={student.id} className="flex items-center gap-3 p-3 bg-surface-50 dark:bg-surface-700/50 rounded-lg">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
-                      idx === 0 ? 'bg-yellow-500' : idx === 1 ? 'bg-gray-400' : idx === 2 ? 'bg-amber-700' : 'bg-surface-400'
+                      idx === 0 ? 'bg-yellow-500' : idx === 1 ? 'bg-surface-400 dark:bg-surface-500' : idx === 2 ? 'bg-amber-700' : 'bg-surface-400'
                     }`}>
                       {idx + 1}
                     </div>

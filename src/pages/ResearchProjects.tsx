@@ -113,20 +113,20 @@ export default function ResearchProjects() {
   ].filter(Boolean).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
+      <div className="bg-white dark:bg-surface-800 border-b border-surface-200 dark:border-surface-700 sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary-100 dark:bg-primary-900 rounded-xl">
+              <div className="p-2 bg-primary-100 dark:bg-primary-900/50 rounded-xl">
                 <Network className="w-6 h-6 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-xl font-bold text-surface-900 dark:text-surface-100">
                   Research Projects
                 </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-surface-500 dark:text-surface-400">
                   {projectsPagination.total} project{projectsPagination.total !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -144,19 +144,19 @@ export default function ResearchProjects() {
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-surface-800 border-b border-surface-200 dark:border-surface-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <form onSubmit={handleSearch} className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400 dark:text-surface-500" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search projects by title, question, or description..."
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 border border-surface-300 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
             </form>
@@ -168,7 +168,7 @@ export default function ResearchProjects() {
                 <select
                   value={filter.status || ''}
                   onChange={(e) => handleFilterChange('status', e.target.value || undefined)}
-                  className="appearance-none pl-4 pr-8 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                  className="appearance-none pl-4 pr-8 py-2.5 border border-surface-300 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                 >
                   <option value="">All Status</option>
                   {Object.entries(RESEARCH_STATUSES).map(([key, { label }]) => (
@@ -177,7 +177,7 @@ export default function ResearchProjects() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400 dark:text-surface-500 pointer-events-none" />
               </div>
 
               {/* Category Filter */}
@@ -185,7 +185,7 @@ export default function ResearchProjects() {
                 <select
                   value={filter.category || ''}
                   onChange={(e) => handleFilterChange('category', e.target.value || undefined)}
-                  className="appearance-none pl-4 pr-8 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                  className="appearance-none pl-4 pr-8 py-2.5 border border-surface-300 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                 >
                   <option value="">All Categories</option>
                   {Object.entries(RESEARCH_CATEGORIES).map(([key, { label, icon }]) => (
@@ -194,18 +194,18 @@ export default function ResearchProjects() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400 dark:text-surface-500 pointer-events-none" />
               </div>
 
               {/* View Toggle */}
-              <div className="hidden sm:flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+              <div className="hidden sm:flex items-center bg-surface-100 dark:bg-surface-700 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode('grid')}
                   className={cn(
                     'p-2 rounded-md transition-colors',
                     viewMode === 'grid'
-                      ? 'bg-white dark:bg-gray-600 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                      ? 'bg-white dark:bg-surface-600 shadow-sm'
+                      : 'text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
                   )}
                 >
                   <Grid3X3 className="w-4 h-4" />
@@ -215,8 +215,8 @@ export default function ResearchProjects() {
                   className={cn(
                     'p-2 rounded-md transition-colors',
                     viewMode === 'list'
-                      ? 'bg-white dark:bg-gray-600 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                      ? 'bg-white dark:bg-surface-600 shadow-sm'
+                      : 'text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
                   )}
                 >
                   <List className="w-4 h-4" />
@@ -251,7 +251,7 @@ export default function ResearchProjects() {
               <div
                 key={i}
                 className={cn(
-                  'bg-white dark:bg-gray-800 rounded-xl animate-pulse',
+                  'bg-white dark:bg-surface-800 rounded-xl animate-pulse',
                   viewMode === 'grid' ? 'h-72' : 'h-24'
                 )}
               />
@@ -263,11 +263,11 @@ export default function ResearchProjects() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-16"
           >
-            <Network className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <Network className="w-16 h-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-surface-900 dark:text-surface-100 mb-2">
               No projects found
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+            <p className="text-surface-500 dark:text-surface-400 mb-6 max-w-md mx-auto">
               {activeFiltersCount > 0
                 ? 'Try adjusting your filters or search query.'
                 : 'Get started by creating your first research project.'}
@@ -276,7 +276,7 @@ export default function ResearchProjects() {
               {activeFiltersCount > 0 && (
                 <button
                   onClick={handleClearFilters}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="px-4 py-2 text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
                 >
                   Clear Filters
                 </button>
@@ -325,7 +325,7 @@ export default function ResearchProjects() {
                 <button
                   onClick={() => handlePageChange(projectsPagination.page - 1)}
                   disabled={projectsPagination.page === 1}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Previous
                 </button>
@@ -341,7 +341,7 @@ export default function ResearchProjects() {
                           'w-10 h-10 rounded-lg font-medium transition-colors',
                           page === projectsPagination.page
                             ? 'bg-primary-600 text-white'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700'
                         )}
                       >
                         {page}
@@ -350,14 +350,14 @@ export default function ResearchProjects() {
                   })}
                   {projectsPagination.totalPages > 5 && (
                     <>
-                      <span className="text-gray-400 px-2">...</span>
+                      <span className="text-surface-400 dark:text-surface-500 px-2">...</span>
                       <button
                         onClick={() => handlePageChange(projectsPagination.totalPages)}
                         className={cn(
                           'w-10 h-10 rounded-lg font-medium transition-colors',
                           projectsPagination.page === projectsPagination.totalPages
                             ? 'bg-primary-600 text-white'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700'
                         )}
                       >
                         {projectsPagination.totalPages}
@@ -369,7 +369,7 @@ export default function ResearchProjects() {
                 <button
                   onClick={() => handlePageChange(projectsPagination.page + 1)}
                   disabled={projectsPagination.page === projectsPagination.totalPages}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Next
                 </button>

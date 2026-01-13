@@ -157,7 +157,7 @@ export default function AdminWellness() {
               Wellness Dashboard
             </h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-surface-400">
             Monitor AI counselor sessions and manage escalations
           </p>
         </div>
@@ -208,13 +208,13 @@ export default function AdminWellness() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Escalations Queue */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="lg:col-span-2 bg-white dark:bg-surface-800 rounded-xl border border-gray-200 dark:border-surface-700 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <PhoneCall className="w-5 h-5 text-amber-500" />
               Escalation Queue
             </h2>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-sm text-gray-500 dark:text-surface-400">
               {pendingEscalations.length} pending
             </span>
           </div>
@@ -222,11 +222,11 @@ export default function AdminWellness() {
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-20 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+                <div key={i} className="h-20 bg-gray-100 dark:bg-surface-700 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : escalations.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            <div className="text-center py-12 text-gray-500 dark:text-surface-400">
               <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>No escalations at this time</p>
             </div>
@@ -237,7 +237,7 @@ export default function AdminWellness() {
                   key={escalation.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+                  className="p-4 rounded-lg border border-gray-200 dark:border-surface-700 hover:bg-gray-50 dark:hover:bg-surface-750 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
@@ -261,12 +261,12 @@ export default function AdminWellness() {
                       </p>
 
                       {escalation.reason && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        <p className="text-sm text-gray-600 dark:text-surface-400 mb-2">
                           {escalation.reason}
                         </p>
                       )}
 
-                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-surface-400">
                         <Clock className="w-3 h-3" />
                         {escalation.createdAt
                           ? formatDistanceToNow(new Date(escalation.createdAt), { addSuffix: true })
@@ -323,7 +323,7 @@ export default function AdminWellness() {
         </div>
 
         {/* Topic Distribution */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-surface-800 rounded-xl border border-gray-200 dark:border-surface-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
             <BarChart3 className="w-5 h-5 text-purple-500" />
             Top Topics
@@ -332,11 +332,11 @@ export default function AdminWellness() {
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-8 bg-gray-100 dark:bg-gray-700 rounded animate-pulse" />
+                <div key={i} className="h-8 bg-gray-100 dark:bg-surface-700 rounded animate-pulse" />
               ))}
             </div>
           ) : !stats?.topTopics || stats.topTopics.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <div className="text-center py-8 text-gray-500 dark:text-surface-400">
               <BarChart3 className="w-10 h-10 mx-auto mb-2 opacity-30" />
               <p>No data yet</p>
             </div>
@@ -349,14 +349,14 @@ export default function AdminWellness() {
                 return (
                   <div key={topic.topic}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                      <span className="text-sm text-gray-700 dark:text-surface-300">
                         {topicLabels[topic.topic] || topic.topic}
                       </span>
                       <span className="text-sm font-medium text-gray-900 dark:text-white">
                         {topic.count}
                       </span>
                     </div>
-                    <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-2 bg-gray-100 dark:bg-surface-700 rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${percentage}%` }}
@@ -371,25 +371,25 @@ export default function AdminWellness() {
           )}
 
           {/* Summary stats */}
-          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-surface-700">
             <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
               Overall Stats
             </h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Total Messages</span>
+                <span className="text-gray-600 dark:text-surface-400">Total Messages</span>
                 <span className="font-medium text-gray-900 dark:text-white">
                   {stats?.totalMessages?.toLocaleString() || 0}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Avg. Mood Score</span>
+                <span className="text-gray-600 dark:text-surface-400">Avg. Mood Score</span>
                 <span className="font-medium text-gray-900 dark:text-white">
                   {stats?.averageMood?.toFixed(1) || '0.0'} / 5
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Sessions Today</span>
+                <span className="text-gray-600 dark:text-surface-400">Sessions Today</span>
                 <span className="font-medium text-gray-900 dark:text-white">
                   {stats?.sessionsToday || 0}
                 </span>
@@ -425,8 +425,8 @@ function StatCard({ icon: Icon, label, value, trend, color, alert }: StatCardPro
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5',
-        alert && 'ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900'
+        'bg-white dark:bg-surface-800 rounded-xl border border-gray-200 dark:border-surface-700 p-5',
+        alert && 'ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-surface-900'
       )}
     >
       <div className="flex items-center justify-between mb-3">
@@ -445,8 +445,8 @@ function StatCard({ icon: Icon, label, value, trend, color, alert }: StatCardPro
         {value}
       </h3>
 
-      <p className="text-sm text-gray-600 dark:text-gray-400">{label}</p>
-      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{trend}</p>
+      <p className="text-sm text-gray-600 dark:text-surface-400">{label}</p>
+      <p className="text-xs text-gray-500 dark:text-surface-500 mt-1">{trend}</p>
     </motion.div>
   );
 }

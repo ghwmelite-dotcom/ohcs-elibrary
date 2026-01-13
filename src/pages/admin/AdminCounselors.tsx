@@ -88,7 +88,7 @@ const topicColors: Record<CounselorTopic, string> = {
 
 const statusConfig = {
   active: { label: 'Active', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', icon: Play },
-  inactive: { label: 'Inactive', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400', icon: Pause },
+  inactive: { label: 'Inactive', color: 'bg-surface-100 text-surface-700 dark:bg-surface-700 dark:text-surface-400', icon: Pause },
   on_leave: { label: 'On Leave', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', icon: Clock },
 };
 

@@ -56,7 +56,7 @@ export default function ResearchLab() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 overflow-hidden">
         {/* Background Pattern */}
@@ -179,21 +179,21 @@ export default function ResearchLab() {
               <motion.div
                 key={stat.label}
                 whileHover={{ y: -4 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700"
+                className="bg-white dark:bg-surface-800 rounded-xl p-5 shadow-sm border border-surface-100 dark:border-surface-700"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className={cn('p-2 rounded-lg bg-gradient-to-br text-white', stat.color)}>
                     <stat.icon className="w-5 h-5" />
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                <div className="text-2xl font-bold text-surface-900 dark:text-surface-100 mb-1">
                   {dashboardLoading ? (
-                    <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                    <div className="h-8 w-16 bg-surface-200 dark:bg-surface-700 rounded animate-pulse" />
                   ) : (
                     stat.value
                   )}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</div>
+                <div className="text-sm text-surface-500 dark:text-surface-400">{stat.label}</div>
               </motion.div>
             ))}
           </motion.div>
@@ -202,7 +202,7 @@ export default function ResearchLab() {
             {/* My Projects */}
             <motion.div variants={itemVariants} className="lg:col-span-2">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-100 flex items-center gap-2">
                   <Network className="w-5 h-5 text-primary-500" />
                   My Projects
                 </h2>
@@ -218,7 +218,7 @@ export default function ResearchLab() {
               {dashboardLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-24 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
+                    <div key={i} className="h-24 bg-surface-100 dark:bg-surface-800 rounded-xl animate-pulse" />
                   ))}
                 </div>
               ) : dashboard?.myProjects && dashboard.myProjects.length > 0 ? (
@@ -228,12 +228,12 @@ export default function ResearchLab() {
                   ))}
                 </div>
               ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center border border-gray-200 dark:border-gray-700">
-                  <Network className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                <div className="bg-white dark:bg-surface-800 rounded-xl p-8 text-center border border-surface-200 dark:border-surface-700">
+                  <Network className="w-12 h-12 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-surface-900 dark:text-surface-100 mb-2">
                     No projects yet
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-surface-500 dark:text-surface-400 mb-4">
                     Start your first research project to see it here.
                   </p>
                   <button
@@ -250,15 +250,15 @@ export default function ResearchLab() {
             {/* Sidebar */}
             <motion.div variants={itemVariants} className="space-y-6">
               {/* Trending Topics */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+              <div className="bg-white dark:bg-surface-800 rounded-xl p-5 shadow-sm border border-surface-100 dark:border-surface-700">
+                <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 flex items-center gap-2 mb-4">
                   <TrendingUp className="w-5 h-5 text-primary-500" />
                   Trending Topics
                 </h3>
                 {dashboardLoading ? (
                   <div className="space-y-3">
                     {[1, 2, 3, 4, 5].map((i) => (
-                      <div key={i} className="h-8 bg-gray-100 dark:bg-gray-700 rounded animate-pulse" />
+                      <div key={i} className="h-8 bg-surface-100 dark:bg-surface-700 rounded animate-pulse" />
                     ))}
                   </div>
                 ) : dashboard?.trendingTopics && dashboard.trendingTopics.length > 0 ? (
@@ -267,28 +267,28 @@ export default function ResearchLab() {
                       <Link
                         key={topic.topic}
                         to={`/research-hub/projects?search=${encodeURIComponent(topic.topic)}`}
-                        className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        className="flex items-center justify-between p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 flex items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 text-sm font-medium">
+                          <span className="w-6 h-6 flex items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 text-sm font-medium">
                             {index + 1}
                           </span>
-                          <span className="text-gray-700 dark:text-gray-300">{topic.topic}</span>
+                          <span className="text-surface-700 dark:text-surface-300">{topic.topic}</span>
                         </div>
-                        <span className="text-sm text-gray-400">{topic.count}</span>
+                        <span className="text-sm text-surface-400 dark:text-surface-500">{topic.count}</span>
                       </Link>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  <p className="text-surface-500 dark:text-surface-400 text-sm">
                     No trending topics yet
                   </p>
                 )}
               </div>
 
               {/* Quick Start Templates */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+              <div className="bg-white dark:bg-surface-800 rounded-xl p-5 shadow-sm border border-surface-100 dark:border-surface-700">
+                <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100 flex items-center gap-2 mb-4">
                   <Sparkles className="w-5 h-5 text-secondary-500" />
                   Quick Start
                 </h3>
@@ -299,7 +299,7 @@ export default function ResearchLab() {
                       <button
                         key={template.id}
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="w-full flex items-center gap-3 p-3 text-left rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+                        className="w-full flex items-center gap-3 p-3 text-left rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors group"
                       >
                         <div
                           className={cn(
@@ -310,11 +310,11 @@ export default function ResearchLab() {
                           {category.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 block truncate group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                          <span className="text-sm font-medium text-surface-700 dark:text-surface-300 block truncate group-hover:text-primary-600 dark:group-hover:text-primary-400">
                             {template.name}
                           </span>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <ArrowRight className="w-4 h-4 text-surface-400 dark:text-surface-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </button>
                     );
                   })}
@@ -326,32 +326,32 @@ export default function ResearchLab() {
           {/* Recent Activity */}
           <motion.div variants={itemVariants}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-100 flex items-center gap-2">
                 <Activity className="w-5 h-5 text-primary-500" />
                 Recent Activity
               </h2>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-sm border border-surface-100 dark:border-surface-700 overflow-hidden">
               {dashboardLoading ? (
                 <div className="p-6 space-y-4">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div key={i} className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full animate-pulse" />
+                      <div className="w-10 h-10 bg-surface-100 dark:bg-surface-700 rounded-full animate-pulse" />
                       <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-3/4 animate-pulse" />
-                        <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded w-1/2 animate-pulse" />
+                        <div className="h-4 bg-surface-100 dark:bg-surface-700 rounded w-3/4 animate-pulse" />
+                        <div className="h-3 bg-surface-100 dark:bg-surface-700 rounded w-1/2 animate-pulse" />
                       </div>
                     </div>
                   ))}
                 </div>
               ) : dashboard?.recentActivity && dashboard.recentActivity.length > 0 ? (
-                <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                <div className="divide-y divide-surface-100 dark:divide-surface-700">
                   {dashboard.recentActivity.map((activity) => (
                     <Link
                       key={activity.id}
                       to={`/research-hub/projects/${activity.projectId}`}
-                      className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                      className="flex items-center gap-4 p-4 hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors"
                     >
                       {activity.user?.avatar ? (
                         <img
@@ -360,17 +360,17 @@ export default function ResearchLab() {
                           className="w-10 h-10 rounded-full"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center">
                           <span className="text-sm font-medium text-primary-600 dark:text-primary-400">
                             {activity.user?.displayName?.charAt(0) || 'U'}
                           </span>
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900 dark:text-white">
+                        <p className="text-sm text-surface-900 dark:text-surface-100">
                           <span className="font-medium">{activity.user?.displayName || 'Someone'}</span>
                           {' '}
-                          <span className="text-gray-500 dark:text-gray-400">
+                          <span className="text-surface-500 dark:text-surface-400">
                             {activity.action.replace(/_/g, ' ')}
                           </span>
                           {' '}
@@ -378,7 +378,7 @@ export default function ResearchLab() {
                             {(activity.metadata as { projectTitle?: string })?.projectTitle || 'a project'}
                           </span>
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-xs text-surface-400 dark:text-surface-500 mt-0.5">
                           {new Date(activity.createdAt).toLocaleDateString('en-GB', {
                             day: 'numeric',
                             month: 'short',
@@ -392,8 +392,8 @@ export default function ResearchLab() {
                 </div>
               ) : (
                 <div className="p-8 text-center">
-                  <Activity className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400">No recent activity</p>
+                  <Activity className="w-12 h-12 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+                  <p className="text-surface-500 dark:text-surface-400">No recent activity</p>
                 </div>
               )}
             </div>
