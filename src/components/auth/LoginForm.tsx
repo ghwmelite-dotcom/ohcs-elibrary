@@ -157,10 +157,14 @@ export function LoginForm() {
     staffIdForm.reset();
   };
 
-  const handleDemoLogin = () => {
-    loginDemo();
-    toast.success('Welcome!', 'Signed in with demo account.');
-    navigate('/dashboard');
+  const handleDemoLogin = async () => {
+    try {
+      await loginDemo();
+      toast.success('Welcome!', 'Signed in with demo account (24hr access).');
+      navigate('/dashboard');
+    } catch (error) {
+      toast.error('Demo Login Failed', 'Unable to start demo session. Please try again.');
+    }
   };
 
   // Show 2FA verification screen

@@ -1092,6 +1092,102 @@ authRoutes.post('/refresh', async (c) => {
   }
 });
 
+// Demo login - creates a valid session for demo/trial users
+authRoutes.post('/demo', async (c) => {
+  try {
+    const demoUserId = 'demo-user-001';
+    const demoEmail = 'demo@ohcs.gov.gh';
+
+    // Check if demo user exists, create if not
+    let user = await c.env.DB.prepare(`
+      SELECT id, email, displayName, firstName, lastName, avatar, role, department, jobTitle as title
+      FROM users WHERE id = ?
+    `).bind(demoUserId).first();
+
+    if (!user) {
+      // Create demo user
+      const passwordHash = await hashPassword('DemoPassword123!');
+      await c.env.DB.prepare(`
+        INSERT INTO users (id, email, passwordHash, displayName, firstName, lastName, staffId, role, department, jobTitle, isActive, isVerified)
+        VALUES (?, ?, ?, 'Kwame Asante', 'Kwame', 'Asante', 'DEMO-001', 'civil_servant', 'Administrative Services', 'Administrative Officer', 1, 1)
+      `).bind(demoUserId, demoEmail, passwordHash).run();
+
+      user = {
+        id: demoUserId,
+        email: demoEmail,
+        displayName: 'Kwame Asante',
+        firstName: 'Kwame',
+        lastName: 'Asante',
+        avatar: null,
+        role: 'civil_servant',
+        department: 'Administrative Services',
+        title: 'Administrative Officer',
+      };
+    }
+
+    // Generate tokens with 24-hour expiry
+    const accessToken = await sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role || 'civil_servant',
+      isDemo: true,
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
+    }, c.env.JWT_SECRET);
+
+    const refreshToken = await sign({
+      sub: user.id,
+      type: 'refresh',
+      isDemo: true,
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours (shorter for demo)
+    }, c.env.JWT_SECRET);
+
+    // Store session
+    try {
+      await c.env.DB.prepare(`
+        INSERT INTO sessions (id, userId, token, expiresAt)
+        VALUES (?, ?, ?, datetime('now', '+24 hours'))
+      `).bind(crypto.randomUUID(), user.id, refreshToken).run();
+    } catch (e) {
+      console.error('Failed to store demo session:', e);
+    }
+
+    // Log demo login
+    try {
+      await c.env.DB.prepare(`
+        INSERT INTO account_activity (id, userId, action, description, status, riskLevel)
+        VALUES (?, ?, 'demo_login', 'Demo access session started', 'success', 'low')
+      `).bind(crypto.randomUUID(), user.id).run();
+    } catch (e) {
+      console.error('Failed to log demo activity:', e);
+    }
+
+    return c.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+        role: user.role || 'civil_servant',
+        department: user.department,
+        title: user.title,
+        staffId: 'DEMO-001',
+      },
+      accessToken,
+      refreshToken,
+      isDemo: true,
+      expiresIn: '24 hours',
+    });
+  } catch (error) {
+    console.error('Demo login error:', error);
+    return c.json({
+      error: 'Server Error',
+      message: 'An error occurred during demo login',
+    }, 500);
+  }
+});
+
 // Logout
 authRoutes.post('/logout', async (c) => {
   const token = c.req.header('Authorization')?.replace('Bearer ', '');

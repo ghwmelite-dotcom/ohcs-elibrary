@@ -1,131 +1,208 @@
 # OHCS E-Library
 
-**AI-Powered Knowledge Management Platform for Ghana's Civil Service**
+<div align="center">
 
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/ghwmelite-dotcom/ohcs-elibrary)
-[![License](https://img.shields.io/badge/license-Proprietary-red.svg)](#license)
-[![Platform](https://img.shields.io/badge/platform-Cloudflare-orange.svg)](https://ohcs-elibrary.pages.dev)
+<img src="public/icons/icon-512x512.png" alt="OHCS E-Library Logo" width="120" height="120">
+
+### **AI-Powered Knowledge Management Platform for Ghana's Civil Service**
+
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Site-success?style=for-the-badge&logo=cloudflare)](https://ohcs-elibrary.pages.dev)
+[![Version](https://img.shields.io/badge/Version-2.0.0-blue?style=for-the-badge)](https://github.com/ghwmelite-dotcom/ohcs-elibrary/releases)
+[![Platform](https://img.shields.io/badge/Platform-Cloudflare-orange?style=for-the-badge&logo=cloudflare)](https://workers.cloudflare.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
+[![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](#license)
+
+**[Live Demo](https://ohcs-elibrary.pages.dev)** | **[Try Demo Access](#demo-access)** | **[Features](#-features)** | **[Tech Stack](#-technology-stack)** | **[Getting Started](#-getting-started)**
+
+</div>
 
 ---
 
 ## Overview
 
-The OHCS E-Library is a comprehensive digital knowledge management platform designed specifically for Ghana's Office of the Head of Civil Service (OHCS). It provides civil servants with a centralized hub for accessing official documents, sharing knowledge, collaborating with colleagues, and staying informed about government news and policies.
+The **OHCS E-Library** is a comprehensive digital knowledge management and collaboration platform designed for Ghana's Office of the Head of Civil Service (OHCS). It empowers over 500,000 civil servants with AI-powered tools for document management, research, learning, wellness support, and professional networking.
 
-### Key Features
+### Highlights
 
-- **Digital Document Library** - Centralized repository for official documents, policies, circulars, and guidelines with AI-powered search and summarization
-- **AI-Powered Analysis** - Intelligent document search, automatic summarization, and content analysis using advanced AI
-- **Research Lab** - Complete research workspace with AI assistant (Kofi), project management, milestones, templates, analytics, and export capabilities
-- **Wellness Hub** - Mental health resources, stress management tools, AI counselor, and 24/7 support
-- **Community Forums** - Discussion boards for knowledge sharing, Q&A, and professional discourse
-- **Real-Time Chat** - Instant messaging with voice messages, file sharing, and group conversations
-- **Groups & Collaboration** - Create and join professional groups for team collaboration
-- **Gamification System** - XP points, badges, levels, and leaderboards to encourage engagement
-- **News Aggregation** - Curated news from Ghanaian sources relevant to civil service
-- **Comprehensive Admin Panel** - Full administrative control over users, content, and system settings
+- **40+ API Endpoints** - Comprehensive REST API powering all features
+- **25+ Database Migrations** - Robust data architecture
+- **100+ React Components** - Modern, accessible UI components
+- **2 AI Assistants** - Kwame (Knowledge) & Ayo (Wellness)
+- **Full LMS** - Complete learning management system with courses, quizzes, and certificates
 
 ---
 
-## Table of Contents
+## Demo Access
 
-1. [Technology Stack](#technology-stack)
-2. [System Architecture](#system-architecture)
-3. [Getting Started](#getting-started)
-4. [Project Structure](#project-structure)
-5. [Features Overview](#features-overview)
-6. [API Documentation](#api-documentation)
-7. [Deployment](#deployment)
-8. [Security](#security)
-9. [Contributing](#contributing)
-10. [License](#license)
-11. [Contact](#contact)
+Try the platform without registration using our **Demo Access** feature:
+
+1. Visit [ohcs-elibrary.pages.dev](https://ohcs-elibrary.pages.dev)
+2. Click **"Try Demo Access"** on the login screen
+3. Explore all features with a 24-hour demo session
+
+Demo users get access to:
+- Document library with AI analysis
+- Kwame AI Knowledge Assistant
+- Ayo Wellness Counselor
+- Research Lab with Kofi AI
+- Learning Management System
+- Community forums and groups
+- And much more!
+
+---
+
+## Features
+
+### AI-Powered Assistants
+
+| Assistant | Purpose | Capabilities |
+|-----------|---------|--------------|
+| **Kwame** | Knowledge Assistant | RAG-powered Q&A on civil service policies, procedures, HR matters. Cites official documents. |
+| **Ayo** | Wellness Counselor | Anonymous mental health support, stress management, mood tracking, crisis resources. |
+| **Kofi** | Research Partner | Policy brief generation, data analysis, literature review, research insights. |
+
+### Core Modules
+
+<table>
+<tr>
+<td width="50%">
+
+#### Document Library
+- PDF, Word, Excel, PowerPoint support
+- AI-powered search & summarization
+- Category & MDA organization
+- Version history tracking
+- Bookmarks & annotations
+- Google Drive integration
+
+#### Learning Management System
+- Course creation & enrollment
+- Video lessons & materials
+- Quizzes with auto-grading
+- Progress tracking & certificates
+- Learning paths
+- Admin analytics
+
+#### Research Lab
+- Project management with phases
+- Literature linking & citations
+- Collaborative discussions
+- Milestone tracking
+- 12+ research templates
+- Export to PDF, DOCX, Markdown
+
+</td>
+<td width="50%">
+
+#### Social Networking
+- Professional profiles
+- Connection requests & following
+- Activity wall & posts
+- Direct messaging with reactions
+- Presence indicators
+- User mentions
+
+#### Wellness Hub
+- Mental health resources
+- Anonymous AI counseling
+- Mood tracking & analytics
+- Breathing exercises
+- Crisis support hotlines
+- Counselor escalation
+
+#### Community Features
+- Discussion forums with voting
+- Professional groups
+- Real-time chat rooms
+- Voice messages
+- File sharing
+- Gamification & badges
+
+</td>
+</tr>
+</table>
+
+### Additional Features
+
+- **News Aggregation** - Curated Ghanaian news with AI summaries
+- **Notifications** - Real-time alerts and email digests
+- **Calendar & Events** - Personal and organization events
+- **E-Shop** - Internal marketplace for supplies
+- **Peer Recognition** - Kudos and appreciation system
+- **Two-Factor Auth** - TOTP-based security
+- **Audit Logging** - Complete activity tracking
+- **Admin Dashboard** - 15+ admin pages with analytics
 
 ---
 
 ## Technology Stack
 
 ### Frontend
-| Technology | Purpose |
-|------------|---------|
-| React 18 | UI framework with concurrent features |
-| TypeScript | Type-safe JavaScript |
-| Vite 5 | Build tool and dev server |
-| Tailwind CSS | Utility-first CSS framework |
-| Framer Motion | Animation library |
-| Zustand | State management |
-| React Router v6 | Client-side routing |
-| React Hook Form | Form handling |
-| Zod | Schema validation |
-| Lucide React | Icon library |
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 18.x | UI framework with concurrent features |
+| TypeScript | 5.x | Type-safe development |
+| Vite | 5.x | Build tool & dev server |
+| Tailwind CSS | 3.x | Utility-first styling |
+| Framer Motion | 10.x | Animations & transitions |
+| Zustand | 4.x | State management |
+| React Router | 6.x | Client-side routing |
+| React Hook Form | 7.x | Form handling |
+| Zod | 3.x | Schema validation |
 
 ### Backend
 | Technology | Purpose |
 |------------|---------|
 | Cloudflare Workers | Serverless edge computing |
 | Hono | Lightweight web framework |
-| D1 Database | SQLite-based serverless database |
+| D1 Database | SQLite-based serverless DB |
 | R2 Storage | Object storage for documents |
-| KV Namespace | Key-value caching |
-| Workers AI | AI-powered features |
+| KV Namespace | Session & cache storage |
+| Workers AI | LLM & embedding inference |
+
+### AI Models (Cloudflare Workers AI)
+| Model | Purpose |
+|-------|---------|
+| `@cf/meta/llama-3.1-8b-instruct` | Chat completions for Kwame, Ayo, Kofi |
+| `@cf/baai/bge-base-en-v1.5` | Document embeddings for RAG search |
 
 ### Email Services
-| Technology | Purpose |
-|------------|---------|
-| Gmail API | Primary email delivery (OAuth2) |
-| Resend API | Fallback email service |
-
-### Design System
-- **Primary Colors**: Ghana flag colors (Green #006B3F, Gold #FCD116, Red #CE1126)
-- **Accent**: Black Star motif
-- **Typography**: System fonts with fallbacks
-- **Theme**: Light/Dark mode support
+- **Gmail API** - OAuth2-based email delivery
+- **Resend API** - Transactional email fallback
 
 ---
 
 ## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CLIENT LAYER                              │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │                 React SPA (Vite)                         │    │
-│  │  • Pages & Components                                    │    │
-│  │  • Zustand State Management                              │    │
-│  │  • React Router Navigation                               │    │
-│  └─────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      EDGE LAYER (Cloudflare)                     │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │              Cloudflare Pages (Frontend)                 │    │
-│  │  • Static asset hosting                                  │    │
-│  │  • Global CDN distribution                               │    │
-│  │  • Automatic HTTPS                                       │    │
-│  └─────────────────────────────────────────────────────────┘    │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │              Cloudflare Workers (API)                    │    │
-│  │  • Hono framework                                        │    │
-│  │  • JWT authentication                                    │    │
-│  │  • Rate limiting                                         │    │
-│  │  • CORS handling                                         │    │
-│  └─────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      DATA LAYER                                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │  D1 Database │  │  R2 Storage  │  │  KV Cache    │          │
-│  │  (SQLite)    │  │  (Documents) │  │  (Sessions)  │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-│  ┌──────────────┐  ┌──────────────┐                             │
-│  │  Workers AI  │  │  Gmail API   │                             │
-│  │  (Analysis)  │  │  (Email)     │                             │
-│  └──────────────┘  └──────────────┘                             │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          CLIENT LAYER                                    │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │                    React SPA (Vite + TypeScript)                   │  │
+│  │  • 100+ Components    • Zustand Stores    • Dark/Light Theme      │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                       EDGE LAYER (Cloudflare)                            │
+│  ┌─────────────────────────┐    ┌─────────────────────────────────┐    │
+│  │   Cloudflare Pages      │    │     Cloudflare Workers (API)    │    │
+│  │   • Static hosting      │    │     • Hono framework            │    │
+│  │   • Global CDN          │    │     • JWT authentication        │    │
+│  │   • Auto HTTPS          │    │     • Rate limiting             │    │
+│  └─────────────────────────┘    └─────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          DATA LAYER                                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐  │
+│  │ D1 Database  │  │  R2 Storage  │  │   KV Cache   │  │ Workers AI │  │
+│  │  (SQLite)    │  │ (Documents)  │  │  (Sessions)  │  │  (LLM/RAG) │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘  │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -134,62 +211,55 @@ The OHCS E-Library is a comprehensive digital knowledge management platform desi
 
 ### Prerequisites
 
-- Node.js 18+
-- npm 9+
-- Cloudflare account (for deployment)
-- Git
+- **Node.js** 18+
+- **npm** 9+
+- **Git**
+- **Cloudflare Account** (for deployment)
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/ghwmelite-dotcom/ohcs-elibrary.git
-   cd ohcs-elibrary
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/ghwmelite-dotcom/ohcs-elibrary.git
+cd ohcs-elibrary
 
-2. **Install frontend dependencies**
-   ```bash
-   npm install
-   ```
+# Install frontend dependencies
+npm install
 
-3. **Install worker dependencies**
-   ```bash
-   cd workers
-   npm install
-   cd ..
-   ```
+# Install worker dependencies
+cd workers && npm install && cd ..
 
-4. **Start development server**
-   ```bash
-   npm run dev
-   ```
+# Start frontend dev server
+npm run dev
 
-5. **Start worker locally** (in separate terminal)
-   ```bash
-   cd workers
-   npm run dev
-   ```
+# In another terminal, start worker
+cd workers && npm run dev
+```
 
-The application will be available at `http://localhost:5173`
+The application runs at `http://localhost:5173`
 
-### Environment Variables
+### Environment Configuration
 
-Create a `.env` file in the root directory:
-
+**Frontend** (`.env`):
 ```env
 VITE_API_URL=http://localhost:8787/api/v1
 ```
 
-For workers, configure `workers/wrangler.toml`:
-
+**Workers** (`workers/wrangler.toml`):
 ```toml
 [vars]
 ENVIRONMENT = "development"
 JWT_SECRET = "your-secret-key"
-GMAIL_CLIENT_ID = "your-gmail-client-id"
-GMAIL_CLIENT_SECRET = "your-gmail-client-secret"
-GMAIL_REFRESH_TOKEN = "your-gmail-refresh-token"
-RESEND_API_KEY = "your-resend-api-key"
+
+# Email (Gmail API recommended for .gov.gh delivery)
+GMAIL_CLIENT_ID = "..."
+GMAIL_CLIENT_SECRET = "..."
+GMAIL_REFRESH_TOKEN = "..."
+
+# Google Drive Integration (optional)
+GOOGLE_DRIVE_CLIENT_ID = "..."
+GOOGLE_DRIVE_CLIENT_SECRET = "..."
+GOOGLE_DRIVE_REDIRECT_URI = "..."
 ```
 
 ---
@@ -198,406 +268,156 @@ RESEND_API_KEY = "your-resend-api-key"
 
 ```
 ohcs-elibrary/
-├── public/                     # Static assets
-│   ├── icons/                  # App icons (PWA)
-│   ├── screenshots/            # App screenshots
-│   └── manifest.json           # PWA manifest
+├── public/                      # Static assets & PWA icons
 ├── src/
-│   ├── components/             # Reusable UI components
-│   │   ├── auth/               # Authentication components
-│   │   ├── chat/               # Chat components
-│   │   ├── common/             # Shared components
-│   │   ├── documents/          # Document components
-│   │   ├── forum/              # Forum components
-│   │   ├── groups/             # Groups components
-│   │   ├── layout/             # Layout components
-│   │   ├── library/            # Library components
-│   │   ├── news/               # News components
-│   │   ├── notifications/      # Notification components
-│   │   ├── research/           # Research Lab components
-│   │   │   ├── AnalyticsPanel.tsx
-│   │   │   ├── CollaborationPanel.tsx
-│   │   │   ├── CreateProjectModal.tsx
-│   │   │   ├── ExportPanel.tsx
-│   │   │   ├── KofiChat.tsx
-│   │   │   ├── MilestonesPanel.tsx
-│   │   │   ├── PhaseProgress.tsx
-│   │   │   ├── ProjectCard.tsx
-│   │   │   └── TemplatesGallery.tsx
-│   │   ├── shared/             # Shared UI components
-│   │   ├── ui/                 # Base UI components
-│   │   └── wellness/           # Wellness Hub components
-│   ├── hooks/                  # Custom React hooks
-│   ├── lib/                    # Utility libraries
-│   ├── pages/                  # Page components
-│   │   ├── admin/              # Admin pages (15+ pages)
-│   │   ├── settings/           # Settings pages
-│   │   ├── Landing.tsx         # Landing page with feature showcase
-│   │   ├── ResearchLab.tsx     # Research Lab dashboard
-│   │   ├── ResearchProject.tsx # Individual project view
-│   │   ├── ResearchProjects.tsx # All projects list
-│   │   ├── Wellness.tsx        # Wellness Hub
-│   │   └── ...                 # Other pages
-│   ├── services/               # API service layers
-│   ├── stores/                 # Zustand state stores
-│   │   ├── authStore.ts        # Authentication state
-│   │   ├── chatStore.ts        # Chat state
-│   │   ├── forumStore.ts       # Forum state
-│   │   ├── groupsStore.ts      # Groups state
-│   │   ├── libraryStore.ts     # Library state
-│   │   ├── researchStore.ts    # Research Lab state
-│   │   ├── themeStore.ts       # Theme state
-│   │   └── wellnessStore.ts    # Wellness state
-│   ├── types/                  # TypeScript type definitions
-│   ├── utils/                  # Utility functions
-│   ├── App.tsx                 # Main application component
-│   ├── main.tsx                # Application entry point
-│   └── index.css               # Global styles
+│   ├── components/              # React components (100+)
+│   │   ├── auth/                # Authentication UI
+│   │   ├── kwame/               # Kwame AI chat components
+│   │   ├── wellness/            # Ayo counselor components
+│   │   ├── research/            # Research Lab components
+│   │   ├── lms/                 # Learning system components
+│   │   ├── social/              # Social networking components
+│   │   └── ...
+│   ├── pages/                   # Page components
+│   │   ├── admin/               # Admin panel (15+ pages)
+│   │   ├── Kwame.tsx            # AI Knowledge Assistant
+│   │   ├── WellnessChat.tsx     # Ayo Wellness Counselor
+│   │   ├── ResearchLab.tsx      # Research workspace
+│   │   ├── LMS.tsx              # Learning system
+│   │   └── ...
+│   ├── stores/                  # Zustand state stores
+│   ├── types/                   # TypeScript definitions
+│   └── utils/                   # Utility functions
 ├── workers/
 │   ├── src/
-│   │   ├── middleware/         # API middleware
-│   │   ├── routes/             # API route handlers
-│   │   │   ├── auth.ts         # Auth routes
-│   │   │   ├── chat.ts         # Chat routes
-│   │   │   ├── documents.ts    # Document routes
-│   │   │   ├── forum.ts        # Forum routes
-│   │   │   ├── groups.ts       # Groups routes
-│   │   │   ├── news.ts         # News routes
-│   │   │   ├── research.ts     # Research Lab routes (3800+ lines)
-│   │   │   ├── wellness.ts     # Wellness routes
-│   │   │   └── ...             # Other routes
-│   │   ├── services/           # Backend services
-│   │   └── index.ts            # Worker entry point
-│   ├── migrations/             # Database migrations (25+ files)
-│   ├── schema.sql              # Base database schema
-│   └── wrangler.toml           # Cloudflare configuration
-├── docs/                       # Documentation
-├── package.json                # Frontend dependencies
-├── tailwind.config.js          # Tailwind configuration
-├── tsconfig.json               # TypeScript configuration
-├── vite.config.ts              # Vite configuration
-├── CHANGELOG.md                # Version history
-└── README.md                   # This file
+│   │   ├── routes/              # API routes (40+ endpoints)
+│   │   │   ├── auth.ts          # Authentication + Demo login
+│   │   │   ├── kwame.ts         # Kwame AI API
+│   │   │   ├── counselor.ts     # Ayo counselor API
+│   │   │   ├── research.ts      # Research Lab API (3800+ lines)
+│   │   │   ├── lms.ts           # LMS API
+│   │   │   └── ...
+│   │   └── services/            # AI services (RAG, embeddings)
+│   └── migrations/              # Database migrations (25+)
+└── docs/                        # Documentation
 ```
 
 ---
 
-## Features Overview
+## API Endpoints
 
-### 1. Authentication & Authorization
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/register` | Register with .gov.gh email |
+| POST | `/auth/login` | Login with email/password |
+| POST | `/auth/demo` | **Demo access** (24hr session) |
+| POST | `/auth/logout` | End session |
+| POST | `/auth/forgot-password` | Request reset code |
 
-- **Registration** - Email-based registration with .gov.gh domain validation
-- **Login** - Secure JWT-based authentication
-- **Two-Factor Authentication** - TOTP-based 2FA with backup codes
-- **Password Reset** - Email-based or on-screen code reset
-- **Role-Based Access Control** - Multiple user roles with granular permissions
+### AI Assistants
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/kwame/sessions` | Create Kwame chat session |
+| POST | `/kwame/sessions/:id/messages` | Send message to Kwame |
+| GET | `/kwame/suggestions` | Get suggested questions |
+| POST | `/counselor/sessions` | Start Ayo counseling (supports anonymous) |
+| POST | `/counselor/sessions/:id/messages` | Message Ayo |
 
-#### User Roles
-| Role | Description |
-|------|-------------|
-| `super_admin` | Full system access |
-| `admin` | Administrative access |
-| `director` | Department director access |
-| `librarian` | Document management access |
-| `moderator` | Forum/chat moderation access |
-| `contributor` | Content creation access |
-| `civil_servant` | Standard user access |
-| `guest` | Limited read-only access |
-
-### 2. Document Library
-
-- **Upload & Storage** - Support for PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX
-- **Categorization** - Organize by category, MDA, document type
-- **Search** - Full-text search with filters
-- **AI Analysis** - Automatic summarization and key point extraction
-- **Bookmarks** - Save documents for quick access
-- **Version History** - Track document versions
-
-### 3. Forum & Discussions
-
-- **Categories** - Organized discussion categories
-- **Topics & Threads** - Create and participate in discussions
-- **Voting** - Upvote/downvote system
-- **Moderation** - Admin moderation tools
-- **Rich Text** - Formatted posts with mentions
-
-### 4. Chat & Messaging
-
-- **Direct Messages** - Private conversations
-- **Group Chats** - Multi-user chat rooms
-- **Voice Messages** - Record and send voice notes
-- **File Sharing** - Share documents in chat
-- **Emoji & GIF** - Rich message content
-- **Real-time** - Instant message delivery
-
-### 5. Groups & Collaboration
-
-- **Create Groups** - Form professional groups
-- **Group Types** - Public, private, or secret groups
-- **Posts & Comments** - Group discussion feed
-- **Member Management** - Invite and manage members
-- **Group Roles** - Owner, admin, moderator, member
-
-### 6. Gamification
-
-- **XP Points** - Earn points for activities
-- **Levels** - Progress through levels
-- **Badges** - Unlock achievement badges
-- **Leaderboard** - Compete with colleagues
-- **Challenges** - Complete challenges for rewards
-
-### 7. News Aggregation
-
-- **Ghanaian Sources** - News from local media
-- **Categories** - Filter by topic
-- **AI Summaries** - Quick article summaries
-- **Bookmarking** - Save articles
-- **Sharing** - Share with colleagues
-
-### 8. Research Lab
-
-The Research Lab is a comprehensive workspace for conducting policy research with AI-powered tools.
-
-- **Project Management** - Create and manage research projects with structured phases
-- **Kofi AI Assistant** - Intelligent research partner for data analysis, insights, and policy briefs
-- **Literature Management** - Link and organize research literature
-- **Notes & Annotations** - Take notes, highlight key findings, create annotations
-- **Collaboration** - Team discussions, peer reviews, and shared citations
-- **Milestones & Timeline** - Track deliverables, deadlines, and project progress
-- **Analytics Dashboard** - Visualize progress, contributions, and activity metrics
-- **Research Templates** - 12+ pre-built templates for policy analysis, case studies, evaluations
-- **Export & Publish** - Generate reports in Markdown, PDF, DOCX with automatic citations
-
-#### Research Categories
-| Category | Description |
-|----------|-------------|
-| `policy_impact` | Policy Impact Assessment |
-| `performance_audit` | Performance Audit |
-| `capacity_assessment` | Capacity Needs Assessment |
-| `citizen_feedback` | Citizen Feedback Analysis |
-| `budget_analysis` | Budget Efficiency Study |
-| `digital_transformation` | Digital Readiness Assessment |
-| `governance` | Governance & Policy |
-| `service_delivery` | Service Delivery Analysis |
-| `reform` | Reform Studies |
-
-### 9. Wellness Hub
-
-A comprehensive mental health and wellness support system for civil servants.
-
-- **Resource Library** - Mental health articles, guides, and multimedia content
-- **AI Counselor** - Anonymous chat with AI wellness assistant
-- **Mood Tracking** - Daily mood check-ins and analytics
-- **Stress Management** - Breathing exercises, meditation guides
-- **Crisis Support** - Emergency resources and hotlines
-- **Counselor Sessions** - Connect with professional counselors
-- **Progress Reports** - Track wellness journey over time
-
-### 10. Admin Panel
-
-- **Dashboard** - Real-time system overview and analytics
-- **User Management** - Manage all users with role assignment
-- **Document Management** - Approve and manage documents
-- **Forum Moderation** - Moderate discussions
-- **Research Management** - Oversee research projects
-- **Wellness Management** - Manage counselors and resources
-- **Analytics** - Comprehensive usage statistics
-- **System Settings** - Configure platform settings
-- **Audit Log** - Track all system activities
-- **Backup & Restore** - System backup management
+### Documents, Forum, Chat, Groups, Research, LMS, Wellness
+See [full API documentation](docs/API.md) for 40+ endpoints.
 
 ---
 
-## API Documentation
+## User Roles
 
-The API is RESTful and follows standard conventions. Base URL: `/api/v1`
+| Role | Access Level |
+|------|--------------|
+| `super_admin` | Full system access |
+| `admin` | Administrative functions |
+| `director` | Department management |
+| `librarian` | Document management |
+| `counselor` | Wellness dashboard access |
+| `moderator` | Forum/chat moderation |
+| `contributor` | Content creation |
+| `civil_servant` | Standard user |
+| `guest` | Limited read-only |
 
-### Authentication Endpoints
+---
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/register` | Register new user |
-| POST | `/auth/login` | User login |
-| POST | `/auth/logout` | User logout |
-| POST | `/auth/refresh` | Refresh access token |
-| POST | `/auth/forgot-password` | Request password reset |
-| POST | `/auth/reset-password` | Reset password with code |
-| POST | `/auth/verify-email` | Verify email address |
+## Security
 
-### User Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/users/me` | Get current user |
-| PUT | `/users/me` | Update current user |
-| GET | `/users/:id` | Get user by ID |
-
-### Document Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/documents` | List documents |
-| POST | `/documents` | Upload document |
-| GET | `/documents/:id` | Get document |
-| PUT | `/documents/:id` | Update document |
-| DELETE | `/documents/:id` | Delete document |
-| GET | `/documents/:id/download` | Download document |
-| POST | `/documents/:id/analyze` | AI analysis |
-
-### Forum Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/forum/categories` | List categories |
-| GET | `/forum/topics` | List topics |
-| POST | `/forum/topics` | Create topic |
-| GET | `/forum/topics/:id` | Get topic |
-| POST | `/forum/topics/:id/replies` | Add reply |
-
-### Chat Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/chat/rooms` | List chat rooms |
-| POST | `/chat/rooms` | Create room |
-| GET | `/chat/rooms/:id/messages` | Get messages |
-| POST | `/chat/rooms/:id/messages` | Send message |
-
-### Groups Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/groups` | List groups |
-| POST | `/groups` | Create group |
-| GET | `/groups/:id` | Get group |
-| POST | `/groups/:id/join` | Join group |
-| POST | `/groups/:id/posts` | Create post |
-
-### Research Lab Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/research/projects` | List research projects |
-| POST | `/research/projects` | Create project |
-| GET | `/research/projects/:id` | Get project details |
-| PUT | `/research/projects/:id` | Update project |
-| DELETE | `/research/projects/:id` | Delete project |
-| GET | `/research/projects/:id/literature` | Get linked literature |
-| POST | `/research/projects/:id/literature` | Add literature |
-| GET | `/research/projects/:id/notes` | Get project notes |
-| POST | `/research/projects/:id/notes` | Create note |
-| GET | `/research/projects/:id/discussions` | Get discussions |
-| POST | `/research/projects/:id/discussions` | Create discussion |
-| GET | `/research/projects/:id/milestones` | List milestones |
-| POST | `/research/projects/:id/milestones` | Create milestone |
-| PUT | `/research/projects/:id/milestones/:mid` | Update milestone |
-| GET | `/research/projects/:id/analytics` | Get analytics |
-| POST | `/research/projects/:id/export` | Generate export |
-| GET | `/research/templates` | List templates |
-| GET | `/research/templates/:id` | Get template |
-| POST | `/research/templates/:id/use` | Create project from template |
-| POST | `/research/kofi/chat` | Chat with Kofi AI |
-| POST | `/research/kofi/insights` | Generate insights |
-| POST | `/research/kofi/brief` | Generate policy brief |
-
-### Wellness Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/wellness/resources` | List resources |
-| GET | `/wellness/resources/:id` | Get resource |
-| POST | `/counselor/sessions` | Start counselor session |
-| POST | `/counselor/sessions/:id/messages` | Send message |
-| GET | `/counselor/sessions/:id/messages` | Get messages |
-| GET | `/wellness/mood` | Get mood history |
-| POST | `/wellness/mood` | Log mood entry |
-
-### News Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/news/articles` | List news articles |
-| GET | `/news/articles/:id` | Get article |
-| GET | `/news/categories` | List categories |
-| POST | `/news/articles/:id/bookmark` | Bookmark article |
-
-For complete API documentation, see [docs/API.md](docs/API.md)
+- **JWT Authentication** - Secure token-based auth with refresh tokens
+- **Two-Factor Authentication** - TOTP with backup codes
+- **Role-Based Access Control** - Granular permissions system
+- **Rate Limiting** - API abuse prevention
+- **HTTPS Everywhere** - TLS encryption in transit
+- **Input Validation** - Zod schemas on all inputs
+- **SQL Injection Prevention** - Parameterized queries
+- **XSS Protection** - Content sanitization
+- **Audit Logging** - Complete activity trail
 
 ---
 
 ## Deployment
 
 ### Frontend (Cloudflare Pages)
-
-1. **Build the application**
-   ```bash
-   npm run build
-   ```
-
-2. **Deploy to Cloudflare Pages**
-   ```bash
-   npx wrangler pages deploy dist --project-name=ohcs-elibrary
-   ```
+```bash
+npm run build
+npx wrangler pages deploy dist --project-name=ohcs-elibrary
+```
 
 ### Backend (Cloudflare Workers)
+```bash
+cd workers
+npm run deploy
+```
 
-1. **Configure wrangler.toml** with your bindings
-
-2. **Deploy the worker**
-   ```bash
-   cd workers
-   npm run deploy
-   ```
-
-3. **Run database migrations**
-   ```bash
-   npx wrangler d1 execute ohcs-elibrary --file=schema.sql
-   npx wrangler d1 execute ohcs-elibrary --file=migrations/0002_add_email_verification_columns.sql
-   ```
-
-For complete deployment instructions, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+### Database Migrations
+```bash
+npx wrangler d1 execute ohcs-elibrary --file=migrations/XXXX_migration.sql
+```
 
 ---
 
-## Security
+## Design System
 
-### Authentication
-- JWT-based authentication with secure token handling
-- Password hashing using SHA-256
-- Two-factor authentication (TOTP)
-- Secure session management
+| Element | Color |
+|---------|-------|
+| Primary (Green) | `#006B3F` - Ghana flag |
+| Accent (Gold) | `#FCD116` - Ghana flag |
+| Danger (Red) | `#CE1126` - Ghana flag |
+| Black Star | `#000000` - National symbol |
 
-### Authorization
-- Role-based access control (RBAC)
-- Resource-level permissions
-- API endpoint protection
+- **Light/Dark Mode** - Full theme support
+- **Responsive** - Mobile-first design
+- **Accessible** - WCAG 2.1 compliance
+- **Animations** - Framer Motion transitions
 
-### Data Protection
-- HTTPS encryption in transit
-- Encrypted storage at rest
-- Secure file upload handling
-- Input validation and sanitization
+---
 
-### Best Practices
-- CORS configuration
-- Rate limiting
-- SQL injection prevention
-- XSS protection
-- CSRF protection
+## Version History
+
+| Version | Date | Highlights |
+|---------|------|------------|
+| 2.0.0 | Jan 2026 | Demo access, Kwame/Ayo AI fixes, Google Drive integration |
+| 1.5.0 | Jan 2026 | LMS, Social networking, Peer recognition |
+| 1.1.0 | Dec 2025 | Research Lab Phase 4, Wellness Hub |
+| 1.0.0 | Dec 2025 | Initial release |
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed history.
 
 ---
 
 ## Contributing
 
-This is a proprietary project for the Office of the Head of Civil Service, Ghana. Contributions are limited to authorized personnel only.
+This is a proprietary project for Ghana's Office of the Head of Civil Service. Contributions are limited to authorized personnel.
 
 ### Development Guidelines
-
 1. Follow TypeScript best practices
 2. Write clean, documented code
-3. Follow the existing code style
-4. Test thoroughly before committing
-5. Use meaningful commit messages
+3. Test thoroughly before committing
+4. Use conventional commit messages
 
 ---
 
@@ -605,33 +425,26 @@ This is a proprietary project for the Office of the Head of Civil Service, Ghana
 
 **Proprietary License**
 
-Copyright (c) 2025 Office of the Head of Civil Service, Ghana. All rights reserved.
+Copyright (c) 2025-2026 Office of the Head of Civil Service, Ghana. All rights reserved.
 
-This software is proprietary and confidential. Unauthorized copying, distribution, modification, or use of this software, via any medium, is strictly prohibited without the express written permission of the Office of the Head of Civil Service, Ghana.
+Unauthorized copying, distribution, or use of this software is strictly prohibited.
 
 ---
 
 ## Contact
 
 **Developer:** Osborn Hodges
-**Role:** Full Stack Developer
 **Email:** davies.hodges@ohcs.gov.gh
+**Organization:** Office of the Head of Civil Service, Ghana
 
-**Organization:** Office of the Head of Civil Service
-**Location:** Accra, Ghana
-**Website:** [https://ohcs-elibrary.pages.dev](https://ohcs-elibrary.pages.dev)
-
----
-
-## Version History
-
-| Version | Date | Description |
-|---------|------|-------------|
-| 1.1.0 | December 28, 2025 | Research Lab Phase 4, Wellness Hub, Landing page enhancements |
-| 1.0.0 | December 28, 2025 | Initial release |
-
-For detailed changelog, see [CHANGELOG.md](CHANGELOG.md)
+**Live Platform:** [ohcs-elibrary.pages.dev](https://ohcs-elibrary.pages.dev)
 
 ---
 
-*Built with pride for Ghana's Civil Service*
+<div align="center">
+
+**Built with pride for Ghana's Civil Service**
+
+<img src="https://flagcdn.com/w80/gh.png" alt="Ghana Flag" width="40">
+
+</div>

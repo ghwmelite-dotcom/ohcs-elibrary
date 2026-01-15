@@ -937,11 +937,15 @@ function LoginFormContent({ isDark, onClose }: { isDark: boolean; onClose: () =>
   const [serverError, setServerError] = useState<string | null>(null);
   const [loginMode, setLoginMode] = useState<'email' | 'staffId'>('email');
 
-  const handleDemoLogin = () => {
-    loginDemo();
-    toast.success('Welcome!', 'Signed in with demo account (24hr access).');
-    onClose();
-    navigate('/dashboard');
+  const handleDemoLogin = async () => {
+    try {
+      await loginDemo();
+      toast.success('Welcome!', 'Signed in with demo account (24hr access).');
+      onClose();
+      navigate('/dashboard');
+    } catch (error) {
+      toast.error('Demo Login Failed', 'Unable to start demo session. Please try again.');
+    }
   };
 
   const emailForm = useForm<LoginFormData>({
