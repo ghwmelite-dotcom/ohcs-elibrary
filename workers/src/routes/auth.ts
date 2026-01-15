@@ -1108,8 +1108,8 @@ authRoutes.post('/demo', async (c) => {
       // Create demo user
       const passwordHash = await hashPassword('DemoPassword123!');
       await c.env.DB.prepare(`
-        INSERT INTO users (id, email, passwordHash, displayName, firstName, lastName, staffId, role, department, jobTitle, isActive, isVerified)
-        VALUES (?, ?, ?, 'Kwame Asante', 'Kwame', 'Asante', 'DEMO-001', 'civil_servant', 'Administrative Services', 'Administrative Officer', 1, 1)
+        INSERT INTO users (id, email, passwordHash, displayName, firstName, lastName, role, department, jobTitle, isActive, isVerified)
+        VALUES (?, ?, ?, 'Kwame Asante', 'Kwame', 'Asante', 'civil_servant', 'Administrative Services', 'Administrative Officer', 1, 1)
       `).bind(demoUserId, demoEmail, passwordHash).run();
 
       user = {
