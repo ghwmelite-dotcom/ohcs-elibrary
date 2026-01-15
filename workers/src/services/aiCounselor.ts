@@ -117,7 +117,7 @@ IMPORTANT:
 ${topicContext}
 ${moodContext}`;
 
-    const prompt = `${systemPrompt}
+    const fullPrompt = `${systemPrompt}
 
 ${historyContext ? `Previous messages:\n${historyContext}\n` : ''}
 
@@ -125,11 +125,18 @@ They just said: "${userMessage}"
 
 Reply naturally as Ayo:`;
 
-    const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
-      prompt,
-      max_tokens: 300,
-      temperature: 0.85,
-    });
+    let response;
+    try {
+      response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+        prompt: fullPrompt,
+        max_tokens: 300,
+        temperature: 0.85,
+      });
+      console.log('Ayo AI Response received:', JSON.stringify(response).slice(0, 200));
+    } catch (aiError: any) {
+      console.error('AI counselor run error:', aiError?.message || aiError);
+      return getFallbackResponse(context.topic);
+    }
 
     let aiResponse = response?.response?.trim();
 

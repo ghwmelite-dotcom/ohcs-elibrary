@@ -351,14 +351,28 @@ export async function searchDocumentChunks(
 }
 
 /**
+ * Check if content is valid text (not binary/corrupted)
+ */
+function isValidTextContent(content: string): boolean {
+  if (!content || content.length < 10) return false;
+  // Check for high ratio of non-printable characters
+  const printable = content.replace(/[^\x20-\x7E\n\r\t]/g, '');
+  const ratio = printable.length / content.length;
+  return ratio > 0.7; // At least 70% should be printable ASCII
+}
+
+/**
  * Build context from retrieved chunks for the prompt
  */
 function buildDocumentContext(chunks: DocumentChunk[]): string {
-  if (chunks.length === 0) {
+  // Filter out corrupted/binary chunks
+  const validChunks = chunks.filter(chunk => isValidTextContent(chunk.content));
+
+  if (validChunks.length === 0) {
     return 'No relevant documents were found in the library for this question.';
   }
 
-  return chunks.map((chunk, i) =>
+  return validChunks.map((chunk, i) =>
     `[Source ${i + 1}: "${chunk.documentTitle}" (${chunk.documentCategory || 'General'})]\n${chunk.content}`
   ).join('\n\n---\n\n');
 }
@@ -367,15 +381,18 @@ function buildDocumentContext(chunks: DocumentChunk[]): string {
  * Build citations from chunks
  */
 function buildCitations(chunks: DocumentChunk[]): Citation[] {
-  return chunks.map(chunk => ({
-    documentId: chunk.documentId,
-    documentTitle: chunk.documentTitle || 'Unknown Document',
-    chunkContent: chunk.content.slice(0, 200) + (chunk.content.length > 200 ? '...' : ''),
-    chunkIndex: chunk.chunkIndex,
-    pageNumber: chunk.metadata?.page,
-    section: chunk.metadata?.section,
-    relevanceScore: Math.round((chunk.score || 0) * 100) / 100,
-  }));
+  // Only include citations for valid text content
+  return chunks
+    .filter(chunk => isValidTextContent(chunk.content))
+    .map(chunk => ({
+      documentId: chunk.documentId,
+      documentTitle: chunk.documentTitle || 'Unknown Document',
+      chunkContent: chunk.content.slice(0, 200) + (chunk.content.length > 200 ? '...' : ''),
+      chunkIndex: chunk.chunkIndex,
+      pageNumber: chunk.metadata?.page,
+      section: chunk.metadata?.section,
+      relevanceScore: Math.round((chunk.score || 0) * 100) / 100,
+    }));
 }
 
 /**
@@ -457,11 +474,38 @@ Kwame:`;
       };
     }
 
-    const aiResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
-      prompt,
-      max_tokens: 700,
-      temperature: 0.7,
-    });
+    let aiResponse;
+    try {
+      // Build the full prompt for the model
+      const fullPrompt = `${KWAME_SYSTEM_PROMPT}
+
+${personalization ? `USER CONTEXT: ${personalization}\n` : ''}
+DOCUMENT SOURCES:
+${documentContext}
+
+${historyContext ? `RECENT CONVERSATION:\n${historyContext}\n` : ''}
+User: ${userQuestion}
+
+Provide a helpful, accurate response based on the document sources above. If the information is not available in the sources, honestly say so and suggest they contact their HR department or OHCS directly.
+
+Kwame:`;
+
+      aiResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+        prompt: fullPrompt,
+        max_tokens: 700,
+        temperature: 0.7,
+      });
+
+      console.log('AI Response received:', JSON.stringify(aiResponse).slice(0, 200));
+    } catch (aiError: any) {
+      console.error('AI run error:', aiError?.message || aiError);
+      return {
+        response: "I'm having trouble connecting to my knowledge base right now. Please try again in a moment.",
+        citations: buildCitations(relevantChunks),
+        processingTimeMs: Date.now() - startTime,
+        chunksUsed: relevantChunks.length,
+      };
+    }
 
     let responseText = aiResponse?.response?.trim();
 
