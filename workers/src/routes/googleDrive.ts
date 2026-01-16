@@ -100,11 +100,12 @@ googleDriveRoutes.use('*', requireAuth);
 googleDriveRoutes.get('/auth/url', requireAdmin, async (c: AppContext) => {
   try {
     const userId = c.get('userId');
-    const state = Buffer.from(JSON.stringify({
+    const stateData = JSON.stringify({
       userId,
       timestamp: Date.now(),
       nonce: crypto.randomUUID(),
-    })).toString('base64');
+    });
+    const state = btoa(stateData);
 
     // Store state in KV for validation
     await c.env.CACHE.put(`gdrive_oauth_state:${state}`, userId!, { expirationTtl: 600 });
@@ -478,6 +479,83 @@ googleDriveRoutes.post('/import', requireAdmin, async (c: AppContext) => {
 });
 
 /**
+ * POST /google-drive/import-folder
+ * Import all files in a folder recursively
+ */
+googleDriveRoutes.post('/import-folder', requireAdmin, async (c: AppContext) => {
+  try {
+    const userId = c.get('userId');
+    const { connectionId, folderId, folderName, category, accessLevel } = await c.req.json();
+
+    if (!connectionId || !folderId) {
+      return c.json({ error: 'Connection ID and folder ID required' }, 400);
+    }
+
+    if (!category) {
+      return c.json({ error: 'Category is required' }, 400);
+    }
+
+    const connection = await getConnection(c.env, connectionId);
+    if (!connection || !connection.isActive) {
+      return c.json({ error: 'Connection not found or inactive' }, 404);
+    }
+
+    const accessToken = await getValidAccessToken(c.env, connection);
+
+    // Recursively collect all files from the folder
+    const allFiles: DriveFile[] = [];
+
+    async function collectFilesFromFolder(parentFolderId: string): Promise<void> {
+      let pageToken: string | undefined;
+
+      do {
+        const contents = await listFolderContents(accessToken, parentFolderId, pageToken);
+
+        // Add files to the list
+        allFiles.push(...contents.files);
+
+        // Recursively process subfolders
+        for (const subfolder of contents.folders) {
+          await collectFilesFromFolder(subfolder.id);
+        }
+
+        pageToken = contents.nextPageToken;
+      } while (pageToken);
+    }
+
+    await collectFilesFromFolder(folderId);
+
+    if (allFiles.length === 0) {
+      return c.json({
+        success: true,
+        imported: 0,
+        message: 'No files found in the folder',
+      });
+    }
+
+    // Import all collected files
+    const filesToImport = allFiles.map((driveFile) => ({
+      driveFile,
+      category,
+      accessLevel: accessLevel || 'internal',
+    }));
+
+    const result = await bulkLinkDriveFiles(c.env, connectionId, filesToImport, userId!);
+
+    return c.json({
+      success: true,
+      imported: result.success,
+      failed: result.failed,
+      documentIds: result.documentIds,
+      folderName,
+    });
+  } catch (error) {
+    console.error('Error importing folder:', error);
+    return c.json({ error: 'Failed to import folder' }, 500);
+  }
+});
+
+/**
  * POST /google-drive/import-single
  * Import a single file with full options
  */
@@ -531,6 +609,111 @@ googleDriveRoutes.post('/import-single', requireAdmin, async (c: AppContext) => 
   }
 });
 
+/**
+ * POST /google-drive/sync
+ * Sync a connection to find and import new files
+ */
+googleDriveRoutes.post('/sync', requireAdmin, async (c: AppContext) => {
+  try {
+    const userId = c.get('userId');
+    const { connectionId, folderId, category, accessLevel } = await c.req.json();
+
+    if (!connectionId) {
+      return c.json({ error: 'Connection ID is required' }, 400);
+    }
+
+    if (!category) {
+      return c.json({ error: 'Category is required' }, 400);
+    }
+
+    const connection = await getConnection(c.env, connectionId);
+    if (!connection || !connection.isActive) {
+      return c.json({ error: 'Connection not found or inactive' }, 404);
+    }
+
+    const accessToken = await getValidAccessToken(c.env, connection);
+
+    // Get all existing documents for this connection
+    const { results: existingDocs } = await c.env.DB.prepare(`
+      SELECT externalFileId FROM documents WHERE driveConnectionId = ?
+    `).bind(connectionId).all();
+
+    const existingFileIds = new Set((existingDocs || []).map((d: any) => d.externalFileId));
+
+    // Determine which folder to sync
+    const syncFolderId = folderId || connection.rootFolderId || 'root';
+
+    // Recursively collect all files from the folder
+    const allFiles: DriveFile[] = [];
+
+    async function collectFilesFromFolder(parentFolderId: string): Promise<void> {
+      let pageToken: string | undefined;
+
+      do {
+        const contents = await listFolderContents(accessToken, parentFolderId, pageToken);
+
+        // Add files to the list
+        allFiles.push(...contents.files);
+
+        // Recursively process subfolders
+        for (const subfolder of contents.folders) {
+          await collectFilesFromFolder(subfolder.id);
+        }
+
+        pageToken = contents.nextPageToken;
+      } while (pageToken);
+    }
+
+    await collectFilesFromFolder(syncFolderId);
+
+    // Filter out files that are already imported
+    const newFiles = allFiles.filter(file => !existingFileIds.has(file.id));
+
+    if (newFiles.length === 0) {
+      // Update last sync time
+      await c.env.DB.prepare(`
+        UPDATE google_drive_connections SET lastSyncAt = datetime('now') WHERE id = ?
+      `).bind(connectionId).run();
+
+      return c.json({
+        success: true,
+        message: 'No new files found',
+        total: allFiles.length,
+        existing: existingFileIds.size,
+        newFiles: 0,
+        imported: 0,
+      });
+    }
+
+    // Import new files
+    const filesToImport = newFiles.map((driveFile) => ({
+      driveFile,
+      category,
+      accessLevel: accessLevel || 'internal',
+    }));
+
+    const result = await bulkLinkDriveFiles(c.env, connectionId, filesToImport, userId!);
+
+    // Update last sync time
+    await c.env.DB.prepare(`
+      UPDATE google_drive_connections SET lastSyncAt = datetime('now') WHERE id = ?
+    `).bind(connectionId).run();
+
+    return c.json({
+      success: true,
+      total: allFiles.length,
+      existing: existingFileIds.size,
+      newFiles: newFiles.length,
+      imported: result.success,
+      failed: result.failed,
+      documentIds: result.documentIds,
+    });
+  } catch (error) {
+    console.error('Error syncing:', error);
+    return c.json({ error: 'Failed to sync files' }, 500);
+  }
+});
+
 // ============================================================================
 // Streaming Routes (for viewing Drive files)
 // ============================================================================
@@ -565,13 +748,12 @@ googleDriveRoutes.get('/stream/:documentId', async (c: AppContext) => {
     }
 
     const accessToken = await getValidAccessToken(c.env, connection);
-    const response = await getFileContent(accessToken, document.externalFileId, document.externalMimeType);
-
-    // Determine content type
-    let contentType = document.externalMimeType;
-    if (GOOGLE_EXPORT_MIMES[document.externalMimeType]) {
-      contentType = GOOGLE_EXPORT_MIMES[document.externalMimeType];
-    }
+    const { response, contentType } = await getFileContent(
+      accessToken,
+      document.externalFileId,
+      document.externalMimeType,
+      true // Export Office files as PDF for viewing
+    );
 
     // Return streamed content with appropriate headers
     const headers = new Headers();
@@ -605,13 +787,12 @@ googleDriveRoutes.get('/stream-direct/:connectionId/:fileId', async (c: AppConte
 
     const accessToken = await getValidAccessToken(c.env, connection);
     const fileMeta = await getFileMetadata(accessToken, fileId);
-    const response = await getFileContent(accessToken, fileId, fileMeta.mimeType);
-
-    // Determine content type
-    let contentType = fileMeta.mimeType;
-    if (GOOGLE_EXPORT_MIMES[fileMeta.mimeType]) {
-      contentType = GOOGLE_EXPORT_MIMES[fileMeta.mimeType];
-    }
+    const { response, contentType } = await getFileContent(
+      accessToken,
+      fileId,
+      fileMeta.mimeType,
+      true // Export Office files as PDF for viewing
+    );
 
     const headers = new Headers();
     headers.set('Content-Type', contentType);

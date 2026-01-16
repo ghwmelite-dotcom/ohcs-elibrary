@@ -118,6 +118,22 @@ export const GOOGLE_EXPORT_MIMES: Record<string, string> = {
   'application/vnd.google-apps.drawing': 'image/png',
 };
 
+// Office formats that should be exported as PDF for viewing
+export const OFFICE_EXPORT_TO_PDF: string[] = [
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation', // pptx
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+  'application/vnd.ms-powerpoint', // ppt
+  'application/msword', // doc
+  // Note: Excel files are better viewed as original format or converted differently
+];
+
+// Check if a MIME type should be exported as PDF
+export function shouldExportAsPdf(mimeType: string): boolean {
+  return OFFICE_EXPORT_TO_PDF.includes(mimeType) ||
+         mimeType === 'application/vnd.google-apps.document' ||
+         mimeType === 'application/vnd.google-apps.presentation';
+}
+
 /**
  * Generate OAuth authorization URL
  */
@@ -387,12 +403,14 @@ export async function searchFiles(
 
 /**
  * Get file content as stream (for viewing/downloading)
+ * @param exportAsPdf - If true, attempt to export Office files as PDF for viewing
  */
 export async function getFileContent(
   accessToken: string,
   fileId: string,
-  mimeType: string
-): Promise<Response> {
+  mimeType: string,
+  exportAsPdf: boolean = false
+): Promise<{ response: Response; contentType: string }> {
   // For Google Docs native files, export to appropriate format
   if (GOOGLE_EXPORT_MIMES[mimeType]) {
     const exportMime = GOOGLE_EXPORT_MIMES[mimeType];
@@ -409,7 +427,31 @@ export async function getFileContent(
       throw new Error(`Failed to export file: ${await response.text()}`);
     }
 
-    return response;
+    return { response, contentType: exportMime };
+  }
+
+  // For Office files, try to export as PDF for viewing
+  if (exportAsPdf && OFFICE_EXPORT_TO_PDF.includes(mimeType)) {
+    try {
+      // Try exporting as PDF using Google's export API
+      const exportResponse = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=application/pdf`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (exportResponse.ok) {
+        return { response: exportResponse, contentType: 'application/pdf' };
+      }
+
+      // If export fails (file might not be converted), fall through to direct download
+      console.log(`PDF export failed for ${fileId}, falling back to direct download`);
+    } catch (exportError) {
+      console.log(`PDF export error for ${fileId}:`, exportError);
+    }
   }
 
   // For regular files, download directly
@@ -426,7 +468,7 @@ export async function getFileContent(
     throw new Error(`Failed to get file content: ${await response.text()}`);
   }
 
-  return response;
+  return { response, contentType: mimeType };
 }
 
 /**
@@ -457,7 +499,7 @@ export async function extractTextFromDriveFile(
 
     // For PDFs and other files, we'll need to download and process
     // For now, return placeholder - in production use document AI or pdf.js
-    const fileResponse = await getFileContent(accessToken, fileId, mimeType);
+    const { response: fileResponse } = await getFileContent(accessToken, fileId, mimeType, false);
 
     if (mimeType === 'application/pdf') {
       const arrayBuffer = await fileResponse.arrayBuffer();

@@ -149,9 +149,15 @@ export default function AdminGoogleDrive() {
 
   // Import state
   const [selectedFiles, setSelectedFiles] = useState<DriveFile[]>([]);
+  const [selectedFolders, setSelectedFolders] = useState<DriveFolder[]>([]);
   const [importCategory, setImportCategory] = useState('general');
   const [importAccessLevel, setImportAccessLevel] = useState('internal');
   const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<string | null>(null);
+
+  // Sync state
+  const [isSyncing, setIsSyncing] = useState<string | null>(null); // Connection ID being synced
+  const [syncCategory, setSyncCategory] = useState('general');
 
   // Fetch connections
   const fetchConnections = useCallback(async () => {
@@ -211,29 +217,42 @@ export default function AdminGoogleDrive() {
     }
   };
 
-  // Handle OAuth callback (check URL params on mount)
+  // Save OAuth callback params immediately on page load (before auth redirect might clear them)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const state = urlParams.get('state');
 
-    if (code && state && token) {
-      const savedState = sessionStorage.getItem('gdrive_oauth_state');
-      if (state === savedState) {
-        const name = sessionStorage.getItem('gdrive_connection_name') || 'My Drive';
-        const description = sessionStorage.getItem('gdrive_connection_desc') || '';
+    if (code && state) {
+      // Save callback params to sessionStorage so they persist through auth redirects
+      sessionStorage.setItem('gdrive_pending_code', code);
+      sessionStorage.setItem('gdrive_pending_state', state);
+      // Clear URL params immediately to prevent re-processing
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []); // Run only once on mount
 
-        // Clear URL params
-        window.history.replaceState({}, '', window.location.pathname);
+  // Process OAuth callback when token is available
+  useEffect(() => {
+    if (!token) return;
 
-        // Complete connection
-        completeConnection(code, state, name, description);
+    const code = sessionStorage.getItem('gdrive_pending_code');
+    const state = sessionStorage.getItem('gdrive_pending_state');
+    const savedState = sessionStorage.getItem('gdrive_oauth_state');
 
-        // Clear session storage
-        sessionStorage.removeItem('gdrive_connection_name');
-        sessionStorage.removeItem('gdrive_connection_desc');
-        sessionStorage.removeItem('gdrive_oauth_state');
-      }
+    if (code && state && savedState && state === savedState) {
+      const name = sessionStorage.getItem('gdrive_connection_name') || 'My Drive';
+      const description = sessionStorage.getItem('gdrive_connection_desc') || '';
+
+      // Clear all session storage items
+      sessionStorage.removeItem('gdrive_pending_code');
+      sessionStorage.removeItem('gdrive_pending_state');
+      sessionStorage.removeItem('gdrive_connection_name');
+      sessionStorage.removeItem('gdrive_connection_desc');
+      sessionStorage.removeItem('gdrive_oauth_state');
+
+      // Complete connection
+      completeConnection(code, state, name, description);
     }
   }, [token]);
 
@@ -287,6 +306,51 @@ export default function AdminGoogleDrive() {
       }
     } catch (err) {
       setError('Failed to disconnect Drive');
+    }
+  };
+
+  // Sync connection to find new files
+  const handleSync = async (connection: DriveConnection, category: string) => {
+    if (!token) return;
+
+    try {
+      setIsSyncing(connection.id);
+      setError(null);
+      setSuccess(null);
+
+      const response = await fetch(`${API_BASE}/google-drive/sync`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          connectionId: connection.id,
+          folderId: connection.rootFolderId,
+          category,
+          accessLevel: 'internal',
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Sync failed');
+      }
+
+      const data = await response.json();
+
+      if (data.newFiles === 0) {
+        setSuccess(`Sync complete! No new files found. (${data.total} files total, ${data.existing} already imported)`);
+      } else {
+        setSuccess(`Sync complete! Imported ${data.imported} new files. (${data.failed > 0 ? `${data.failed} failed` : 'All successful'})`);
+      }
+
+      // Refresh connections to update lastSyncAt
+      fetchConnections();
+    } catch (err: any) {
+      setError(err.message || 'Failed to sync');
+    } finally {
+      setIsSyncing(null);
     }
   };
 
@@ -355,38 +419,89 @@ export default function AdminGoogleDrive() {
     });
   };
 
-  // Import selected files
+  const toggleFolderSelection = (folder: DriveFolder, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent folder navigation
+    setSelectedFolders((prev) => {
+      const isSelected = prev.some((f) => f.id === folder.id);
+      if (isSelected) {
+        return prev.filter((f) => f.id !== folder.id);
+      } else {
+        return [...prev, folder];
+      }
+    });
+  };
+
+  // Import selected files and folders
   const handleImport = async () => {
-    if (!token || !selectedConnection || selectedFiles.length === 0) return;
+    if (!token || !selectedConnection || (selectedFiles.length === 0 && selectedFolders.length === 0)) return;
 
     try {
       setIsImporting(true);
       setError(null);
+      setImportProgress(null);
 
-      const response = await fetch(`${API_BASE}/google-drive/import`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          connectionId: selectedConnection.id,
-          files: selectedFiles.map((f) => ({ id: f.id })),
-          category: importCategory,
-          accessLevel: importAccessLevel,
-        }),
-      });
+      let totalImported = 0;
 
-      if (!response.ok) throw new Error('Import failed');
+      // Import individual files first
+      if (selectedFiles.length > 0) {
+        setImportProgress(`Importing ${selectedFiles.length} file(s)...`);
+        const response = await fetch(`${API_BASE}/google-drive/import`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            connectionId: selectedConnection.id,
+            files: selectedFiles.map((f) => ({ id: f.id })),
+            category: importCategory,
+            accessLevel: importAccessLevel,
+          }),
+        });
 
-      const data = await response.json();
-      setSuccess(`Successfully imported ${data.imported} file(s)!`);
+        if (!response.ok) throw new Error('File import failed');
+        const data = await response.json();
+        totalImported += data.imported || 0;
+      }
+
+      // Import folders recursively
+      for (let i = 0; i < selectedFolders.length; i++) {
+        const folder = selectedFolders[i];
+        setImportProgress(`Importing folder "${folder.name}" (${i + 1}/${selectedFolders.length})...`);
+
+        const response = await fetch(`${API_BASE}/google-drive/import-folder`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            connectionId: selectedConnection.id,
+            folderId: folder.id,
+            folderName: folder.name,
+            category: importCategory,
+            accessLevel: importAccessLevel,
+          }),
+        });
+
+        if (!response.ok) {
+          console.error(`Failed to import folder ${folder.name}`);
+          continue;
+        }
+
+        const data = await response.json();
+        totalImported += data.imported || 0;
+      }
+
+      setSuccess(`Successfully imported ${totalImported} file(s)!`);
       setSelectedFiles([]);
+      setSelectedFolders([]);
       fetchConnections(); // Refresh to update file counts
     } catch (err) {
-      setError('Failed to import files');
+      setError('Failed to import files/folders');
     } finally {
       setIsImporting(false);
+      setImportProgress(null);
     }
   };
 
@@ -477,17 +592,17 @@ export default function AdminGoogleDrive() {
         </button>
         <button
           onClick={() => setActiveTab('import')}
-          disabled={selectedFiles.length === 0}
+          disabled={selectedFiles.length === 0 && selectedFolders.length === 0}
           className={cn(
             'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
             activeTab === 'import'
               ? 'border-primary-500 text-primary-600 dark:text-primary-400'
               : 'border-transparent text-surface-500 hover:text-surface-700',
-            selectedFiles.length === 0 && 'opacity-50 cursor-not-allowed'
+            (selectedFiles.length === 0 && selectedFolders.length === 0) && 'opacity-50 cursor-not-allowed'
           )}
         >
           <Upload className="w-4 h-4 inline mr-2" />
-          Import ({selectedFiles.length})
+          Import ({selectedFiles.length + selectedFolders.length})
         </button>
       </div>
 
@@ -577,6 +692,9 @@ export default function AdminGoogleDrive() {
                             <span>{conn.totalFilesLinked} files linked</span>
                             <span>Connected {formatRelativeTime(conn.createdAt)}</span>
                             {conn.connectedByName && <span>by {conn.connectedByName}</span>}
+                            {conn.lastSyncAt && (
+                              <span>Last synced {formatRelativeTime(conn.lastSyncAt)}</span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -584,6 +702,25 @@ export default function AdminGoogleDrive() {
                         <Badge variant={conn.isActive ? 'success' : 'default'}>
                           {conn.isActive ? 'Active' : 'Inactive'}
                         </Badge>
+                        <select
+                          className="px-2 py-1.5 text-xs border border-surface-300 dark:border-surface-600 rounded-lg bg-white dark:bg-surface-700 text-surface-700 dark:text-surface-300"
+                          value={syncCategory}
+                          onChange={(e) => setSyncCategory(e.target.value)}
+                          disabled={isSyncing === conn.id}
+                        >
+                          {DOCUMENT_CATEGORIES.map((cat) => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                          ))}
+                        </select>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSync(conn, syncCategory)}
+                          disabled={isSyncing === conn.id}
+                          leftIcon={isSyncing === conn.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                        >
+                          {isSyncing === conn.id ? 'Syncing...' : 'Sync'}
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
@@ -663,6 +800,82 @@ export default function AdminGoogleDrive() {
 
           {/* File Browser */}
           <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 overflow-hidden">
+            {/* Selection Toolbar */}
+            {folderContents && (folderContents.files.length > 0 || folderContents.folders.length > 0 || searchResults.length > 0) && (
+              <div className="px-4 py-3 bg-surface-50 dark:bg-surface-700/50 border-b border-surface-200 dark:border-surface-700 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-surface-600 dark:text-surface-400">
+                    {selectedFolders.length > 0 && `${selectedFolders.length} folder(s)`}
+                    {selectedFolders.length > 0 && selectedFiles.length > 0 && ', '}
+                    {selectedFiles.length > 0 && `${selectedFiles.length} file(s)`}
+                    {selectedFolders.length === 0 && selectedFiles.length === 0 && 'No items selected'}
+                    {' selected'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Select All Folders */}
+                  {folderContents.folders.length > 0 && !searchResults.length && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const allFoldersSelected = folderContents.folders.every(f => selectedFolders.some(sf => sf.id === f.id));
+                        if (allFoldersSelected) {
+                          setSelectedFolders(prev => prev.filter(sf => !folderContents.folders.some(f => f.id === sf.id)));
+                        } else {
+                          setSelectedFolders(prev => {
+                            const existingIds = new Set(prev.map(f => f.id));
+                            const newFolders = folderContents.folders.filter(f => !existingIds.has(f.id));
+                            return [...prev, ...newFolders];
+                          });
+                        }
+                      }}
+                    >
+                      <FolderOpen className="w-4 h-4 mr-1" />
+                      {folderContents.folders.every(f => selectedFolders.some(sf => sf.id === f.id))
+                        ? 'Deselect Folders'
+                        : 'Select All Folders'}
+                    </Button>
+                  )}
+                  {/* Select All Files */}
+                  {(folderContents.files.length > 0 || searchResults.length > 0) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const filesToSelect = searchResults.length > 0 ? searchResults : folderContents.files;
+                        const allSelected = filesToSelect.every(f => selectedFiles.some(sf => sf.id === f.id));
+                        if (allSelected) {
+                          setSelectedFiles(prev => prev.filter(sf => !filesToSelect.some(f => f.id === sf.id)));
+                        } else {
+                          setSelectedFiles(prev => {
+                            const existingIds = new Set(prev.map(f => f.id));
+                            const newFiles = filesToSelect.filter(f => !existingIds.has(f.id));
+                            return [...prev, ...newFiles];
+                          });
+                        }
+                      }}
+                    >
+                      <FileText className="w-4 h-4 mr-1" />
+                      {(searchResults.length > 0 ? searchResults : folderContents.files).every(f => selectedFiles.some(sf => sf.id === f.id))
+                        ? 'Deselect Files'
+                        : 'Select All Files'}
+                    </Button>
+                  )}
+                  {/* Import Button */}
+                  {(selectedFiles.length > 0 || selectedFolders.length > 0) && (
+                    <Button
+                      size="sm"
+                      onClick={() => setActiveTab('import')}
+                      leftIcon={<Upload className="w-4 h-4" />}
+                    >
+                      Import Selected
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {isBrowsing ? (
               <div className="flex items-center justify-center py-24">
                 <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
@@ -738,19 +951,46 @@ export default function AdminGoogleDrive() {
                 )}
 
                 {/* Folders */}
-                {!searchResults.length && folderContents?.folders.map((folder) => (
-                  <button
-                    key={folder.id}
-                    onClick={() => browseFolder(folder.id)}
-                    className="w-full px-4 py-3 flex items-center gap-4 hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors"
-                  >
-                    <FolderOpen className="w-5 h-5 text-secondary-500" />
-                    <span className="text-sm font-medium text-surface-900 dark:text-surface-50 text-left">
-                      {folder.name}
-                    </span>
-                    <ChevronRight className="w-4 h-4 text-surface-400 ml-auto" />
-                  </button>
-                ))}
+                {!searchResults.length && folderContents?.folders.map((folder) => {
+                  const isFolderSelected = selectedFolders.some((f) => f.id === folder.id);
+                  return (
+                    <div
+                      key={folder.id}
+                      className={cn(
+                        'w-full px-4 py-3 flex items-center gap-4 transition-colors',
+                        isFolderSelected
+                          ? 'bg-primary-50 dark:bg-primary-900/20'
+                          : 'hover:bg-surface-50 dark:hover:bg-surface-700/50'
+                      )}
+                    >
+                      {/* Checkbox for folder selection */}
+                      <button
+                        onClick={(e) => toggleFolderSelection(folder, e)}
+                        className={cn(
+                          'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0',
+                          isFolderSelected
+                            ? 'bg-primary-500 border-primary-500'
+                            : 'border-surface-300 dark:border-surface-600 hover:border-primary-400'
+                        )}
+                      >
+                        {isFolderSelected && <Check className="w-3 h-3 text-white" />}
+                      </button>
+
+                      {/* Clickable folder name for navigation */}
+                      <button
+                        onClick={() => browseFolder(folder.id)}
+                        className="flex-1 flex items-center gap-3 text-left"
+                      >
+                        <FolderOpen className="w-5 h-5 text-secondary-500" />
+                        <span className="text-sm font-medium text-surface-900 dark:text-surface-50">
+                          {folder.name}
+                        </span>
+                      </button>
+
+                      <ChevronRight className="w-4 h-4 text-surface-400" />
+                    </div>
+                  );
+                })}
 
                 {/* Files */}
                 {!searchResults.length && folderContents?.files.map((file) => {
@@ -848,7 +1088,7 @@ export default function AdminGoogleDrive() {
       )}
 
       {/* Import Tab */}
-      {activeTab === 'import' && selectedFiles.length > 0 && (
+      {activeTab === 'import' && (selectedFiles.length > 0 || selectedFolders.length > 0) && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
             <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-50 mb-4">
@@ -890,36 +1130,74 @@ export default function AdminGoogleDrive() {
               </div>
             </div>
 
-            {/* Selected Files Preview */}
-            <div className="border border-surface-200 dark:border-surface-700 rounded-lg overflow-hidden mb-6">
-              <div className="px-4 py-2 bg-surface-50 dark:bg-surface-700/50 font-medium text-sm">
-                Files to Import ({selectedFiles.length})
-              </div>
-              <div className="max-h-64 overflow-y-auto divide-y divide-surface-200 dark:divide-surface-700">
-                {selectedFiles.map((file) => {
-                  const FileIcon = getFileIcon(file.mimeType);
-                  const typeBadge = getFileTypeBadge(file.mimeType);
-
-                  return (
-                    <div key={file.id} className="px-4 py-2 flex items-center gap-3">
-                      <FileIcon className="w-4 h-4 text-surface-400" />
+            {/* Selected Folders Preview */}
+            {selectedFolders.length > 0 && (
+              <div className="border border-surface-200 dark:border-surface-700 rounded-lg overflow-hidden mb-4">
+                <div className="px-4 py-2 bg-secondary-50 dark:bg-secondary-900/20 font-medium text-sm flex items-center gap-2">
+                  <FolderOpen className="w-4 h-4 text-secondary-500" />
+                  Folders to Import ({selectedFolders.length})
+                  <span className="text-xs text-surface-500 ml-2">All files inside will be imported recursively</span>
+                </div>
+                <div className="max-h-48 overflow-y-auto divide-y divide-surface-200 dark:divide-surface-700">
+                  {selectedFolders.map((folder) => (
+                    <div key={folder.id} className="px-4 py-2 flex items-center gap-3">
+                      <FolderOpen className="w-4 h-4 text-secondary-500" />
                       <span className="text-sm text-surface-700 dark:text-surface-300 flex-1 truncate">
-                        {file.name}
+                        {folder.name}
                       </span>
-                      <Badge variant={typeBadge.variant} className="text-xs">
-                        {typeBadge.label}
-                      </Badge>
+                      <Badge variant="warning" className="text-xs">Folder</Badge>
                       <button
-                        onClick={() => toggleFileSelection(file)}
+                        onClick={() => setSelectedFolders(prev => prev.filter(f => f.id !== folder.id))}
                         className="p-1 text-surface-400 hover:text-red-500"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Selected Files Preview */}
+            {selectedFiles.length > 0 && (
+              <div className="border border-surface-200 dark:border-surface-700 rounded-lg overflow-hidden mb-6">
+                <div className="px-4 py-2 bg-surface-50 dark:bg-surface-700/50 font-medium text-sm">
+                  Files to Import ({selectedFiles.length})
+                </div>
+                <div className="max-h-48 overflow-y-auto divide-y divide-surface-200 dark:divide-surface-700">
+                  {selectedFiles.map((file) => {
+                    const FileIcon = getFileIcon(file.mimeType);
+                    const typeBadge = getFileTypeBadge(file.mimeType);
+
+                    return (
+                      <div key={file.id} className="px-4 py-2 flex items-center gap-3">
+                        <FileIcon className="w-4 h-4 text-surface-400" />
+                        <span className="text-sm text-surface-700 dark:text-surface-300 flex-1 truncate">
+                          {file.name}
+                        </span>
+                        <Badge variant={typeBadge.variant} className="text-xs">
+                          {typeBadge.label}
+                        </Badge>
+                        <button
+                          onClick={() => toggleFileSelection(file)}
+                          className="p-1 text-surface-400 hover:text-red-500"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Import Progress */}
+            {importProgress && (
+              <div className="mb-4 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center gap-3">
+                <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                <span className="text-sm text-blue-700 dark:text-blue-300">{importProgress}</span>
+              </div>
+            )}
 
             <div className="flex items-center gap-4">
               <Button
@@ -927,7 +1205,7 @@ export default function AdminGoogleDrive() {
                 disabled={isImporting}
                 leftIcon={isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
               >
-                {isImporting ? 'Importing...' : `Import ${selectedFiles.length} File(s)`}
+                {isImporting ? 'Importing...' : `Import ${selectedFolders.length > 0 ? `${selectedFolders.length} Folder(s)` : ''}${selectedFolders.length > 0 && selectedFiles.length > 0 ? ' + ' : ''}${selectedFiles.length > 0 ? `${selectedFiles.length} File(s)` : ''}`}
               </Button>
               <Button
                 variant="outline"
@@ -936,6 +1214,16 @@ export default function AdminGoogleDrive() {
                 }}
               >
                 Back to Browse
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setSelectedFiles([]);
+                  setSelectedFolders([]);
+                }}
+                className="text-red-500 hover:text-red-700"
+              >
+                Clear All
               </Button>
             </div>
           </div>

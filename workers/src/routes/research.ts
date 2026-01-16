@@ -89,6 +89,70 @@ async function logActivity(
   ).run();
 }
 
+// Parse AI-generated brief content into structured sections
+function parseAIBriefResponse(content: string): {
+  executiveSummary?: string;
+  background?: string;
+  methodology?: string;
+  keyFindings?: string[];
+  recommendations?: string[];
+  conclusion?: string;
+} {
+  const result: {
+    executiveSummary?: string;
+    background?: string;
+    methodology?: string;
+    keyFindings?: string[];
+    recommendations?: string[];
+    conclusion?: string;
+  } = {};
+
+  // Try to extract Executive Summary
+  const execMatch = content.match(/(?:executive\s+summary|summary)[:\s]*\n?([\s\S]*?)(?=\n(?:background|key\s+findings|recommendations|implementation|##|\d\.)|$)/i);
+  if (execMatch) {
+    result.executiveSummary = execMatch[1].trim().replace(/^[-*•]\s*/gm, '').substring(0, 1000);
+  }
+
+  // Try to extract Background
+  const bgMatch = content.match(/(?:background|context)[:\s]*\n?([\s\S]*?)(?=\n(?:key\s+findings|methodology|recommendations|##|\d\.)|$)/i);
+  if (bgMatch) {
+    result.background = bgMatch[1].trim().substring(0, 1000);
+  }
+
+  // Try to extract Key Findings as array
+  const findingsMatch = content.match(/(?:key\s+findings|findings)[:\s]*\n?([\s\S]*?)(?=\n(?:recommendations|implementation|conclusion|##)|$)/i);
+  if (findingsMatch) {
+    const findings = findingsMatch[1]
+      .split(/\n[-*•\d.]+\s*/)
+      .map(f => f.trim())
+      .filter(f => f.length > 10);
+    result.keyFindings = findings.slice(0, 10);
+  }
+
+  // Try to extract Recommendations as array
+  const recsMatch = content.match(/(?:recommendations|recommended\s+actions)[:\s]*\n?([\s\S]*?)(?=\n(?:implementation|conclusion|limitations|##)|$)/i);
+  if (recsMatch) {
+    const recs = recsMatch[1]
+      .split(/\n[-*•\d.]+\s*/)
+      .map(r => r.trim())
+      .filter(r => r.length > 10);
+    result.recommendations = recs.slice(0, 10);
+  }
+
+  // Try to extract Conclusion
+  const concMatch = content.match(/(?:conclusion|implementation\s+considerations)[:\s]*\n?([\s\S]*?)$/i);
+  if (concMatch) {
+    result.conclusion = concMatch[1].trim().substring(0, 1000);
+  }
+
+  // If parsing failed, use the full content as executive summary
+  if (!result.executiveSummary && !result.keyFindings) {
+    result.executiveSummary = content.substring(0, 500);
+  }
+
+  return result;
+}
+
 export const researchRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Apply optional auth to all routes
@@ -1495,7 +1559,7 @@ researchRoutes.post('/projects/:id/briefs', requireAuth, async (c: AppContext) =
     const { results: insights } = await DB.prepare(`
       SELECT type, title, content FROM research_insights
       WHERE project_id = ? AND (is_verified = 1 OR is_ai_generated = 1)
-      ORDER BY priority DESC LIMIT 5
+      ORDER BY confidence DESC, created_at DESC LIMIT 5
     `).bind(projectId).all();
 
     const insightsContext = insights.map((i: any) =>
@@ -1537,13 +1601,29 @@ Brief:`;
     // Generate a title
     const briefTitle = `${briefType.charAt(0).toUpperCase() + briefType.slice(1)} Brief: ${row.title.substring(0, 50)}`;
 
-    // Save brief to database
+    // Parse the AI response to extract sections
+    const sections = parseAIBriefResponse(content);
+
+    // Save brief to database (matching actual table schema)
     const briefId = generateId();
     await DB.prepare(`
       INSERT INTO research_briefs (
-        id, project_id, title, brief_type, audience, content, status, created_by_id, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, datetime('now'), datetime('now'))
-    `).bind(briefId, projectId, briefTitle, briefType, audience, content, userId).run();
+        id, project_id, title, executive_summary, background, methodology,
+        key_findings, recommendations, conclusion, status, version,
+        is_ai_generated, generated_by_id, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 1, 1, ?, datetime('now'), datetime('now'))
+    `).bind(
+      briefId,
+      projectId,
+      briefTitle,
+      sections.executiveSummary || content.substring(0, 500),
+      sections.background || null,
+      sections.methodology || row.methodology,
+      JSON.stringify(sections.keyFindings || []),
+      JSON.stringify(sections.recommendations || []),
+      sections.conclusion || null,
+      userId
+    ).run();
 
     await logActivity(DB, projectId, userId, 'brief_generated', `Generated ${briefType} brief`);
 
@@ -1552,7 +1632,12 @@ Brief:`;
       title: briefTitle,
       briefType,
       audience,
-      content,
+      executiveSummary: sections.executiveSummary,
+      background: sections.background,
+      keyFindings: sections.keyFindings,
+      recommendations: sections.recommendations,
+      conclusion: sections.conclusion,
+      content, // Include full content for backward compatibility
       status: 'draft',
       message: 'Policy brief generated successfully'
     });

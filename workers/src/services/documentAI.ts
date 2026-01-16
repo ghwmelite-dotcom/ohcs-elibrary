@@ -3,6 +3,8 @@
  * Provides AI-powered document analysis, summarization, and Q&A
  */
 
+// Using native APIs for decompression in Workers environment
+
 interface Env {
   DB: D1Database;
   DOCUMENTS: R2Bucket;
@@ -29,8 +31,349 @@ export interface ChatMessage {
 }
 
 /**
+ * Simple ZIP file parser for Workers environment
+ * Extracts files from ZIP archives without external dependencies
+ */
+async function parseZipFile(data: Uint8Array): Promise<Map<string, Uint8Array>> {
+  const files = new Map<string, Uint8Array>();
+
+  // Verify ZIP signature
+  if (data[0] !== 0x50 || data[1] !== 0x4B) {
+    return files;
+  }
+
+  let offset = 0;
+  const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+
+  while (offset < data.length - 30) {
+    // Look for local file header signature (PK\x03\x04)
+    if (data[offset] !== 0x50 || data[offset + 1] !== 0x4B ||
+        data[offset + 2] !== 0x03 || data[offset + 3] !== 0x04) {
+      // Check for central directory header (PK\x01\x02) - end of file entries
+      if (data[offset] === 0x50 && data[offset + 1] === 0x4B &&
+          data[offset + 2] === 0x01 && data[offset + 3] === 0x02) {
+        break;
+      }
+      offset++;
+      continue;
+    }
+
+    try {
+      const compressionMethod = view.getUint16(offset + 8, true);
+      const compressedSize = view.getUint32(offset + 18, true);
+      const uncompressedSize = view.getUint32(offset + 22, true);
+      const fileNameLength = view.getUint16(offset + 26, true);
+      const extraFieldLength = view.getUint16(offset + 28, true);
+
+      const fileNameStart = offset + 30;
+      const fileNameEnd = fileNameStart + fileNameLength;
+      const fileName = new TextDecoder().decode(data.slice(fileNameStart, fileNameEnd));
+
+      const dataStart = fileNameEnd + extraFieldLength;
+      const dataEnd = dataStart + compressedSize;
+
+      if (dataEnd > data.length) {
+        break;
+      }
+
+      const fileData = data.slice(dataStart, dataEnd);
+
+      // Handle compression
+      if (compressionMethod === 0) {
+        // No compression (stored)
+        files.set(fileName, fileData);
+      } else if (compressionMethod === 8) {
+        // DEFLATE compression - use DecompressionStream
+        try {
+          const decompressed = await decompressDeflate(fileData);
+          files.set(fileName, decompressed);
+        } catch (e) {
+          // If decompression fails, store raw data
+          console.log('Decompression failed for:', fileName);
+        }
+      }
+
+      offset = dataEnd;
+    } catch (e) {
+      offset++;
+    }
+  }
+
+  return files;
+}
+
+/**
+ * Decompress DEFLATE data using native DecompressionStream
+ */
+async function decompressDeflate(data: Uint8Array): Promise<Uint8Array> {
+  // DEFLATE in ZIP is raw deflate, we need to use deflate-raw
+  const ds = new DecompressionStream('deflate-raw');
+  const writer = ds.writable.getWriter();
+  writer.write(data);
+  writer.close();
+
+  const reader = ds.readable.getReader();
+  const chunks: Uint8Array[] = [];
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+
+  // Combine chunks
+  const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  return result;
+}
+
+/**
+ * Extract text from DOCX files (Office Open XML format)
+ */
+async function extractTextFromDocx(zipData: Uint8Array): Promise<string> {
+  try {
+    const files = await parseZipFile(zipData);
+    console.log('Parsed ZIP files:', Array.from(files.keys()).slice(0, 5));
+
+    // DOCX stores main content in word/document.xml
+    const documentXml = files.get('word/document.xml');
+    if (!documentXml) {
+      console.log('word/document.xml not found');
+      return '';
+    }
+
+    const xmlContent = new TextDecoder().decode(documentXml);
+    console.log('XML content length:', xmlContent.length);
+
+    // Extract text from <w:t> tags (Word text elements)
+    const textMatches = xmlContent.match(/<w:t[^>]*>([^<]*)<\/w:t>/g);
+    if (!textMatches) {
+      console.log('No w:t tags found');
+      return '';
+    }
+
+    const text = textMatches
+      .map(match => match.replace(/<[^>]+>/g, ''))
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    console.log('Extracted DOCX text length:', text.length);
+    return text;
+  } catch (error) {
+    console.error('DOCX extraction error:', error);
+    return '';
+  }
+}
+
+/**
+ * Extract text from PPTX files (PowerPoint Open XML format)
+ */
+async function extractTextFromPptx(zipData: Uint8Array): Promise<string> {
+  try {
+    const files = await parseZipFile(zipData);
+    console.log('Parsed PPTX files:', Array.from(files.keys()).filter(k => k.includes('slide')).slice(0, 5));
+
+    const textParts: string[] = [];
+
+    // PPTX stores slide content in ppt/slides/slide*.xml
+    for (const [path, data] of files) {
+      if (path.startsWith('ppt/slides/slide') && path.endsWith('.xml')) {
+        const xmlContent = new TextDecoder().decode(data);
+
+        // Extract text from <a:t> tags (PowerPoint text elements)
+        const textMatches = xmlContent.match(/<a:t>([^<]*)<\/a:t>/g);
+        if (textMatches) {
+          const slideText = textMatches
+            .map(match => match.replace(/<[^>]+>/g, ''))
+            .join(' ');
+          textParts.push(slideText);
+        }
+      }
+    }
+
+    const text = textParts.join('\n\n').replace(/\s+/g, ' ').trim();
+    console.log('Extracted PPTX text length:', text.length);
+    return text;
+  } catch (error) {
+    console.error('PPTX extraction error:', error);
+    return '';
+  }
+}
+
+/**
+ * Extract text from XLSX files (Excel Open XML format)
+ */
+async function extractTextFromXlsx(zipData: Uint8Array): Promise<string> {
+  try {
+    const files = await parseZipFile(zipData);
+    console.log('Parsed XLSX files:', Array.from(files.keys()).slice(0, 5));
+
+    const textParts: string[] = [];
+
+    // XLSX stores shared strings in xl/sharedStrings.xml
+    const sharedStringsXml = files.get('xl/sharedStrings.xml');
+    if (sharedStringsXml) {
+      const xmlContent = new TextDecoder().decode(sharedStringsXml);
+
+      // Extract text from <t> tags
+      const textMatches = xmlContent.match(/<t[^>]*>([^<]*)<\/t>/g);
+      if (textMatches) {
+        const text = textMatches
+          .map(match => match.replace(/<[^>]+>/g, ''))
+          .filter(t => t.trim().length > 0)
+          .join(' ');
+        textParts.push(text);
+      }
+    }
+
+    // Also extract from sheet data if needed
+    for (const [path, data] of files) {
+      if (path.startsWith('xl/worksheets/sheet') && path.endsWith('.xml')) {
+        const xmlContent = new TextDecoder().decode(data);
+
+        // Extract inline strings
+        const inlineMatches = xmlContent.match(/<is><t>([^<]*)<\/t><\/is>/g);
+        if (inlineMatches) {
+          const inlineText = inlineMatches
+            .map(match => match.replace(/<[^>]+>/g, ''))
+            .join(' ');
+          textParts.push(inlineText);
+        }
+      }
+    }
+
+    const text = textParts.join(' ').replace(/\s+/g, ' ').trim();
+    console.log('Extracted XLSX text length:', text.length);
+    return text;
+  } catch (error) {
+    console.error('XLSX extraction error:', error);
+    return '';
+  }
+}
+
+/**
+ * Extract text from PDF files
+ * Note: This is a best-effort extraction as full PDF parsing requires heavy libraries
+ */
+function extractTextFromPdf(arrayBuffer: ArrayBuffer): string {
+  try {
+    const bytes = new Uint8Array(arrayBuffer);
+    const decoder = new TextDecoder('utf-8', { fatal: false });
+    const content = decoder.decode(bytes);
+
+    const textParts: string[] = [];
+
+    // Method 1: Extract text from PDF text objects (Tj, TJ operators)
+    // Look for text in parentheses within BT...ET blocks
+    const btEtBlocks = content.match(/BT[\s\S]*?ET/g) || [];
+    for (const block of btEtBlocks) {
+      // Extract strings from Tj operator: (text) Tj
+      const tjMatches = block.match(/\(([^)\\]*(?:\\.[^)\\]*)*)\)\s*Tj/g) || [];
+      for (const match of tjMatches) {
+        const text = match.replace(/\(([^)\\]*(?:\\.[^)\\]*)*)\)\s*Tj/, '$1')
+          .replace(/\\n/g, '\n')
+          .replace(/\\r/g, '\r')
+          .replace(/\\t/g, '\t')
+          .replace(/\\\(/g, '(')
+          .replace(/\\\)/g, ')')
+          .replace(/\\\\/g, '\\');
+        if (text.length > 2 && /[a-zA-Z]/.test(text)) {
+          textParts.push(text);
+        }
+      }
+
+      // Extract strings from TJ operator: [(text1) -100 (text2)] TJ
+      const tjArrayMatches = block.match(/\[([^\]]+)\]\s*TJ/g) || [];
+      for (const match of tjArrayMatches) {
+        const innerMatches = match.match(/\(([^)\\]*(?:\\.[^)\\]*)*)\)/g) || [];
+        for (const inner of innerMatches) {
+          const text = inner.slice(1, -1)
+            .replace(/\\n/g, '\n')
+            .replace(/\\r/g, '\r')
+            .replace(/\\\(/g, '(')
+            .replace(/\\\)/g, ')');
+          if (text.length > 1 && /[a-zA-Z]/.test(text)) {
+            textParts.push(text);
+          }
+        }
+      }
+    }
+
+    // Method 2: Extract from ToUnicode CMap if present
+    // This handles fonts with Unicode mappings
+    const unicodeText = extractUnicodeFromPdf(content);
+    if (unicodeText) {
+      textParts.push(unicodeText);
+    }
+
+    // Clean and combine
+    let result = textParts.join(' ')
+      .replace(/[^\x20-\x7E\n\r\t\u00A0-\u00FF\u0100-\u017F]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Validate that the result is actual readable text, not PDF metadata
+    if (result.length > 0) {
+      // Check for PDF internal structure patterns (indicates corrupt extraction)
+      const pdfMetadataPatterns = [
+        /StructTreeRoot\s+\d+\s+\d+\s+R/,
+        /ViewerPreferences\s+\d+\s+\d+\s+R/,
+        /FontDescriptor\s+\d+\s+\d+\s+R/,
+        /DescendantFonts\s+\d+\s+\d+\s+R/,
+        /\d+\s+\d+\s+R\s+\d+\s+\d+\s+R\s+\d+\s+\d+\s+R/, // Multiple PDF references
+        /CDEFGHIJSTUVWXYZcdefghijstuvwxyz/, // Encoding table
+      ];
+
+      const hasPdfMetadata = pdfMetadataPatterns.some(pattern => pattern.test(result));
+      if (hasPdfMetadata) {
+        console.log('PDF extraction returned metadata instead of text, returning empty');
+        return '';
+      }
+
+      // Check that result has actual words (at least 5 words with 3+ characters)
+      const words = result.match(/\b[a-zA-Z]{3,}\b/g) || [];
+      if (words.length < 5) {
+        console.log('PDF extraction did not find enough readable words:', words.length);
+        return '';
+      }
+    }
+
+    return result;
+  } catch (error) {
+    console.error('PDF extraction error:', error);
+    return '';
+  }
+}
+
+/**
+ * Try to extract Unicode text from PDF ToUnicode CMap
+ */
+function extractUnicodeFromPdf(content: string): string {
+  // Look for readable ASCII text segments
+  const readableSegments: string[] = [];
+
+  // Find long sequences of readable ASCII
+  const asciiMatches = content.match(/[A-Za-z][A-Za-z0-9\s,.;:'"!?\-()]{20,}/g) || [];
+  for (const match of asciiMatches) {
+    // Filter out PDF operators and metadata
+    if (!match.includes('/') && !match.includes('obj') && !match.includes('stream')) {
+      readableSegments.push(match);
+    }
+  }
+
+  return readableSegments.join(' ');
+}
+
+/**
  * Extract text content from a document file
- * For PDFs and text-based documents
+ * Supports DOCX, PPTX, XLSX, PDF, and text files
  */
 export async function extractTextFromDocument(
   env: Env,
@@ -45,61 +388,64 @@ export async function extractTextFromDocument(
     }
 
     const arrayBuffer = await object.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
 
     // For text-based files, extract directly
     if (fileType.includes('text') || fileType.includes('json') || fileType.includes('xml')) {
       const text = new TextDecoder().decode(arrayBuffer);
-      return text.slice(0, 50000); // Limit to ~50KB of text
+      return cleanExtractedText(text);
     }
 
-    // For PDFs, we'll extract what we can
-    // Note: Full PDF parsing would require pdf.js or similar
-    // For now, we'll use a simplified approach and rely on metadata + AI
+    // For DOCX files
+    if (fileType.includes('wordprocessingml') || fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      const text = await extractTextFromDocx(bytes);
+      if (text.length > 50) {
+        return cleanExtractedText(text);
+      }
+    }
+
+    // For PPTX files
+    if (fileType.includes('presentationml') || fileType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
+      const text = await extractTextFromPptx(bytes);
+      if (text.length > 50) {
+        return cleanExtractedText(text);
+      }
+    }
+
+    // For XLSX files
+    if (fileType.includes('spreadsheetml') || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+      const text = await extractTextFromXlsx(bytes);
+      if (text.length > 50) {
+        return cleanExtractedText(text);
+      }
+    }
+
+    // For PDF files
     if (fileType.includes('pdf')) {
-      // Try to extract any readable text from PDF
-      const bytes = new Uint8Array(arrayBuffer);
-      let text = '';
-
-      // Simple extraction of text streams from PDF
-      // This is a basic approach - production would use a proper PDF parser
-      const decoder = new TextDecoder('utf-8', { fatal: false });
-      const content = decoder.decode(bytes);
-
-      // Extract text between common PDF text markers
-      const textMatches = content.match(/\(([^)]+)\)/g);
-      if (textMatches) {
-        text = textMatches
-          .map(m => m.slice(1, -1))
-          .filter(t => t.length > 3 && /[a-zA-Z]/.test(t))
-          .join(' ');
+      const text = extractTextFromPdf(arrayBuffer);
+      if (text.length > 50) {
+        return cleanExtractedText(text);
       }
-
-      // Also try to find plain text streams
-      const streamMatch = content.match(/stream[\r\n]+([\s\S]*?)[\r\n]+endstream/g);
-      if (streamMatch) {
-        const additionalText = streamMatch
-          .map(s => s.replace(/stream[\r\n]+/, '').replace(/[\r\n]+endstream/, ''))
-          .filter(t => /[a-zA-Z]{3,}/.test(t))
-          .join(' ');
-        text += ' ' + additionalText;
-      }
-
-      // Clean up the text
-      text = text
-        .replace(/[^\x20-\x7E\s]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      return text.slice(0, 50000) || `Document: PDF file containing civil service related content`;
     }
 
-    // For Word docs and other formats, return placeholder
-    // Production would use mammoth.js or similar for .docx
-    return `Document content (${fileType})`;
+    // For old DOC format (binary), we can't easily extract
+    // Return empty to trigger AI-based description
+    return '';
   } catch (error) {
     console.error('Error extracting text:', error);
     return '';
   }
+}
+
+/**
+ * Clean extracted text by removing excess whitespace and invalid characters
+ */
+function cleanExtractedText(text: string): string {
+  return text
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '') // Remove control characters except tab, newline, carriage return
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 50000); // Limit to ~50KB
 }
 
 /**

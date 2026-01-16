@@ -1161,6 +1161,59 @@ authRoutes.post('/demo', async (c) => {
       console.error('Failed to log demo activity:', e);
     }
 
+    // Seed demo certificate if it doesn't exist (permanent, not tied to session)
+    try {
+      const demoCertId = 'demo-certificate-permanent-001';
+      const demoEnrollmentId = 'demo-enrollment-permanent-001';
+      const demoCertNumber = 'OHCS-DEMO-2024-001';
+
+      const existingCert = await c.env.DB.prepare(`
+        SELECT id FROM lms_certificates WHERE id = ?
+      `).bind(demoCertId).first();
+
+      if (!existingCert) {
+        // Get the first available course
+        const course = await c.env.DB.prepare(`
+          SELECT id, title, instructorId FROM lms_courses WHERE status = 'published' LIMIT 1
+        `).first();
+
+        if (course) {
+          // Get instructor name
+          const instructor = await c.env.DB.prepare(`
+            SELECT displayName FROM users WHERE id = ?
+          `).bind((course as any).instructorId).first();
+
+          // Create permanent demo enrollment (completed)
+          await c.env.DB.prepare(`
+            INSERT OR IGNORE INTO lms_enrollments (id, courseId, userId, status, progress, completedAt, enrolledAt)
+            VALUES (?, ?, ?, 'completed', 100, '2024-12-15', '2024-11-15')
+          `).bind(demoEnrollmentId, (course as any).id, demoUserId).run();
+
+          // Create permanent demo certificate
+          await c.env.DB.prepare(`
+            INSERT OR IGNORE INTO lms_certificates (
+              id, courseId, userId, enrollmentId, certificateNumber,
+              recipientName, courseTitle, instructorName, completionDate,
+              grade, gradeLabel, timeSpent, issuedAt
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, '2024-12-15', 92.5, 'A', 180, '2024-12-15 10:30:00')
+          `).bind(
+            demoCertId,
+            (course as any).id,
+            demoUserId,
+            demoEnrollmentId,
+            demoCertNumber,
+            'Kwame Asante',
+            (course as any).title,
+            (instructor as any)?.displayName || 'System Admin'
+          ).run();
+
+          console.log('Permanent demo certificate created:', demoCertNumber);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to seed demo certificate:', e);
+    }
+
     return c.json({
       user: {
         id: user.id,

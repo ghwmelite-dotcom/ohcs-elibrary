@@ -314,8 +314,12 @@ export default function DocumentView() {
                 documentId={document.id}
                 fileUrl={document.fileUrl}
                 fileName={document.title}
+                fileType={document.fileType}
                 totalPages={100}
                 onDownload={handleDownload}
+                source={document.source || 'local'}
+                externalFileId={document.externalFileId}
+                externalUrl={document.externalUrl}
               />
             </motion.div>
           )}

@@ -637,6 +637,60 @@ kwame.post('/admin/queue/:documentId', authMiddleware, async (c) => {
   }
 });
 
+// POST /kwame/admin/reprocess-all - Clear and reprocess ALL document embeddings
+kwame.post('/admin/reprocess-all', authMiddleware, async (c) => {
+  const user = c.get('user');
+  const userRole = user?.role || 'user';
+
+  if (!['admin', 'super_admin'].includes(userRole)) {
+    return c.json({ error: 'Unauthorized - super_admin required' }, 403);
+  }
+
+  const db = c.env.DB;
+
+  try {
+    // 1. Clear ALL existing document chunks
+    await db.prepare(`DELETE FROM document_chunks`).run();
+
+    // 2. Clear embedding queue
+    await db.prepare(`DELETE FROM embedding_queue`).run();
+
+    // 3. Get all published documents
+    const { results: documents } = await db.prepare(`
+      SELECT id, title FROM documents WHERE status = 'published'
+    `).all();
+
+    if (!documents || documents.length === 0) {
+      return c.json({ success: true, message: 'No documents to process', queued: 0 });
+    }
+
+    // 4. Queue all documents for embedding with high priority
+    for (const doc of documents) {
+      await queueDocumentForEmbedding(c.env, doc.id as string, 10);
+    }
+
+    // 5. Start processing immediately (first batch)
+    const body = await c.req.json().catch(() => ({}));
+    const processNow = body.processNow !== false;
+    let processed = { processed: 0, succeeded: 0, failed: 0 };
+
+    if (processNow) {
+      processed = await processEmbeddingQueue(c.env, 10);
+    }
+
+    return c.json({
+      success: true,
+      message: `Cleared all chunks and queued ${documents.length} documents for re-embedding`,
+      totalDocuments: documents.length,
+      queued: documents.length,
+      immediatelyProcessed: processed,
+    });
+  } catch (error) {
+    console.error('Error reprocessing documents:', error);
+    return c.json({ error: 'Failed to reprocess documents' }, 500);
+  }
+});
+
 // GET /kwame/admin/embedding-stats - Get embedding statistics
 kwame.get('/admin/embedding-stats', authMiddleware, async (c) => {
   const user = c.get('user');

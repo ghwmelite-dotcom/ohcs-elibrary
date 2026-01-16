@@ -468,9 +468,14 @@ function validateFileType(file: File): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
-// POST /documents - Upload new document (requires auth)
+// POST /documents - Upload new document (admin only)
 documentsRoutes.post('/', requireAuth, async (c: AppContext) => {
   try {
+    // Only admins can upload documents
+    if (!isAdmin(c)) {
+      return c.json({ error: 'Forbidden', message: 'Admin access required to upload documents' }, 403);
+    }
+
     const { DB, DOCUMENTS } = c.env;
     const userId = c.get('userId');
     const userRole = c.get('userRole');

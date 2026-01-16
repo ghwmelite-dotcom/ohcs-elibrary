@@ -355,10 +355,33 @@ export async function searchDocumentChunks(
  */
 function isValidTextContent(content: string): boolean {
   if (!content || content.length < 10) return false;
+
   // Check for high ratio of non-printable characters
   const printable = content.replace(/[^\x20-\x7E\n\r\t]/g, '');
   const ratio = printable.length / content.length;
-  return ratio > 0.7; // At least 70% should be printable ASCII
+  if (ratio < 0.7) return false;
+
+  // Check for PDF internal structure patterns (indicates corrupt extraction)
+  const pdfMetadataPatterns = [
+    /StructTreeRoot\s+\d+\s+\d+\s+R/,
+    /ViewerPreferences\s+\d+\s+\d+\s+R/,
+    /FontDescriptor\s+\d+\s+\d+\s+R/,
+    /DescendantFonts\s+\d+\s+\d+\s+R/,
+    /\d+\s+\d+\s+R\s+\d+\s+\d+\s+R\s+\d+\s+\d+\s+R/, // Multiple PDF references
+    /TimesNewRomanPS-BoldMT|ArialMT|Calibri-Bold/i, // Font names in PDF
+    /CreationDate\(D:\d+/,
+    /CDEFGHIJSTUVWXYZcdefghijstuvwxyz/, // Encoding table
+    /^PK[\x03\x04]/, // ZIP header (shouldn't be in text)
+  ];
+
+  const hasPdfMetadata = pdfMetadataPatterns.some(pattern => pattern.test(content));
+  if (hasPdfMetadata) return false;
+
+  // Check that content has actual words (at least 3 words with 3+ characters)
+  const words = content.match(/\b[a-zA-Z]{3,}\b/g) || [];
+  if (words.length < 3) return false;
+
+  return true;
 }
 
 /**
@@ -767,15 +790,25 @@ export async function queueDocumentForEmbedding(
   priority: number = 0
 ): Promise<void> {
   try {
-    await env.DB.prepare(`
-      INSERT INTO embedding_queue (id, documentId, status, priority, createdAt)
-      VALUES (?, ?, 'pending', ?, datetime('now'))
-      ON CONFLICT(documentId) DO UPDATE SET
-        status = 'pending',
-        priority = MAX(priority, excluded.priority),
-        attempts = 0,
-        error = NULL
-    `).bind(crypto.randomUUID(), documentId, priority).run();
+    // Check if document is already in queue
+    const existing = await env.DB.prepare(`
+      SELECT id FROM embedding_queue WHERE documentId = ?
+    `).bind(documentId).first();
+
+    if (existing) {
+      // Update existing entry
+      await env.DB.prepare(`
+        UPDATE embedding_queue
+        SET status = 'pending', priority = MAX(priority, ?), attempts = 0, error = NULL
+        WHERE documentId = ?
+      `).bind(priority, documentId).run();
+    } else {
+      // Insert new entry
+      await env.DB.prepare(`
+        INSERT INTO embedding_queue (id, documentId, status, priority, createdAt)
+        VALUES (?, ?, 'pending', ?, datetime('now'))
+      `).bind(crypto.randomUUID(), documentId, priority).run();
+    }
   } catch (error) {
     console.error('Error queuing document for embedding:', error);
   }
