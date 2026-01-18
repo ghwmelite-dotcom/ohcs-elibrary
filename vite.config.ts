@@ -82,6 +82,10 @@ export default defineConfig({
           state: ['zustand', '@tanstack/react-query'],
           // PDF viewer - only loaded when needed
           pdf: ['react-pdf'],
+          // Date utilities
+          dates: ['date-fns'],
+          // Common utilities
+          utils: ['axios', 'clsx', 'tailwind-merge'],
         },
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',

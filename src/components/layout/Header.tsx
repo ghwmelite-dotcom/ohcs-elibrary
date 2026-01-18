@@ -82,7 +82,7 @@ export function Header() {
           <button
             onClick={toggleMobileMenu}
             aria-label="Open menu"
-            className="lg:hidden p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+            className="lg:hidden p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -91,7 +91,7 @@ export function Header() {
           <button
             data-tour="search"
             onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}
-            className="hidden md:flex items-center gap-3 w-80 px-3 py-2 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-xl text-surface-500 dark:text-surface-400 transition-colors group"
+            className="hidden md:flex items-center gap-3 w-80 px-3 py-2 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-xl text-surface-500 dark:text-surface-300 transition-colors group"
           >
             <Search className="w-4 h-4" />
             <span className="text-sm">Search...</span>
@@ -104,7 +104,7 @@ export function Header() {
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}
             aria-label="Search"
-            className="md:hidden p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+            className="md:hidden p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
           >
             <Search className="w-5 h-5" />
           </button>
@@ -139,7 +139,7 @@ export function Header() {
           {/* Wishlist */}
           <Link
             to="/shop/wishlist"
-            className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+            className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
             aria-label={`Wishlist${wishlistCount > 0 ? ` (${wishlistCount} items)` : ''}`}
           >
             <Heart className={cn('w-5 h-5', wishlistCount > 0 && 'text-red-500')} />
@@ -157,7 +157,7 @@ export function Header() {
           {/* Cart */}
           <Link
             to="/shop/cart"
-            className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+            className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
             aria-label={`Shopping cart${cartCount > 0 ? ` (${cartCount} items)` : ''}`}
           >
             <ShoppingCart className="w-5 h-5" />
@@ -177,7 +177,7 @@ export function Header() {
             trigger={
               <button
                 aria-label={`Friend requests${pendingRequests.length > 0 ? ` (${pendingRequests.length} pending)` : ''}`}
-                className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
               >
                 <UserPlus className="w-5 h-5" />
                 {pendingRequests.length > 0 && (
@@ -286,7 +286,7 @@ export function Header() {
               <button
                 data-tour="notifications"
                 aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
-                className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
               >
                 {unreadCount > 0 ? (
                   <BellRing className="w-5 h-5" />
@@ -407,7 +407,7 @@ export function Header() {
                     showStatus
                     status="online"
                   />
-                  <ChevronDown className="w-4 h-4 text-surface-400 hidden lg:block" />
+                  <ChevronDown className="w-4 h-4 text-surface-400 dark:text-surface-300 hidden lg:block" />
                 </button>
               }
               align="right"

@@ -1,5 +1,9 @@
 # Proxy API requests to Workers
 /api/*  https://ohcs-elibrary-api.ghwmelite.workers.dev/api/:splat  200
 
+# Serve static files directly (prevent SPA fallback intercepting them)
+/robots.txt  /robots.txt  200
+/sitemap.xml  /sitemap.xml  200
+
 # SPA fallback - all other routes go to index.html
 /*  /index.html  200

@@ -329,8 +329,8 @@ export function AuthLayout() {
         {/* Ghana flag stripe - mobile */}
         <div className="lg:hidden ghana-flag-stripe" />
 
-        {/* Form Content */}
-        <div className="flex-1 flex items-center justify-center p-6 lg:p-8 xl:p-12">
+        {/* Form Content - Main landmark for accessibility */}
+        <main className="flex-1 flex items-center justify-center p-6 lg:p-8 xl:p-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -339,7 +339,7 @@ export function AuthLayout() {
           >
             <Outlet />
           </motion.div>
-        </div>
+        </main>
 
         {/* Mobile footer */}
         <div className="lg:hidden p-6 text-center text-sm text-surface-500 border-t border-surface-200 dark:border-surface-700">

@@ -84,9 +84,10 @@ const themes = {
   dark: {
     bg: 'linear-gradient(180deg, #1a1510 0%, #0f0d0a 50%, #1a1510 100%)',
     text: 'text-amber-50',
-    textMuted: 'text-amber-50/60',
-    textFaint: 'text-amber-50/40',
-    textGhost: 'text-amber-50/20',
+    // WCAG AA compliant solid colors instead of opacity-based (4.5:1+ contrast ratio)
+    textMuted: 'text-amber-100',
+    textFaint: 'text-amber-200',
+    textGhost: 'text-amber-300',
     cardBg: 'rgba(245, 240, 230, 0.06)',
     cardBorder: 'rgba(245, 240, 230, 0.1)',
     navBg: 'rgba(26, 21, 16, 0.95)',
