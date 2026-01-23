@@ -252,29 +252,23 @@ export default function MyScholarships() {
 
       {/* Stats Overview */}
       <section className="max-w-7xl mx-auto px-4 -mt-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 gap-3 md:gap-4">
           {[
-            { label: 'Total Applications', value: applications.length, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-100' },
-            { label: 'Active', value: activeApplications.length, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100' },
-            { label: 'Awarded', value: awardedApplications.length, icon: Award, color: 'text-green-600', bg: 'bg-green-100' },
-            { label: 'Drafts', value: draftApplications.length, icon: FileText, color: 'text-gray-600', bg: 'bg-gray-100' },
+            { label: 'Total', value: applications.length, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+            { label: 'Active', value: activeApplications.length, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
+            { label: 'Awarded', value: awardedApplications.length, icon: Award, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
+            { label: 'Drafts', value: draftApplications.length, icon: FileText, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200' },
           ].map((stat, index) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-2xl p-5 shadow-lg border border-surface-200 overflow-hidden"
+              className={`${stat.bg} ${stat.border} border rounded-xl p-3 md:p-4 text-center shadow-sm`}
             >
-              <div className="flex items-start gap-3">
-                <div className={`h-12 w-12 rounded-xl ${stat.bg} flex items-center justify-center flex-shrink-0`}>
-                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-2xl md:text-3xl font-bold text-text-primary">{stat.value}</p>
-                  <p className="text-xs md:text-sm text-text-secondary truncate">{stat.label}</p>
-                </div>
-              </div>
+              <stat.icon className={`h-5 w-5 md:h-6 md:w-6 ${stat.color} mx-auto mb-1`} />
+              <p className="text-xl md:text-3xl font-bold text-text-primary">{stat.value}</p>
+              <p className="text-[10px] md:text-xs text-text-secondary font-medium">{stat.label}</p>
             </motion.div>
           ))}
         </div>
