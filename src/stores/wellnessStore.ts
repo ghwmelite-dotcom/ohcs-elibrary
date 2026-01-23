@@ -24,15 +24,15 @@ const getAuthToken = (): string | null => {
 
 // Helper to get/set anonymous session ID
 const getAnonymousId = (): string | null => {
-  return sessionStorage.getItem('ayo-anonymous-id');
+  return sessionStorage.getItem('drsena-anonymous-id');
 };
 
 const setAnonymousId = (id: string): void => {
-  sessionStorage.setItem('ayo-anonymous-id', id);
+  sessionStorage.setItem('drsena-anonymous-id', id);
 };
 
 const clearAnonymousId = (): void => {
-  sessionStorage.removeItem('ayo-anonymous-id');
+  sessionStorage.removeItem('drsena-anonymous-id');
 };
 
 // Helper for authenticated fetch (supports both auth and anonymous)

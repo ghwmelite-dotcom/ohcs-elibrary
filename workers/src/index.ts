@@ -33,8 +33,8 @@ import {
   presenceRoutes,
   // Peer Recognition System
   recognitionRoutes,
-  // AI Knowledge Assistant "Kwame"
-  kwameRoutes,
+  // AI Knowledge Assistant "Ozzy"
+  ozzyRoutes,
   // Learning Management System (LMS)
   lmsRoutes,
   // Calendar & Events System
@@ -187,9 +187,9 @@ app.route('/api/v1/presence', presenceRoutes);
 // Recognition routes handle their own auth (some endpoints are public)
 app.route('/api/v1/recognition', recognitionRoutes);
 
-// AI Knowledge Assistant "Kwame"
-// Kwame routes handle their own auth
-app.route('/api/v1/kwame', kwameRoutes);
+// AI Knowledge Assistant "Ozzy"
+// Ozzy routes handle their own auth
+app.route('/api/v1/ozzy', ozzyRoutes);
 
 // Learning Management System (LMS)
 // LMS routes handle their own auth internally
@@ -348,9 +348,9 @@ export default {
             console.log('Scheduled backup completed:', backupResult);
           }
 
-          // Process Kwame embedding queue (every 15 min cron)
+          // Process Ozzy embedding queue (every 15 min cron)
           try {
-            const { processEmbeddingQueue } = await import('./services/aiKwame');
+            const { processEmbeddingQueue } = await import('./services/aiOzzy');
             const embeddingResult = await processEmbeddingQueue(env, 10);
             if (embeddingResult.processed > 0) {
               console.log('Embedding queue processed:', embeddingResult);

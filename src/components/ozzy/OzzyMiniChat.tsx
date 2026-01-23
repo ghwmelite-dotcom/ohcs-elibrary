@@ -1,5 +1,5 @@
 /**
- * KwameMiniChat Component
+ * OzzyMiniChat Component
  * Compact chat interface for the floating widget
  */
 
@@ -7,19 +7,19 @@ import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Send, X, Maximize2, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useKwameStore } from '@/stores/kwameStore';
-import { KwameAvatar } from './KwameAvatar';
-import { KwameTypingIndicator } from './KwameChatMessage';
+import { useOzzyStore } from '@/stores/ozzyStore';
+import { OzzyAvatar } from './OzzyAvatar';
+import { OzzyTypingIndicator } from './OzzyChatMessage';
 import { SuggestedQuestionsCompact } from './SuggestedQuestions';
 import { Spinner } from '@/components/shared/Spinner';
 import { cn } from '@/utils/cn';
 
-interface KwameMiniChatProps {
+interface OzzyMiniChatProps {
   onClose: () => void;
   onMaximize: () => void;
 }
 
-export function KwameMiniChat({ onClose, onMaximize }: KwameMiniChatProps) {
+export function OzzyMiniChat({ onClose, onMaximize }: OzzyMiniChatProps) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -33,7 +33,7 @@ export function KwameMiniChat({ onClose, onMaximize }: KwameMiniChatProps) {
     createSession,
     sendMessage,
     fetchSuggestions,
-  } = useKwameStore();
+  } = useOzzyStore();
 
   // Focus input on mount
   useEffect(() => {
@@ -89,10 +89,10 @@ export function KwameMiniChat({ onClose, onMaximize }: KwameMiniChatProps) {
     >
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-surface-200 dark:border-surface-700 bg-gradient-to-r from-primary-50 to-yellow-50 dark:from-primary-900/20 dark:to-yellow-900/20">
-        <KwameAvatar size="sm" state={isTyping ? 'thinking' : 'idle'} />
+        <OzzyAvatar size="sm" state={isTyping ? 'thinking' : 'idle'} />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-surface-900 dark:text-white text-sm">
-            Ask Kwame
+            Ask Ozzy
           </h3>
           <p className="text-xs text-surface-500 dark:text-surface-400 truncate">
             Civil Service Knowledge Assistant
@@ -120,9 +120,9 @@ export function KwameMiniChat({ onClose, onMaximize }: KwameMiniChatProps) {
       <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[200px]">
         {messages.length === 0 && !isTyping ? (
           <div className="text-center py-4">
-            <KwameAvatar size="lg" className="mx-auto mb-3" />
+            <OzzyAvatar size="lg" className="mx-auto mb-3" />
             <p className="text-sm text-surface-600 dark:text-surface-400 mb-3">
-              Hi! I'm Kwame. Ask me about policies, procedures, or regulations.
+              Hi! I'm Ozzy. Ask me about policies, procedures, or regulations.
             </p>
             <SuggestedQuestionsCompact
               suggestions={suggestions}
@@ -141,7 +141,7 @@ export function KwameMiniChat({ onClose, onMaximize }: KwameMiniChatProps) {
                 )}
               >
                 {message.role === 'assistant' && (
-                  <KwameAvatar size="sm" className="flex-shrink-0" />
+                  <OzzyAvatar size="sm" className="flex-shrink-0" />
                 )}
                 <div
                   className={cn(
@@ -164,7 +164,7 @@ export function KwameMiniChat({ onClose, onMaximize }: KwameMiniChatProps) {
                 </div>
               </div>
             ))}
-            {isTyping && <KwameTypingIndicator />}
+            {isTyping && <OzzyTypingIndicator />}
           </>
         )}
         <div ref={messagesEndRef} />
@@ -211,7 +211,7 @@ export function KwameMiniChat({ onClose, onMaximize }: KwameMiniChatProps) {
         {/* View full chat link */}
         {messages.length > 0 && (
           <Link
-            to="/kwame"
+            to="/ozzy"
             className="mt-2 flex items-center justify-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:underline"
             onClick={onClose}
           >

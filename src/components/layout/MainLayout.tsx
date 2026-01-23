@@ -19,7 +19,7 @@ import {
   useSmartWellnessNotifications,
   WellnessPulse,
 } from '@/components/wellness';
-import { KwameWidget } from '@/components/kwame';
+import { OzzyWidget } from '@/components/ozzy';
 import { GlobalSearch } from '@/components/search';
 import { TourOverlay, WelcomeTourTrigger } from '@/components/onboarding';
 import {
@@ -218,8 +218,8 @@ export function MainLayout() {
       {/* Floating Wellness Pulse (subtle ambient reminder) */}
       <WellnessPulse onClick={() => window.location.href = '/wellness'} />
 
-      {/* Kwame AI Knowledge Assistant Widget */}
-      <KwameWidget />
+      {/* Ozzy AI Knowledge Assistant Widget */}
+      <OzzyWidget />
 
       {/* Global Search Modal (Ctrl+K) */}
       <GlobalSearch />

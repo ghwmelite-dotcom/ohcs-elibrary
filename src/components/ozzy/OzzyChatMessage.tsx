@@ -1,22 +1,22 @@
 /**
- * KwameChatMessage Component
- * Message bubble for Kwame chat with citation support
+ * OzzyChatMessage Component
+ * Message bubble for Ozzy chat with citation support
  */
 
 import { motion } from 'framer-motion';
 import { ThumbsUp, ThumbsDown, User, Clock } from 'lucide-react';
-import { KwameAvatar } from './KwameAvatar';
-import { CitationsList } from './KwameCitation';
+import { OzzyAvatar } from './OzzyAvatar';
+import { CitationsList } from './OzzyCitation';
 import { cn } from '@/utils/cn';
-import type { KwameMessage } from '@/types';
+import type { OzzyMessage } from '@/types';
 
-interface KwameChatMessageProps {
-  message: KwameMessage;
+interface OzzyChatMessageProps {
+  message: OzzyMessage;
   onRate?: (messageId: string, helpful: boolean) => void;
   isLatest?: boolean;
 }
 
-export function KwameChatMessage({ message, onRate, isLatest }: KwameChatMessageProps) {
+export function OzzyChatMessage({ message, onRate, isLatest }: OzzyChatMessageProps) {
   const isUser = message.role === 'user';
 
   // Format processing time
@@ -43,7 +43,7 @@ export function KwameChatMessage({ message, onRate, isLatest }: KwameChatMessage
             <User className="w-5 h-5 text-surface-500 dark:text-surface-400" />
           </div>
         ) : (
-          <KwameAvatar size="md" />
+          <OzzyAvatar size="md" />
         )}
       </div>
 
@@ -160,13 +160,13 @@ export function KwameChatMessage({ message, onRate, isLatest }: KwameChatMessage
 }
 
 // Typing indicator component
-export function KwameTypingIndicator() {
+export function OzzyTypingIndicator() {
   return (
     <div className="flex gap-3">
-      <KwameAvatar size="md" state="thinking" />
+      <OzzyAvatar size="md" state="thinking" />
       <div className="bg-white dark:bg-surface-800 rounded-2xl rounded-tl-sm px-4 py-3 border border-surface-200 dark:border-surface-700">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm text-surface-500 dark:text-surface-400">Kwame is thinking</span>
+          <span className="text-sm text-surface-500 dark:text-surface-400">Ozzy is thinking</span>
           <div className="flex gap-1">
             {[0, 1, 2].map((i) => (
               <motion.div

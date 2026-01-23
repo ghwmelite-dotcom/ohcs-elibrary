@@ -1,5 +1,5 @@
 /**
- * KwameWidget Component
+ * OzzyWidget Component
  * Floating action button with mini-chat for quick AI assistance
  */
 
@@ -7,18 +7,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
-import { KwameAvatar } from './KwameAvatar';
-import { KwameMiniChat } from './KwameMiniChat';
+import { OzzyAvatar } from './OzzyAvatar';
+import { OzzyMiniChat } from './OzzyMiniChat';
 import { cn } from '@/utils/cn';
 
-export function KwameWidget() {
+export function OzzyWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Don't show widget on the Kwame page itself
-  const isOnKwamePage = location.pathname === '/kwame';
+  // Don't show widget on the Ozzy page itself
+  const isOnOzzyPage = location.pathname === '/ozzy';
 
   // Keyboard shortcut: Ctrl+K or Cmd+K to toggle
   useEffect(() => {
@@ -29,9 +29,9 @@ export function KwameWidget() {
 
         e.preventDefault();
 
-        if (isOnKwamePage) {
-          // If on Kwame page, focus the input
-          const input = document.querySelector('textarea[placeholder*="Kwame"]') as HTMLTextAreaElement;
+        if (isOnOzzyPage) {
+          // If on Ozzy page, focus the input
+          const input = document.querySelector('textarea[placeholder*="Ozzy"]') as HTMLTextAreaElement;
           input?.focus();
         } else {
           setIsOpen((prev) => !prev);
@@ -46,7 +46,7 @@ export function KwameWidget() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isOnKwamePage]);
+  }, [isOpen, isOnOzzyPage]);
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
@@ -54,11 +54,11 @@ export function KwameWidget() {
 
   const handleMaximize = useCallback(() => {
     setIsOpen(false);
-    navigate('/kwame');
+    navigate('/ozzy');
   }, [navigate]);
 
-  // Hide on Kwame page
-  if (isOnKwamePage) return null;
+  // Hide on Ozzy page
+  if (isOnOzzyPage) return null;
 
   return (
     <>
@@ -76,11 +76,11 @@ export function KwameWidget() {
       </AnimatePresence>
 
       {/* Widget container */}
-      <div data-tour="kwame" className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
+      <div data-tour="ozzy" className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
         {/* Mini chat */}
         <AnimatePresence>
           {isOpen && (
-            <KwameMiniChat onClose={handleClose} onMaximize={handleMaximize} />
+            <OzzyMiniChat onClose={handleClose} onMaximize={handleMaximize} />
           )}
         </AnimatePresence>
 
@@ -171,7 +171,7 @@ export function KwameWidget() {
                 'pointer-events-none'
               )}
             >
-              Ask Kwame
+              Ask Ozzy
               <span className="ml-2 text-xs text-surface-400">
                 Ctrl+K
               </span>

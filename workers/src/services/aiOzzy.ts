@@ -1,5 +1,5 @@
 /**
- * AI Knowledge Assistant "Kwame" Service
+ * AI Knowledge Assistant "Ozzy" Service
  * RAG-powered Q&A for Ghana's Civil Service
  */
 
@@ -12,7 +12,7 @@ interface Env {
   AI: any;
 }
 
-export interface KwameMessage {
+export interface OzzyMessage {
   id: string;
   sessionId: string;
   role: 'user' | 'assistant';
@@ -56,8 +56,8 @@ export interface SessionContext {
   sessionTopic?: string;
 }
 
-// Kwame's personality and system prompt
-const KWAME_SYSTEM_PROMPT = `You are Kwame - a friendly, knowledgeable, and warm AI assistant for Ghana's Office of the Head of Civil Service (OHCS). Your name means "born on Saturday" in Akan, symbolizing wisdom and reliability.
+// Ozzy's personality and system prompt
+const OZZY_SYSTEM_PROMPT = `You are Ozzy - a friendly, knowledgeable, and warm AI assistant for Ghana's Office of the Head of Civil Service (OHCS). Your name reflects wisdom and approachability, symbolizing your role as a trusted knowledge companion.
 
 WHO YOU ARE:
 - You are an expert on Ghana's civil service policies, procedures, HR matters, and regulations
@@ -419,13 +419,13 @@ function buildCitations(chunks: DocumentChunk[]): Citation[] {
 }
 
 /**
- * Get Kwame's response to a user question using RAG
+ * Get Ozzy's response to a user question using RAG
  */
-export async function getKwameResponse(
+export async function getOzzyResponse(
   env: Env,
   sessionId: string,
   userQuestion: string,
-  conversationHistory: KwameMessage[],
+  conversationHistory: OzzyMessage[],
   context: SessionContext
 ): Promise<{ response: string; citations: Citation[]; processingTimeMs: number; chunksUsed: number }> {
   const startTime = Date.now();
@@ -457,7 +457,7 @@ export async function getKwameResponse(
     // 4. Build conversation history context (last 6 messages)
     const historyContext = conversationHistory
       .slice(-6)
-      .map(m => `${m.role === 'user' ? 'User' : 'Kwame'}: ${m.content}`)
+      .map(m => `${m.role === 'user' ? 'User' : 'Ozzy'}: ${m.content}`)
       .join('\n');
 
     // 5. Personalization context
@@ -474,7 +474,7 @@ export async function getKwameResponse(
     }
 
     // 6. Build the full prompt
-    const prompt = `${KWAME_SYSTEM_PROMPT}
+    const prompt = `${OZZY_SYSTEM_PROMPT}
 
 ${personalization ? `USER CONTEXT: ${personalization}\n` : ''}
 DOCUMENT SOURCES:
@@ -485,7 +485,7 @@ User: ${userQuestion}
 
 Provide a helpful, accurate response based on the document sources above. If the information is not available in the sources, honestly say so and suggest they contact their HR department or OHCS directly.
 
-Kwame:`;
+Ozzy:`;
 
     // 7. Generate response
     if (!env.AI) {
@@ -500,7 +500,7 @@ Kwame:`;
     let aiResponse;
     try {
       // Build the full prompt for the model
-      const fullPrompt = `${KWAME_SYSTEM_PROMPT}
+      const fullPrompt = `${OZZY_SYSTEM_PROMPT}
 
 ${personalization ? `USER CONTEXT: ${personalization}\n` : ''}
 DOCUMENT SOURCES:
@@ -511,7 +511,7 @@ User: ${userQuestion}
 
 Provide a helpful, accurate response based on the document sources above. If the information is not available in the sources, honestly say so and suggest they contact their HR department or OHCS directly.
 
-Kwame:`;
+Ozzy:`;
 
       aiResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
         prompt: fullPrompt,
@@ -546,7 +546,7 @@ Kwame:`;
       chunksUsed: relevantChunks.length,
     };
   } catch (error) {
-    console.error('Kwame response error:', error);
+    console.error('Ozzy response error:', error);
     return {
       response: "I encountered an unexpected error. Please try your question again.",
       citations: [],
@@ -566,7 +566,7 @@ export async function getSuggestedQuestions(
   try {
     // Fetch personalized suggestions based on role/department
     const { results } = await env.DB.prepare(`
-      SELECT question FROM kwame_suggested_questions
+      SELECT question FROM ozzy_suggested_questions
       WHERE isActive = 1
         AND (targetRole IS NULL OR targetRole = ?)
         AND (targetDepartment IS NULL OR targetDepartment = ?)
@@ -605,7 +605,7 @@ export async function incrementQuestionUsage(
 ): Promise<void> {
   try {
     await env.DB.prepare(`
-      UPDATE kwame_suggested_questions
+      UPDATE ozzy_suggested_questions
       SET usageCount = usageCount + 1
       WHERE question = ?
     `).bind(question).run();

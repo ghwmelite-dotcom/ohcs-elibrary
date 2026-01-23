@@ -1,5 +1,5 @@
 /**
- * KwameCitation Component
+ * OzzyCitation Component
  * Displays a citation card with link to source document
  */
 
@@ -8,14 +8,14 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { cn } from '@/utils/cn';
-import type { KwameCitation as CitationType } from '@/types';
+import type { OzzyCitation as CitationType } from '@/types';
 
-interface KwameCitationProps {
+interface OzzyCitationProps {
   citation: CitationType;
   index: number;
 }
 
-export function KwameCitation({ citation, index }: KwameCitationProps) {
+export function OzzyCitation({ citation, index }: OzzyCitationProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const relevanceColor =
@@ -126,7 +126,7 @@ export function CitationsList({ citations }: CitationsListProps) {
       </p>
       <div className="space-y-2">
         {citations.map((citation, index) => (
-          <KwameCitation key={citation.documentId + index} citation={citation} index={index} />
+          <OzzyCitation key={citation.documentId + index} citation={citation} index={index} />
         ))}
       </div>
     </div>

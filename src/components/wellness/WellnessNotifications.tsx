@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/shared/Button';
-import { AyoAvatar } from './AyoAvatar';
+import { DrSenaAvatar } from './DrSenaAvatar';
 import { useWellnessStore } from '@/stores/wellnessStore';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -312,7 +312,7 @@ export function WellnessPulse({ onClick }: { onClick: () => void }) {
           transition={{ duration: 2, repeat: Infinity }}
         />
 
-        <AyoAvatar size="sm" mood="caring" />
+        <DrSenaAvatar size="sm" mood="caring" />
 
         {/* Tooltip */}
         <motion.div

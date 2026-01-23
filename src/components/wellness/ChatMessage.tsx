@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { ThumbsUp, ThumbsDown, User } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { AyoAvatar } from './AyoAvatar';
+import { DrSenaAvatar } from './DrSenaAvatar';
 import type { CounselorMessage } from '@/types';
 
 interface ChatMessageProps {
@@ -31,7 +31,7 @@ export function ChatMessage({ message, onRate, isLatestAI }: ChatMessageProps) {
             <User className="w-5 h-5 text-surface-500 dark:text-surface-400" />
           </div>
         ) : (
-          <AyoAvatar size="md" mood="listening" isThinking={isTemp} />
+          <DrSenaAvatar size="md" mood="listening" isThinking={isTemp} />
         )}
       </div>
 

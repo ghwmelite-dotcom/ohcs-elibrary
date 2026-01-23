@@ -1,15 +1,15 @@
 /**
- * Kwame AI Knowledge Assistant Types
+ * Ozzy AI Knowledge Assistant Types
  */
 
 // Session topics
-export type KwameTopic = 'policy' | 'hr' | 'procedures' | 'regulations' | 'training' | 'general';
+export type OzzyTopic = 'policy' | 'hr' | 'procedures' | 'regulations' | 'training' | 'general';
 
 // Session status
-export type KwameSessionStatus = 'active' | 'completed';
+export type OzzySessionStatus = 'active' | 'completed';
 
 // Citation from a document
-export interface KwameCitation {
+export interface OzzyCitation {
   documentId: string;
   documentTitle: string;
   chunkContent: string;
@@ -20,12 +20,12 @@ export interface KwameCitation {
 }
 
 // Message in a conversation
-export interface KwameMessage {
+export interface OzzyMessage {
   id: string;
   sessionId: string;
   role: 'user' | 'assistant';
   content: string;
-  citations?: KwameCitation[];
+  citations?: OzzyCitation[];
   helpful?: boolean | null;
   processingTimeMs?: number;
   chunksUsed?: number;
@@ -33,46 +33,46 @@ export interface KwameMessage {
 }
 
 // Conversation session
-export interface KwameSession {
+export interface OzzySession {
   id: string;
   userId: string;
   title: string;
-  topic: KwameTopic;
-  status: KwameSessionStatus;
+  topic: OzzyTopic;
+  status: OzzySessionStatus;
   messageCount: number;
   lastMessageAt?: string;
   createdAt: string;
   updatedAt: string;
-  messages?: KwameMessage[];
+  messages?: OzzyMessage[];
 }
 
 // Create session input
-export interface CreateKwameSessionInput {
-  topic?: KwameTopic;
+export interface CreateOzzySessionInput {
+  topic?: OzzyTopic;
   title?: string;
 }
 
 // Send message input
-export interface SendKwameMessageInput {
+export interface SendOzzyMessageInput {
   content: string;
 }
 
 // Message response from API
-export interface KwameMessageResponse {
-  userMessage: KwameMessage;
-  assistantMessage: KwameMessage;
+export interface OzzyMessageResponse {
+  userMessage: OzzyMessage;
+  assistantMessage: OzzyMessage;
 }
 
 // Sessions list response
-export interface KwameSessionsResponse {
-  sessions: KwameSession[];
+export interface OzzySessionsResponse {
+  sessions: OzzySession[];
   total: number;
   limit: number;
   offset: number;
 }
 
 // User usage stats
-export interface KwameUserStats {
+export interface OzzyUserStats {
   totalSessions: number;
   totalMessages: number;
   helpfulResponses: number;
@@ -82,14 +82,14 @@ export interface KwameUserStats {
 }
 
 // Suggested questions
-export interface KwameSuggestion {
+export interface OzzySuggestion {
   id: string;
   question: string;
-  category?: KwameTopic;
+  category?: OzzyTopic;
 }
 
 // Embedding stats (admin)
-export interface KwameEmbeddingStats {
+export interface OzzyEmbeddingStats {
   totalDocuments: number;
   embeddedDocuments: number;
   totalChunks: number;
@@ -98,7 +98,7 @@ export interface KwameEmbeddingStats {
 }
 
 // Admin dashboard stats
-export interface KwameAdminDashboard {
+export interface OzzyAdminDashboard {
   sessions: {
     total: number;
   };
@@ -110,7 +110,7 @@ export interface KwameAdminDashboard {
   users: {
     activeThisWeek: number;
   };
-  embeddings: KwameEmbeddingStats;
+  embeddings: OzzyEmbeddingStats;
   feedback: {
     helpful: number;
     notHelpful: number;
@@ -120,7 +120,7 @@ export interface KwameAdminDashboard {
 }
 
 // Widget state
-export interface KwameWidgetState {
+export interface OzzyWidgetState {
   isOpen: boolean;
   isMinimized: boolean;
   isExpanded: boolean;

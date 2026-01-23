@@ -1069,7 +1069,7 @@ export interface UseMutationOptions<TData, TVariables> {
 }
 
 // ============================================================================
-// Wellness & Counselor Types (AI Counselor "Ayo")
+// Wellness & Counselor Types (AI Counselor "Dr. Sena")
 // ============================================================================
 
 export type CounselorTopic =
@@ -2244,8 +2244,8 @@ export interface SocialActivity {
 // Re-export Recognition Types
 export * from './recognition';
 
-// Re-export Kwame AI Assistant Types
-export * from './kwame';
+// Re-export Ozzy AI Assistant Types
+export * from './ozzy';
 
 // Re-export LMS Types
 export * from './lms';

@@ -261,14 +261,14 @@ export default function WellnessResource() {
                 Need more support?
               </h3>
               <p className="text-sm text-surface-600 dark:text-surface-400 mb-3">
-                Chat with Ayo for personalized guidance on this topic.
+                Chat with Dr. Sena (AI) for personalized guidance on this topic.
               </p>
               <Button
                 size="sm"
                 className="w-full"
                 onClick={() => navigate('/wellness/chat')}
               >
-                Chat with Ayo
+                Chat with Dr. Sena
               </Button>
             </div>
           </motion.div>

@@ -83,9 +83,9 @@ const welcomeTourSteps: TourStep[] = [
   },
   {
     id: 'welcome-7',
-    title: 'Meet Kwame',
-    content: 'Kwame is your AI assistant! Click the icon to ask questions about policies, documents, or get help navigating the platform.',
-    target: '[data-tour="kwame"]',
+    title: 'Meet Ozzy',
+    content: 'Ozzy is your AI knowledge assistant! Click the icon to ask questions about policies, documents, or get help navigating the platform.',
+    target: '[data-tour="ozzy"]',
     position: 'left',
     spotlightPadding: 8,
   },
@@ -100,7 +100,7 @@ const welcomeTourSteps: TourStep[] = [
   {
     id: 'welcome-9',
     title: 'You\'re All Set!',
-    content: 'Explore the platform and make the most of your learning journey. Need help? Kwame is always here for you.',
+    content: 'Explore the platform and make the most of your learning journey. Need help? Ozzy is always here for you.',
     target: '[data-tour="header"]',
     position: 'bottom',
     nextLabel: 'Get Started',
@@ -134,7 +134,7 @@ const libraryTourSteps: TourStep[] = [
   {
     id: 'library-4',
     title: 'AI Summary',
-    content: 'Kwame can summarize long documents for you. Look for the AI summary option when viewing documents.',
+    content: 'Ozzy can summarize long documents for you. Look for the AI summary option when viewing documents.',
     target: '[data-tour="library-header"]',
     position: 'bottom',
     nextLabel: 'Got it!',

@@ -26,8 +26,8 @@ export { default as presenceRoutes } from './presence';
 // Peer Recognition System
 export { default as recognitionRoutes } from './recognition';
 
-// AI Knowledge Assistant "Kwame"
-export { default as kwameRoutes } from './kwame';
+// AI Knowledge Assistant "Ozzy"
+export { default as ozzyRoutes } from './ozzy';
 
 // Learning Management System (LMS)
 export { default as lmsRoutes } from './lms';

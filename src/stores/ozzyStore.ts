@@ -1,18 +1,18 @@
 /**
- * Kwame AI Knowledge Assistant Store
- * Zustand store for managing Kwame chat state
+ * Ozzy AI Knowledge Assistant Store
+ * Zustand store for managing Ozzy chat state
  */
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
-  KwameSession,
-  KwameMessage,
-  KwameTopic,
-  KwameUserStats,
-  KwameMessageResponse,
-  KwameSessionsResponse,
-} from '@/types';
+  OzzySession,
+  OzzyMessage,
+  OzzyTopic,
+  OzzyUserStats,
+  OzzyMessageResponse,
+  OzzySessionsResponse,
+} from '@/types/ozzy';
 
 const API_BASE = import.meta.env.PROD
   ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
@@ -44,11 +44,11 @@ const authFetch = async (url: string, options: RequestInit = {}) => {
   return response.json();
 };
 
-interface KwameState {
+interface OzzyState {
   // Sessions
-  sessions: KwameSession[];
-  currentSession: KwameSession | null;
-  messages: KwameMessage[];
+  sessions: OzzySession[];
+  currentSession: OzzySession | null;
+  messages: OzzyMessage[];
   suggestions: string[];
 
   // Loading states
@@ -61,7 +61,7 @@ interface KwameState {
   widgetMinimized: boolean;
 
   // User stats
-  userStats: KwameUserStats | null;
+  userStats: OzzyUserStats | null;
 
   // Error handling
   error: string | null;
@@ -69,8 +69,8 @@ interface KwameState {
   // Actions
   fetchSessions: (status?: string) => Promise<void>;
   fetchSession: (sessionId: string) => Promise<void>;
-  createSession: (topic?: KwameTopic, title?: string) => Promise<KwameSession | null>;
-  sendMessage: (content: string) => Promise<KwameMessageResponse | null>;
+  createSession: (topic?: OzzyTopic, title?: string) => Promise<OzzySession | null>;
+  sendMessage: (content: string) => Promise<OzzyMessageResponse | null>;
   rateMessage: (messageId: string, helpful: boolean) => Promise<void>;
   endSession: (sessionId: string) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
@@ -85,12 +85,12 @@ interface KwameState {
   expandWidget: () => void;
 
   // Session management
-  setCurrentSession: (session: KwameSession | null) => void;
+  setCurrentSession: (session: OzzySession | null) => void;
   clearMessages: () => void;
   clearError: () => void;
 }
 
-export const useKwameStore = create<KwameState>()(
+export const useOzzyStore = create<OzzyState>()(
   persist(
     (set, get) => ({
       // Initial state
@@ -115,8 +115,8 @@ export const useKwameStore = create<KwameState>()(
           params.set('limit', '20');
 
           const response = await authFetch(
-            `${API_BASE}/kwame/sessions?${params.toString()}`
-          ) as KwameSessionsResponse;
+            `${API_BASE}/ozzy/sessions?${params.toString()}`
+          ) as OzzySessionsResponse;
           set({ sessions: response.sessions || [] });
         } catch (error: any) {
           console.error('Error fetching sessions:', error);
@@ -131,8 +131,8 @@ export const useKwameStore = create<KwameState>()(
         set({ isLoading: true, error: null });
         try {
           const session = await authFetch(
-            `${API_BASE}/kwame/sessions/${sessionId}`
-          ) as KwameSession & { messages: KwameMessage[] };
+            `${API_BASE}/ozzy/sessions/${sessionId}`
+          ) as OzzySession & { messages: OzzyMessage[] };
           set({
             currentSession: session,
             messages: session.messages || [],
@@ -146,19 +146,19 @@ export const useKwameStore = create<KwameState>()(
       },
 
       // Create a new session
-      createSession: async (topic: KwameTopic = 'general', title?: string) => {
+      createSession: async (topic: OzzyTopic = 'general', title?: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await authFetch(`${API_BASE}/kwame/sessions`, {
+          const response = await authFetch(`${API_BASE}/ozzy/sessions`, {
             method: 'POST',
             body: JSON.stringify({ topic, title }),
-          }) as KwameSession & { suggestions: string[] };
+          }) as OzzySession & { suggestions: string[] };
 
-          const session: KwameSession = {
+          const session: OzzySession = {
             id: response.id,
             userId: '',
             title: response.title,
-            topic: response.topic as KwameTopic,
+            topic: response.topic as OzzyTopic,
             status: response.status as 'active' | 'completed',
             messageCount: response.messageCount,
             createdAt: response.createdAt,
@@ -193,7 +193,7 @@ export const useKwameStore = create<KwameState>()(
         set({ isSending: true, isTyping: true, error: null });
 
         // Optimistically add user message
-        const tempUserMessage: KwameMessage = {
+        const tempUserMessage: OzzyMessage = {
           id: `temp-${Date.now()}`,
           sessionId: currentSession.id,
           role: 'user',
@@ -207,9 +207,9 @@ export const useKwameStore = create<KwameState>()(
 
         try {
           const response = await authFetch(
-            `${API_BASE}/kwame/sessions/${currentSession.id}/messages`,
+            `${API_BASE}/ozzy/sessions/${currentSession.id}/messages`,
             { method: 'POST', body: JSON.stringify({ content }) }
-          ) as KwameMessageResponse;
+          ) as OzzyMessageResponse;
 
           // Replace temp message with actual response
           set(state => ({
@@ -240,7 +240,7 @@ export const useKwameStore = create<KwameState>()(
       // Rate a message as helpful or not
       rateMessage: async (messageId: string, helpful: boolean) => {
         try {
-          await authFetch(`${API_BASE}/kwame/messages/${messageId}/feedback`, {
+          await authFetch(`${API_BASE}/ozzy/messages/${messageId}/feedback`, {
             method: 'POST',
             body: JSON.stringify({ helpful }),
           });
@@ -258,7 +258,7 @@ export const useKwameStore = create<KwameState>()(
       // End a session
       endSession: async (sessionId: string) => {
         try {
-          await authFetch(`${API_BASE}/kwame/sessions/${sessionId}`, {
+          await authFetch(`${API_BASE}/ozzy/sessions/${sessionId}`, {
             method: 'PATCH',
             body: JSON.stringify({ status: 'completed' }),
           });
@@ -280,7 +280,7 @@ export const useKwameStore = create<KwameState>()(
       // Delete a session
       deleteSession: async (sessionId: string) => {
         try {
-          await authFetch(`${API_BASE}/kwame/sessions/${sessionId}`, {
+          await authFetch(`${API_BASE}/ozzy/sessions/${sessionId}`, {
             method: 'DELETE',
           });
 
@@ -298,7 +298,7 @@ export const useKwameStore = create<KwameState>()(
       // Fetch suggested questions
       fetchSuggestions: async () => {
         try {
-          const response = await authFetch(`${API_BASE}/kwame/suggestions`) as { suggestions: string[] };
+          const response = await authFetch(`${API_BASE}/ozzy/suggestions`) as { suggestions: string[] };
           set({ suggestions: response.suggestions || [] });
         } catch (error) {
           console.error('Error fetching suggestions:', error);
@@ -308,7 +308,7 @@ export const useKwameStore = create<KwameState>()(
       // Fetch user stats
       fetchUserStats: async () => {
         try {
-          const stats = await authFetch(`${API_BASE}/kwame/stats`) as KwameUserStats;
+          const stats = await authFetch(`${API_BASE}/ozzy/stats`) as OzzyUserStats;
           set({ userStats: stats });
         } catch (error) {
           console.error('Error fetching user stats:', error);
@@ -328,7 +328,7 @@ export const useKwameStore = create<KwameState>()(
       clearError: () => set({ error: null }),
     }),
     {
-      name: 'kwame-store',
+      name: 'ozzy-store',
       partialize: (state) => ({
         // Only persist widget state
         widgetOpen: state.widgetOpen,

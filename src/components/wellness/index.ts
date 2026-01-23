@@ -1,5 +1,5 @@
 // Wellness component exports
-export { AyoAvatar } from './AyoAvatar';
+export { DrSenaAvatar } from './DrSenaAvatar';
 export { MoodSelector } from './MoodSelector';
 export { TopicSelector } from './TopicSelector';
 export { WelcomeCard } from './WelcomeCard';

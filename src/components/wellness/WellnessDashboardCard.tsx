@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { MessageCircle, Heart, TrendingUp, TrendingDown, Minus, Sparkles, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/shared/Button';
-import { AyoAvatar } from './AyoAvatar';
+import { DrSenaAvatar } from './DrSenaAvatar';
 import { useWellnessStore } from '@/stores/wellnessStore';
 import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/utils/cn';
@@ -94,7 +94,7 @@ export function WellnessDashboardCard() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1 }}
           >
-            <AyoAvatar size="md" mood="happy" />
+            <DrSenaAvatar size="md" mood="happy" />
           </motion.div>
 
           <div className="flex-1 min-w-0">
@@ -161,7 +161,7 @@ export function WellnessDashboardCard() {
             className="flex-1 bg-white text-teal-700 hover:bg-white/90 font-semibold"
           >
             <MessageCircle className="w-4 h-4 mr-2" />
-            Chat with Ayo
+            Chat with Dr. Sena
           </Button>
           <Button
             variant="outline"

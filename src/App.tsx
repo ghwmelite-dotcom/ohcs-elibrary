@@ -67,7 +67,7 @@ const WellnessResources = lazy(() => import('@/pages/WellnessResources'));
 const WellnessResource = lazy(() => import('@/pages/WellnessResource'));
 
 // AI Knowledge Assistant
-const Kwame = lazy(() => import('@/pages/Kwame'));
+const Ozzy = lazy(() => import('@/pages/Ozzy'));
 
 // Calendar & Events
 const CalendarPage = lazy(() => import('@/pages/Calendar'));
@@ -431,7 +431,7 @@ export default function App() {
             <Route path="/wellness/resources/:id" element={<WellnessResource />} />
 
             {/* AI Knowledge Assistant */}
-            <Route path="/kwame" element={<Kwame />} />
+            <Route path="/ozzy" element={<Ozzy />} />
 
             {/* Calendar & Events */}
             <Route path="/calendar" element={<CalendarPage />} />

@@ -1,5 +1,5 @@
 /**
- * AI Counselor "Ayo" Routes
+ * AI Counselor "Dr. Sena" Routes
  * Wellness counseling API endpoints
  */
 

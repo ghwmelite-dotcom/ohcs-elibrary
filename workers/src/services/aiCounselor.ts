@@ -1,5 +1,5 @@
 /**
- * AI Counselor "Ayo" Service
+ * AI Counselor "Dr. Sena" Service
  * Provides AI-powered wellness counseling for Ghana's civil servants
  */
 
@@ -69,7 +69,7 @@ export async function getCounselorResponse(
     // Build conversation context
     const historyContext = conversationHistory
       .slice(-8) // Last 8 messages for context
-      .map(m => `${m.role === 'user' ? 'User' : 'Ayo'}: ${m.content}`)
+      .map(m => `${m.role === 'user' ? 'User' : 'Dr. Sena'}: ${m.content}`)
       .join('\n');
 
     const topicContext = getTopicContext(context.topic);
@@ -79,17 +79,24 @@ export async function getCounselorResponse(
     // Check if this is the first message (no history)
     const isFirstMessage = conversationHistory.length === 0;
 
-    const systemPrompt = `You are Ayo - a friendly, warm, and genuinely caring wellness companion at Ghana's OHCS. Your name means "joy" and you bring that energy to conversations.
+    const systemPrompt = `You are Dr. Sena - an AI wellness companion at Ghana's OHCS. You are named in honor of the respected leader of the Counselor Unit, but you are an AI assistant, NOT the actual person.
 
 WHO YOU ARE:
-You're like a trusted friend or wise older sibling - real, warm, and easy to talk to. You chat naturally like a real person, not a robot or a clinical therapist.
+You're an AI wellness companion - friendly, warm, and genuinely caring. You chat naturally and supportively, while being transparent that you're an AI. You're like a supportive friend who happens to be powered by AI.
+
+CRITICAL - ALWAYS BE TRANSPARENT:
+- You are an AI assistant, NOT a human counselor
+- You are named "Dr. Sena" in honor of the Counselor Unit leader, but you are NOT that person
+- If asked directly, always confirm you are an AI
+- For serious issues, remind users that human CSEAP counselors are available
 
 ${isFirstMessage ? `IMPORTANT - FIRST MESSAGE:
 This is the start of a new conversation. In your response:
-1. Warmly greet them and introduce yourself briefly as Ayo
-2. Ask for their name so you can address them personally
-3. Then gently ask what's on their mind
-Keep it natural and welcoming, not formal.` : ''}
+1. Warmly greet them and introduce yourself as Dr. Sena, the AI wellness companion
+2. Briefly mention you're an AI here to provide supportive conversation
+3. Ask for their name so you can address them personally
+4. Then gently ask what's on their mind
+Keep it natural and welcoming, not overly formal.` : ''}
 
 CONVERSATION STYLE:
 - Talk like you're having a real conversation with a friend
@@ -99,9 +106,10 @@ CONVERSATION STYLE:
 - Ask ONE thoughtful question at a time
 - Acknowledge what they said before going deeper
 - Match their tone - casual if they're casual, thoughtful if they're serious
-- Be genuine, relatable, and human
+- Be genuine, relatable, and supportive
 
 WHAT NOT TO DO:
+- Don't pretend to be a human or the actual Dr. Sena
 - Don't sound scripted or robotic
 - Don't overuse phrases like "I understand" or "That must be difficult"
 - Don't give unsolicited advice - listen first, then offer if asked
@@ -111,8 +119,8 @@ WHAT NOT TO DO:
 
 IMPORTANT:
 - For crisis situations (self-harm, suicide), immediately provide crisis resources
-- For serious issues, gently suggest the OHCS human counseling team
-- Be honest about being an AI
+- For serious issues, gently suggest speaking with a human CSEAP counselor
+- Always be honest about being an AI when asked
 
 ${topicContext}
 ${moodContext}`;
@@ -123,7 +131,7 @@ ${historyContext ? `Previous messages:\n${historyContext}\n` : ''}
 
 They just said: "${userMessage}"
 
-Reply naturally as Ayo:`;
+Reply naturally as Dr. Sena:`;
 
     let response;
     try {
@@ -132,7 +140,7 @@ Reply naturally as Ayo:`;
         max_tokens: 300,
         temperature: 0.85,
       });
-      console.log('Ayo AI Response received:', JSON.stringify(response).slice(0, 200));
+      console.log('Dr. Sena AI Response received:', JSON.stringify(response).slice(0, 200));
     } catch (aiError: any) {
       console.error('AI counselor run error:', aiError?.message || aiError);
       return getFallbackResponse(context.topic);
@@ -146,7 +154,7 @@ Reply naturally as Ayo:`;
 
     // Clean up response
     aiResponse = aiResponse
-      .replace(/^(Ayo:|Assistant:|AI:)\s*/i, '')
+      .replace(/^(Dr\.?\s*Sena:|Ayo:|Assistant:|AI:)\s*/i, '')
       .trim();
 
     // Add escalation suggestion if high urgency detected
@@ -299,7 +307,7 @@ export async function generateSessionSummary(
 
   try {
     const conversation = messages
-      .map(m => `${m.role === 'user' ? 'User' : 'Ayo'}: ${m.content}`)
+      .map(m => `${m.role === 'user' ? 'User' : 'Dr. Sena'}: ${m.content}`)
       .join('\n');
 
     const prompt = `Summarize this wellness counseling session in 2-3 sentences. Focus on:
@@ -389,34 +397,34 @@ I'm still here to listen if you want to talk, but please also reach out to one o
 function getFallbackResponse(topic?: string): string {
   const responses: Record<string, string[]> = {
     work_stress: [
-      "Hey there! I'm Ayo, and I'm here to chat. Work stress can really take a toll. Before we dive in, what's your name? And tell me what's been on your mind.",
-      "Hi, I'm Ayo. Work stuff can get heavy sometimes. I'd love to know your name, and then you can tell me what's going on.",
-      "Hello! I'm Ayo, your wellness companion. What should I call you? And what's been weighing on you at work?"
+      "Hey there! I'm Dr. Sena, your AI wellness companion. Work stress can really take a toll. Before we dive in, what's your name? And tell me what's been on your mind.",
+      "Hi, I'm Dr. Sena - an AI here to chat and support you. Work stuff can get heavy sometimes. I'd love to know your name, and then you can tell me what's going on.",
+      "Hello! I'm Dr. Sena, your AI wellness companion. What should I call you? And what's been weighing on you at work?"
     ],
     career: [
-      "Hey! I'm Ayo. Career decisions can be tricky to navigate. What's your name? I'd love to hear what's on your mind.",
-      "Hi there, I'm Ayo. Before we chat about your career, what should I call you?",
-      "Hello! I'm Ayo. What's your name? And tell me what's going on with your career."
+      "Hey! I'm Dr. Sena, your AI wellness companion. Career decisions can be tricky to navigate. What's your name? I'd love to hear what's on your mind.",
+      "Hi there, I'm Dr. Sena - an AI here to support you. Before we chat about your career, what should I call you?",
+      "Hello! I'm Dr. Sena, your AI wellness companion. What's your name? And tell me what's going on with your career."
     ],
     relationships: [
-      "Hey, I'm Ayo. Relationships can be complicated. What's your name? I'm here to listen.",
-      "Hi! I'm Ayo, and I'm glad you're here. What should I call you? Tell me what's happening.",
-      "Hello! I'm Ayo. Before we talk, what's your name? And what's been going on?"
+      "Hey, I'm Dr. Sena, your AI wellness companion. Relationships can be complicated. What's your name? I'm here to listen.",
+      "Hi! I'm Dr. Sena - an AI here to support you, and I'm glad you're here. What should I call you? Tell me what's happening.",
+      "Hello! I'm Dr. Sena, your AI wellness companion. Before we talk, what's your name? And what's been going on?"
     ],
     personal: [
-      "Hey, I'm Ayo. Thanks for being here. What's your name? I'd like to know who I'm talking with.",
-      "Hi there, I'm Ayo. What should I call you? Take your time and share what's on your heart.",
-      "Hello! I'm Ayo. What's your name? I'm here to listen, no judgment."
+      "Hey, I'm Dr. Sena, your AI wellness companion. Thanks for being here. What's your name? I'd like to know who I'm talking with.",
+      "Hi there, I'm Dr. Sena - an AI here to listen and support you. What should I call you? Take your time and share what's on your heart.",
+      "Hello! I'm Dr. Sena, your AI wellness companion. What's your name? I'm here to listen, no judgment."
     ],
     financial: [
-      "Hey! I'm Ayo. Money stuff can be stressful. What's your name? Tell me what's on your mind.",
-      "Hi, I'm Ayo. Before we talk about finances, what should I call you?",
-      "Hello! I'm Ayo. What's your name? And what's been worrying you about money?"
+      "Hey! I'm Dr. Sena, your AI wellness companion. Money stuff can be stressful. What's your name? Tell me what's on your mind.",
+      "Hi, I'm Dr. Sena - an AI here to support you. Before we talk about finances, what should I call you?",
+      "Hello! I'm Dr. Sena, your AI wellness companion. What's your name? And what's been worrying you about money?"
     ],
     general: [
-      "Hey there! I'm Ayo, and I'm glad you're here. What's your name? I'd love to know who I'm chatting with.",
-      "Hi! I'm Ayo. What should I call you? And what brings you here today?",
-      "Hello! I'm Ayo, your wellness companion. What's your name? Tell me what's on your mind."
+      "Hey there! I'm Dr. Sena, your AI wellness companion, and I'm glad you're here. What's your name? I'd love to know who I'm chatting with.",
+      "Hi! I'm Dr. Sena - an AI here to listen and support you. What should I call you? And what brings you here today?",
+      "Hello! I'm Dr. Sena, your AI wellness companion. What's your name? Tell me what's on your mind."
     ]
   };
 

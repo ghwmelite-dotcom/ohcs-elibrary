@@ -1,5 +1,5 @@
 /**
- * Kwame AI Knowledge Assistant Page
+ * Ozzy AI Knowledge Assistant Page
  * Full-page chat interface for civil service Q&A
  */
 
@@ -16,17 +16,17 @@ import {
   BookOpen,
   Sparkles,
 } from 'lucide-react';
-import { useKwameStore } from '@/stores/kwameStore';
+import { useOzzyStore } from '@/stores/ozzyStore';
 import {
-  KwameAvatar,
-  KwameChatMessage,
+  OzzyAvatar,
+  OzzyChatMessage,
   SuggestedQuestions,
-} from '@/components/kwame';
-import { KwameTypingIndicator } from '@/components/kwame/KwameChatMessage';
+} from '@/components/ozzy';
+import { OzzyTypingIndicator } from '@/components/ozzy/OzzyChatMessage';
 import { Spinner } from '@/components/shared/Spinner';
 import { cn } from '@/utils/cn';
 
-export default function Kwame() {
+export default function Ozzy() {
   const [input, setInput] = useState('');
   const [showSidebar, setShowSidebar] = useState(true);
   const [showMenu, setShowMenu] = useState<string | null>(null);
@@ -52,7 +52,7 @@ export default function Kwame() {
     fetchSuggestions,
     fetchUserStats,
     clearError,
-  } = useKwameStore();
+  } = useOzzyStore();
 
   // Initialize
   useEffect(() => {
@@ -243,11 +243,11 @@ export default function Kwame() {
             <ChevronLeft className={cn('w-5 h-5 transition-transform', !showSidebar && 'rotate-180')} />
           </button>
 
-          <KwameAvatar size="lg" />
+          <OzzyAvatar size="lg" />
 
           <div className="flex-1">
             <h1 className="text-lg font-semibold text-surface-900 dark:text-white">
-              Kwame
+              Ozzy
             </h1>
             <p className="text-sm text-surface-500 dark:text-surface-400">
               Your Civil Service Knowledge Assistant
@@ -283,7 +283,7 @@ export default function Kwame() {
                 animate={{ scale: 1, opacity: 1 }}
                 className="mb-6"
               >
-                <KwameAvatar size="xl" />
+                <OzzyAvatar size="xl" />
               </motion.div>
 
               <motion.div
@@ -293,7 +293,7 @@ export default function Kwame() {
                 className="text-center max-w-md"
               >
                 <h2 className="text-xl font-semibold text-surface-900 dark:text-white mb-2">
-                  Hello! I'm Kwame
+                  Hello! I'm Ozzy
                 </h2>
                 <p className="text-surface-600 dark:text-surface-400 mb-6">
                   Your knowledgeable guide to Ghana's civil service policies, procedures, and regulations.
@@ -329,7 +329,7 @@ export default function Kwame() {
 
           {/* Messages */}
           {messages.map((message, index) => (
-            <KwameChatMessage
+            <OzzyChatMessage
               key={message.id}
               message={message}
               onRate={rateMessage}
@@ -338,7 +338,7 @@ export default function Kwame() {
           ))}
 
           {/* Typing indicator */}
-          {isTyping && <KwameTypingIndicator />}
+          {isTyping && <OzzyTypingIndicator />}
 
           <div ref={messagesEndRef} />
         </div>
@@ -357,7 +357,7 @@ export default function Kwame() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask Kwame a question..."
+              placeholder="Ask Ozzy a question..."
               disabled={isSending}
               rows={1}
               className={cn(
@@ -388,7 +388,7 @@ export default function Kwame() {
           </div>
 
           <p className="mt-2 text-xs text-center text-surface-400 dark:text-surface-500">
-            Kwame uses AI to search documents. Always verify important information with official sources.
+            Ozzy uses AI to search documents. Always verify important information with official sources.
           </p>
         </div>
       </main>

@@ -12,7 +12,7 @@ import {
   Info,
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
-import { AyoAvatar, ChatMessage, TopicSelector } from '@/components/wellness';
+import { DrSenaAvatar, ChatMessage, TopicSelector } from '@/components/wellness';
 import { useWellnessStore } from '@/stores/wellnessStore';
 import { cn } from '@/utils/cn';
 import type { CounselorTopic } from '@/types';
@@ -139,15 +139,23 @@ export default function WellnessChat() {
               className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 p-6"
             >
               <div className="flex items-center gap-4 mb-6">
-                <AyoAvatar size="lg" mood="happy" />
+                <DrSenaAvatar size="lg" mood="happy" />
                 <div>
                   <h1 className="text-xl font-bold text-surface-900 dark:text-surface-100">
                     Start a Conversation
                   </h1>
                   <p className="text-surface-600 dark:text-surface-400">
-                    I'm Ayo, here to listen and support you.
+                    I'm Dr. Sena, your AI wellness companion, here to listen and support you.
                   </p>
                 </div>
+              </div>
+
+              <div className="mb-6 p-3 rounded-lg bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-800 flex items-start gap-2">
+                <Info className="w-4 h-4 text-teal-600 dark:text-teal-400 mt-0.5 shrink-0" />
+                <span className="text-sm text-teal-700 dark:text-teal-300">
+                  <strong>Note:</strong> Dr. Sena is an AI assistant named in honor of the Counselor Unit leader.
+                  For human counseling support, you can request to speak with a CSEAP counselor at any time.
+                </span>
               </div>
 
               {isAnonymous && (
@@ -202,16 +210,16 @@ export default function WellnessChat() {
                 <ArrowLeft className="w-5 h-5" />
               </button>
 
-              <AyoAvatar size="sm" mood="listening" isThinking={isSending} />
+              <DrSenaAvatar size="sm" mood="listening" isThinking={isSending} />
 
               <div>
                 <h1 className="font-semibold text-surface-900 dark:text-surface-100">
-                  Ayo
+                  Dr. Sena <span className="text-xs font-normal text-teal-600 dark:text-teal-400">(AI)</span>
                 </h1>
                 <p className="text-xs text-surface-500 dark:text-surface-400">
                   {currentSession?.topic
                     ? topicLabels[currentSession.topic]
-                    : 'Wellness Companion'}
+                    : 'AI Wellness Companion'}
                   {isAnonymous && ' • Anonymous'}
                 </p>
               </div>
@@ -282,7 +290,7 @@ export default function WellnessChat() {
 
             {isSending && (
               <div className="flex items-center gap-3">
-                <AyoAvatar size="md" mood="listening" isThinking />
+                <DrSenaAvatar size="md" mood="listening" isThinking />
                 <div className="bg-surface-100 dark:bg-surface-800 rounded-2xl rounded-tl-sm px-4 py-3">
                   <div className="flex items-center gap-1">
                     {[0, 1, 2].map((i) => (
@@ -316,7 +324,7 @@ export default function WellnessChat() {
                     </h3>
                     <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
                       A counselor from <span className="font-semibold">CSEAP</span> (Civil Service Employee Assistance Programme) will be in touch with you soon.
-                      You can continue chatting with Ayo in the meantime.
+                      You can continue chatting with Dr. Sena in the meantime.
                     </p>
                   </div>
                 </div>
