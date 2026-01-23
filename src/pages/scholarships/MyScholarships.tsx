@@ -264,13 +264,17 @@ export default function MyScholarships() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-xl p-4 shadow-lg border border-surface-200"
+              className="bg-white rounded-2xl p-5 shadow-lg border border-surface-200 overflow-hidden"
             >
-              <div className={`h-10 w-10 rounded-lg ${stat.bg} flex items-center justify-center mb-3`}>
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
+              <div className="flex items-start gap-3">
+                <div className={`h-12 w-12 rounded-xl ${stat.bg} flex items-center justify-center flex-shrink-0`}>
+                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-2xl md:text-3xl font-bold text-text-primary">{stat.value}</p>
+                  <p className="text-xs md:text-sm text-text-secondary truncate">{stat.label}</p>
+                </div>
               </div>
-              <p className="text-2xl font-bold text-text-primary">{stat.value}</p>
-              <p className="text-sm text-text-secondary">{stat.label}</p>
             </motion.div>
           ))}
         </div>

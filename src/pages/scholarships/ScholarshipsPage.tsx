@@ -13,6 +13,10 @@ import {
   Sparkles,
   Building2,
   BookOpen,
+  Home,
+  LayoutDashboard,
+  FileText,
+  ArrowLeft,
 } from 'lucide-react';
 import { useScholarshipsStore } from '@/stores/sponsorshipStore';
 import type { Scholarship, ScholarshipProgramType } from '@/types/sponsorship';
@@ -214,7 +218,7 @@ export default function ScholarshipsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-surface-50 to-white">
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-16 px-4 bg-gradient-to-br from-ghana-green via-green-700 to-green-800">
+      <section className="relative overflow-hidden py-12 md:py-16 px-4 bg-gradient-to-br from-ghana-green via-green-700 to-green-800">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 left-10 w-40 h-40 border-4 border-white rounded-full" />
@@ -222,40 +226,86 @@ export default function ScholarshipsPage() {
           <div className="absolute top-1/2 left-1/3 w-32 h-32 border-4 border-ghana-gold rounded-full" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto text-center text-white">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
+        <div className="relative max-w-7xl mx-auto">
+          {/* Breadcrumb Navigation */}
+          <motion.nav
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
+            className="flex items-center gap-2 text-white/70 text-sm mb-8"
           >
-            <GraduationCap className="h-16 w-16 mx-auto mb-4 text-ghana-gold" />
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Scholarships & Opportunities
-            </h1>
-            <p className="text-lg text-white/80 max-w-2xl mx-auto">
-              Explore scholarship opportunities sponsored by our partners. Invest in your
-              professional development and advance your career in Ghana's public service.
-            </p>
-          </motion.div>
+            <Link to="/dashboard" className="flex items-center gap-1.5 hover:text-white transition-colors">
+              <Home className="h-4 w-4" />
+              <span>Home</span>
+            </Link>
+            <ChevronRight className="h-4 w-4" />
+            <span className="text-white font-medium">Scholarships</span>
+          </motion.nav>
 
-          {/* Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="max-w-xl mx-auto mt-8"
-          >
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-text-tertiary" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search scholarships..."
-                className="w-full pl-12 pr-4 py-4 rounded-xl bg-white text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-ghana-gold shadow-lg"
-              />
-            </div>
-          </motion.div>
+          <div className="text-center text-white">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6"
+            >
+              <GraduationCap className="h-16 w-16 mx-auto mb-4 text-ghana-gold" />
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                Scholarships & Opportunities
+              </h1>
+              <p className="text-lg text-white/80 max-w-2xl mx-auto">
+                Explore scholarship opportunities sponsored by our partners. Invest in your
+                professional development and advance your career in Ghana's public service.
+              </p>
+            </motion.div>
+
+            {/* Quick Action Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="flex flex-wrap items-center justify-center gap-3 mb-8"
+            >
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white rounded-xl text-sm font-medium transition-all border border-white/20"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </Link>
+              <Link
+                to="/my-scholarships"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-ghana-gold hover:bg-ghana-gold/90 text-white rounded-xl text-sm font-medium transition-all shadow-lg"
+              >
+                <FileText className="h-4 w-4" />
+                My Applications
+              </Link>
+              <Link
+                to="/sponsors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white rounded-xl text-sm font-medium transition-all border border-white/20"
+              >
+                <Building2 className="h-4 w-4" />
+                Our Sponsors
+              </Link>
+            </motion.div>
+
+            {/* Search Bar */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="max-w-xl mx-auto"
+            >
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-text-tertiary" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search scholarships..."
+                  className="w-full pl-12 pr-4 py-4 rounded-xl bg-white text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-ghana-gold shadow-lg"
+                />
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -312,16 +362,32 @@ export default function ScholarshipsPage() {
           </div>
         ) : filteredScholarships.length === 0 ? (
           <div className="text-center py-20">
-            <div className="h-16 w-16 rounded-full bg-surface-100 flex items-center justify-center mx-auto mb-4">
-              <Search className="h-8 w-8 text-text-tertiary" />
+            <div className="h-20 w-20 rounded-full bg-surface-100 flex items-center justify-center mx-auto mb-6">
+              <Search className="h-10 w-10 text-text-tertiary" />
             </div>
-            <h3 className="text-lg font-semibold text-text-primary mb-2">No Scholarships Found</h3>
-            <p className="text-text-secondary">
+            <h3 className="text-xl font-semibold text-text-primary mb-2">No Scholarships Found</h3>
+            <p className="text-text-secondary mb-6 max-w-md mx-auto">
               {searchQuery
-                ? 'Try adjusting your search terms'
-                : 'Check back soon for new opportunities'
+                ? 'Try adjusting your search terms or filters to find what you\'re looking for.'
+                : 'Check back soon for new opportunities. In the meantime, explore other areas of the platform.'
               }
             </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-ghana-green text-white rounded-xl text-sm font-medium hover:bg-ghana-green/90 transition-colors"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                Go to Dashboard
+              </Link>
+              <Link
+                to="/my-scholarships"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-surface-100 text-text-primary rounded-xl text-sm font-medium hover:bg-surface-200 transition-colors"
+              >
+                <FileText className="h-4 w-4" />
+                View My Applications
+              </Link>
+            </div>
           </div>
         ) : (
           <>
@@ -381,6 +447,84 @@ export default function ScholarshipsPage() {
           </>
         )}
       </main>
+
+      {/* Quick Navigation Footer */}
+      <section className="border-t border-surface-200 bg-white">
+        <div className="max-w-7xl mx-auto px-4 py-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Back to Dashboard */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex flex-col items-center text-center p-6 rounded-2xl bg-gradient-to-br from-ghana-green/5 to-green-100/50 border border-ghana-green/10"
+            >
+              <div className="h-14 w-14 rounded-2xl bg-ghana-green/10 flex items-center justify-center mb-4">
+                <LayoutDashboard className="h-7 w-7 text-ghana-green" />
+              </div>
+              <h3 className="text-lg font-semibold text-text-primary mb-2">Your Dashboard</h3>
+              <p className="text-sm text-text-secondary mb-4">
+                Access all your courses, documents, and learning progress in one place.
+              </p>
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-ghana-green text-white rounded-xl text-sm font-medium hover:bg-ghana-green/90 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Go to Dashboard
+              </Link>
+            </motion.div>
+
+            {/* My Applications */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="flex flex-col items-center text-center p-6 rounded-2xl bg-gradient-to-br from-ghana-gold/5 to-amber-100/50 border border-ghana-gold/10"
+            >
+              <div className="h-14 w-14 rounded-2xl bg-ghana-gold/10 flex items-center justify-center mb-4">
+                <FileText className="h-7 w-7 text-ghana-gold" />
+              </div>
+              <h3 className="text-lg font-semibold text-text-primary mb-2">Track Applications</h3>
+              <p className="text-sm text-text-secondary mb-4">
+                View the status of your scholarship applications and awarded scholarships.
+              </p>
+              <Link
+                to="/my-scholarships"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-ghana-gold text-white rounded-xl text-sm font-medium hover:bg-ghana-gold/90 transition-colors"
+              >
+                My Applications
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </motion.div>
+
+            {/* Our Sponsors */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="flex flex-col items-center text-center p-6 rounded-2xl bg-gradient-to-br from-blue-500/5 to-blue-100/50 border border-blue-500/10"
+            >
+              <div className="h-14 w-14 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4">
+                <Building2 className="h-7 w-7 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-text-primary mb-2">Meet Our Sponsors</h3>
+              <p className="text-sm text-text-secondary mb-4">
+                Discover the organizations supporting professional development in Ghana.
+              </p>
+              <Link
+                to="/sponsors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
+              >
+                View Sponsors
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
