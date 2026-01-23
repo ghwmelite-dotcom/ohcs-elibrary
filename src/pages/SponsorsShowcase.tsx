@@ -145,7 +145,7 @@ export default function SponsorsShowcase() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-surface-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-surface-50 to-white dark:from-surface-900 dark:to-surface-800">
       {/* Hero Section */}
       <motion.section
         style={{ y, opacity }}
@@ -183,7 +183,7 @@ export default function SponsorsShowcase() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-xl text-text-secondary max-w-3xl mx-auto mb-12"
+            className="text-xl text-surface-600 dark:text-surface-300 max-w-3xl mx-auto mb-12"
           >
             Together with our valued sponsors, we are transforming Ghana's civil service through
             education, technology, and innovation. Their support enables us to empower public
@@ -203,7 +203,7 @@ export default function SponsorsShowcase() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5 + index * 0.1 }}
-                className="bg-white rounded-2xl p-6 shadow-lg border border-surface-200"
+                className="bg-white dark:bg-surface-800 rounded-2xl p-6 shadow-lg border border-surface-200 dark:border-surface-700"
               >
                 <div className={`w-12 h-12 rounded-xl ${metric.bgColor} flex items-center justify-center mx-auto mb-3`}>
                   <metric.icon className={`h-6 w-6 ${metric.color}`} />
@@ -215,7 +215,7 @@ export default function SponsorsShowcase() {
                     duration={2.5}
                   />
                 </div>
-                <div className="text-sm text-text-secondary">{metric.label}</div>
+                <div className="text-sm text-surface-600 dark:text-surface-400">{metric.label}</div>
               </motion.div>
             ))}
           </motion.div>
@@ -256,8 +256,8 @@ export default function SponsorsShowcase() {
                     `}>
                       <TierIcon className={`h-5 w-5 ${tier === 'gold' || tier === 'bronze' || tier === 'silver' ? 'text-white' : 'text-slate-600'}`} />
                     </div>
-                    <h2 className="text-2xl font-bold text-text-primary">{config.title}</h2>
-                    <div className="flex-1 h-px bg-gradient-to-r from-surface-200 to-transparent" />
+                    <h2 className="text-2xl font-bold text-surface-900 dark:text-white">{config.title}</h2>
+                    <div className="flex-1 h-px bg-gradient-to-r from-surface-200 dark:from-surface-700 to-transparent" />
                   </div>
 
                   <div className={`grid ${config.columns} gap-6`}>
@@ -277,11 +277,11 @@ export default function SponsorsShowcase() {
 
           {!isLoading && sponsors.length === 0 && (
             <div className="text-center py-20">
-              <Sparkles className="h-16 w-16 text-surface-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-text-secondary mb-2">
+              <Sparkles className="h-16 w-16 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-surface-600 dark:text-surface-300 mb-2">
                 Be Our First Partner
               </h3>
-              <p className="text-text-tertiary">
+              <p className="text-surface-500 dark:text-surface-400">
                 Join us in transforming Ghana's public service sector.
               </p>
             </div>
@@ -290,7 +290,7 @@ export default function SponsorsShowcase() {
       </section>
 
       {/* Sponsorship Tiers Info */}
-      <section className="py-16 px-4 bg-gradient-to-b from-surface-50 to-white">
+      <section className="py-16 px-4 bg-gradient-to-b from-surface-50 to-white dark:from-surface-800 dark:to-surface-900">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -298,10 +298,10 @@ export default function SponsorsShowcase() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold text-text-primary mb-4">
+            <h2 className="text-3xl font-bold text-surface-900 dark:text-white mb-4">
               Sponsorship Tiers
             </h2>
-            <p className="text-text-secondary max-w-2xl mx-auto">
+            <p className="text-surface-600 dark:text-surface-300 max-w-2xl mx-auto">
               Choose a partnership level that aligns with your organization's goals and make
               a lasting impact on Ghana's public service sector.
             </p>
@@ -317,7 +317,7 @@ export default function SponsorsShowcase() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="relative bg-white rounded-2xl border border-surface-200 p-6 hover:shadow-lg transition-shadow"
+                  className="relative bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 p-6 hover:shadow-lg transition-shadow"
                 >
                   <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
@@ -325,14 +325,14 @@ export default function SponsorsShowcase() {
                   >
                     <TierIcon className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-text-primary mb-2">{tier.name}</h3>
-                  <p className="text-2xl font-bold text-ghana-green mb-4">
+                  <h3 className="text-xl font-bold text-surface-900 dark:text-white mb-2">{tier.name}</h3>
+                  <p className="text-2xl font-bold text-ghana-green dark:text-green-400 mb-4">
                     GHS {(tier.minInvestment / 1000000).toFixed(1)}M+
                   </p>
                   <ul className="space-y-2">
                     {tier.benefits.slice(0, 4).map((benefit, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-text-secondary">
-                        <span className="text-ghana-green mt-0.5">✓</span>
+                      <li key={i} className="flex items-start gap-2 text-sm text-surface-600 dark:text-surface-300">
+                        <span className="text-ghana-green dark:text-green-400 mt-0.5">✓</span>
                         {benefit}
                       </li>
                     ))}

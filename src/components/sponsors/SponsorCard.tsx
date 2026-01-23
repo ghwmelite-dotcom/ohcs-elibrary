@@ -40,27 +40,27 @@ export function SponsorCard({
 
   const tierStyles: Record<TierLevel, { bg: string; border: string; text: string; badge: string }> = {
     platinum: {
-      bg: 'bg-gradient-to-br from-slate-50 via-white to-slate-100',
-      border: 'border-slate-200 hover:border-slate-300',
-      text: 'text-slate-600',
-      badge: 'bg-gradient-to-r from-slate-200 to-slate-100 text-slate-700',
+      bg: 'bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-800 dark:via-surface-800 dark:to-slate-900',
+      border: 'border-slate-200 hover:border-slate-300 dark:border-slate-600 dark:hover:border-slate-500',
+      text: 'text-slate-600 dark:text-slate-300',
+      badge: 'bg-gradient-to-r from-slate-200 to-slate-100 text-slate-700 dark:from-slate-600 dark:to-slate-500 dark:text-slate-100',
     },
     gold: {
-      bg: 'bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50',
-      border: 'border-yellow-200 hover:border-yellow-300',
-      text: 'text-yellow-700',
+      bg: 'bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 dark:from-yellow-900/30 dark:via-amber-900/20 dark:to-yellow-900/30',
+      border: 'border-yellow-200 hover:border-yellow-300 dark:border-yellow-700 dark:hover:border-yellow-600',
+      text: 'text-yellow-700 dark:text-yellow-400',
       badge: 'bg-gradient-to-r from-yellow-400 to-amber-400 text-white',
     },
     silver: {
-      bg: 'bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100',
-      border: 'border-slate-200 hover:border-slate-300',
-      text: 'text-slate-600',
-      badge: 'bg-gradient-to-r from-slate-300 to-slate-400 text-white',
+      bg: 'bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-800 dark:via-gray-800 dark:to-slate-900',
+      border: 'border-slate-200 hover:border-slate-300 dark:border-slate-600 dark:hover:border-slate-500',
+      text: 'text-slate-600 dark:text-slate-300',
+      badge: 'bg-gradient-to-r from-slate-300 to-slate-400 text-white dark:from-slate-500 dark:to-slate-600',
     },
     bronze: {
-      bg: 'bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50',
-      border: 'border-amber-200 hover:border-amber-300',
-      text: 'text-amber-700',
+      bg: 'bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 dark:from-amber-900/30 dark:via-orange-900/20 dark:to-amber-900/30',
+      border: 'border-amber-200 hover:border-amber-300 dark:border-amber-700 dark:hover:border-amber-600',
+      text: 'text-amber-700 dark:text-amber-400',
       badge: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
     },
   };
@@ -99,7 +99,7 @@ export function SponsorCard({
             className="h-10 max-w-[120px] object-contain grayscale hover:grayscale-0 transition-all"
           />
         ) : (
-          <span className="text-lg font-bold text-text-secondary">{sponsor.name}</span>
+          <span className="text-lg font-bold text-surface-600 dark:text-surface-300">{sponsor.name}</span>
         )}
       </motion.div>
     );
@@ -121,7 +121,7 @@ export function SponsorCard({
       >
         <div className="flex items-center gap-3">
           {sponsor.logo ? (
-            <div className="h-12 w-12 rounded-lg bg-white shadow-sm p-1.5 flex items-center justify-center flex-shrink-0">
+            <div className="h-12 w-12 rounded-lg bg-white dark:bg-surface-700 shadow-sm p-1.5 flex items-center justify-center flex-shrink-0">
               <img src={sponsor.logo} alt={sponsor.name} className="max-h-full max-w-full object-contain" />
             </div>
           ) : (
@@ -133,9 +133,9 @@ export function SponsorCard({
             </div>
           )}
           <div className="min-w-0">
-            <h3 className="font-semibold text-text-primary truncate">{sponsor.name}</h3>
+            <h3 className="font-semibold text-surface-900 dark:text-white truncate">{sponsor.name}</h3>
             {sponsor.tagline && (
-              <p className="text-sm text-text-secondary truncate">{sponsor.tagline}</p>
+              <p className="text-sm text-surface-600 dark:text-surface-400 truncate">{sponsor.tagline}</p>
             )}
           </div>
         </div>
@@ -172,7 +172,7 @@ export function SponsorCard({
         <div className="relative">
           <div className="flex items-start gap-6">
             {sponsor.logo ? (
-              <div className="h-24 w-24 rounded-xl bg-white shadow-lg p-3 flex items-center justify-center flex-shrink-0">
+              <div className="h-24 w-24 rounded-xl bg-white dark:bg-surface-700 shadow-lg p-3 flex items-center justify-center flex-shrink-0">
                 <img src={sponsor.logo} alt={sponsor.name} className="max-h-full max-w-full object-contain" />
               </div>
             ) : (
@@ -184,9 +184,9 @@ export function SponsorCard({
               </div>
             )}
             <div className="flex-1 min-w-0 pt-2">
-              <h2 className="text-2xl font-bold text-text-primary">{sponsor.name}</h2>
+              <h2 className="text-2xl font-bold text-surface-900 dark:text-white">{sponsor.name}</h2>
               {sponsor.tagline && (
-                <p className="text-lg text-text-secondary mt-1">{sponsor.tagline}</p>
+                <p className="text-lg text-surface-600 dark:text-surface-300 mt-1">{sponsor.tagline}</p>
               )}
             </div>
           </div>
@@ -211,7 +211,7 @@ export function SponsorCard({
                   className={`
                     flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium
                     border-2 ${style.border} ${style.text}
-                    hover:bg-white/50 transition-colors
+                    hover:bg-white/50 dark:hover:bg-white/10 transition-colors
                   `}
                 >
                   <ExternalLink className="h-5 w-5" />
@@ -249,7 +249,7 @@ export function SponsorCard({
 
       <div className="flex flex-col items-center text-center">
         {sponsor.logo ? (
-          <div className="h-16 w-16 rounded-xl bg-white shadow-md p-2 flex items-center justify-center mb-4">
+          <div className="h-16 w-16 rounded-xl bg-white dark:bg-surface-700 shadow-md p-2 flex items-center justify-center mb-4">
             <img src={sponsor.logo} alt={sponsor.name} className="max-h-full max-w-full object-contain" />
           </div>
         ) : (
@@ -260,9 +260,9 @@ export function SponsorCard({
             <TierIcon className="h-8 w-8 text-white" />
           </div>
         )}
-        <h3 className="font-semibold text-lg text-text-primary">{sponsor.name}</h3>
+        <h3 className="font-semibold text-lg text-surface-900 dark:text-white">{sponsor.name}</h3>
         {sponsor.tagline && (
-          <p className="text-sm text-text-secondary mt-1 line-clamp-2">{sponsor.tagline}</p>
+          <p className="text-sm text-surface-600 dark:text-surface-400 mt-1 line-clamp-2">{sponsor.tagline}</p>
         )}
 
         {showActions && (
@@ -280,7 +280,7 @@ export function SponsorCard({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => handleClick('website')}
-                className={`p-2 rounded-lg border ${style.border} ${style.text} hover:bg-white/50 transition-colors`}
+                className={`p-2 rounded-lg border ${style.border} ${style.text} hover:bg-white/50 dark:hover:bg-white/10 transition-colors`}
               >
                 <ExternalLink className="h-4 w-4" />
               </a>
