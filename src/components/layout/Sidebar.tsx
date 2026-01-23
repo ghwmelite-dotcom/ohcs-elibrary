@@ -38,6 +38,8 @@ import {
   Map,
   Building2,
   HandHeart,
+  Presentation,
+  Medal,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
@@ -134,7 +136,7 @@ const navSections: NavSection[] = [
   {
     title: 'Teach',
     items: [
-      { path: '/instructor', label: 'Instructor Hub', icon: GraduationCap, color: 'violet', tag: { label: 'NEW', color: 'violet' } },
+      { path: '/instructor', label: 'Instructor Hub', icon: Presentation, color: 'violet', tag: { label: 'NEW', color: 'violet' } },
     ],
     requiresInstructor: true,
   },
@@ -155,9 +157,9 @@ const navSections: NavSection[] = [
   {
     title: 'Sponsorship',
     items: [
-      { path: '/scholarships', label: 'Scholarships', icon: GraduationCap, color: 'indigo', tag: { label: 'NEW', color: 'indigo' } },
+      { path: '/scholarships', label: 'Scholarships', icon: Medal, color: 'amber', tag: { label: 'NEW', color: 'amber' } },
       { path: '/my-scholarships', label: 'My Applications', icon: ClipboardList, color: 'sky' },
-      { path: '/sponsors', label: 'Our Sponsors', icon: Building2, color: 'amber' },
+      { path: '/sponsors', label: 'Our Sponsors', icon: Building2, color: 'indigo' },
     ],
   },
   {
