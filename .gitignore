@@ -38,5 +38,8 @@ coverage/
 .eslintcache
 *.tsbuildinfo
 
+# Claude Code local settings
+.claude/
+
 # Lighthouse reports
 lighthouse-report.*
