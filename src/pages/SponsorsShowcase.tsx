@@ -10,9 +10,12 @@ import {
   GraduationCap,
   TrendingUp,
   ArrowRight,
+  ArrowLeft,
   Sparkles,
   Building2,
   Mail,
+  Home,
+  Handshake,
 } from 'lucide-react';
 import { useShowcaseStore, useTiersStore } from '@/stores/sponsorshipStore';
 import { SponsorCard } from '@/components/sponsors';
@@ -146,6 +149,39 @@ export default function SponsorsShowcase() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-surface-50 to-white dark:from-surface-900 dark:to-surface-800">
+      {/* Navigation Bar */}
+      <nav className="sticky top-0 z-40 bg-white/80 dark:bg-surface-900/80 backdrop-blur-lg border-b border-surface-200 dark:border-surface-700">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-14">
+            {/* Back to Dashboard */}
+            <Link
+              to="/dashboard"
+              className="group flex items-center gap-2 px-3 py-1.5 text-surface-600 dark:text-surface-300 hover:text-ghana-green dark:hover:text-ghana-gold rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-all"
+            >
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+              <span className="font-medium">Dashboard</span>
+            </Link>
+
+            {/* Page Indicator */}
+            <div className="hidden sm:flex items-center gap-2 text-sm text-surface-500 dark:text-surface-400">
+              <Home className="h-4 w-4" />
+              <span>/</span>
+              <span className="text-ghana-green dark:text-ghana-gold font-medium">Our Partners</span>
+            </div>
+
+            {/* Become a Sponsor CTA */}
+            <Link
+              to="/sponsorship"
+              className="flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-ghana-green to-green-600 text-white text-sm font-medium rounded-lg hover:from-ghana-green/90 hover:to-green-600/90 transition-all shadow-sm hover:shadow-md"
+            >
+              <Handshake className="h-4 w-4" />
+              <span className="hidden sm:inline">Become a Partner</span>
+              <span className="sm:hidden">Partner</span>
+            </Link>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <motion.section
         style={{ y, opacity }}
