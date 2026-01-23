@@ -24,8 +24,22 @@ const API_BASE = import.meta.env.PROD
 // HELPER FUNCTIONS
 // ============================================================================
 
+const getAuthToken = (): string | null => {
+  // First try the direct localStorage key
+  const directToken = localStorage.getItem('auth_token');
+  if (directToken) return directToken;
+
+  // Fallback to Zustand persisted state
+  try {
+    const authState = JSON.parse(localStorage.getItem('ohcs-auth-storage') || '{}');
+    return authState?.state?.token || null;
+  } catch {
+    return null;
+  }
+};
+
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('auth_token');
+  const token = getAuthToken();
   return {
     'Content-Type': 'application/json',
     'Authorization': token ? `Bearer ${token}` : '',

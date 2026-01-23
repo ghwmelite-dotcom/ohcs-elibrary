@@ -254,7 +254,7 @@ export default function MyScholarships() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-surface-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-surface-50 to-white dark:from-surface-900 dark:to-surface-800">
       {/* Header */}
       <section className="relative overflow-hidden py-16 px-4 bg-gradient-to-br from-ghana-green via-green-700 to-green-800">
         <div className="absolute inset-0 opacity-10">
@@ -293,14 +293,14 @@ export default function MyScholarships() {
       </section>
 
       {/* Stats Overview */}
-      <section className="bg-white border-b border-surface-200">
+      <section className="bg-white dark:bg-surface-800 border-b border-surface-200 dark:border-surface-700">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="grid grid-cols-4 gap-3 md:gap-4">
             {[
-              { label: 'Total', value: applications.length, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
-              { label: 'Active', value: activeApplications.length, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
-              { label: 'Awarded', value: awardedApplications.length, icon: Award, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
-              { label: 'Drafts', value: draftApplications.length, icon: FileText, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200' },
+              { label: 'Total', value: applications.length, icon: FileText, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/30', border: 'border-blue-200 dark:border-blue-800' },
+              { label: 'Active', value: activeApplications.length, icon: Clock, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/30', border: 'border-amber-200 dark:border-amber-800' },
+              { label: 'Awarded', value: awardedApplications.length, icon: Award, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/30', border: 'border-green-200 dark:border-green-800' },
+              { label: 'Drafts', value: draftApplications.length, icon: FileText, color: 'text-gray-600 dark:text-gray-400', bg: 'bg-gray-50 dark:bg-gray-800/50', border: 'border-gray-200 dark:border-gray-700' },
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -310,8 +310,8 @@ export default function MyScholarships() {
                 className={`${stat.bg} ${stat.border} border rounded-xl p-3 md:p-4 text-center shadow-sm`}
               >
                 <stat.icon className={`h-5 w-5 md:h-6 md:w-6 ${stat.color} mx-auto mb-1`} />
-                <p className="text-xl md:text-3xl font-bold text-text-primary">{stat.value}</p>
-                <p className="text-[10px] md:text-xs text-text-secondary font-medium">{stat.label}</p>
+                <p className="text-xl md:text-3xl font-bold text-surface-900 dark:text-white">{stat.value}</p>
+                <p className="text-[10px] md:text-xs text-surface-600 dark:text-surface-400 font-medium">{stat.label}</p>
               </motion.div>
             ))}
           </div>
