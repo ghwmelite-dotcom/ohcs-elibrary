@@ -2258,3 +2258,6 @@ export * from './audit';
 
 // Re-export Analytics Types
 export * from './analytics';
+
+// Re-export Sponsorship Types
+export * from './sponsorship';

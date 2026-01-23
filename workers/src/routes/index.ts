@@ -56,6 +56,9 @@ export { orderRoutes } from './shop-orders';
 // Google Drive Integration
 export { googleDriveRoutes } from './googleDrive';
 
+// Sponsorship System
+export { sponsorshipRoutes } from './sponsorship';
+
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
 

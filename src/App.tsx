@@ -110,6 +110,17 @@ const ResearchLab = lazy(() => import('@/pages/ResearchLab'));
 const ResearchProjects = lazy(() => import('@/pages/ResearchProjects'));
 const ResearchProject = lazy(() => import('@/pages/ResearchProject'));
 
+// Sponsorship pages
+const SponsorsShowcase = lazy(() => import('@/pages/SponsorsShowcase'));
+const SponsorDashboard = lazy(() => import('@/pages/sponsor/SponsorDashboard'));
+const SponsorAnalytics = lazy(() => import('@/pages/sponsor/SponsorAnalytics'));
+
+// Scholarship pages
+const ScholarshipsPage = lazy(() => import('@/pages/scholarships/ScholarshipsPage'));
+const ScholarshipDetail = lazy(() => import('@/pages/scholarships/ScholarshipDetail'));
+const ScholarshipApplication = lazy(() => import('@/pages/scholarships/ScholarshipApplication'));
+const MyScholarships = lazy(() => import('@/pages/scholarships/MyScholarships'));
+
 // Shop / Marketplace pages
 const Shop = lazy(() => import('@/pages/shop/Shop'));
 const BecomeSeller = lazy(() => import('@/pages/shop/BecomeSeller'));
@@ -145,6 +156,7 @@ const AdminResearch = lazy(() => import('@/pages/admin/AdminResearch'));
 const AdminLMS = lazy(() => import('@/pages/admin/AdminLMS'));
 const AdminSellerApplications = lazy(() => import('@/pages/admin/AdminSellerApplications'));
 const AdminGoogleDrive = lazy(() => import('@/pages/admin/AdminGoogleDrive'));
+const AdminScholarships = lazy(() => import('@/pages/admin/ScholarshipManagement'));
 
 // Loading fallback component
 function PageLoader() {
@@ -342,6 +354,9 @@ export default function App() {
           {/* Public routes */}
           <Route path="/" element={<Landing />} />
           <Route path="/sponsorship" element={<Sponsorship />} />
+          <Route path="/sponsors" element={<SponsorsShowcase />} />
+          <Route path="/scholarships" element={<ScholarshipsPage />} />
+          <Route path="/scholarships/:scholarshipId" element={<ScholarshipDetail />} />
           <Route path="/verify" element={<VerifyCertificate />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
@@ -459,6 +474,14 @@ export default function App() {
             <Route path="/mentorship" element={<Mentorship />} />
             <Route path="/my-plan" element={<DevelopmentPlan />} />
             <Route path="/competencies" element={<Competencies />} />
+
+            {/* Scholarship routes (protected) */}
+            <Route path="/scholarships/:scholarshipId/apply" element={<ScholarshipApplication />} />
+            <Route path="/my-scholarships" element={<MyScholarships />} />
+
+            {/* Sponsor Dashboard */}
+            <Route path="/sponsor/dashboard" element={<SponsorDashboard />} />
+            <Route path="/sponsor/analytics" element={<SponsorAnalytics />} />
 
             {/* Research Hub routes */}
             <Route path="/research-hub" element={<ResearchLab />} />
@@ -588,6 +611,7 @@ export default function App() {
             <Route path="/admin/research" element={<AdminResearch />} />
             <Route path="/admin/lms" element={<AdminLMS />} />
             <Route path="/admin/seller-applications" element={<AdminSellerApplications />} />
+            <Route path="/admin/scholarships" element={<AdminScholarships />} />
             <Route path="/admin/integrations/google-drive" element={<AdminGoogleDrive />} />
             <Route path="/admin/integrations/google-drive/callback" element={<AdminGoogleDrive />} />
           </Route>

@@ -54,6 +54,8 @@ import {
   orderRoutes,
   // Google Drive Integration
   googleDriveRoutes,
+  // Sponsorship System
+  sponsorshipRoutes,
 } from './routes';
 
 export interface Env {
@@ -235,6 +237,10 @@ app.route('/api/v1/shop/orders', orderRoutes);
 // Google Drive Integration
 // Google Drive routes handle their own auth internally
 app.route('/api/v1/google-drive', googleDriveRoutes);
+
+// Sponsorship System
+// Sponsorship routes handle their own auth internally (some endpoints are public)
+app.route('/api/v1/sponsorship', sponsorshipRoutes);
 
 // News aggregation admin endpoints
 app.post('/api/v1/admin/news/aggregate', authMiddleware, async (c) => {
