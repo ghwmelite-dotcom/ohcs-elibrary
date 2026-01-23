@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   GraduationCap,
@@ -14,8 +14,10 @@ import {
   Building2,
   Eye,
   Loader2,
+  LogIn,
 } from 'lucide-react';
 import { useApplicationsStore } from '@/stores/sponsorshipStore';
+import { useAuthStore } from '@/stores/authStore';
 import type { ApplicationStatus } from '@/types/sponsorship';
 
 const statusConfig: Record<ApplicationStatus, {
@@ -197,11 +199,14 @@ function ApplicationCard({ application, index }: { application: any; index: numb
 }
 
 export default function MyScholarships() {
+  const { isAuthenticated } = useAuthStore();
   const { applications, isLoading, error, fetchMyApplications } = useApplicationsStore();
 
   useEffect(() => {
-    fetchMyApplications();
-  }, [fetchMyApplications]);
+    if (isAuthenticated) {
+      fetchMyApplications();
+    }
+  }, [fetchMyApplications, isAuthenticated]);
 
   // Group applications by status
   const activeApplications = applications.filter(
@@ -210,6 +215,43 @@ export default function MyScholarships() {
   const awardedApplications = applications.filter((app) => app.status === 'approved');
   const pastApplications = applications.filter((app) => app.status === 'rejected');
   const draftApplications = applications.filter((app) => app.status === 'draft');
+
+  // Show login prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-surface-50 to-white flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full text-center"
+        >
+          <div className="bg-white rounded-2xl shadow-lg border border-surface-200 p-8">
+            <div className="h-16 w-16 rounded-full bg-ghana-green/10 flex items-center justify-center mx-auto mb-6">
+              <LogIn className="h-8 w-8 text-ghana-green" />
+            </div>
+            <h1 className="text-2xl font-bold text-text-primary mb-3">Sign In Required</h1>
+            <p className="text-text-secondary mb-6">
+              Please sign in to view your scholarship applications and track their status.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Link
+                to="/auth/login"
+                className="w-full py-3 px-4 bg-ghana-green text-white rounded-xl font-medium hover:bg-ghana-green/90 transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/scholarships"
+                className="w-full py-3 px-4 bg-surface-100 text-text-primary rounded-xl font-medium hover:bg-surface-200 transition-colors"
+              >
+                Browse Scholarships
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-surface-50 to-white">
