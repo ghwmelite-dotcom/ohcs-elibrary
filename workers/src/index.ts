@@ -239,7 +239,9 @@ app.route('/api/v1/shop/orders', orderRoutes);
 app.route('/api/v1/google-drive', googleDriveRoutes);
 
 // Sponsorship System
-// Sponsorship routes handle their own auth internally (some endpoints are public)
+// Apply optional auth to parse tokens when present, but don't require auth
+import { optionalAuth } from './middleware/auth';
+app.use('/api/v1/sponsorship/*', optionalAuth);
 app.route('/api/v1/sponsorship', sponsorshipRoutes);
 
 // News aggregation admin endpoints
