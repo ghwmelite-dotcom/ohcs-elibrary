@@ -36,6 +36,8 @@ import {
   TrendingUp,
   ClipboardList,
   Map,
+  Building2,
+  HandHeart,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
@@ -148,6 +150,14 @@ const navSections: NavSection[] = [
     items: [
       { path: '/shop', label: 'Shop', icon: ShoppingBag, color: 'emerald', tag: { label: 'NEW', color: 'green' } },
       { path: '/shop/account', label: 'My Account', icon: UserCircle, color: 'violet' },
+    ],
+  },
+  {
+    title: 'Sponsorship',
+    items: [
+      { path: '/scholarships', label: 'Scholarships', icon: GraduationCap, color: 'indigo', tag: { label: 'NEW', color: 'indigo' } },
+      { path: '/my-scholarships', label: 'My Applications', icon: ClipboardList, color: 'sky' },
+      { path: '/sponsors', label: 'Our Sponsors', icon: Building2, color: 'amber' },
     ],
   },
   {

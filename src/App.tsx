@@ -157,6 +157,7 @@ const AdminLMS = lazy(() => import('@/pages/admin/AdminLMS'));
 const AdminSellerApplications = lazy(() => import('@/pages/admin/AdminSellerApplications'));
 const AdminGoogleDrive = lazy(() => import('@/pages/admin/AdminGoogleDrive'));
 const AdminScholarships = lazy(() => import('@/pages/admin/ScholarshipManagement'));
+const AdminSponsors = lazy(() => import('@/pages/admin/AdminSponsors'));
 
 // Loading fallback component
 function PageLoader() {
@@ -612,6 +613,7 @@ export default function App() {
             <Route path="/admin/lms" element={<AdminLMS />} />
             <Route path="/admin/seller-applications" element={<AdminSellerApplications />} />
             <Route path="/admin/scholarships" element={<AdminScholarships />} />
+            <Route path="/admin/sponsors" element={<AdminSponsors />} />
             <Route path="/admin/integrations/google-drive" element={<AdminGoogleDrive />} />
             <Route path="/admin/integrations/google-drive/callback" element={<AdminGoogleDrive />} />
           </Route>

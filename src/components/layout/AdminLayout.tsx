@@ -30,6 +30,9 @@ import {
   Store,
   HardDrive,
   Plug,
+  Building2,
+  Award,
+  HandHeart,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
@@ -90,6 +93,16 @@ const adminNavCategories: NavCategory[] = [
     color: '#10B981',
     items: [
       { path: '/admin/seller-applications', label: 'Seller Applications', icon: Store },
+    ],
+  },
+  {
+    id: 'sponsorship',
+    label: 'Sponsorship',
+    icon: HandHeart,
+    color: '#FCD116',
+    items: [
+      { path: '/admin/scholarships', label: 'Scholarships', icon: GraduationCap },
+      { path: '/admin/sponsors', label: 'Manage Sponsors', icon: Building2 },
     ],
   },
   {

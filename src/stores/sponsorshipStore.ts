@@ -451,6 +451,8 @@ export const useSponsorDashboardStore = create<SponsorDashboardStore>()((set) =>
 interface AdminSponsorshipState {
   sponsors: Sponsor[];
   currentSponsor: Sponsor | null;
+  scholarships: Scholarship[];
+  applications: ScholarshipApplication[];
   stats: AdminSponsorStats | null;
   tierBreakdown: Record<string, number>;
   statusCounts: Record<string, number>;
@@ -475,9 +477,13 @@ interface AdminSponsorshipActions {
   fetchSponsor: (id: string) => Promise<any>;
   createSponsor: (data: any) => Promise<{ sponsorId: string; slug: string; dashboardAccessKey: string }>;
   updateSponsor: (id: string, data: any) => Promise<void>;
+  deleteSponsor: (id: string) => Promise<void>;
   updateSponsorStatus: (id: string, status: string, notes?: string) => Promise<void>;
-  createScholarship: (sponsorId: string, data: any) => Promise<{ scholarshipId: string; slug: string }>;
+  fetchScholarships: () => Promise<void>;
+  createScholarship: (data: any) => Promise<{ scholarshipId: string; slug: string }>;
   updateScholarship: (id: string, data: any) => Promise<void>;
+  fetchApplications: () => Promise<void>;
+  updateApplicationStatus: (id: string, status: string, notes: string, awardAmount?: number) => Promise<void>;
   reviewApplication: (id: string, data: any) => Promise<void>;
   createSponsoredContent: (sponsorId: string, data: any) => Promise<{ contentId: string }>;
   fetchStats: () => Promise<void>;
@@ -489,6 +495,8 @@ type AdminSponsorshipStore = AdminSponsorshipState & AdminSponsorshipActions;
 export const useAdminSponsorshipStore = create<AdminSponsorshipStore>()((set, get) => ({
   sponsors: [],
   currentSponsor: null,
+  scholarships: [],
+  applications: [],
   stats: null,
   tierBreakdown: {},
   statusCounts: {},
@@ -571,6 +579,19 @@ export const useAdminSponsorshipStore = create<AdminSponsorshipStore>()((set, ge
     }
   },
 
+  deleteSponsor: async (id: string) => {
+    try {
+      const response = await fetch(`${API_BASE}/sponsorship/admin/sponsors/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to delete sponsor');
+      await get().fetchSponsors();
+    } catch (error) {
+      throw error;
+    }
+  },
+
   updateSponsorStatus: async (id: string, status: string, notes?: string) => {
     try {
       const response = await fetch(`${API_BASE}/sponsorship/admin/sponsors/${id}/status`, {
@@ -585,9 +606,52 @@ export const useAdminSponsorshipStore = create<AdminSponsorshipStore>()((set, ge
     }
   },
 
-  createScholarship: async (sponsorId: string, data: any) => {
+  fetchScholarships: async () => {
+    set({ isLoading: true, error: null });
     try {
-      const response = await fetch(`${API_BASE}/sponsorship/admin/sponsors/${sponsorId}/scholarships`, {
+      const response = await fetch(`${API_BASE}/sponsorship/admin/scholarships`, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to fetch scholarships');
+      const data = await response.json();
+      set({ scholarships: data.scholarships || [], isLoading: false });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load scholarships';
+      set({ error: message, isLoading: false });
+    }
+  },
+
+  fetchApplications: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch(`${API_BASE}/sponsorship/admin/applications`, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to fetch applications');
+      const data = await response.json();
+      set({ applications: data.applications || [], isLoading: false });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load applications';
+      set({ error: message, isLoading: false });
+    }
+  },
+
+  updateApplicationStatus: async (id: string, status: string, notes: string, awardAmount?: number) => {
+    try {
+      const response = await fetch(`${API_BASE}/sponsorship/admin/applications/${id}/review`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status, reviewNotes: notes, awardAmount }),
+      });
+      if (!response.ok) throw new Error('Failed to update application');
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  createScholarship: async (data: any) => {
+    try {
+      const response = await fetch(`${API_BASE}/sponsorship/admin/scholarships`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(data),
@@ -662,6 +726,8 @@ export const useAdminSponsorshipStore = create<AdminSponsorshipStore>()((set, ge
     set({
       sponsors: [],
       currentSponsor: null,
+      scholarships: [],
+      applications: [],
       stats: null,
       tierBreakdown: {},
       statusCounts: {},
