@@ -52,7 +52,7 @@ ozzy.post('/sessions', authMiddleware, async (c) => {
 
     // Check active session count
     const { results: activeSessions } = await db.prepare(`
-      SELECT COUNT(*) as count FROM ozzy_sessions
+      SELECT COUNT(*) as count FROM kwame_sessions
       WHERE userId = ? AND status = 'active'
     `).bind(userId).all();
 
@@ -67,7 +67,7 @@ ozzy.post('/sessions', authMiddleware, async (c) => {
     const sessionTitle = title || `Chat ${new Date().toLocaleDateString()}`;
 
     await db.prepare(`
-      INSERT INTO ozzy_sessions (id, userId, title, topic, status, createdAt, updatedAt)
+      INSERT INTO kwame_sessions (id, userId, title, topic, status, createdAt, updatedAt)
       VALUES (?, ?, ?, ?, 'active', datetime('now'), datetime('now'))
     `).bind(sessionId, userId, sessionTitle, topic).run();
 
@@ -114,7 +114,7 @@ ozzy.get('/sessions', authMiddleware, async (c) => {
 
     let query = `
       SELECT id, title, topic, status, messageCount, lastMessageAt, createdAt, updatedAt
-      FROM ozzy_sessions
+      FROM kwame_sessions
       WHERE userId = ?
     `;
     const params: any[] = [userId];
@@ -130,7 +130,7 @@ ozzy.get('/sessions', authMiddleware, async (c) => {
     const { results: sessions } = await db.prepare(query).bind(...params).all();
 
     // Get total count
-    let countQuery = `SELECT COUNT(*) as count FROM ozzy_sessions WHERE userId = ?`;
+    let countQuery = `SELECT COUNT(*) as count FROM kwame_sessions WHERE userId = ?`;
     const countParams: any[] = [userId];
     if (status) {
       countQuery += ` AND status = ?`;
@@ -168,7 +168,7 @@ ozzy.get('/sessions/:id', authMiddleware, async (c) => {
     // Get session
     const session = await db.prepare(`
       SELECT id, title, topic, status, messageCount, lastMessageAt, createdAt, updatedAt
-      FROM ozzy_sessions
+      FROM kwame_sessions
       WHERE id = ? AND userId = ?
     `).bind(sessionId, userId).first();
 
@@ -179,7 +179,7 @@ ozzy.get('/sessions/:id', authMiddleware, async (c) => {
     // Get messages
     const { results: messages } = await db.prepare(`
       SELECT id, role, content, citations, helpful, processingTimeMs, chunksUsed, createdAt
-      FROM ozzy_messages
+      FROM kwame_messages
       WHERE sessionId = ?
       ORDER BY createdAt ASC
     `).bind(sessionId).all();
@@ -227,7 +227,7 @@ ozzy.post('/sessions/:id/messages', authMiddleware, async (c) => {
 
     // Verify session exists and belongs to user
     const session = await db.prepare(`
-      SELECT id, status, topic FROM ozzy_sessions
+      SELECT id, status, topic FROM kwame_sessions
       WHERE id = ? AND userId = ?
     `).bind(sessionId, userId).first();
 
@@ -242,8 +242,8 @@ ozzy.post('/sessions/:id/messages', authMiddleware, async (c) => {
     // Check daily message limit
     const today = new Date().toISOString().split('T')[0];
     const messageCount = await db.prepare(`
-      SELECT COUNT(*) as count FROM ozzy_messages m
-      JOIN ozzy_sessions s ON m.sessionId = s.id
+      SELECT COUNT(*) as count FROM kwame_messages m
+      JOIN kwame_sessions s ON m.sessionId = s.id
       WHERE s.userId = ? AND m.role = 'user' AND DATE(m.createdAt) = ?
     `).bind(userId, today).first();
 
@@ -255,7 +255,7 @@ ozzy.post('/sessions/:id/messages', authMiddleware, async (c) => {
 
     // Get conversation history for context
     const { results: history } = await db.prepare(`
-      SELECT id, role, content, citations FROM ozzy_messages
+      SELECT id, role, content, citations FROM kwame_messages
       WHERE sessionId = ?
       ORDER BY createdAt DESC
       LIMIT 10
@@ -275,7 +275,7 @@ ozzy.post('/sessions/:id/messages', authMiddleware, async (c) => {
     // Save user message
     const userMessageId = generateId();
     await db.prepare(`
-      INSERT INTO ozzy_messages (id, sessionId, role, content, createdAt)
+      INSERT INTO kwame_messages (id, sessionId, role, content, createdAt)
       VALUES (?, ?, 'user', ?, datetime('now'))
     `).bind(userMessageId, sessionId, content.trim()).run();
 
@@ -302,7 +302,7 @@ ozzy.post('/sessions/:id/messages', authMiddleware, async (c) => {
     // Save assistant message
     const assistantMessageId = generateId();
     await db.prepare(`
-      INSERT INTO ozzy_messages (
+      INSERT INTO kwame_messages (
         id, sessionId, role, content, citations, processingTimeMs, chunksUsed, createdAt
       ) VALUES (?, ?, 'assistant', ?, ?, ?, ?, datetime('now'))
     `).bind(
@@ -316,7 +316,7 @@ ozzy.post('/sessions/:id/messages', authMiddleware, async (c) => {
 
     // Update session
     await db.prepare(`
-      UPDATE ozzy_sessions
+      UPDATE kwame_sessions
       SET messageCount = messageCount + 2, lastMessageAt = datetime('now'), updatedAt = datetime('now')
       WHERE id = ?
     `).bind(sessionId).run();
@@ -325,7 +325,7 @@ ozzy.post('/sessions/:id/messages', authMiddleware, async (c) => {
     if (conversationHistory.length === 0) {
       const autoTitle = content.slice(0, 50) + (content.length > 50 ? '...' : '');
       await db.prepare(`
-        UPDATE ozzy_sessions SET title = ? WHERE id = ? AND title LIKE 'Chat %'
+        UPDATE kwame_sessions SET title = ? WHERE id = ? AND title LIKE 'Chat %'
       `).bind(autoTitle, sessionId).run();
     }
 
@@ -375,8 +375,8 @@ ozzy.post('/messages/:id/feedback', authMiddleware, async (c) => {
 
     // Verify message belongs to user's session
     const message = await db.prepare(`
-      SELECT m.id, s.userId FROM ozzy_messages m
-      JOIN ozzy_sessions s ON m.sessionId = s.id
+      SELECT m.id, s.userId FROM kwame_messages m
+      JOIN kwame_sessions s ON m.sessionId = s.id
       WHERE m.id = ? AND s.userId = ?
     `).bind(messageId, userId).first();
 
@@ -385,7 +385,7 @@ ozzy.post('/messages/:id/feedback', authMiddleware, async (c) => {
     }
 
     await db.prepare(`
-      UPDATE ozzy_messages SET helpful = ? WHERE id = ?
+      UPDATE kwame_messages SET helpful = ? WHERE id = ?
     `).bind(helpful ? 1 : 0, messageId).run();
 
     return c.json({ success: true, helpful });
@@ -414,7 +414,7 @@ ozzy.patch('/sessions/:id', authMiddleware, async (c) => {
 
     // Verify session belongs to user
     const session = await db.prepare(`
-      SELECT id FROM ozzy_sessions WHERE id = ? AND userId = ?
+      SELECT id FROM kwame_sessions WHERE id = ? AND userId = ?
     `).bind(sessionId, userId).first();
 
     if (!session) {
@@ -439,7 +439,7 @@ ozzy.patch('/sessions/:id', authMiddleware, async (c) => {
       params.push(sessionId);
 
       await db.prepare(`
-        UPDATE ozzy_sessions SET ${updates.join(', ')} WHERE id = ?
+        UPDATE kwame_sessions SET ${updates.join(', ')} WHERE id = ?
       `).bind(...params).run();
     }
 
@@ -466,7 +466,7 @@ ozzy.delete('/sessions/:id', authMiddleware, async (c) => {
   try {
     // Verify session belongs to user
     const session = await db.prepare(`
-      SELECT id FROM ozzy_sessions WHERE id = ? AND userId = ?
+      SELECT id FROM kwame_sessions WHERE id = ? AND userId = ?
     `).bind(sessionId, userId).first();
 
     if (!session) {
@@ -474,8 +474,8 @@ ozzy.delete('/sessions/:id', authMiddleware, async (c) => {
     }
 
     // Delete messages first (cascade should handle this, but being explicit)
-    await db.prepare(`DELETE FROM ozzy_messages WHERE sessionId = ?`).bind(sessionId).run();
-    await db.prepare(`DELETE FROM ozzy_sessions WHERE id = ?`).bind(sessionId).run();
+    await db.prepare(`DELETE FROM kwame_messages WHERE sessionId = ?`).bind(sessionId).run();
+    await db.prepare(`DELETE FROM kwame_sessions WHERE id = ?`).bind(sessionId).run();
 
     return c.json({ success: true });
   } catch (error) {
@@ -523,18 +523,18 @@ ozzy.get('/stats', authMiddleware, async (c) => {
       SELECT
         COUNT(DISTINCT s.id) as totalSessions,
         SUM(s.messageCount) as totalMessages,
-        (SELECT COUNT(*) FROM ozzy_messages m
-         JOIN ozzy_sessions s2 ON m.sessionId = s2.id
+        (SELECT COUNT(*) FROM kwame_messages m
+         JOIN kwame_sessions s2 ON m.sessionId = s2.id
          WHERE s2.userId = ? AND m.helpful = 1) as helpfulResponses
-      FROM ozzy_sessions s
+      FROM kwame_sessions s
       WHERE s.userId = ?
     `).bind(userId, userId).first();
 
     // Today's usage
     const today = new Date().toISOString().split('T')[0];
     const todayUsage = await db.prepare(`
-      SELECT COUNT(*) as count FROM ozzy_messages m
-      JOIN ozzy_sessions s ON m.sessionId = s.id
+      SELECT COUNT(*) as count FROM kwame_messages m
+      JOIN kwame_sessions s ON m.sessionId = s.id
       WHERE s.userId = ? AND m.role = 'user' AND DATE(m.createdAt) = ?
     `).bind(userId, today).first();
 
@@ -724,18 +724,18 @@ ozzy.get('/admin/dashboard', authMiddleware, async (c) => {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     const [totalSessions, totalMessages, todayMessages, weekMessages, activeUsers, embeddingStats, feedbackStats] = await Promise.all([
-      db.prepare(`SELECT COUNT(*) as count FROM ozzy_sessions`).first(),
-      db.prepare(`SELECT COUNT(*) as count FROM ozzy_messages`).first(),
-      db.prepare(`SELECT COUNT(*) as count FROM ozzy_messages WHERE DATE(createdAt) = ?`).bind(today).first(),
-      db.prepare(`SELECT COUNT(*) as count FROM ozzy_messages WHERE DATE(createdAt) >= ?`).bind(weekAgo).first(),
-      db.prepare(`SELECT COUNT(DISTINCT userId) as count FROM ozzy_sessions WHERE DATE(createdAt) >= ?`).bind(weekAgo).first(),
+      db.prepare(`SELECT COUNT(*) as count FROM kwame_sessions`).first(),
+      db.prepare(`SELECT COUNT(*) as count FROM kwame_messages`).first(),
+      db.prepare(`SELECT COUNT(*) as count FROM kwame_messages WHERE DATE(createdAt) = ?`).bind(today).first(),
+      db.prepare(`SELECT COUNT(*) as count FROM kwame_messages WHERE DATE(createdAt) >= ?`).bind(weekAgo).first(),
+      db.prepare(`SELECT COUNT(DISTINCT userId) as count FROM kwame_sessions WHERE DATE(createdAt) >= ?`).bind(weekAgo).first(),
       getEmbeddingStats(c.env),
       db.prepare(`
         SELECT
           SUM(CASE WHEN helpful = 1 THEN 1 ELSE 0 END) as helpful,
           SUM(CASE WHEN helpful = 0 THEN 1 ELSE 0 END) as notHelpful,
           COUNT(CASE WHEN helpful IS NOT NULL THEN 1 END) as total
-        FROM ozzy_messages WHERE role = 'assistant'
+        FROM kwame_messages WHERE role = 'assistant'
       `).first(),
     ]);
 

@@ -566,7 +566,7 @@ export async function getSuggestedQuestions(
   try {
     // Fetch personalized suggestions based on role/department
     const { results } = await env.DB.prepare(`
-      SELECT question FROM ozzy_suggested_questions
+      SELECT question FROM kwame_suggested_questions
       WHERE isActive = 1
         AND (targetRole IS NULL OR targetRole = ?)
         AND (targetDepartment IS NULL OR targetDepartment = ?)
@@ -605,7 +605,7 @@ export async function incrementQuestionUsage(
 ): Promise<void> {
   try {
     await env.DB.prepare(`
-      UPDATE ozzy_suggested_questions
+      UPDATE kwame_suggested_questions
       SET usageCount = usageCount + 1
       WHERE question = ?
     `).bind(question).run();
