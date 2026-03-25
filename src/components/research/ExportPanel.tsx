@@ -101,12 +101,11 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
   const handleGenerateExport = async () => {
     setGenerating(true);
     try {
-      const response = await authFetch(`${API_BASE}/api/v1/research/projects/${projectId}/export`, {
+      const response = await authFetch(`${API_BASE}/api/v1/research/projects/${projectId}/exports`, {
         method: 'POST',
         body: JSON.stringify({
           exportType,
           formatStyle,
-          title: projectTitle,
           contentSections: selectedSections,
           includeCitations,
           includeAppendices: false,
@@ -115,7 +114,7 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
 
       if (response.ok) {
         const data = await response.json();
-        setPreviewContent(data.content);
+        setPreviewContent(data.content || data.markdown || '');
         setShowPreview('new');
         await fetchExports();
       }
@@ -405,14 +404,34 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
                     </p>
                   </div>
                 </div>
-                <span className={cn(
-                  'px-2 py-1 text-xs rounded-full',
-                  exp.status === 'completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' :
-                  exp.status === 'failed' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
-                  'bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400'
-                )}>
-                  {exp.status}
-                </span>
+                <div className="flex items-center gap-2">
+                  {exp.status === 'completed' && (
+                    <button
+                      onClick={() => {
+                        const url = `${API_BASE}/api/v1/research/projects/${projectId}/exports/${exp.id}/download`;
+                        const a = document.createElement('a');
+                        a.href = token ? `${url}?token=${encodeURIComponent(token)}` : url;
+                        a.download = `${exp.title || 'export'}.md`;
+                        a.target = '_blank';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                      }}
+                      className="p-1.5 text-surface-400 dark:text-surface-500 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                      title="Download"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                  )}
+                  <span className={cn(
+                    'px-2 py-1 text-xs rounded-full',
+                    exp.status === 'completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' :
+                    exp.status === 'failed' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
+                    'bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400'
+                  )}>
+                    {exp.status}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

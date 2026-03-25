@@ -2241,6 +2241,64 @@ export interface SocialActivity {
   createdAt: Timestamp;
 }
 
+// ============================================================================
+// Research Hub - Phase 5: Enhanced Types
+// ============================================================================
+
+export interface ResearchAttachment {
+  id: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  description?: string;
+  category: 'general' | 'data' | 'survey' | 'instrument' | 'literature' | 'report' | 'image' | 'other';
+  uploadedBy: { name: string; avatar?: string };
+  createdAt: string;
+}
+
+export interface ResearchPhaseApproval {
+  id: string;
+  projectId: string;
+  phase: string;
+  status: 'pending' | 'approved' | 'rejected';
+  requestedByName?: string;
+  approvedByName?: string;
+  comments?: string;
+  requestedAt: string;
+  resolvedAt?: string;
+}
+
+export interface ResearchEthicsApproval {
+  id: string;
+  projectId: string;
+  approvalBody: string;
+  referenceNumber?: string;
+  status: 'pending' | 'submitted' | 'approved' | 'rejected' | 'expired';
+  submittedDate?: string;
+  approvalDate?: string;
+  expiryDate?: string;
+  conditions?: string;
+  createdByName?: string;
+  createdAt: string;
+}
+
+export interface ResearchContribution {
+  user_id: string;
+  displayName: string;
+  avatar?: string;
+  total_contributions: number;
+  total_points: number;
+  types: string;
+}
+
+export interface ResearchSearchResult {
+  id: string;
+  resultType: 'project' | 'note' | 'literature';
+  title?: string;
+  matchSnippet?: string;
+  [key: string]: any;
+}
+
 // Re-export Recognition Types
 export * from './recognition';
 

@@ -7,3 +7,6 @@ export { AnalyticsPanel } from './AnalyticsPanel';
 export { MilestonesPanel } from './MilestonesPanel';
 export { ExportPanel } from './ExportPanel';
 export { TemplatesGallery } from './TemplatesGallery';
+export { FileAttachments } from './FileAttachments';
+export { AdvancedAIPanel } from './AdvancedAIPanel';
+export { PhaseApprovalGate } from './PhaseApprovalGate';

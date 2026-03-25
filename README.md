@@ -168,6 +168,17 @@ Demo users get access to:
 | `@cf/meta/llama-4-scout-17b-16e-instruct` | Light | Document summaries, topic extraction, news summarization |
 | `@cf/baai/bge-m3` | Embedding | Multilingual document embeddings for RAG search (1024-dim) |
 
+### Research Hub Enhancements
+- **Full-Text Search**: FTS5-powered search across projects, notes, and literature with ranked results
+- **File Attachments**: Upload and manage research documents via R2 storage (50MB limit)
+- **Export Generation**: Compile research into Markdown/HTML with R2 storage and download
+- **Advanced AI Analysis**: Literature gap analysis, question refinement, methodology suggestions, auto-tagging, cross-project insights
+- **Research Notifications**: Team alerts for reviews, discussions, mentions, milestones, and phase approvals
+- **Phase Approval Gates**: Formal approval workflow for advancing project phases
+- **Ethics Tracking**: IRB/ethics approval records with status tracking
+- **Audit Trail Export**: CSV export of all project activities for compliance
+- **Contribution Tracking**: Points-based tracking of team member contributions
+
 ### Email Services
 - **Gmail API** - OAuth2-based email delivery
 - **Resend API** - Transactional email fallback

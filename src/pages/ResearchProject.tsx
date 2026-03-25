@@ -39,6 +39,8 @@ import {
   Flag,
   BarChart3,
   FileDown,
+  Paperclip,
+  ShieldCheck,
 } from 'lucide-react';
 import {
   useResearchStore,
@@ -47,11 +49,11 @@ import {
   RESEARCH_PHASES,
   RESEARCH_METHODOLOGIES,
 } from '@/stores/researchStore';
-import { PhaseProgress, KofiChat, CollaborationPanel, AnalyticsPanel, MilestonesPanel, ExportPanel } from '@/components/research';
+import { PhaseProgress, KofiChat, CollaborationPanel, AnalyticsPanel, MilestonesPanel, ExportPanel, FileAttachments, AdvancedAIPanel, PhaseApprovalGate } from '@/components/research';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
 
-type TabType = 'overview' | 'literature' | 'notes' | 'citations' | 'reviews' | 'discussions' | 'milestones' | 'analytics' | 'export' | 'insights' | 'briefs' | 'team' | 'activity' | 'comments';
+type TabType = 'overview' | 'literature' | 'notes' | 'citations' | 'reviews' | 'discussions' | 'milestones' | 'analytics' | 'export' | 'insights' | 'briefs' | 'team' | 'activity' | 'comments' | 'files' | 'ai-analysis' | 'governance';
 
 export default function ResearchProject() {
   const { id } = useParams<{ id: string }>();
@@ -239,6 +241,9 @@ export default function ResearchProject() {
     { id: 'milestones', label: 'Milestones', icon: Flag },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'export', label: 'Export', icon: FileDown },
+    { id: 'files', label: 'Files', icon: Paperclip },
+    { id: 'ai-analysis', label: 'AI Analysis', icon: Sparkles, isAI: true },
+    { id: 'governance', label: 'Governance', icon: ShieldCheck },
     { id: 'insights', label: 'AI Insights', icon: Brain, count: currentProject.insightCount, isAI: true },
     { id: 'briefs', label: 'Briefs', icon: FileText, count: currentProject.briefCount, isAI: true },
     { id: 'team', label: 'Team', icon: Users, count: currentProject.teamMemberCount },
@@ -681,6 +686,42 @@ export default function ResearchProject() {
               exit={{ opacity: 0, y: -10 }}
             >
               <ExportPanel projectId={id!} projectTitle={currentProject.title} />
+            </motion.div>
+          )}
+
+          {/* Phase 5: Files Tab */}
+          {activeTab === 'files' && (
+            <motion.div
+              key="files"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <FileAttachments projectId={id!} />
+            </motion.div>
+          )}
+
+          {/* Phase 5: AI Analysis Tab */}
+          {activeTab === 'ai-analysis' && (
+            <motion.div
+              key="ai-analysis"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <AdvancedAIPanel projectId={id!} project={currentProject} />
+            </motion.div>
+          )}
+
+          {/* Phase 5: Governance Tab */}
+          {activeTab === 'governance' && (
+            <motion.div
+              key="governance"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <PhaseApprovalGate projectId={id!} project={currentProject} />
             </motion.div>
           )}
 
