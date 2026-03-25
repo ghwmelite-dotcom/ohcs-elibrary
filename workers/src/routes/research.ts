@@ -4298,9 +4298,11 @@ researchRoutes.get('/search', async (c: AppContext) => {
           FROM research_projects_fts
           JOIN research_projects p ON p.id = research_projects_fts.id
           WHERE research_projects_fts MATCH ?
-            AND (p.is_public = 1 OR p.created_by_id = ?)
+            AND (p.is_public = 1 OR p.created_by_id = ? OR p.team_lead_id = ? OR EXISTS (
+              SELECT 1 FROM research_team_members tm WHERE tm.project_id = p.id AND tm.user_id = ?
+            ))
           LIMIT ?
-        `).bind(ftsQuery, userId, limit).all();
+        `).bind(ftsQuery, userId, userId, userId, limit).all();
 
         results.projects = projectResults.map((row: any) => ({
           id: row.id,
@@ -4320,9 +4322,11 @@ researchRoutes.get('/search', async (c: AppContext) => {
           SELECT id, title, description, status, category, is_public, created_by_id
           FROM research_projects
           WHERE (title LIKE ? OR description LIKE ?)
-            AND (is_public = 1 OR created_by_id = ?)
+            AND (is_public = 1 OR created_by_id = ? OR team_lead_id = ? OR EXISTS (
+              SELECT 1 FROM research_team_members tm WHERE tm.project_id = research_projects.id AND tm.user_id = ?
+            ))
           LIMIT ?
-        `).bind(likeQuery, likeQuery, userId, limit).all();
+        `).bind(likeQuery, likeQuery, userId, userId, userId, limit).all();
 
         results.projects = projectResults.map((row: any) => ({
           id: row.id,
@@ -4347,9 +4351,11 @@ researchRoutes.get('/search', async (c: AppContext) => {
           JOIN research_notes n ON n.id = research_notes_fts.id
           JOIN research_projects p ON n.project_id = p.id
           WHERE research_notes_fts MATCH ?
-            AND (p.is_public = 1 OR p.created_by_id = ?)
+            AND (p.is_public = 1 OR p.created_by_id = ? OR p.team_lead_id = ? OR EXISTS (
+              SELECT 1 FROM research_team_members tm WHERE tm.project_id = p.id AND tm.user_id = ?
+            ))
           LIMIT ?
-        `).bind(ftsQuery, userId, limit).all();
+        `).bind(ftsQuery, userId, userId, userId, limit).all();
 
         results.notes = noteResults.map((row: any) => ({
           id: row.id,
@@ -4368,9 +4374,11 @@ researchRoutes.get('/search', async (c: AppContext) => {
           FROM research_notes n
           JOIN research_projects p ON n.project_id = p.id
           WHERE (n.title LIKE ? OR n.content LIKE ?)
-            AND (p.is_public = 1 OR p.created_by_id = ?)
+            AND (p.is_public = 1 OR p.created_by_id = ? OR p.team_lead_id = ? OR EXISTS (
+              SELECT 1 FROM research_team_members tm WHERE tm.project_id = p.id AND tm.user_id = ?
+            ))
           LIMIT ?
-        `).bind(likeQuery, likeQuery, userId, limit).all();
+        `).bind(likeQuery, likeQuery, userId, userId, userId, limit).all();
 
         results.notes = noteResults.map((row: any) => ({
           id: row.id,
@@ -4394,9 +4402,11 @@ researchRoutes.get('/search', async (c: AppContext) => {
           JOIN research_literature l ON l.id = research_literature_fts.id
           JOIN research_projects p ON l.project_id = p.id
           WHERE research_literature_fts MATCH ?
-            AND (p.is_public = 1 OR p.created_by_id = ?)
+            AND (p.is_public = 1 OR p.created_by_id = ? OR p.team_lead_id = ? OR EXISTS (
+              SELECT 1 FROM research_team_members tm WHERE tm.project_id = p.id AND tm.user_id = ?
+            ))
           LIMIT ?
-        `).bind(ftsQuery, userId, limit).all();
+        `).bind(ftsQuery, userId, userId, userId, limit).all();
 
         results.literature = litResults.map((row: any) => ({
           id: row.id,
@@ -4416,9 +4426,11 @@ researchRoutes.get('/search', async (c: AppContext) => {
           FROM research_literature l
           JOIN research_projects p ON l.project_id = p.id
           WHERE (l.external_title LIKE ? OR l.authors LIKE ? OR l.abstract LIKE ?)
-            AND (p.is_public = 1 OR p.created_by_id = ?)
+            AND (p.is_public = 1 OR p.created_by_id = ? OR p.team_lead_id = ? OR EXISTS (
+              SELECT 1 FROM research_team_members tm WHERE tm.project_id = p.id AND tm.user_id = ?
+            ))
           LIMIT ?
-        `).bind(likeQuery, likeQuery, likeQuery, userId, limit).all();
+        `).bind(likeQuery, likeQuery, likeQuery, userId, userId, userId, limit).all();
 
         results.literature = litResults.map((row: any) => ({
           id: row.id,

@@ -458,7 +458,7 @@ export function PhaseApprovalGate({ projectId, project }: PhaseApprovalGateProps
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleRespondApproval(approval.id, 'approved')}
-                              disabled={respondingId === approval.id && requestingApproval}
+                              disabled={respondingId !== null}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-medium"
                             >
                               <CheckCircle className="w-3.5 h-3.5" />
@@ -466,7 +466,7 @@ export function PhaseApprovalGate({ projectId, project }: PhaseApprovalGateProps
                             </button>
                             <button
                               onClick={() => handleRespondApproval(approval.id, 'rejected')}
-                              disabled={respondingId === approval.id && requestingApproval}
+                              disabled={respondingId !== null}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-medium"
                             >
                               <XCircle className="w-3.5 h-3.5" />
