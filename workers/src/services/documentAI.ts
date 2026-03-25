@@ -3,6 +3,8 @@
  * Provides AI-powered document analysis, summarization, and Q&A
  */
 
+import { AI_DEFAULTS, AI_MODELS } from '../config/aiModels';
+
 // Using native APIs for decompression in Workers environment
 
 interface Env {
@@ -487,10 +489,10 @@ Provide a clear, professional 3-4 sentence summary that:
 
 Summary:`;
 
-    const summaryResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const summaryResponse = await env.AI.run(AI_DEFAULTS.documentAnalysis.model, {
       prompt: summaryPrompt,
-      max_tokens: 300,
-      temperature: 0.3,
+      max_tokens: AI_DEFAULTS.documentAnalysis.summary.max_tokens,
+      temperature: AI_DEFAULTS.documentAnalysis.summary.temperature,
     });
 
     const summary = summaryResponse?.response?.trim() ||
@@ -503,10 +505,10 @@ ${context}
 
 List 5 key points (one per line, no numbering or bullets):`;
 
-    const keyPointsResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const keyPointsResponse = await env.AI.run(AI_DEFAULTS.documentAnalysis.model, {
       prompt: keyPointsPrompt,
-      max_tokens: 400,
-      temperature: 0.3,
+      max_tokens: AI_DEFAULTS.documentAnalysis.keyPoints.max_tokens,
+      temperature: AI_DEFAULTS.documentAnalysis.keyPoints.temperature,
     });
 
     let keyPoints = parseListResponse(keyPointsResponse?.response || '');
@@ -521,10 +523,10 @@ ${context}
 
 Topics (comma-separated):`;
 
-    const topicsResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const topicsResponse = await env.AI.run(AI_DEFAULTS.documentAnalysis.model, {
       prompt: topicsPrompt,
-      max_tokens: 100,
-      temperature: 0.3,
+      max_tokens: AI_DEFAULTS.documentAnalysis.topics.max_tokens,
+      temperature: AI_DEFAULTS.documentAnalysis.topics.temperature,
     });
 
     let topics = parseCommaSeparated(topicsResponse?.response || '');
@@ -600,10 +602,10 @@ Instructions:
 
 Answer:`;
 
-    const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await env.AI.run(AI_DEFAULTS.documentChat.model, {
       prompt,
-      max_tokens: 500,
-      temperature: 0.4,
+      max_tokens: AI_DEFAULTS.documentChat.max_tokens,
+      temperature: AI_DEFAULTS.documentChat.temperature,
     });
 
     return response?.response?.trim() ||

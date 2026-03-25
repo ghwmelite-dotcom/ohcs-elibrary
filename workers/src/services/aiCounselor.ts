@@ -3,6 +3,8 @@
  * Provides AI-powered wellness counseling for Ghana's civil servants
  */
 
+import { AI_DEFAULTS } from '../config/aiModels';
+
 interface Env {
   DB: D1Database;
   AI: any;
@@ -135,10 +137,10 @@ Reply naturally as Dr. Sena:`;
 
     let response;
     try {
-      response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+      response = await env.AI.run(AI_DEFAULTS.counselor.model, {
         prompt: fullPrompt,
-        max_tokens: 300,
-        temperature: 0.85,
+        max_tokens: AI_DEFAULTS.counselor.response.max_tokens,
+        temperature: AI_DEFAULTS.counselor.response.temperature,
       });
       console.log('Dr. Sena AI Response received:', JSON.stringify(response).slice(0, 200));
     } catch (aiError: any) {
@@ -272,10 +274,10 @@ ESCALATE: [YES/NO]
 URGENCY: [low/normal/high/crisis]
 REASON: [brief reason or "none"]`;
 
-    const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await env.AI.run(AI_DEFAULTS.counselor.model, {
       prompt,
-      max_tokens: 100,
-      temperature: 0.2,
+      max_tokens: AI_DEFAULTS.counselor.escalation.max_tokens,
+      temperature: AI_DEFAULTS.counselor.escalation.temperature,
     });
 
     const text = response?.response || '';
@@ -320,10 +322,10 @@ ${conversation}
 
 SUMMARY:`;
 
-    const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await env.AI.run(AI_DEFAULTS.counselor.model, {
       prompt,
-      max_tokens: 150,
-      temperature: 0.3,
+      max_tokens: AI_DEFAULTS.counselor.summary.max_tokens,
+      temperature: AI_DEFAULTS.counselor.summary.temperature,
     });
 
     return response?.response?.trim() || generateFallbackSummary(messages);

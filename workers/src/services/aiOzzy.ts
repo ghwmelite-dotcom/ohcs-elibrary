@@ -4,6 +4,7 @@
  */
 
 import { extractTextFromDocument } from './documentAI';
+import { AI_MODELS, AI_DEFAULTS, EMBEDDING_DIMENSION } from '../config/aiModels';
 
 interface Env {
   DB: D1Database;
@@ -110,7 +111,7 @@ export async function generateEmbedding(
       .trim()
       .slice(0, 8000); // BGE model has token limits
 
-    const response = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
+    const response = await env.AI.run(AI_MODELS.EMBEDDING, {
       text: [cleanText],
     });
 
@@ -118,7 +119,7 @@ export async function generateEmbedding(
       throw new Error('No embedding returned from AI');
     }
 
-    return response.data[0]; // 768-dimensional vector
+    return response.data[0]; // 1024-dimensional vector (bge-m3)
   } catch (error) {
     console.error('Embedding generation error:', error);
     throw error;
@@ -249,7 +250,8 @@ export function chunkDocument(
  */
 export function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length !== b.length) {
-    throw new Error('Vectors must have the same length');
+    // Dimension mismatch (e.g., legacy 768-dim vs new 1024-dim embeddings) — not comparable
+    return -1;
   }
 
   let dotProduct = 0;
@@ -513,10 +515,10 @@ Provide a helpful, accurate response based on the document sources above. If the
 
 Ozzy:`;
 
-      aiResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+      aiResponse = await env.AI.run(AI_DEFAULTS.ozzy.model, {
         prompt: fullPrompt,
-        max_tokens: 700,
-        temperature: 0.7,
+        max_tokens: AI_DEFAULTS.ozzy.max_tokens,
+        temperature: AI_DEFAULTS.ozzy.temperature,
       });
 
       console.log('AI Response received:', JSON.stringify(aiResponse).slice(0, 200));

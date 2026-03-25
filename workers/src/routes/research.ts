@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { Context, Next } from 'hono';
+import { AI_DEFAULTS } from '../config/aiModels';
 
 interface Env {
   DB: D1Database;
@@ -1247,7 +1248,7 @@ ${projectContext.objectives?.length ? `Objectives:\n${projectContext.objectives.
 
     conversationPrompt += `User: ${message}\n\nKofi:`;
 
-    const response = await AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await AI.run(AI_DEFAULTS.research.model, {
       prompt: conversationPrompt,
       max_tokens: 600,
       temperature: 0.7,
@@ -1325,7 +1326,7 @@ Priorities: high, medium, low
 
 JSON Output:`;
 
-    const response = await AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await AI.run(AI_DEFAULTS.research.model, {
       prompt,
       max_tokens: 800,
       temperature: 0.4,
@@ -1504,7 +1505,7 @@ Provide:
 
 Summary:`;
 
-    const response = await AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await AI.run(AI_DEFAULTS.research.model, {
       prompt,
       max_tokens: 400,
       temperature: 0.3,
@@ -1590,7 +1591,7 @@ Format as clean markdown.
 
 Brief:`;
 
-    const response = await AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await AI.run(AI_DEFAULTS.research.model, {
       prompt,
       max_tokens: 1000,
       temperature: 0.4,
@@ -1840,7 +1841,7 @@ Analysis:`;
 Insights:`;
     }
 
-    const response = await AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await AI.run(AI_DEFAULTS.research.model, {
       prompt,
       max_tokens: 500,
       temperature: 0.4,
@@ -2642,7 +2643,7 @@ Publisher: ${publisher || ''}
 DOI: ${doi || ''}
 URL: ${url || ''}`;
 
-      const response = await AI.run('@cf/meta/llama-3.1-8b-instruct', {
+      const response = await AI.run(AI_DEFAULTS.research.model, {
         prompt: `Generate citation formats for this source. Return ONLY the formatted citations, one per line, labeled:
 
 ${citationData}

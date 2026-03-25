@@ -162,10 +162,11 @@ Demo users get access to:
 | Workers AI | LLM & embedding inference |
 
 ### AI Models (Cloudflare Workers AI)
-| Model | Purpose |
-|-------|---------|
-| `@cf/meta/llama-3.1-8b-instruct` | Chat completions for Kwame, Ayo, Kofi |
-| `@cf/baai/bge-base-en-v1.5` | Document embeddings for RAG search |
+| Model | Tier | Purpose |
+|-------|------|---------|
+| `@cf/qwen/qwq-32b` | Heavy | Research, counseling (Dr. Sena), Ozzy RAG, document Q&A |
+| `@cf/meta/llama-4-scout-17b-16e-instruct` | Light | Document summaries, topic extraction, news summarization |
+| `@cf/baai/bge-m3` | Embedding | Multilingual document embeddings for RAG search (1024-dim) |
 
 ### Email Services
 - **Gmail API** - OAuth2-based email delivery

@@ -4,6 +4,7 @@
  */
 
 import { Env } from '../types';
+import { AI_DEFAULTS } from '../config/aiModels';
 
 interface RSSItem {
   title: string;
@@ -699,10 +700,10 @@ Article Content: ${content.slice(0, 2000)}
 
 Summary:`;
 
-    const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const response = await env.AI.run(AI_DEFAULTS.news.model, {
       prompt,
-      max_tokens: 150,
-      temperature: 0.3,
+      max_tokens: AI_DEFAULTS.news.max_tokens,
+      temperature: AI_DEFAULTS.news.temperature,
     });
 
     if (response && response.response) {
