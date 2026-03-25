@@ -59,16 +59,19 @@ CREATE TABLE IF NOT EXISTS research_templates_new (
   description TEXT,
   category TEXT NOT NULL,
   methodology TEXT NOT NULL,
-  structure TEXT NOT NULL,
   default_objectives TEXT,
+  suggested_phases TEXT,
+  guideline_url TEXT,
+  is_official INTEGER DEFAULT 0,
+  usage_count INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  structure TEXT,
   suggested_literature TEXT,
   estimated_duration_days INTEGER,
   difficulty_level TEXT DEFAULT 'intermediate' CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
-  usage_count INTEGER DEFAULT 0,
   is_featured INTEGER DEFAULT 0,
   is_public INTEGER DEFAULT 1,
   created_by_id TEXT REFERENCES users(id),
-  created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -148,7 +151,8 @@ CREATE TABLE IF NOT EXISTS research_contributions_new (
   contribution_type TEXT NOT NULL CHECK (contribution_type IN (
     'note_created', 'note_edited', 'citation_added', 'literature_added',
     'discussion_started', 'discussion_replied', 'review_submitted',
-    'insight_generated', 'brief_generated', 'milestone_completed'
+    'insight_generated', 'brief_generated', 'milestone_completed',
+    'export_generated', 'file_uploaded'
   )),
   contribution_count INTEGER DEFAULT 1,
   points_earned INTEGER DEFAULT 0,
