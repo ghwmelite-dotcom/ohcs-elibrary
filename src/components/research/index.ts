@@ -11,3 +11,5 @@ export { FileAttachments } from './FileAttachments';
 export { AdvancedAIPanel } from './AdvancedAIPanel';
 export { PhaseApprovalGate } from './PhaseApprovalGate';
 export { ErrorAlert } from './ErrorAlert';
+export { ContributionsPanel } from './ContributionsPanel';
+export { ResearchSearch } from './ResearchSearch';

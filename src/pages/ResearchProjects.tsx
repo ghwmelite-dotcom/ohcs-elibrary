@@ -18,9 +18,9 @@ import {
   RESEARCH_STATUSES,
   RESEARCH_METHODOLOGIES,
 } from '@/stores/researchStore';
-import { ProjectCard, CreateProjectModal } from '@/components/research';
+import { ProjectCard, CreateProjectModal, ResearchSearch } from '@/components/research';
 import { cn } from '@/utils/cn';
-import type { ResearchCategory, ResearchProjectStatus, ResearchMethodology } from '@/types';
+import type { ResearchCategory, ResearchProjectStatus, ResearchMethodology, ResearchSearchResult } from '@/types';
 
 export default function ResearchProjects() {
   const navigate = useNavigate();
@@ -104,6 +104,20 @@ export default function ResearchProjects() {
     setFilter({ page });
     fetchProjects();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSearchResultClick = (result: ResearchSearchResult) => {
+    switch (result.resultType) {
+      case 'project':
+        navigate(`/research/projects/${result.id}`);
+        break;
+      case 'note':
+        navigate(`/research/projects/${result.projectId}?tab=notes`);
+        break;
+      case 'literature':
+        navigate(`/research/projects/${result.projectId}?tab=literature`);
+        break;
+    }
   };
 
   const activeFiltersCount = [
@@ -236,6 +250,11 @@ export default function ResearchProjects() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Research Hub Search */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <ResearchSearch onResultClick={handleSearchResultClick} />
       </div>
 
       {/* Content */}

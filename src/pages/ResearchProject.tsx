@@ -49,7 +49,7 @@ import {
   RESEARCH_PHASES,
   RESEARCH_METHODOLOGIES,
 } from '@/stores/researchStore';
-import { PhaseProgress, KofiChat, CollaborationPanel, AnalyticsPanel, MilestonesPanel, ExportPanel, FileAttachments, AdvancedAIPanel, PhaseApprovalGate } from '@/components/research';
+import { PhaseProgress, KofiChat, CollaborationPanel, AnalyticsPanel, MilestonesPanel, ExportPanel, FileAttachments, AdvancedAIPanel, PhaseApprovalGate, ContributionsPanel } from '@/components/research';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -674,6 +674,9 @@ export default function ResearchProject() {
               exit={{ opacity: 0, y: -10 }}
             >
               <AnalyticsPanel projectId={id!} />
+              <div className="mt-8">
+                <ContributionsPanel projectId={id!} />
+              </div>
             </motion.div>
           )}
 
