@@ -1360,15 +1360,14 @@ JSON Output:`;
       const insightId = generateId();
       await DB.prepare(`
         INSERT INTO research_insights (
-          id, project_id, type, title, content, source, confidence, priority, is_ai_generated, created_at
-        ) VALUES (?, ?, ?, ?, ?, 'ai_analysis', 0.8, ?, 1, datetime('now'))
+          id, project_id, type, title, content, sources, confidence, is_ai_generated, created_at
+        ) VALUES (?, ?, ?, ?, ?, 'ai_analysis', 0.8, 1, datetime('now'))
       `).bind(
         insightId,
         projectId,
         insight.type || 'recommendation',
         insight.title || 'Insight',
-        insight.content || '',
-        insight.priority || 'medium'
+        insight.content || ''
       ).run();
 
       savedInsights.push({
@@ -3685,7 +3684,7 @@ researchRoutes.post('/projects/:id/exports', requireAuth, async (c: AppContext) 
     `).bind(projectId).all();
 
     const { results: milestones } = await DB.prepare(`
-      SELECT * FROM research_milestones WHERE project_id = ? ORDER BY due_date
+      SELECT * FROM research_milestones WHERE project_id = ? ORDER BY target_date
     `).bind(projectId).all();
 
     const projectData = { project, notes, citations, insights, briefs, literature, milestones };
@@ -4610,9 +4609,9 @@ researchRoutes.post('/projects/:id/phase-approval', requireAuth, async (c: AppCo
 
     const approvalId = generateId();
     await DB.prepare(`
-      INSERT INTO research_phase_approvals (id, project_id, requested_by_id, approver_id, current_phase, requested_phase, justification, status, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'), datetime('now'))
-    `).bind(approvalId, projectId, userId, approverId, currentPhase, requestedPhase, justification || null).run();
+      INSERT INTO research_phase_approvals (id, project_id, phase, requested_by_id, approved_by_id, comments, status, requested_at)
+      VALUES (?, ?, ?, ?, ?, ?, 'pending', datetime('now'))
+    `).bind(approvalId, projectId, requestedPhase || currentPhase, userId, approverId || null, justification || null).run();
 
     await logActivity(DB, projectId, userId, 'phase_approval_requested', `Requested phase change: ${currentPhase} -> ${requestedPhase}`);
 
@@ -4667,7 +4666,7 @@ researchRoutes.put('/projects/:id/phase-approval/:approvalId', requireAuth, asyn
       return c.json({ error: 'Approval request not found' }, 404);
     }
 
-    if (approval.approver_id !== userId) {
+    if (approval.approved_by_id !== userId) {
       return c.json({ error: 'Only the designated approver can approve/reject' }, 403);
     }
 
@@ -4678,19 +4677,19 @@ researchRoutes.put('/projects/:id/phase-approval/:approvalId', requireAuth, asyn
     // Update approval status
     await DB.prepare(`
       UPDATE research_phase_approvals
-      SET status = ?, comments = ?, decided_at = datetime('now'), updated_at = datetime('now')
+      SET status = ?, comments = ?, resolved_at = datetime('now')
       WHERE id = ?
     `).bind(status, comments || null, approvalId).run();
 
     // If approved, advance the project phase
     if (status === 'approved') {
       await DB.prepare(`
-        UPDATE research_projects SET current_phase = ?, updated_at = datetime('now') WHERE id = ?
-      `).bind(approval.requested_phase, projectId).run();
+        UPDATE research_projects SET phase = ?, updated_at = datetime('now') WHERE id = ?
+      `).bind(approval.phase, projectId).run();
 
-      await logActivity(DB, projectId, userId, 'phase_advanced', `Phase advanced to: ${approval.requested_phase}`);
+      await logActivity(DB, projectId, userId, 'phase_advanced', `Phase advanced to: ${approval.phase}`);
     } else {
-      await logActivity(DB, projectId, userId, 'phase_approval_rejected', `Phase change rejected: ${approval.current_phase} -> ${approval.requested_phase}`);
+      await logActivity(DB, projectId, userId, 'phase_approval_rejected', `Phase change rejected for: ${approval.phase}`);
     }
 
     // Notify the requester
@@ -4784,10 +4783,10 @@ researchRoutes.post('/projects/:id/ethics', requireAuth, async (c: AppContext) =
     const { DB } = c.env;
     const userId = c.get('userId')!;
     const projectId = c.req.param('id');
-    const { boardName, submissionType, status, referenceNumber, approvalDate, expiryDate, conditions, submittedDate } = await c.req.json();
+    const { boardName, approvalBody, status, referenceNumber, approvalDate, expiryDate, conditions, submittedDate } = await c.req.json();
 
-    if (!boardName) {
-      return c.json({ error: 'boardName is required' }, 400);
+    if (!boardName && !approvalBody) {
+      return c.json({ error: 'approvalBody is required' }, 400);
     }
 
     const isMember = await isProjectMember(DB, projectId, userId);
@@ -4797,13 +4796,12 @@ researchRoutes.post('/projects/:id/ethics', requireAuth, async (c: AppContext) =
 
     const ethicsId = generateId();
     await DB.prepare(`
-      INSERT INTO research_ethics_approvals (id, project_id, board_name, submission_type, status, reference_number, approval_date, expiry_date, conditions, submitted_date, submitted_by_id, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+      INSERT INTO research_ethics_approvals (id, project_id, approval_body, status, reference_number, approval_date, expiry_date, conditions, submitted_date, created_by_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `).bind(
       ethicsId,
       projectId,
-      boardName,
-      submissionType || 'initial',
+      boardName || approvalBody,
       status || 'pending',
       referenceNumber || null,
       approvalDate || null,
@@ -4845,7 +4843,7 @@ researchRoutes.get('/projects/:id/ethics', async (c: AppContext) => {
     const { results } = await DB.prepare(`
       SELECT ea.*, u.displayName as submittedByName
       FROM research_ethics_approvals ea
-      LEFT JOIN users u ON ea.submitted_by_id = u.id
+      LEFT JOIN users u ON ea.created_by_id = u.id
       WHERE ea.project_id = ?
       ORDER BY ea.created_at DESC
     `).bind(projectId).all();
@@ -4853,8 +4851,8 @@ researchRoutes.get('/projects/:id/ethics', async (c: AppContext) => {
     const items = results.map((row: any) => ({
       id: row.id,
       projectId: row.project_id,
-      boardName: row.board_name,
-      submissionType: row.submission_type,
+      boardName: row.approval_body,
+      approvalBody: row.approval_body,
       status: row.status,
       referenceNumber: row.reference_number,
       approvalDate: row.approval_date,
@@ -4862,7 +4860,7 @@ researchRoutes.get('/projects/:id/ethics', async (c: AppContext) => {
       conditions: row.conditions,
       submittedDate: row.submitted_date,
       submittedBy: row.submittedByName,
-      submittedById: row.submitted_by_id,
+      submittedById: row.created_by_id,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }));
