@@ -13,14 +13,13 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { useAuthStore } from '@/stores/authStore';
+import { useResearchApi } from '@/hooks/useResearchApi';
+import { ErrorAlert } from './ErrorAlert';
 
 interface AdvancedAIPanelProps {
   projectId: string;
   project: any;
 }
-
-const API_BASE = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
 
 type AITab = 'literature-gaps' | 'question-refinement' | 'methodology' | 'auto-tags' | 'cross-insights';
 
@@ -61,7 +60,7 @@ interface CrossInsightResult {
 }
 
 export function AdvancedAIPanel({ projectId, project }: AdvancedAIPanelProps) {
-  const { token } = useAuthStore();
+  const { authFetch } = useResearchApi();
   const [activeTab, setActiveTab] = useState<AITab>('literature-gaps');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,17 +73,6 @@ export function AdvancedAIPanel({ projectId, project }: AdvancedAIPanelProps) {
   const [crossInsights, setCrossInsights] = useState<CrossInsightResult | null>(null);
   const [addedTags, setAddedTags] = useState<Set<string>>(new Set());
 
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
-
   const runAnalysis = async () => {
     setLoading(true);
     setError(null);
@@ -95,7 +83,7 @@ export function AdvancedAIPanel({ projectId, project }: AdvancedAIPanelProps) {
       switch (activeTab) {
         case 'literature-gaps':
           response = await authFetch(
-            `${API_BASE}/api/v1/research/projects/${projectId}/ai/literature-gaps`,
+            `/projects/${projectId}/ai/literature-gaps`,
             { method: 'POST', body: JSON.stringify({}) }
           );
           if (response.ok) {
@@ -108,7 +96,7 @@ export function AdvancedAIPanel({ projectId, project }: AdvancedAIPanelProps) {
 
         case 'question-refinement':
           response = await authFetch(
-            `${API_BASE}/api/v1/research/projects/${projectId}/ai/refine-question`,
+            `/projects/${projectId}/ai/refine-question`,
             {
               method: 'POST',
               body: JSON.stringify({
@@ -128,7 +116,7 @@ export function AdvancedAIPanel({ projectId, project }: AdvancedAIPanelProps) {
 
         case 'methodology':
           response = await authFetch(
-            `${API_BASE}/api/v1/research/projects/${projectId}/ai/suggest-methodology`,
+            `/projects/${projectId}/ai/suggest-methodology`,
             {
               method: 'POST',
               body: JSON.stringify({
@@ -147,7 +135,7 @@ export function AdvancedAIPanel({ projectId, project }: AdvancedAIPanelProps) {
 
         case 'auto-tags':
           response = await authFetch(
-            `${API_BASE}/api/v1/research/projects/${projectId}/ai/auto-tags`,
+            `/projects/${projectId}/ai/auto-tags`,
             { method: 'POST', body: JSON.stringify({}) }
           );
           if (response.ok) {
@@ -160,7 +148,7 @@ export function AdvancedAIPanel({ projectId, project }: AdvancedAIPanelProps) {
 
         case 'cross-insights':
           response = await authFetch(
-            `${API_BASE}/api/v1/research/projects/${projectId}/ai/cross-insights`
+            `/projects/${projectId}/ai/cross-insights`
           );
           if (response.ok) {
             const data = await response.json();
@@ -265,11 +253,9 @@ export function AdvancedAIPanel({ projectId, project }: AdvancedAIPanelProps) {
               </div>
 
               {/* Error */}
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
-                  {error}
-                </div>
-              )}
+              <AnimatePresence>
+                {error && <ErrorAlert message={error} onDismiss={() => setError(null)} />}
+              </AnimatePresence>
 
               {/* Results */}
               {!getResultForTab() && !loading && (

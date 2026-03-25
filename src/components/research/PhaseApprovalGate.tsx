@@ -15,15 +15,14 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { useAuthStore } from '@/stores/authStore';
+import { useResearchApi } from '@/hooks/useResearchApi';
+import { ErrorAlert } from './ErrorAlert';
 import type { ResearchPhaseApproval, ResearchEthicsApproval } from '@/types';
 
 interface PhaseApprovalGateProps {
   projectId: string;
   project: any;
 }
-
-const API_BASE = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
 
 type GovernanceSection = 'phase-approval' | 'ethics' | 'audit';
 
@@ -36,8 +35,9 @@ const STATUS_CONFIG = {
 };
 
 export function PhaseApprovalGate({ projectId, project }: PhaseApprovalGateProps) {
-  const { token, user } = useAuthStore();
+  const { authFetch, API_BASE } = useResearchApi();
   const [activeSection, setActiveSection] = useState<GovernanceSection>('phase-approval');
+  const [error, setError] = useState<string | null>(null);
 
   // Phase Approval State
   const [approvals, setApprovals] = useState<ResearchPhaseApproval[]>([]);
@@ -64,30 +64,23 @@ export function PhaseApprovalGate({ projectId, project }: PhaseApprovalGateProps
   // Audit State
   const [exportingAudit, setExportingAudit] = useState(false);
 
-  const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  }, [token]);
-
   // Fetch Phase Approvals
   const fetchApprovals = useCallback(async () => {
     setApprovalsLoading(true);
+    setError(null);
     try {
       const response = await authFetch(
-        `${API_BASE}/api/v1/research/projects/${projectId}/phase-approvals`
+        `/projects/${projectId}/phase-approvals`
       );
       if (response.ok) {
         const data = await response.json();
         setApprovals(data.items || data.approvals || []);
+      } else {
+        setError('Failed to load phase approvals.');
       }
     } catch (err) {
       console.error('Failed to fetch approvals:', err);
+      setError('Failed to load phase approvals.');
     } finally {
       setApprovalsLoading(false);
     }
@@ -96,16 +89,20 @@ export function PhaseApprovalGate({ projectId, project }: PhaseApprovalGateProps
   // Fetch Ethics
   const fetchEthics = useCallback(async () => {
     setEthicsLoading(true);
+    setError(null);
     try {
       const response = await authFetch(
-        `${API_BASE}/api/v1/research/projects/${projectId}/ethics`
+        `/projects/${projectId}/ethics`
       );
       if (response.ok) {
         const data = await response.json();
         setEthics(data.items || data.ethics || []);
+      } else {
+        setError('Failed to load ethics records.');
       }
     } catch (err) {
       console.error('Failed to fetch ethics:', err);
+      setError('Failed to load ethics records.');
     } finally {
       setEthicsLoading(false);
     }
@@ -125,7 +122,7 @@ export function PhaseApprovalGate({ projectId, project }: PhaseApprovalGateProps
     setRequestingApproval(true);
     try {
       const response = await authFetch(
-        `${API_BASE}/api/v1/research/projects/${projectId}/phase-approval`,
+        `/projects/${projectId}/phase-approval`,
         {
           method: 'POST',
           body: JSON.stringify({
@@ -151,7 +148,7 @@ export function PhaseApprovalGate({ projectId, project }: PhaseApprovalGateProps
     setRespondingId(approvalId);
     try {
       const response = await authFetch(
-        `${API_BASE}/api/v1/research/projects/${projectId}/phase-approval/${approvalId}`,
+        `/projects/${projectId}/phase-approval/${approvalId}`,
         {
           method: 'PUT',
           body: JSON.stringify({ status, comments: responseComments }),
@@ -174,7 +171,7 @@ export function PhaseApprovalGate({ projectId, project }: PhaseApprovalGateProps
     setSavingEthics(true);
     try {
       const response = await authFetch(
-        `${API_BASE}/api/v1/research/projects/${projectId}/ethics`,
+        `/projects/${projectId}/ethics`,
         {
           method: 'POST',
           body: JSON.stringify(ethicsForm),
@@ -201,15 +198,10 @@ export function PhaseApprovalGate({ projectId, project }: PhaseApprovalGateProps
   // Export Audit Trail
   const handleExportAudit = async () => {
     setExportingAudit(true);
+    setError(null);
     try {
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(
-        `${API_BASE}/api/v1/research/projects/${projectId}/audit-trail/export`,
-        { headers }
+      const response = await authFetch(
+        `/projects/${projectId}/audit-trail/export`
       );
 
       if (response.ok) {
@@ -222,9 +214,12 @@ export function PhaseApprovalGate({ projectId, project }: PhaseApprovalGateProps
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+      } else {
+        setError('Failed to export audit trail. Please try again.');
       }
     } catch (err) {
       console.error('Failed to export audit trail:', err);
+      setError('Failed to export audit trail. Please try again.');
     } finally {
       setExportingAudit(false);
     }
@@ -244,6 +239,11 @@ export function PhaseApprovalGate({ projectId, project }: PhaseApprovalGateProps
           Phase approvals, ethics tracking, and audit trail
         </p>
       </div>
+
+      {/* Error Alert */}
+      <AnimatePresence>
+        {error && <ErrorAlert message={error} onDismiss={() => setError(null)} />}
+      </AnimatePresence>
 
       {/* Section Navigation */}
       <div className="flex gap-2">

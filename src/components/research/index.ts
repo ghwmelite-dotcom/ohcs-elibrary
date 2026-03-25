@@ -10,3 +10,4 @@ export { TemplatesGallery } from './TemplatesGallery';
 export { FileAttachments } from './FileAttachments';
 export { AdvancedAIPanel } from './AdvancedAIPanel';
 export { PhaseApprovalGate } from './PhaseApprovalGate';
+export { ErrorAlert } from './ErrorAlert';

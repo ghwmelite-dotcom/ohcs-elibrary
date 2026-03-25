@@ -13,14 +13,13 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { useAuthStore } from '@/stores/authStore';
+import { useResearchApi } from '@/hooks/useResearchApi';
+import { ErrorAlert } from './ErrorAlert';
 import type { ResearchAttachment } from '@/types';
 
 interface FileAttachmentsProps {
   projectId: string;
 }
-
-const API_BASE = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
 
 const CATEGORIES = [
   { value: 'general', label: 'General', color: 'bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300' },
@@ -54,7 +53,7 @@ function getCategoryConfig(category: string) {
 }
 
 export function FileAttachments({ projectId }: FileAttachmentsProps) {
-  const { token } = useAuthStore();
+  const { authFetch, API_BASE } = useResearchApi();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<ResearchAttachment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,30 +63,22 @@ export function FileAttachments({ projectId }: FileAttachmentsProps) {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
-    const headers: Record<string, string> = {
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  }, [token]);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAttachments = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await authFetch(
-        `${API_BASE}/api/v1/research/projects/${projectId}/attachments`,
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+      const response = await authFetch(`/projects/${projectId}/attachments`);
       if (response.ok) {
         const data = await response.json();
         setAttachments(data.items || data.attachments || []);
+      } else {
+        setError('Failed to load attachments. Please try again.');
       }
     } catch (err) {
       console.error('Failed to fetch attachments:', err);
+      setError('Failed to load attachments. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -100,25 +91,25 @@ export function FileAttachments({ projectId }: FileAttachmentsProps) {
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setUploading(true);
+    setError(null);
     try {
       for (const file of Array.from(files)) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('category', selectedCategory);
 
-        const headers: Record<string, string> = {};
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        await fetch(
-          `${API_BASE}/api/v1/research/projects/${projectId}/attachments`,
-          { method: 'POST', headers, body: formData }
+        const response = await authFetch(
+          `/projects/${projectId}/attachments`,
+          { method: 'POST', body: formData }
         );
+        if (!response.ok) {
+          setError('Failed to upload file. Please try again.');
+        }
       }
       await fetchAttachments();
     } catch (err) {
       console.error('Failed to upload file:', err);
+      setError('Failed to upload file. Please try again.');
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -133,10 +124,6 @@ export function FileAttachments({ projectId }: FileAttachmentsProps) {
     a.href = url;
     a.download = fileName;
     a.target = '_blank';
-    // Add auth token as query param for direct download
-    if (token) {
-      a.href = `${url}?token=${encodeURIComponent(token)}`;
-    }
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -144,16 +131,20 @@ export function FileAttachments({ projectId }: FileAttachmentsProps) {
 
   const handleDelete = async (attachmentId: string) => {
     setDeletingId(attachmentId);
+    setError(null);
     try {
       const response = await authFetch(
-        `${API_BASE}/api/v1/research/projects/${projectId}/attachments/${attachmentId}`,
-        { method: 'DELETE', headers: { 'Content-Type': 'application/json' } }
+        `/projects/${projectId}/attachments/${attachmentId}`,
+        { method: 'DELETE' }
       );
       if (response.ok) {
         setAttachments(prev => prev.filter(a => a.id !== attachmentId));
+      } else {
+        setError('Failed to delete attachment. Please try again.');
       }
     } catch (err) {
       console.error('Failed to delete attachment:', err);
+      setError('Failed to delete attachment. Please try again.');
     } finally {
       setDeletingId(null);
     }
@@ -191,6 +182,11 @@ export function FileAttachments({ projectId }: FileAttachmentsProps) {
           Upload and manage research documents and files
         </p>
       </div>
+
+      {/* Error Alert */}
+      <AnimatePresence>
+        {error && <ErrorAlert message={error} onDismiss={() => setError(null)} />}
+      </AnimatePresence>
 
       {/* Upload Area */}
       <div

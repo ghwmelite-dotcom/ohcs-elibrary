@@ -15,15 +15,14 @@ import {
   Settings2,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { useAuthStore } from '@/stores/authStore';
+import { useResearchApi } from '@/hooks/useResearchApi';
+import { ErrorAlert } from './ErrorAlert';
 import type { ResearchExport, ExportType, FormatStyle } from '@/types';
 
 interface ExportPanelProps {
   projectId: string;
   projectTitle: string;
 }
-
-const API_BASE = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
 
 const EXPORT_TYPES: Record<ExportType, { label: string; icon: typeof FileText; description: string }> = {
   markdown: { label: 'Markdown', icon: FileCode, description: 'Plain text with formatting' },
@@ -53,13 +52,14 @@ const CONTENT_SECTIONS = [
 ];
 
 export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
-  const { token } = useAuthStore();
+  const { authFetch, API_BASE } = useResearchApi();
   const [exports, setExports] = useState<ResearchExport[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState<string | null>(null);
   const [previewContent, setPreviewContent] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Export options
   const [exportType, setExportType] = useState<ExportType>('markdown');
@@ -68,27 +68,20 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
   const [includeCitations, setIncludeCitations] = useState(true);
   const [showOptions, setShowOptions] = useState(false);
 
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
-
   const fetchExports = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await authFetch(`${API_BASE}/api/v1/research/projects/${projectId}/exports`);
+      const response = await authFetch(`/projects/${projectId}/exports`);
       if (response.ok) {
         const data = await response.json();
         setExports(data.items || []);
+      } else {
+        setError('Failed to load export history.');
       }
     } catch (err) {
       console.error('Failed to fetch exports:', err);
+      setError('Failed to load export history.');
     } finally {
       setLoading(false);
     }
@@ -100,8 +93,9 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
 
   const handleGenerateExport = async () => {
     setGenerating(true);
+    setError(null);
     try {
-      const response = await authFetch(`${API_BASE}/api/v1/research/projects/${projectId}/exports`, {
+      const response = await authFetch(`/projects/${projectId}/exports`, {
         method: 'POST',
         body: JSON.stringify({
           exportType,
@@ -117,9 +111,12 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
         setPreviewContent(data.content || data.markdown || '');
         setShowPreview('new');
         await fetchExports();
+      } else {
+        setError('Failed to generate export. Please try again.');
       }
     } catch (err) {
       console.error('Failed to generate export:', err);
+      setError('Failed to generate export. Please try again.');
     } finally {
       setGenerating(false);
     }
@@ -167,6 +164,11 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
           Generate and download your research in various formats
         </p>
       </div>
+
+      {/* Error Alert */}
+      <AnimatePresence>
+        {error && <ErrorAlert message={error} onDismiss={() => setError(null)} />}
+      </AnimatePresence>
 
       {/* Export Generator */}
       <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden">
@@ -410,7 +412,7 @@ export function ExportPanel({ projectId, projectTitle }: ExportPanelProps) {
                       onClick={() => {
                         const url = `${API_BASE}/api/v1/research/projects/${projectId}/exports/${exp.id}/download`;
                         const a = document.createElement('a');
-                        a.href = token ? `${url}?token=${encodeURIComponent(token)}` : url;
+                        a.href = url;
                         a.download = `${exp.title || 'export'}.md`;
                         a.target = '_blank';
                         document.body.appendChild(a);

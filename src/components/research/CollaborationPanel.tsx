@@ -30,7 +30,8 @@ import {
   History,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { useAuthStore } from '@/stores/authStore';
+import { useResearchApi } from '@/hooks/useResearchApi';
+import { ErrorAlert } from './ErrorAlert';
 import type {
   ResearchNote,
   ResearchCitation,
@@ -38,8 +39,6 @@ import type {
   ResearchDiscussion,
   ResearchDiscussionReply,
 } from '@/types';
-
-const API_BASE = '/api/v1';
 
 // Note Types with colors
 const NOTE_TYPES = [
@@ -70,32 +69,27 @@ interface CollaborationPanelProps {
 }
 
 export function CollaborationPanel({ projectId, activeTab, canEdit }: CollaborationPanelProps) {
-  const { token } = useAuthStore();
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    return fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options.headers,
-      },
-    });
-  };
+  const { authFetch, API_BASE } = useResearchApi();
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <div className="space-y-6">
+      {/* Error Alert */}
+      <AnimatePresence>
+        {error && <ErrorAlert message={error} onDismiss={() => setError(null)} />}
+      </AnimatePresence>
+
       {activeTab === 'notes' && (
-        <NotesTab projectId={projectId} canEdit={canEdit} authFetch={authFetch} />
+        <NotesTab projectId={projectId} canEdit={canEdit} authFetch={authFetch} onError={setError} />
       )}
       {activeTab === 'citations' && (
-        <CitationsTab projectId={projectId} canEdit={canEdit} authFetch={authFetch} />
+        <CitationsTab projectId={projectId} canEdit={canEdit} authFetch={authFetch} apiBase={API_BASE} onError={setError} />
       )}
       {activeTab === 'reviews' && (
-        <ReviewsTab projectId={projectId} canEdit={canEdit} authFetch={authFetch} />
+        <ReviewsTab projectId={projectId} canEdit={canEdit} authFetch={authFetch} onError={setError} />
       )}
       {activeTab === 'discussions' && (
-        <DiscussionsTab projectId={projectId} canEdit={canEdit} authFetch={authFetch} />
+        <DiscussionsTab projectId={projectId} canEdit={canEdit} authFetch={authFetch} onError={setError} />
       )}
     </div>
   );
@@ -108,10 +102,11 @@ export function CollaborationPanel({ projectId, activeTab, canEdit }: Collaborat
 interface NotesTabProps {
   projectId: string;
   canEdit: boolean;
-  authFetch: (url: string, options?: RequestInit) => Promise<Response>;
+  authFetch: (path: string, options?: RequestInit) => Promise<Response>;
+  onError: (msg: string | null) => void;
 }
 
-function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
+function NotesTab({ projectId, canEdit, authFetch, onError }: NotesTabProps) {
   const [notes, setNotes] = useState<ResearchNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
@@ -131,7 +126,7 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
   const fetchNotes = async () => {
     setIsLoading(true);
     try {
-      const res = await authFetch(`${API_BASE}/research/projects/${projectId}/notes`);
+      const res = await authFetch(`/projects/${projectId}/notes`);
       if (res.ok) {
         const data = await res.json();
         setNotes(data.items || []);
@@ -149,8 +144,8 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
 
     try {
       const url = editingNote
-        ? `${API_BASE}/research/projects/${projectId}/notes/${editingNote.id}`
-        : `${API_BASE}/research/projects/${projectId}/notes`;
+        ? `/projects/${projectId}/notes/${editingNote.id}`
+        : `/projects/${projectId}/notes`;
 
       const res = await authFetch(url, {
         method: editingNote ? 'PUT' : 'POST',
@@ -172,7 +167,7 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
     if (!confirm('Delete this note?')) return;
 
     try {
-      await authFetch(`${API_BASE}/research/projects/${projectId}/notes/${noteId}`, {
+      await authFetch(`/projects/${projectId}/notes/${noteId}`, {
         method: 'DELETE',
       });
       await fetchNotes();
@@ -183,7 +178,7 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
 
   const handlePin = async (note: ResearchNote) => {
     try {
-      await authFetch(`${API_BASE}/research/projects/${projectId}/notes/${note.id}`, {
+      await authFetch(`/projects/${projectId}/notes/${note.id}`, {
         method: 'PUT',
         body: JSON.stringify({ isPinned: !note.isPinned }),
       });
@@ -407,10 +402,12 @@ function NotesTab({ projectId, canEdit, authFetch }: NotesTabProps) {
 interface CitationsTabProps {
   projectId: string;
   canEdit: boolean;
-  authFetch: (url: string, options?: RequestInit) => Promise<Response>;
+  authFetch: (path: string, options?: RequestInit) => Promise<Response>;
+  apiBase: string;
+  onError: (msg: string | null) => void;
 }
 
-function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
+function CitationsTab({ projectId, canEdit, authFetch, apiBase, onError }: CitationsTabProps) {
   const [citations, setCitations] = useState<ResearchCitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -439,7 +436,7 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
   const fetchCitations = async () => {
     setIsLoading(true);
     try {
-      const res = await authFetch(`${API_BASE}/research/projects/${projectId}/citations`);
+      const res = await authFetch(`/projects/${projectId}/citations`);
       if (res.ok) {
         const data = await res.json();
         setCitations(data.items || []);
@@ -456,7 +453,7 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
     setIsSaving(true);
 
     try {
-      const res = await authFetch(`${API_BASE}/research/projects/${projectId}/citations`, {
+      const res = await authFetch(`/projects/${projectId}/citations`, {
         method: 'POST',
         body: JSON.stringify({
           ...formData,
@@ -491,7 +488,7 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
     if (!confirm('Delete this citation?')) return;
 
     try {
-      await authFetch(`${API_BASE}/research/projects/${projectId}/citations/${citationId}`, {
+      await authFetch(`/projects/${projectId}/citations/${citationId}`, {
         method: 'DELETE',
       });
       await fetchCitations();
@@ -508,7 +505,7 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
   };
 
   const handleExport = async (format: string) => {
-    window.open(`${API_BASE}/research/projects/${projectId}/citations/export?format=${format}`, '_blank');
+    window.open(`${apiBase}/api/v1/research/projects/${projectId}/citations/export?format=${format}`, '_blank');
   };
 
   if (isLoading) {
@@ -756,10 +753,11 @@ function CitationsTab({ projectId, canEdit, authFetch }: CitationsTabProps) {
 interface ReviewsTabProps {
   projectId: string;
   canEdit: boolean;
-  authFetch: (url: string, options?: RequestInit) => Promise<Response>;
+  authFetch: (path: string, options?: RequestInit) => Promise<Response>;
+  onError: (msg: string | null) => void;
 }
 
-function ReviewsTab({ projectId, canEdit, authFetch }: ReviewsTabProps) {
+function ReviewsTab({ projectId, canEdit, authFetch, onError }: ReviewsTabProps) {
   const [reviews, setReviews] = useState<ResearchReview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedReview, setExpandedReview] = useState<string | null>(null);
@@ -771,7 +769,7 @@ function ReviewsTab({ projectId, canEdit, authFetch }: ReviewsTabProps) {
   const fetchReviews = async () => {
     setIsLoading(true);
     try {
-      const res = await authFetch(`${API_BASE}/research/projects/${projectId}/reviews`);
+      const res = await authFetch(`/projects/${projectId}/reviews`);
       if (res.ok) {
         const data = await res.json();
         setReviews(data.items || []);
@@ -932,10 +930,11 @@ function ReviewsTab({ projectId, canEdit, authFetch }: ReviewsTabProps) {
 interface DiscussionsTabProps {
   projectId: string;
   canEdit: boolean;
-  authFetch: (url: string, options?: RequestInit) => Promise<Response>;
+  authFetch: (path: string, options?: RequestInit) => Promise<Response>;
+  onError: (msg: string | null) => void;
 }
 
-function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) {
+function DiscussionsTab({ projectId, canEdit, authFetch, onError }: DiscussionsTabProps) {
   const [discussions, setDiscussions] = useState<ResearchDiscussion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -962,7 +961,7 @@ function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) 
   const fetchDiscussions = async () => {
     setIsLoading(true);
     try {
-      const res = await authFetch(`${API_BASE}/research/projects/${projectId}/discussions`);
+      const res = await authFetch(`/projects/${projectId}/discussions`);
       if (res.ok) {
         const data = await res.json();
         setDiscussions(data.items || []);
@@ -976,7 +975,7 @@ function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) 
 
   const fetchReplies = async (discussionId: string) => {
     try {
-      const res = await authFetch(`${API_BASE}/research/discussions/${discussionId}/replies`);
+      const res = await authFetch(`/discussions/${discussionId}/replies`);
       if (res.ok) {
         const data = await res.json();
         setReplies(data.items || []);
@@ -991,7 +990,7 @@ function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) 
     setIsSaving(true);
 
     try {
-      const res = await authFetch(`${API_BASE}/research/projects/${projectId}/discussions`, {
+      const res = await authFetch(`/projects/${projectId}/discussions`, {
         method: 'POST',
         body: JSON.stringify({ title, initialMessage }),
       });
@@ -1014,7 +1013,7 @@ function DiscussionsTab({ projectId, canEdit, authFetch }: DiscussionsTabProps) 
     setIsSending(true);
 
     try {
-      const res = await authFetch(`${API_BASE}/research/discussions/${selectedDiscussion}/replies`, {
+      const res = await authFetch(`/discussions/${selectedDiscussion}/replies`, {
         method: 'POST',
         body: JSON.stringify({ content: newReply }),
       });
