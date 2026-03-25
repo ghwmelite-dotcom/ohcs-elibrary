@@ -179,9 +179,6 @@ interface ResearchActions {
   updateBrief: (projectId: string, briefId: string, data: Partial<ResearchBrief>) => Promise<void>;
   deleteBrief: (projectId: string, briefId: string) => Promise<void>;
 
-  // AI Analysis
-  analyzeText: (text: string, analysisType?: string) => Promise<string>;
-
   // Comments
   fetchComments: (projectId: string) => Promise<void>;
   addComment: (projectId: string, content: string, parentId?: string) => Promise<void>;
@@ -675,24 +672,6 @@ export const useResearchStore = create<ResearchStore>()(
           }));
         } catch (error) {
           console.error('Failed to delete brief:', error);
-          throw error;
-        }
-      },
-
-      // AI Analysis
-      analyzeText: async (text: string, analysisType = 'general') => {
-        try {
-          const response = await authFetch(`${API_BASE}/research/analyze-text`, {
-            method: 'POST',
-            body: JSON.stringify({ text, analysisType }),
-          });
-
-          if (!response.ok) throw new Error('Failed to analyze text');
-
-          const data = await response.json();
-          return data.analysis;
-        } catch (error) {
-          console.error('Failed to analyze text:', error);
           throw error;
         }
       },
