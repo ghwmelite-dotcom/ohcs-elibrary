@@ -2,6 +2,8 @@ import { Hono } from 'hono';
 import type { Context, Next } from 'hono';
 import { AI_DEFAULTS } from '../config/aiModels';
 import { generateExportContent, markdownToHtml } from '../services/researchExport';
+import { analyzeLiteratureGaps, refineResearchQuestion, suggestMethodology, generateAutoTags, crossProjectInsights } from '../services/researchAI';
+import { sendResearchNotification, notifyTeamMembers, notifyMentionedUsers } from '../services/researchNotifications';
 
 interface Env {
   DB: D1Database;
@@ -2999,6 +3001,27 @@ researchRoutes.post('/discussions/:id/replies', requireAuth, async (c: AppContex
 
     await logTeamActivity(DB, discussion.project_id, userId, 'discussion_replied', 'discussion', discussionId);
 
+    // Send notifications to team members and mentioned users
+    try {
+      const sender = await DB.prepare(`SELECT displayName FROM users WHERE id = ?`).bind(userId).first<{ displayName: string }>();
+      const senderName = sender?.displayName || 'A team member';
+
+      await notifyTeamMembers(DB, discussion.project_id, userId, {
+        type: 'research_discussion_reply',
+        title: 'New discussion reply',
+        message: `${senderName} replied to a discussion`,
+        link: `/research/projects/${discussion.project_id}?tab=discussions`,
+        actorId: userId,
+        actorName: senderName,
+        resourceId: discussionId,
+        resourceType: 'research_discussion',
+      });
+
+      await notifyMentionedUsers(DB, content, userId, senderName, discussion.project_id, 'discussion reply');
+    } catch (e) {
+      console.error('Error sending discussion reply notifications:', e);
+    }
+
     return c.json({ id: replyId, message: 'Reply added successfully' }, 201);
   } catch (error) {
     console.error('Error adding reply:', error);
@@ -3447,6 +3470,23 @@ researchRoutes.put('/projects/:id/milestones/:milestoneId', requireAuth, async (
         fields.push('completed_date = datetime("now")');
         // Log team activity
         await logTeamActivity(DB, projectId, userId, 'milestone_completed', 'milestone', milestoneId, updates.title);
+        // Notify team members about milestone completion
+        try {
+          const sender = await DB.prepare(`SELECT displayName FROM users WHERE id = ?`).bind(userId).first<{ displayName: string }>();
+          const senderName = sender?.displayName || 'A team member';
+          await notifyTeamMembers(DB, projectId, userId, {
+            type: 'research_milestone_completed',
+            title: 'Milestone completed',
+            message: `${senderName} completed milestone: ${updates.title || 'Untitled'}`,
+            link: `/research/projects/${projectId}?tab=milestones`,
+            actorId: userId,
+            actorName: senderName,
+            resourceId: milestoneId,
+            resourceType: 'research_milestone',
+          });
+        } catch (e) {
+          console.error('Error sending milestone notifications:', e);
+        }
       }
     }
     if (updates.targetDate !== undefined) {
@@ -4038,10 +4078,21 @@ researchRoutes.get('/projects/:id/contributions', optionalAuth, async (c: AppCon
 });
 
 // GET /research/projects/:id/exports - Get project exports
-researchRoutes.get('/projects/:id/exports', async (c: AppContext) => {
+researchRoutes.get('/projects/:id/exports', optionalAuth, async (c: AppContext) => {
   try {
     const { DB } = c.env;
+    const userId = c.get('userId') || 'guest';
     const projectId = c.req.param('id');
+
+    // Check project access
+    const project = await DB.prepare('SELECT visibility, created_by_id FROM research_projects WHERE id = ?').bind(projectId).first<any>();
+    if (!project) return c.json({ error: 'Project not found' }, 404);
+    if (project.visibility !== 'public' && userId !== 'guest') {
+      const isMember = await isProjectMember(DB, projectId, userId);
+      if (!isMember) return c.json({ error: 'Access denied' }, 403);
+    } else if (project.visibility !== 'public' && userId === 'guest') {
+      return c.json({ error: 'Authentication required' }, 401);
+    }
 
     const { results } = await DB.prepare(`
       SELECT e.*, u.displayName as generatedByName
@@ -4209,5 +4260,717 @@ researchRoutes.get('/projects/:id/tags', async (c: AppContext) => {
   } catch (error) {
     console.error('Error getting project tags:', error);
     return c.json({ error: 'Failed to get project tags' }, 500);
+  }
+});
+
+// ============================================================================
+// FTS5 Full-Text Search
+// ============================================================================
+
+// GET /research/search - Full-text search across projects, notes, literature
+researchRoutes.get('/search', async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId') || 'guest';
+    const q = (c.req.query('q') || '').trim();
+    const type = c.req.query('type') || 'all';
+    const limit = Math.min(parseInt(c.req.query('limit') || '20'), 50);
+
+    if (q.length < 2) {
+      return c.json({ error: 'Search query must be at least 2 characters' }, 400);
+    }
+
+    // Sanitize for FTS5: strip double-quotes, wrap each term in quotes with wildcard
+    const ftsQuery = q.split(/\s+/).map(term => '"' + term.replace(/"/g, '') + '"*').join(' ');
+
+    const results: { projects: any[]; notes: any[]; literature: any[] } = {
+      projects: [],
+      notes: [],
+      literature: [],
+    };
+
+    // Search projects
+    if (type === 'all' || type === 'projects') {
+      try {
+        const { results: projectResults } = await DB.prepare(`
+          SELECT p.id, p.title, p.description, p.status, p.category, p.is_public, p.created_by_id,
+            snippet(research_projects_fts, 1, '<mark>', '</mark>', '...', 40) as matchSnippet
+          FROM research_projects_fts
+          JOIN research_projects p ON p.id = research_projects_fts.id
+          WHERE research_projects_fts MATCH ?
+            AND (p.is_public = 1 OR p.created_by_id = ?)
+          LIMIT ?
+        `).bind(ftsQuery, userId, limit).all();
+
+        results.projects = projectResults.map((row: any) => ({
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          status: row.status,
+          category: row.category,
+          isPublic: !!row.is_public,
+          matchSnippet: row.matchSnippet,
+          type: 'project',
+        }));
+      } catch (ftsError) {
+        // FTS table may not exist; fall back to LIKE
+        console.warn('FTS5 project search failed, falling back to LIKE:', ftsError);
+        const likeQuery = `%${q}%`;
+        const { results: projectResults } = await DB.prepare(`
+          SELECT id, title, description, status, category, is_public, created_by_id
+          FROM research_projects
+          WHERE (title LIKE ? OR description LIKE ?)
+            AND (is_public = 1 OR created_by_id = ?)
+          LIMIT ?
+        `).bind(likeQuery, likeQuery, userId, limit).all();
+
+        results.projects = projectResults.map((row: any) => ({
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          status: row.status,
+          category: row.category,
+          isPublic: !!row.is_public,
+          matchSnippet: null,
+          type: 'project',
+        }));
+      }
+    }
+
+    // Search notes
+    if (type === 'all' || type === 'notes') {
+      try {
+        const { results: noteResults } = await DB.prepare(`
+          SELECT n.id, n.project_id, n.title, n.note_type, n.created_at,
+            snippet(research_notes_fts, 2, '<mark>', '</mark>', '...', 40) as matchSnippet
+          FROM research_notes_fts
+          JOIN research_notes n ON n.id = research_notes_fts.id
+          JOIN research_projects p ON n.project_id = p.id
+          WHERE research_notes_fts MATCH ?
+            AND (p.is_public = 1 OR p.created_by_id = ?)
+          LIMIT ?
+        `).bind(ftsQuery, userId, limit).all();
+
+        results.notes = noteResults.map((row: any) => ({
+          id: row.id,
+          projectId: row.project_id,
+          title: row.title,
+          noteType: row.note_type,
+          createdAt: row.created_at,
+          matchSnippet: row.matchSnippet,
+          type: 'note',
+        }));
+      } catch (ftsError) {
+        console.warn('FTS5 notes search failed, falling back to LIKE:', ftsError);
+        const likeQuery = `%${q}%`;
+        const { results: noteResults } = await DB.prepare(`
+          SELECT n.id, n.project_id, n.title, n.note_type, n.created_at
+          FROM research_notes n
+          JOIN research_projects p ON n.project_id = p.id
+          WHERE (n.title LIKE ? OR n.content LIKE ?)
+            AND (p.is_public = 1 OR p.created_by_id = ?)
+          LIMIT ?
+        `).bind(likeQuery, likeQuery, userId, limit).all();
+
+        results.notes = noteResults.map((row: any) => ({
+          id: row.id,
+          projectId: row.project_id,
+          title: row.title,
+          noteType: row.note_type,
+          createdAt: row.created_at,
+          matchSnippet: null,
+          type: 'note',
+        }));
+      }
+    }
+
+    // Search literature
+    if (type === 'all' || type === 'literature') {
+      try {
+        const { results: litResults } = await DB.prepare(`
+          SELECT l.id, l.project_id, l.external_title, l.authors, l.source_type, l.publication_year,
+            snippet(research_literature_fts, 2, '<mark>', '</mark>', '...', 40) as matchSnippet
+          FROM research_literature_fts
+          JOIN research_literature l ON l.id = research_literature_fts.id
+          JOIN research_projects p ON l.project_id = p.id
+          WHERE research_literature_fts MATCH ?
+            AND (p.is_public = 1 OR p.created_by_id = ?)
+          LIMIT ?
+        `).bind(ftsQuery, userId, limit).all();
+
+        results.literature = litResults.map((row: any) => ({
+          id: row.id,
+          projectId: row.project_id,
+          externalTitle: row.external_title,
+          authors: row.authors,
+          sourceType: row.source_type,
+          publicationYear: row.publication_year,
+          matchSnippet: row.matchSnippet,
+          type: 'literature',
+        }));
+      } catch (ftsError) {
+        console.warn('FTS5 literature search failed, falling back to LIKE:', ftsError);
+        const likeQuery = `%${q}%`;
+        const { results: litResults } = await DB.prepare(`
+          SELECT l.id, l.project_id, l.external_title, l.authors, l.source_type, l.publication_year
+          FROM research_literature l
+          JOIN research_projects p ON l.project_id = p.id
+          WHERE (l.external_title LIKE ? OR l.authors LIKE ? OR l.abstract LIKE ?)
+            AND (p.is_public = 1 OR p.created_by_id = ?)
+          LIMIT ?
+        `).bind(likeQuery, likeQuery, likeQuery, userId, limit).all();
+
+        results.literature = litResults.map((row: any) => ({
+          id: row.id,
+          projectId: row.project_id,
+          externalTitle: row.external_title,
+          authors: row.authors,
+          sourceType: row.source_type,
+          publicationYear: row.publication_year,
+          matchSnippet: null,
+          type: 'literature',
+        }));
+      }
+    }
+
+    const totalResults = results.projects.length + results.notes.length + results.literature.length;
+
+    return c.json({
+      query: q,
+      totalResults,
+      ...results,
+    });
+  } catch (error) {
+    console.error('Error in search:', error);
+    return c.json({ error: 'Search failed' }, 500);
+  }
+});
+
+// ============================================================================
+// Advanced AI Endpoints
+// ============================================================================
+
+// POST /research/projects/:id/ai/literature-gaps - Analyze literature gaps
+researchRoutes.post('/projects/:id/ai/literature-gaps', requireAuth, async (c: AppContext) => {
+  try {
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const { DB } = c.env;
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    const result = await analyzeLiteratureGaps(c.env, projectId);
+
+    await logActivity(DB, projectId, userId, 'ai_literature_gaps', 'Analyzed literature gaps via AI');
+
+    return c.json(result);
+  } catch (error) {
+    console.error('Error analyzing literature gaps:', error);
+    return c.json({ error: 'Failed to analyze literature gaps' }, 500);
+  }
+});
+
+// POST /research/projects/:id/ai/refine-question - Refine research question
+researchRoutes.post('/projects/:id/ai/refine-question', requireAuth, async (c: AppContext) => {
+  try {
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const { DB } = c.env;
+    const { question, category, methodology } = await c.req.json();
+
+    if (!question?.trim()) {
+      return c.json({ error: 'Question is required' }, 400);
+    }
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    const result = await refineResearchQuestion(c.env, question, category, methodology);
+
+    await logActivity(DB, projectId, userId, 'ai_refine_question', 'Refined research question via AI');
+
+    return c.json(result);
+  } catch (error) {
+    console.error('Error refining question:', error);
+    return c.json({ error: 'Failed to refine question' }, 500);
+  }
+});
+
+// POST /research/projects/:id/ai/suggest-methodology - Suggest methodology
+researchRoutes.post('/projects/:id/ai/suggest-methodology', requireAuth, async (c: AppContext) => {
+  try {
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const { DB } = c.env;
+    const { question, category } = await c.req.json();
+
+    if (!question?.trim()) {
+      return c.json({ error: 'Question is required' }, 400);
+    }
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    const result = await suggestMethodology(c.env, question, category);
+
+    await logActivity(DB, projectId, userId, 'ai_suggest_methodology', 'AI methodology suggestion');
+
+    return c.json(result);
+  } catch (error) {
+    console.error('Error suggesting methodology:', error);
+    return c.json({ error: 'Failed to suggest methodology' }, 500);
+  }
+});
+
+// POST /research/projects/:id/ai/auto-tags - Generate auto-tags
+researchRoutes.post('/projects/:id/ai/auto-tags', requireAuth, async (c: AppContext) => {
+  try {
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const { DB } = c.env;
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    const tags = await generateAutoTags(c.env, projectId);
+
+    await logActivity(DB, projectId, userId, 'ai_auto_tags', `Generated ${tags.length} auto-tags`);
+
+    return c.json({ tags });
+  } catch (error) {
+    console.error('Error generating auto-tags:', error);
+    return c.json({ error: 'Failed to generate auto-tags' }, 500);
+  }
+});
+
+// GET /research/projects/:id/ai/cross-insights - Cross-project insights
+researchRoutes.get('/projects/:id/ai/cross-insights', requireAuth, async (c: AppContext) => {
+  try {
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const { DB } = c.env;
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    const insights = await crossProjectInsights(c.env, projectId);
+
+    await logActivity(DB, projectId, userId, 'ai_cross_insights', `Found ${insights.length} cross-project insights`);
+
+    return c.json({ insights });
+  } catch (error) {
+    console.error('Error finding cross-project insights:', error);
+    return c.json({ error: 'Failed to find cross-project insights' }, 500);
+  }
+});
+
+// ============================================================================
+// Phase Approval Gate
+// ============================================================================
+
+// POST /research/projects/:id/phase-approval - Request phase approval
+researchRoutes.post('/projects/:id/phase-approval', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const { currentPhase, requestedPhase, approverId, justification } = await c.req.json();
+
+    if (!currentPhase || !requestedPhase || !approverId) {
+      return c.json({ error: 'currentPhase, requestedPhase, and approverId are required' }, 400);
+    }
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    const approvalId = generateId();
+    await DB.prepare(`
+      INSERT INTO research_phase_approvals (id, project_id, requested_by_id, approver_id, current_phase, requested_phase, justification, status, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'), datetime('now'))
+    `).bind(approvalId, projectId, userId, approverId, currentPhase, requestedPhase, justification || null).run();
+
+    await logActivity(DB, projectId, userId, 'phase_approval_requested', `Requested phase change: ${currentPhase} -> ${requestedPhase}`);
+
+    // Notify the approver
+    try {
+      const requester = await DB.prepare(`SELECT displayName FROM users WHERE id = ?`).bind(userId).first<{ displayName: string }>();
+      const requesterName = requester?.displayName || 'A team member';
+
+      const project = await DB.prepare(`SELECT title FROM research_projects WHERE id = ?`).bind(projectId).first<{ title: string }>();
+
+      await sendResearchNotification(DB, approverId, {
+        type: 'research_phase_approval_request',
+        title: 'Phase approval requested',
+        message: `${requesterName} requests approval to move "${project?.title || 'project'}" from ${currentPhase} to ${requestedPhase}`,
+        link: `/research/projects/${projectId}?tab=governance`,
+        actorId: userId,
+        actorName: requesterName,
+        resourceId: approvalId,
+        resourceType: 'research_phase_approval',
+        priority: 'high',
+      });
+    } catch (e) {
+      console.error('Error sending phase approval notification:', e);
+    }
+
+    return c.json({ id: approvalId, message: 'Phase approval requested' }, 201);
+  } catch (error) {
+    console.error('Error creating phase approval:', error);
+    return c.json({ error: 'Failed to create phase approval' }, 500);
+  }
+});
+
+// PUT /research/projects/:id/phase-approval/:approvalId - Approve or reject phase change
+researchRoutes.put('/projects/:id/phase-approval/:approvalId', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const approvalId = c.req.param('approvalId');
+    const { status, comments } = await c.req.json();
+
+    if (!status || !['approved', 'rejected'].includes(status)) {
+      return c.json({ error: 'Status must be "approved" or "rejected"' }, 400);
+    }
+
+    // Verify this user is the designated approver
+    const approval = await DB.prepare(`
+      SELECT * FROM research_phase_approvals WHERE id = ? AND project_id = ?
+    `).bind(approvalId, projectId).first<any>();
+
+    if (!approval) {
+      return c.json({ error: 'Approval request not found' }, 404);
+    }
+
+    if (approval.approver_id !== userId) {
+      return c.json({ error: 'Only the designated approver can approve/reject' }, 403);
+    }
+
+    if (approval.status !== 'pending') {
+      return c.json({ error: 'This approval has already been processed' }, 400);
+    }
+
+    // Update approval status
+    await DB.prepare(`
+      UPDATE research_phase_approvals
+      SET status = ?, comments = ?, decided_at = datetime('now'), updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(status, comments || null, approvalId).run();
+
+    // If approved, advance the project phase
+    if (status === 'approved') {
+      await DB.prepare(`
+        UPDATE research_projects SET current_phase = ?, updated_at = datetime('now') WHERE id = ?
+      `).bind(approval.requested_phase, projectId).run();
+
+      await logActivity(DB, projectId, userId, 'phase_advanced', `Phase advanced to: ${approval.requested_phase}`);
+    } else {
+      await logActivity(DB, projectId, userId, 'phase_approval_rejected', `Phase change rejected: ${approval.current_phase} -> ${approval.requested_phase}`);
+    }
+
+    // Notify the requester
+    try {
+      const approver = await DB.prepare(`SELECT displayName FROM users WHERE id = ?`).bind(userId).first<{ displayName: string }>();
+      const approverName = approver?.displayName || 'An approver';
+
+      await sendResearchNotification(DB, approval.requested_by_id, {
+        type: status === 'approved' ? 'research_phase_approved' : 'research_phase_rejected',
+        title: status === 'approved' ? 'Phase change approved' : 'Phase change rejected',
+        message: `${approverName} ${status} the phase change to ${approval.requested_phase}${comments ? ': ' + comments : ''}`,
+        link: `/research/projects/${projectId}?tab=governance`,
+        actorId: userId,
+        actorName: approverName,
+        resourceId: approvalId,
+        resourceType: 'research_phase_approval',
+        priority: 'high',
+      });
+    } catch (e) {
+      console.error('Error sending phase decision notification:', e);
+    }
+
+    return c.json({ message: `Phase approval ${status}` });
+  } catch (error) {
+    console.error('Error processing phase approval:', error);
+    return c.json({ error: 'Failed to process phase approval' }, 500);
+  }
+});
+
+// GET /research/projects/:id/phase-approvals - List approval history
+researchRoutes.get('/projects/:id/phase-approvals', async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId') || 'guest';
+    const projectId = c.req.param('id');
+
+    const project = await DB.prepare(`
+      SELECT is_public, created_by_id FROM research_projects WHERE id = ?
+    `).bind(projectId).first<{ is_public: number; created_by_id: string }>();
+
+    if (!project) return c.json({ error: 'Project not found' }, 404);
+
+    if (!project.is_public && userId !== 'guest') {
+      const isMember = await isProjectMember(DB, projectId, userId);
+      if (!isMember) return c.json({ error: 'Access denied' }, 403);
+    } else if (!project.is_public && userId === 'guest') {
+      return c.json({ error: 'Authentication required' }, 401);
+    }
+
+    const { results } = await DB.prepare(`
+      SELECT pa.*,
+        req.displayName as requesterName,
+        app.displayName as approverName
+      FROM research_phase_approvals pa
+      LEFT JOIN users req ON pa.requested_by_id = req.id
+      LEFT JOIN users app ON pa.approver_id = app.id
+      WHERE pa.project_id = ?
+      ORDER BY pa.created_at DESC
+    `).bind(projectId).all();
+
+    const approvals = results.map((row: any) => ({
+      id: row.id,
+      projectId: row.project_id,
+      requestedById: row.requested_by_id,
+      requesterName: row.requesterName,
+      approverId: row.approver_id,
+      approverName: row.approverName,
+      currentPhase: row.current_phase,
+      requestedPhase: row.requested_phase,
+      justification: row.justification,
+      status: row.status,
+      comments: row.comments,
+      decidedAt: row.decided_at,
+      createdAt: row.created_at,
+    }));
+
+    return c.json({ items: approvals });
+  } catch (error) {
+    console.error('Error getting phase approvals:', error);
+    return c.json({ error: 'Failed to get phase approvals' }, 500);
+  }
+});
+
+// ============================================================================
+// Ethics Approval
+// ============================================================================
+
+// POST /research/projects/:id/ethics - Create ethics approval record
+researchRoutes.post('/projects/:id/ethics', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const { boardName, submissionType, status, referenceNumber, approvalDate, expiryDate, conditions, submittedDate } = await c.req.json();
+
+    if (!boardName) {
+      return c.json({ error: 'boardName is required' }, 400);
+    }
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    const ethicsId = generateId();
+    await DB.prepare(`
+      INSERT INTO research_ethics_approvals (id, project_id, board_name, submission_type, status, reference_number, approval_date, expiry_date, conditions, submitted_date, submitted_by_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(
+      ethicsId,
+      projectId,
+      boardName,
+      submissionType || 'initial',
+      status || 'pending',
+      referenceNumber || null,
+      approvalDate || null,
+      expiryDate || null,
+      conditions || null,
+      submittedDate || null,
+      userId
+    ).run();
+
+    await logActivity(DB, projectId, userId, 'ethics_submitted', `Ethics submission to ${boardName}`);
+
+    return c.json({ id: ethicsId, message: 'Ethics approval record created' }, 201);
+  } catch (error) {
+    console.error('Error creating ethics record:', error);
+    return c.json({ error: 'Failed to create ethics record' }, 500);
+  }
+});
+
+// GET /research/projects/:id/ethics - List ethics approvals
+researchRoutes.get('/projects/:id/ethics', async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId') || 'guest';
+    const projectId = c.req.param('id');
+
+    const project = await DB.prepare(`
+      SELECT is_public, created_by_id FROM research_projects WHERE id = ?
+    `).bind(projectId).first<{ is_public: number; created_by_id: string }>();
+
+    if (!project) return c.json({ error: 'Project not found' }, 404);
+
+    if (!project.is_public && userId !== 'guest') {
+      const isMember = await isProjectMember(DB, projectId, userId);
+      if (!isMember) return c.json({ error: 'Access denied' }, 403);
+    } else if (!project.is_public && userId === 'guest') {
+      return c.json({ error: 'Authentication required' }, 401);
+    }
+
+    const { results } = await DB.prepare(`
+      SELECT ea.*, u.displayName as submittedByName
+      FROM research_ethics_approvals ea
+      LEFT JOIN users u ON ea.submitted_by_id = u.id
+      WHERE ea.project_id = ?
+      ORDER BY ea.created_at DESC
+    `).bind(projectId).all();
+
+    const items = results.map((row: any) => ({
+      id: row.id,
+      projectId: row.project_id,
+      boardName: row.board_name,
+      submissionType: row.submission_type,
+      status: row.status,
+      referenceNumber: row.reference_number,
+      approvalDate: row.approval_date,
+      expiryDate: row.expiry_date,
+      conditions: row.conditions,
+      submittedDate: row.submitted_date,
+      submittedBy: row.submittedByName,
+      submittedById: row.submitted_by_id,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+
+    return c.json({ items });
+  } catch (error) {
+    console.error('Error getting ethics approvals:', error);
+    return c.json({ error: 'Failed to get ethics approvals' }, 500);
+  }
+});
+
+// PUT /research/projects/:id/ethics/:ethicsId - Update ethics approval status
+researchRoutes.put('/projects/:id/ethics/:ethicsId', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+    const ethicsId = c.req.param('ethicsId');
+    const updates = await c.req.json();
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    // Allowed fields only
+    const allowedFields: Record<string, string> = {
+      status: 'status',
+      referenceNumber: 'reference_number',
+      approvalDate: 'approval_date',
+      expiryDate: 'expiry_date',
+      conditions: 'conditions',
+      submittedDate: 'submitted_date',
+    };
+
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    for (const [key, column] of Object.entries(allowedFields)) {
+      if (updates[key] !== undefined) {
+        fields.push(`${column} = ?`);
+        values.push(updates[key]);
+      }
+    }
+
+    if (fields.length === 0) {
+      return c.json({ error: 'No valid fields to update' }, 400);
+    }
+
+    fields.push('updated_at = datetime("now")');
+    values.push(ethicsId, projectId);
+
+    await DB.prepare(`
+      UPDATE research_ethics_approvals SET ${fields.join(', ')} WHERE id = ? AND project_id = ?
+    `).bind(...values).run();
+
+    await logActivity(DB, projectId, userId, 'ethics_updated', `Updated ethics approval: ${ethicsId}`);
+
+    return c.json({ message: 'Ethics approval updated' });
+  } catch (error) {
+    console.error('Error updating ethics record:', error);
+    return c.json({ error: 'Failed to update ethics record' }, 500);
+  }
+});
+
+// ============================================================================
+// Audit Trail Export
+// ============================================================================
+
+// GET /research/projects/:id/audit-trail/export - Export activity log as CSV
+researchRoutes.get('/projects/:id/audit-trail/export', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId')!;
+    const projectId = c.req.param('id');
+
+    const isMember = await isProjectMember(DB, projectId, userId);
+    if (!isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    const { results } = await DB.prepare(`
+      SELECT a.created_at, u.displayName, u.staffId, a.action, a.details
+      FROM research_activities a
+      LEFT JOIN users u ON a.user_id = u.id
+      WHERE a.project_id = ?
+      ORDER BY a.created_at DESC
+    `).bind(projectId).all();
+
+    // Build CSV
+    const csvRows = ['Timestamp,User,Staff ID,Action,Details'];
+    for (const row of results) {
+      const r = row as any;
+      const escapeCsv = (val: string | null) => {
+        if (!val) return '';
+        // Escape double quotes and wrap in quotes if contains comma, newline, or quote
+        if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+          return '"' + val.replace(/"/g, '""') + '"';
+        }
+        return val;
+      };
+      csvRows.push([
+        escapeCsv(r.created_at),
+        escapeCsv(r.displayName),
+        escapeCsv(r.staffId),
+        escapeCsv(r.action),
+        escapeCsv(r.details),
+      ].join(','));
+    }
+
+    const csv = csvRows.join('\n');
+
+    return new Response(csv, {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="audit-trail-${projectId}.csv"`,
+      },
+    });
+  } catch (error) {
+    console.error('Error exporting audit trail:', error);
+    return c.json({ error: 'Failed to export audit trail' }, 500);
   }
 });

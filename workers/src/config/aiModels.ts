@@ -62,4 +62,10 @@ export const AI_DEFAULTS = {
     max_tokens: 1000,
     temperature: 0.5,
   },
+  /** Research advanced AI analysis */
+  researchAnalysis: {
+    model: AI_MODELS.HEAVY,
+    max_tokens: 1200,
+    temperature: 0.4,
+  },
 } as const;
