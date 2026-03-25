@@ -1,7 +1,20 @@
+-- ============================================================
+-- SUPERSEDED MIGRATION
+-- ============================================================
+-- All 7 tables in this file are also defined (with proper FK
+-- constraints, CHECK constraints, and indexes) in:
+--   add_research_advanced.sql
+--
+-- This file is kept for history. The CREATE TABLE IF NOT EXISTS
+-- statements are harmless — they are no-ops if the tables
+-- already exist from add_research_advanced.sql.
+-- ============================================================
+
 -- Research Lab Phase 4: Advanced Analytics & Publishing
 -- Run this migration to add advanced features
 
 -- Research Milestones (timeline tracking)
+-- NOTE: Superseded by add_research_advanced.sql (proper FK constraints)
 CREATE TABLE IF NOT EXISTS research_milestones (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,
@@ -26,6 +39,8 @@ CREATE INDEX IF NOT EXISTS idx_milestones_status ON research_milestones(status);
 CREATE INDEX IF NOT EXISTS idx_milestones_target ON research_milestones(target_date);
 
 -- Research Templates (pre-built project structures)
+-- NOTE: Superseded by add_research_advanced.sql (proper FK constraints)
+-- DROP TABLE IF EXISTS research_templates;
 CREATE TABLE IF NOT EXISTS research_templates (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -49,6 +64,8 @@ CREATE INDEX IF NOT EXISTS idx_templates_category ON research_templates(category
 CREATE INDEX IF NOT EXISTS idx_templates_methodology ON research_templates(methodology);
 
 -- Research Exports (generated documents)
+-- NOTE: Superseded by add_research_advanced.sql (proper FK constraints)
+-- DROP TABLE IF EXISTS research_exports;
 CREATE TABLE IF NOT EXISTS research_exports (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,
@@ -71,6 +88,8 @@ CREATE INDEX IF NOT EXISTS idx_exports_project ON research_exports(project_id);
 CREATE INDEX IF NOT EXISTS idx_exports_status ON research_exports(status);
 
 -- Research Analytics Snapshots (periodic metrics)
+-- NOTE: Superseded by add_research_advanced.sql (proper FK constraints)
+-- DROP TABLE IF EXISTS research_analytics;
 CREATE TABLE IF NOT EXISTS research_analytics (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,
@@ -93,6 +112,8 @@ CREATE INDEX IF NOT EXISTS idx_analytics_project ON research_analytics(project_i
 CREATE INDEX IF NOT EXISTS idx_analytics_date ON research_analytics(snapshot_date);
 
 -- Team Contributions (track individual contributions)
+-- NOTE: Superseded by add_research_advanced.sql (proper FK constraints)
+-- DROP TABLE IF EXISTS research_contributions;
 CREATE TABLE IF NOT EXISTS research_contributions (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,
@@ -109,6 +130,8 @@ CREATE INDEX IF NOT EXISTS idx_contributions_user ON research_contributions(user
 CREATE INDEX IF NOT EXISTS idx_contributions_date ON research_contributions(contribution_date);
 
 -- Research Tags (enhanced tagging system)
+-- NOTE: Superseded by add_research_advanced.sql (proper FK constraints)
+-- DROP TABLE IF EXISTS research_tags;
 CREATE TABLE IF NOT EXISTS research_tags (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
@@ -122,6 +145,8 @@ CREATE TABLE IF NOT EXISTS research_tags (
 CREATE INDEX IF NOT EXISTS idx_tags_slug ON research_tags(slug);
 
 -- Project-Tag associations
+-- NOTE: Superseded by add_research_advanced.sql (proper FK constraints)
+-- DROP TABLE IF EXISTS research_project_tags;
 CREATE TABLE IF NOT EXISTS research_project_tags (
   project_id TEXT NOT NULL,
   tag_id TEXT NOT NULL,
