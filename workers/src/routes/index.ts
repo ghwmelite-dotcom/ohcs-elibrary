@@ -15,7 +15,7 @@ export { default as broadcastsRoutes } from './broadcasts';
 export { counselorRoutes } from './counselor';
 export { backupRoutes, createScheduledBackup } from './backup';
 export { adminUsersRoutes } from './admin-users';
-export { researchRoutes } from './research';
+export { researchRoutes } from './research/index';
 
 // Phase 1 Social Networking Routes
 export { default as socialRoutes } from './social';
