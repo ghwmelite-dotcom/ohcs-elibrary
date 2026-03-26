@@ -2186,6 +2186,14 @@ lms.get('/instructor/courses/:id/students', async (c) => {
   const courseId = c.req.param('id');
 
   try {
+    const course = await c.env.DB.prepare(`
+      SELECT c.* FROM lms_courses c WHERE c.id = ? AND c.instructorId = ?
+    `).bind(courseId, user.id).first();
+
+    if (!course) {
+      return c.json({ error: 'Course not found or access denied' }, 403);
+    }
+
     const students = await c.env.DB.prepare(`
       SELECT
         e.*,
@@ -2233,6 +2241,14 @@ lms.get('/instructor/courses/:id/grades', async (c) => {
   const courseId = c.req.param('id');
 
   try {
+    const course = await c.env.DB.prepare(`
+      SELECT c.* FROM lms_courses c WHERE c.id = ? AND c.instructorId = ?
+    `).bind(courseId, user.id).first();
+
+    if (!course) {
+      return c.json({ error: 'Course not found or access denied' }, 403);
+    }
+
     // Get all enrolled students with their grades
     const students = await c.env.DB.prepare(`
       SELECT
