@@ -31,7 +31,7 @@ async function getCategory(db: D1Database, categoryId: string) {
 
 // Helper: Check if user can manage event
 async function canManageEvent(db: D1Database, eventId: string, userId: string, userRole: string): Promise<boolean> {
-  const event = await db.prepare(`SELECT organizerId FROM calendar_events WHERE id = ?`).bind(eventId).first();
+  const event = await db.prepare(`SELECT organizerId FROM calendar_events WHERE id = ?`).bind(eventId).first<{ organizerId: string }>();
   if (!event) return false;
   if (event.organizerId === userId) return true;
   if (['admin', 'super_admin', 'director'].includes(userRole)) return true;

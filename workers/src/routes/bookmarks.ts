@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
+import { authMiddleware } from '../middleware/auth';
 
 interface Env {
   DB: D1Database;
@@ -13,6 +14,9 @@ type AppContext = Context<{ Bindings: Env; Variables: Variables }>;
 
 export const bookmarksRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
+// Apply auth to all bookmark routes — bookmarks are user-specific
+bookmarksRoutes.use('*', authMiddleware);
+
 // GET /bookmarks - Get user's bookmarks
 bookmarksRoutes.get('/', async (c: AppContext) => {
   try {
@@ -23,7 +27,6 @@ bookmarksRoutes.get('/', async (c: AppContext) => {
       SELECT
         b.id,
         b.documentId,
-        b.notes,
         b.createdAt,
         d.title,
         d.description,
@@ -40,7 +43,6 @@ bookmarksRoutes.get('/', async (c: AppContext) => {
     const bookmarks = results.map((b: any) => ({
       id: b.id,
       documentId: b.documentId,
-      notes: b.notes,
       createdAt: b.createdAt,
       document: {
         id: b.documentId,
@@ -65,7 +67,7 @@ bookmarksRoutes.post('/', async (c: AppContext) => {
   try {
     const { DB } = c.env;
     const userId = c.get('userId');
-    const { documentId, notes } = await c.req.json();
+    const { documentId } = await c.req.json();
 
     if (!documentId) {
       return c.json({ error: 'Document ID is required' }, 400);
@@ -92,12 +94,12 @@ bookmarksRoutes.post('/', async (c: AppContext) => {
     // Create bookmark
     const bookmarkId = crypto.randomUUID();
     await DB.prepare(`
-      INSERT INTO bookmarks (id, documentId, userId, notes, createdAt)
-      VALUES (?, ?, ?, ?, datetime('now'))
-    `).bind(bookmarkId, documentId, userId, notes || null).run();
+      INSERT INTO bookmarks (id, documentId, userId, createdAt)
+      VALUES (?, ?, ?, datetime('now'))
+    `).bind(bookmarkId, documentId, userId).run();
 
     const bookmark = await DB.prepare(`
-      SELECT * FROM bookmarks WHERE id = ?
+      SELECT id, documentId, userId, createdAt FROM bookmarks WHERE id = ?
     `).bind(bookmarkId).first();
 
     return c.json(bookmark, 201);
@@ -129,29 +131,3 @@ bookmarksRoutes.delete('/:documentId', async (c: AppContext) => {
   }
 });
 
-// PATCH /bookmarks/:documentId - Update bookmark notes
-bookmarksRoutes.patch('/:documentId', async (c: AppContext) => {
-  try {
-    const { DB } = c.env;
-    const userId = c.get('userId');
-    const documentId = c.req.param('documentId');
-    const { notes } = await c.req.json();
-
-    const result = await DB.prepare(`
-      UPDATE bookmarks SET notes = ? WHERE documentId = ? AND userId = ?
-    `).bind(notes, documentId, userId).run();
-
-    if (result.meta.changes === 0) {
-      return c.json({ error: 'Bookmark not found' }, 404);
-    }
-
-    const bookmark = await DB.prepare(`
-      SELECT * FROM bookmarks WHERE documentId = ? AND userId = ?
-    `).bind(documentId, userId).first();
-
-    return c.json(bookmark);
-  } catch (error) {
-    console.error('Error updating bookmark:', error);
-    return c.json({ error: 'Failed to update bookmark' }, 500);
-  }
-});

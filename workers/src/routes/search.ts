@@ -4,10 +4,8 @@
  */
 
 import { Hono } from 'hono';
-
-interface Env {
-  DB: D1Database;
-}
+import type { Env } from '../types';
+import { authMiddleware, optionalAuth } from '../middleware/auth';
 
 interface SearchResult {
   id: string;
@@ -445,7 +443,7 @@ searchRoutes.get('/suggestions', async (c) => {
 /**
  * GET /search/recent - Get user's recent searches
  */
-searchRoutes.get('/recent', async (c) => {
+searchRoutes.get('/recent', optionalAuth, async (c) => {
   const user = c.get('user');
 
   if (!user?.id) {
@@ -478,7 +476,7 @@ searchRoutes.get('/recent', async (c) => {
 /**
  * POST /search/history - Save search to history
  */
-searchRoutes.post('/history', async (c) => {
+searchRoutes.post('/history', authMiddleware, async (c) => {
   const user = c.get('user');
 
   if (!user?.id) {
@@ -523,7 +521,7 @@ searchRoutes.post('/history', async (c) => {
 /**
  * DELETE /search/history - Clear search history
  */
-searchRoutes.delete('/history', async (c) => {
+searchRoutes.delete('/history', authMiddleware, async (c) => {
   const user = c.get('user');
 
   if (!user?.id) {
@@ -545,7 +543,7 @@ searchRoutes.delete('/history', async (c) => {
 /**
  * DELETE /search/history/:id - Delete specific search from history
  */
-searchRoutes.delete('/history/:id', async (c) => {
+searchRoutes.delete('/history/:id', authMiddleware, async (c) => {
   const user = c.get('user');
   const searchId = c.req.param('id');
 
