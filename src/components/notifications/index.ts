@@ -6,3 +6,4 @@ export { NotificationCenter } from './NotificationCenter';
 export { NotificationTimeline } from './NotificationTimeline';
 export { NotificationActivityChart } from './NotificationActivityChart';
 export { PushNotificationManager } from './PushNotificationManager';
+export { NewsletterSubscription } from './NewsletterSubscription';

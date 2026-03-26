@@ -36,6 +36,7 @@ const TermsOfService = lazy(() => import('@/pages/legal/TermsOfService').then(m 
 const Wall = lazy(() => import('@/pages/Wall'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Library = lazy(() => import('@/pages/Library'));
+const Bookmarks = lazy(() => import('@/pages/Bookmarks'));
 const DirectMessages = lazy(() => import('@/pages/DirectMessages'));
 const Network = lazy(() => import('@/pages/Network'));
 const DocumentView = lazy(() => import('@/pages/DocumentView'));
@@ -417,6 +418,7 @@ export default function App() {
             {/* Library routes */}
             <Route path="/library" element={<Library />} />
             <Route path="/library/:documentId" element={<DocumentView />} />
+            <Route path="/bookmarks" element={<Bookmarks />} />
 
             {/* Forum routes */}
             <Route path="/forum" element={<Forum />} />

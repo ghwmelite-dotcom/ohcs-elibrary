@@ -19,7 +19,8 @@ import {
   NotificationTimeline,
   NotificationActivityChart,
   NotificationSettings,
-  PushNotificationManager
+  PushNotificationManager,
+  NewsletterSubscription,
 } from '@/components/notifications';
 import { BroadcastsSection } from '@/components/broadcasts';
 import { useNotificationStore } from '@/stores/notificationStore';
@@ -337,7 +338,11 @@ export default function Notifications() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
+            className="space-y-6"
           >
+            {/* Quick subscription widget */}
+            <NewsletterSubscription compact={false} />
+
             <NotificationSettings
               initialPreferences={preferences ? {
                 email: preferences.emailEnabled,
