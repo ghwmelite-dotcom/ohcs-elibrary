@@ -1,6 +1,6 @@
 // OHCS E-Library Service Worker
-const CACHE_NAME = 'ohcs-elibrary-v6';
-const RUNTIME_CACHE = 'ohcs-runtime-v6';
+const CACHE_NAME = 'ohcs-elibrary-v7';
+const RUNTIME_CACHE = 'ohcs-runtime-v7';
 const ARTICLES_CACHE = 'ohcs-articles-v1';
 const API_CACHE = 'ohcs-api-v1';
 
@@ -96,7 +96,10 @@ self.addEventListener('fetch', (event) => {
         .catch(() => {
           // Fallback to cache
           return caches.match(request).then((cachedResponse) => {
-            return cachedResponse || caches.match('/');
+            if (cachedResponse) return cachedResponse;
+            return caches.match('/').then((homeResponse) => {
+              return homeResponse || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/html' } });
+            });
           });
         })
     );
@@ -144,7 +147,9 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        return caches.match(request);
+        return caches.match(request).then((cachedResponse) => {
+          return cachedResponse || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/html' } });
+        });
       })
   );
 });
