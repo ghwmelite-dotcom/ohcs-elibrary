@@ -696,27 +696,22 @@ export const useOrdersStore = create<OrdersStore>()((set, get) => ({
   fetchOrders: async (page = 1) => {
     set({ isLoading: true, error: null });
     try {
-      console.log('[Orders] Fetching orders, page:', page);
-      console.log('[Orders] Auth token:', localStorage.getItem('auth_token')?.substring(0, 50) + '...');
       const response = await fetch(`${API_BASE}/shop/orders?page=${page}`, {
         headers: getAuthHeaders(),
       });
-      console.log('[Orders] Response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('[Orders] Error response:', errorData);
+        if (import.meta.env.DEV) console.error('[Orders] Error response:', errorData);
         throw new Error('Failed to fetch orders');
       }
 
       const data = await response.json();
-      console.log('[Orders] Orders received:', data.orders?.length, data);
       set({
         orders: data.orders,
         pagination: data.pagination,
       });
     } catch (error) {
-      console.error('[Orders] Fetch error:', error);
       set({ error: error instanceof Error ? error.message : 'Failed to load orders' });
     } finally {
       set({ isLoading: false });

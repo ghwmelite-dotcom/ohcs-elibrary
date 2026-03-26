@@ -85,7 +85,8 @@ export default function OrderConfirmation() {
     if (!orderNumber) return;
     setDownloadingItem(itemId);
     try {
-      await downloadDigitalProduct(orderNumber, itemId);
+      const url = await downloadDigitalProduct(orderNumber, itemId);
+      if (url) window.open(url, '_blank');
     } finally {
       setDownloadingItem(null);
     }

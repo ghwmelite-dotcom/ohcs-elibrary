@@ -166,14 +166,11 @@ export default function Checkout() {
     setDiscountError(null);
 
     try {
-      const result = await applyDiscount(discountCode.trim());
-      if (!result.valid) {
-        setDiscountError(result.error || 'Invalid discount code');
-      } else {
-        setDiscountCode('');
-      }
-    } catch (err) {
-      setDiscountError('Failed to apply discount');
+      await applyDiscount(discountCode.trim());
+      // If applyDiscount didn't throw, the discount was applied successfully
+      setDiscountCode('');
+    } catch (err: any) {
+      setDiscountError(err.message || 'Invalid discount code');
     } finally {
       setIsApplyingDiscount(false);
     }
@@ -226,18 +223,14 @@ export default function Checkout() {
         customerNote: shippingDetails.notes,
       });
 
-      console.log('Checkout result:', result);
-      console.log('Payment method:', paymentMethod);
-
       if (result.success && result.orderNumber) {
         // Redirect to Paystack for all payment methods
         if (result.paystackData?.authorization_url) {
-          console.log('Redirecting to Paystack:', result.paystackData.authorization_url);
           window.location.href = result.paystackData.authorization_url;
           return;
         } else {
           // Paystack initialization failed
-          console.error('Paystack data missing or no authorization_url');
+          if (import.meta.env.DEV) console.error('Paystack data missing or no authorization_url');
           setError('Payment gateway initialization failed. Please try again.');
           return;
         }

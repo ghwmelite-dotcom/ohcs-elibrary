@@ -124,7 +124,8 @@ export default function Orders() {
   const handleDownload = async (orderNumber: string, itemId: string) => {
     setDownloadingItem(itemId);
     try {
-      await downloadDigitalProduct(orderNumber, itemId);
+      const url = await downloadDigitalProduct(orderNumber, itemId);
+      if (url) window.open(url, '_blank');
     } finally {
       setDownloadingItem(null);
     }

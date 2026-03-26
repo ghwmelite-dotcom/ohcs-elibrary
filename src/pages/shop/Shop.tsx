@@ -159,6 +159,29 @@ export default function Shop() {
                          featuredData.bestsellers.length > 0 ||
                          featuredData.newArrivals.length > 0;
 
+  // Compute hero stats from fetched products
+  const heroStats = (() => {
+    const allProducts = [
+      ...featuredData.featured,
+      ...featuredData.bestsellers,
+      ...featuredData.newArrivals,
+    ];
+    // Deduplicate by id
+    const uniqueProducts = Array.from(
+      new Map(allProducts.map((p) => [p.id, p])).values()
+    );
+    const totalProducts = uniqueProducts.length;
+    const uniqueSellers = new Set(
+      uniqueProducts.map((p) => p.storeName || p.author).filter(Boolean)
+    ).size;
+    const ratedProducts = uniqueProducts.filter((p) => p.rating && p.rating > 0);
+    const avgRating =
+      ratedProducts.length > 0
+        ? ratedProducts.reduce((sum, p) => sum + (p.rating || 0), 0) / ratedProducts.length
+        : 0;
+    return { totalProducts, uniqueSellers, avgRating };
+  })();
+
   const ProductCard = ({ product, index }: { product: Product; index: number }) => {
     const isDigital = product.productType === 'digital';
     const discount = product.compareAtPrice
@@ -386,15 +409,21 @@ export default function Shop() {
             <div className="flex flex-wrap justify-center gap-8 mt-10">
               <div className="flex items-center gap-2 text-white/90">
                 <BookOpen className="w-5 h-5" />
-                <span className="font-semibold">50+ Publications</span>
+                <span className="font-semibold">
+                  {heroStats.totalProducts > 0 ? `${heroStats.totalProducts}+ Publications` : 'Publications'}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-white/90">
                 <Users className="w-5 h-5" />
-                <span className="font-semibold">20+ Authors</span>
+                <span className="font-semibold">
+                  {heroStats.uniqueSellers > 0 ? `${heroStats.uniqueSellers}+ Authors` : 'Authors'}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-white/90">
                 <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                <span className="font-semibold">4.8 Avg Rating</span>
+                <span className="font-semibold">
+                  {heroStats.avgRating > 0 ? `${heroStats.avgRating.toFixed(1)} Avg Rating` : 'Top Rated'}
+                </span>
               </div>
             </div>
           </motion.div>
