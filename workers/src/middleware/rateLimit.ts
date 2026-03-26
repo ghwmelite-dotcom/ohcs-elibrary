@@ -18,29 +18,9 @@ const rateLimitConfigs: Record<string, RateLimitConfig> = {
   '/api/v1/chat': { windowMs: 60 * 1000, max: 60 },
 };
 
-// Admin emails exempt from rate limiting on login
-const ADMIN_EMAILS = [
-  'admin@ohcs.gov.gh',
-];
-
 export async function rateLimiter(c: Context, next: Next) {
   const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
   const path = c.req.path;
-
-  // Bypass rate limiting for admin login attempts
-  if (path === '/api/v1/auth/login' && c.req.method === 'POST') {
-    try {
-      // Clone the request to read the body without consuming it
-      const clonedReq = c.req.raw.clone();
-      const body = await clonedReq.json();
-      if (body.email && ADMIN_EMAILS.includes(body.email.toLowerCase())) {
-        await next();
-        return;
-      }
-    } catch (e) {
-      // If body parsing fails, continue with normal rate limiting
-    }
-  }
 
   // Find matching rate limit config
   let config = defaultConfig;

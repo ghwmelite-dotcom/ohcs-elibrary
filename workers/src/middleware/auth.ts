@@ -139,7 +139,7 @@ export function requirePermission(permission: string) {
     if (!result) {
       return c.json({
         error: 'Forbidden',
-        message: `Missing permission: ${permission}`,
+        message: 'Insufficient permissions',
       }, 403);
     }
 

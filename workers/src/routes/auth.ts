@@ -950,11 +950,8 @@ authRoutes.post('/forgot-password', zValidator('json', forgotPasswordSchema), as
       }
     }
 
-    // Return code on screen for .gov.gh users (email may be blocked by their servers)
     return c.json({
-      message: 'Your password reset code is ready.',
-      resetCode,
-      email: email.toLowerCase(),
+      message: 'If an account exists with this email, you will receive a password reset code.',
       expiresIn: '1 hour',
       emailSent,
     });
