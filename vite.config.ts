@@ -1,23 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import compression from 'vite-plugin-compression';
 import path from 'path';
 
 export default defineConfig({
   plugins: [
     react(),
-    // Pre-compress assets with gzip
-    compression({
-      algorithm: 'gzip',
-      ext: '.gz',
-      threshold: 1024, // Only compress files > 1KB
-    }),
-    // Pre-compress assets with brotli (better compression)
-    compression({
-      algorithm: 'brotliCompress',
-      ext: '.br',
-      threshold: 1024,
-    }),
+    // Cloudflare Pages handles compression automatically — no pre-compression needed
   ],
   resolve: {
     alias: {
