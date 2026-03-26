@@ -312,7 +312,7 @@ export function WellnessPulse({ onClick }: { onClick: () => void }) {
           transition={{ duration: 2, repeat: Infinity }}
         />
 
-        <DrSenaAvatar size="sm" mood="caring" />
+        <DrSenaAvatar size="sm" mood="listening" />
 
         {/* Tooltip */}
         <motion.div

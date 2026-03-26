@@ -486,7 +486,7 @@ export function ActivityNudge({ onDismiss, onAccept }: ActivityNudgeProps) {
             transition={{ duration: 2, repeat: Infinity }}
             className="p-2 bg-white/20 rounded-xl"
           >
-            <DrSenaAvatar size="sm" mood="caring" />
+            <DrSenaAvatar size="sm" mood="listening" />
           </motion.div>
 
           <div className="flex-1">
