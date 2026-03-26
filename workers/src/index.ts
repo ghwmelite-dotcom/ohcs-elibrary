@@ -61,6 +61,8 @@ import {
   sponsorshipRoutes,
   // Career Development System
   careerRoutes,
+  // WebRTC Signaling (Voice/Video Calls)
+  callRoutes,
 } from './routes';
 
 export interface Env {
@@ -332,6 +334,10 @@ app.route('/api/v1/sponsorship', sponsorshipRoutes);
 // Career Development System
 // Career routes handle their own auth internally (some endpoints are public)
 app.route('/api/v1/career', careerRoutes);
+
+// WebRTC Signaling (Voice/Video Calls)
+// Call routes handle their own auth internally
+app.route('/api/v1/calls', callRoutes);
 
 // News aggregation admin endpoints
 app.post('/api/v1/admin/news/aggregate', authMiddleware, async (c) => {

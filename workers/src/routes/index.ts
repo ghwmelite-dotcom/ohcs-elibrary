@@ -62,6 +62,9 @@ export { sponsorshipRoutes } from './sponsorship';
 // Career Development System
 export { careerRoutes } from './career';
 
+// WebRTC Signaling (Voice/Video Calls)
+export { callRoutes } from './calls';
+
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
 
