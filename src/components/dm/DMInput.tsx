@@ -5,6 +5,7 @@ import { useDMStore } from '@/stores/dmStore';
 import { usePresenceStore } from '@/stores/presenceStore';
 import { EnhancedDirectMessage } from '@/types';
 import { cn } from '@/utils/cn';
+import { useToast } from '@/components/shared/Toast';
 
 interface DMInputProps {
   conversationId: string;
@@ -20,6 +21,7 @@ export function DMInput({
   className,
 }: DMInputProps) {
   const { sendMessage, isSending, startTyping, stopTyping } = useDMStore();
+  const toast = useToast();
 
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
@@ -129,8 +131,9 @@ export function DMInput({
           {/* Attachment button */}
           <button
             type="button"
-            className="p-2 rounded-lg text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
-            title="Attach file"
+            onClick={() => toast.info('File sharing coming soon')}
+            className="p-2 rounded-lg text-surface-400 hover:text-surface-500 dark:hover:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+            title="Attach file (coming soon)"
           >
             <Paperclip className="w-5 h-5" />
           </button>

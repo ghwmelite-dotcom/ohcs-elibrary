@@ -12,6 +12,7 @@ import { TypingIndicator } from '@/components/presence/TypingIndicator';
 import { DMMessage } from './DMMessage';
 import { DMInput } from './DMInput';
 import { cn } from '@/utils/cn';
+import { useToast } from '@/components/shared/Toast';
 
 interface DMThreadProps {
   userId: string;
@@ -21,6 +22,7 @@ interface DMThreadProps {
 
 export function DMThread({ userId, onBack, className }: DMThreadProps) {
   const { user } = useAuthStore();
+  const toast = useToast();
   const {
     currentConversation,
     messages,
@@ -139,12 +141,14 @@ export function DMThread({ userId, onBack, className }: DMThreadProps) {
 
             <div className="flex items-center gap-1">
               <button
+                onClick={() => toast.info('Voice and video calls coming soon')}
                 className="p-2 rounded-lg text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
                 title="Voice call"
               >
                 <Phone className="w-5 h-5" />
               </button>
               <button
+                onClick={() => toast.info('Voice and video calls coming soon')}
                 className="p-2 rounded-lg text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
                 title="Video call"
               >

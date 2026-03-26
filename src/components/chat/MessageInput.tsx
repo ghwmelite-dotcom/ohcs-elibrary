@@ -31,6 +31,7 @@ interface MessageInputProps {
   onSendGif?: (gif: { url: string; preview: string; title: string }) => void;
   onSendVoice?: (audioBlob: Blob, duration: number) => void;
   onTyping?: () => void;
+  onAttachmentBlocked?: () => void;
   replyTo?: ChatMessage | null;
   onCancelReply?: () => void;
   placeholder?: string;
@@ -45,6 +46,7 @@ export function MessageInput({
   onSendGif,
   onSendVoice,
   onTyping,
+  onAttachmentBlocked,
   replyTo,
   onCancelReply,
   placeholder = 'Type a message...',
@@ -170,6 +172,13 @@ export function MessageInput({
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onAttachmentBlocked) {
+      onAttachmentBlocked();
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
     const files = Array.from(e.target.files || []);
     setAttachments((prev) => [...prev, ...files].slice(0, 5)); // Max 5 files
     if (fileInputRef.current) {

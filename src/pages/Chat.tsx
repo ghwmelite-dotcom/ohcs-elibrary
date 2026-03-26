@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -26,6 +26,8 @@ import {
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useCallStore, CallType } from '@/stores/callStore';
+import { usePresenceStore } from '@/stores/presenceStore';
+import { useToast } from '@/components/shared/Toast';
 import {
   RoomList,
   MessageList,
@@ -65,6 +67,10 @@ export default function Chat() {
     startCall,
     endCall,
   } = useCallStore();
+
+  const presenceStore = usePresenceStore();
+  const toast = useToast();
+  const [chatTypingUsers, setChatTypingUsers] = useState<Array<{ id: string; name: string }>>([]);
 
   const [showRoomInfo, setShowRoomInfo] = useState(false);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
@@ -145,6 +151,23 @@ export default function Chat() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleRoomList, toggleMembers, toggleFocusMode]);
+
+  // Poll for typing indicators in current room
+  useEffect(() => {
+    if (!currentRoom?.id) return;
+
+    const interval = setInterval(async () => {
+      const users = await presenceStore.fetchTypingUsers(currentRoom.id, 'chat');
+      // Filter out current user and map to MessageList's expected shape
+      setChatTypingUsers(
+        users
+          .filter((u) => u.id !== user?.id)
+          .map((u) => ({ id: u.id, name: u.displayName }))
+      );
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [currentRoom?.id, user?.id, presenceStore]);
 
   // Open pre-call setup modal
   const handleOpenPreCallSetup = (type: CallType) => {
@@ -236,9 +259,14 @@ export default function Chat() {
     }
   }, [roomId, rooms, setCurrentRoom, fetchMessages, fetchRoomMembers, navigate]);
 
-  const handleSendMessage = (content: string, _attachments?: File[]) => {
+  const handleSendMessage = (content: string, attachments?: File[]) => {
     if (!currentRoom) return;
-    sendMessage(currentRoom.id, content);
+    if (attachments && attachments.length > 0) {
+      toast.info('File sharing coming soon');
+    }
+    if (content.trim()) {
+      sendMessage(currentRoom.id, content);
+    }
     setReplyTo(null);
   };
 
@@ -562,7 +590,7 @@ export default function Chat() {
               <MessageList
                 messages={messages}
                 currentUserId={user?.id || ''}
-                typingUsers={[]}
+                typingUsers={chatTypingUsers}
                 isLoading={isLoading}
                 onReply={(message) => setReplyTo(message)}
                 onEdit={(messageId, content) => useChatStore.getState().editMessage(messageId, content)}
@@ -574,7 +602,12 @@ export default function Chat() {
             {/* Message Input */}
             <MessageInput
               onSend={handleSendMessage}
-              onTyping={() => {}}
+              onTyping={() => {
+                if (currentRoom) {
+                  presenceStore.startTyping(currentRoom.id, 'chat');
+                }
+              }}
+              onAttachmentBlocked={() => toast.info('File sharing coming soon')}
               replyTo={replyTo}
               onCancelReply={() => setReplyTo(null)}
               placeholder={`Message #${currentRoom.name}`}

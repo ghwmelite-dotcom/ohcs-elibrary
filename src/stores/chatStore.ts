@@ -60,7 +60,7 @@ interface ChatActions {
   fetchConversation: (id: string) => Promise<void>;
   fetchDirectMessages: (conversationId: string) => Promise<void>;
   sendDirectMessage: (conversationId: string, content: string) => Promise<void>;
-  markAsRead: (roomId: string) => void;
+  markAsRead: (roomId: string) => Promise<void>;
   setError: (error: string | null) => void;
 }
 
@@ -485,12 +485,22 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     // DMs not implemented yet
   },
 
-  markAsRead: (roomId: string) => {
+  markAsRead: async (roomId: string) => {
+    // Update local state immediately
     set((state) => ({
       rooms: state.rooms.map((r) =>
         r.id === roomId ? { ...r, unreadCount: 0 } : r
       ),
     }));
+
+    // Persist to API
+    try {
+      await authFetch(`${API_BASE}/chat/rooms/${roomId}/read`, {
+        method: 'PUT',
+      });
+    } catch (error) {
+      console.error('Error marking room as read:', error);
+    }
   },
 
   setError: (error: string | null) => {
