@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Image,
@@ -40,6 +40,8 @@ export function PostComposer({
   const [attachments, setAttachments] = useState<string[]>([]);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleVisibilityChange = (v: PostVisibility, listId?: string) => {
     setVisibility(v);
@@ -80,6 +82,29 @@ export function PostComposer({
   const handleFocus = () => {
     setIsExpanded(true);
   };
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File "${file.name}" exceeds 10MB limit.`);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        if (dataUrl) {
+          setAttachments((prev) => [...prev, dataUrl]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Reset input so the same file can be selected again
+    e.target.value = '';
+  }, []);
 
   return (
     <motion.div
@@ -154,8 +179,24 @@ export function PostComposer({
                   {/* Actions Bar */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
+                      <input
+                        ref={imageInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={handleFileSelect}
+                      />
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        className="hidden"
+                        onChange={handleFileSelect}
+                      />
                       <button
                         type="button"
+                        onClick={() => imageInputRef.current?.click()}
                         className="p-2 rounded-lg text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
                         title="Add image"
                       >
@@ -163,6 +204,7 @@ export function PostComposer({
                       </button>
                       <button
                         type="button"
+                        onClick={() => fileInputRef.current?.click()}
                         className="p-2 rounded-lg text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
                         title="Share document"
                       >

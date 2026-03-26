@@ -956,19 +956,76 @@ export const useGroupsStore = create<GroupsStore>((set, get) => ({
     }
   },
 
-  inviteMember: async (_groupId: string, _userId: string) => {
-    // Would send invitation in real implementation
-    console.log('Invite member not yet implemented');
+  inviteMember: async (groupId: string, userId: string) => {
+    try {
+      const response = await authFetch(`${API_BASE}/groups/${groupId}/invite`, {
+        method: 'POST',
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to invite member');
+      }
+
+      // Refresh members list
+      await get().fetchMembers(groupId);
+    } catch (error) {
+      console.error('Failed to invite member:', error);
+      throw error;
+    }
   },
 
-  removeMember: async (_groupId: string, _userId: string) => {
-    // Would remove member in real implementation
-    console.log('Remove member not yet implemented');
+  removeMember: async (groupId: string, userId: string) => {
+    try {
+      const response = await authFetch(`${API_BASE}/groups/${groupId}/members/${userId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to remove member');
+      }
+
+      // Remove from local state
+      set((state) => ({
+        members: state.members.filter((m) => m.userId !== userId),
+        groups: state.groups.map((g) =>
+          g.id === groupId ? { ...g, memberCount: Math.max(0, g.memberCount - 1) } : g
+        ),
+        currentGroup:
+          state.currentGroup?.id === groupId
+            ? { ...state.currentGroup, memberCount: Math.max(0, state.currentGroup.memberCount - 1) }
+            : state.currentGroup,
+      }));
+    } catch (error) {
+      console.error('Failed to remove member:', error);
+      throw error;
+    }
   },
 
-  updateMemberRole: async (_groupId: string, _userId: string, _role: GroupMember['role']) => {
-    // Would update member role in real implementation
-    console.log('Update member role not yet implemented');
+  updateMemberRole: async (groupId: string, userId: string, role: GroupMember['role']) => {
+    try {
+      const response = await authFetch(`${API_BASE}/groups/${groupId}/members/${userId}/role`, {
+        method: 'PUT',
+        body: JSON.stringify({ role }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update member role');
+      }
+
+      // Update local state
+      set((state) => ({
+        members: state.members.map((m) =>
+          m.userId === userId && m.groupId === groupId ? { ...m, role } : m
+        ),
+      }));
+    } catch (error) {
+      console.error('Failed to update member role:', error);
+      throw error;
+    }
   },
 
   setFilter: (filter) => {

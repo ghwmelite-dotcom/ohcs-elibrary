@@ -59,6 +59,7 @@ export function WallPost({
     bookmarkPost,
     unbookmarkPost,
     deletePost,
+    editPost,
     fetchComments,
     comments,
   } = useWallStore();
@@ -67,6 +68,8 @@ export function WallPost({
   const [showCommentsSection, setShowCommentsSection] = useState(showComments);
   const [isLiking, setIsLiking] = useState(false);
   const [isBookmarking, setIsBookmarking] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(post.content);
 
   const isOwner = user?.id === post.authorId;
   const VisibilityIcon = visibilityIcons[post.visibility] || Globe;
@@ -112,6 +115,23 @@ export function WallPost({
       await deletePost(post.id);
     }
     setShowMenu(false);
+  };
+
+  const handleStartEdit = () => {
+    setEditContent(post.content);
+    setIsEditing(true);
+    setShowMenu(false);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editContent.trim()) return;
+    await editPost(post.id, editContent.trim());
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditContent(post.content);
+    setIsEditing(false);
   };
 
   // Reactions display
@@ -202,7 +222,7 @@ export function WallPost({
                   {isOwner && (
                     <>
                       <button
-                        onClick={() => setShowMenu(false)}
+                        onClick={handleStartEdit}
                         className="w-full flex items-center gap-3 px-4 py-2 text-sm text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700"
                       >
                         <Edit2 className="w-4 h-4" />
@@ -244,9 +264,35 @@ export function WallPost({
 
       {/* Content */}
       <div className="px-3 sm:px-4 py-3">
-        <p className="text-surface-800 dark:text-surface-200 whitespace-pre-wrap break-words text-sm sm:text-base leading-relaxed">
-          {post.content}
-        </p>
+        {isEditing ? (
+          <div className="space-y-3">
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="w-full bg-surface-50 dark:bg-surface-900 rounded-xl px-4 py-3 border border-surface-200 dark:border-surface-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-surface-900 dark:text-surface-100 resize-none min-h-[100px]"
+              rows={4}
+            />
+            <div className="flex items-center gap-2 justify-end">
+              <button
+                onClick={handleCancelEdit}
+                className="px-4 py-2 text-sm rounded-lg text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={!editContent.trim()}
+                className="px-4 py-2 text-sm rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-medium transition-colors disabled:opacity-50"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-surface-800 dark:text-surface-200 whitespace-pre-wrap break-words text-sm sm:text-base leading-relaxed">
+            {post.content}
+          </p>
+        )}
 
         {/* Attachments */}
         {post.attachments && post.attachments.length > 0 && (

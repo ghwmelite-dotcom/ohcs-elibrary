@@ -19,6 +19,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { useForumStore } from '@/stores/forumStore';
+import { useAuthStore } from '@/stores/authStore';
 import { PostThread, PostEditor, CompactCategoryList } from '@/components/forum';
 import { Avatar } from '@/components/shared/Avatar';
 import { Button } from '@/components/shared/Button';
@@ -31,7 +32,8 @@ import { formatRelativeTime, formatDate } from '@/utils/formatters';
 export default function ForumTopic() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { topics, categories, posts, fetchTopic, fetchPosts, isLoading } = useForumStore();
+  const { user } = useAuthStore();
+  const { topics, categories, posts, fetchTopic, fetchPosts, createPost, votePost, markBestAnswer, subscribeTopic, editPost, deletePost, isLoading } = useForumStore();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,16 +63,21 @@ export default function ForumTopic() {
   };
 
   const handleSubmitReply = async () => {
-    if (!replyContent.trim()) return;
+    if (!replyContent.trim() || !id) return;
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Submit reply:', replyContent);
+      await createPost(id, replyContent);
       setReplyContent('');
+      fetchTopic(id);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleBookmarkToggle = async () => {
+    if (!id) return;
+    await subscribeTopic(id);
+    setIsBookmarked(!isBookmarked);
   };
 
   if (isLoading && !topic) {
@@ -103,21 +110,21 @@ export default function ForumTopic() {
   const menuItems = [
     { label: 'Share', icon: Share2, onClick: () => {} },
     { label: 'Report', icon: Flag, onClick: () => {} },
-    ...(topic.author?.id === 'current-user'
+    ...(topic.author?.id === user?.id
       ? [
-          { label: 'Edit', icon: Edit2, onClick: () => {} },
-          { label: 'Delete', icon: Trash2, onClick: () => {}, className: 'text-error-600' },
+          { label: 'Edit', icon: Edit2, onClick: () => navigate(`/forum/topic/${id}/edit`) },
+          { label: 'Delete', icon: Trash2, onClick: async () => { if (id && window.confirm('Delete this topic?')) { await deletePost(id); navigate('/forum'); } }, className: 'text-error-600' },
         ]
       : []),
   ];
 
-  // Mock first post (the topic content)
+  // First post is the topic content itself
   const topicPost = {
-    id: 'topic-post',
+    id: `topic-${topic.id}`,
     topicId: topic.id,
     authorId: topic.authorId,
     author: topic.author,
-    content: `${topic.content}\n\nThis is the full content of the topic post. It contains detailed information about the subject matter being discussed.\n\nKey points to consider:\n1. First important point\n2. Second important point\n3. Third important point\n\nI would appreciate any insights or feedback from the community on this matter.`,
+    content: topic.content,
     createdAt: topic.createdAt,
     likes: 0,
     dislikes: 0,
@@ -252,7 +259,7 @@ export default function ForumTopic() {
             <Button
               variant={isBookmarked ? 'secondary' : 'ghost'}
               size="sm"
-              onClick={() => setIsBookmarked(!isBookmarked)}
+              onClick={handleBookmarkToggle}
             >
               {isBookmarked ? (
                 <BookmarkCheck className="w-5 h-5" />
@@ -276,14 +283,21 @@ export default function ForumTopic() {
           <PostThread
             posts={allPosts as import('@/types').ForumPost[]}
             topicAuthorId={topic.author?.id || topic.authorId}
-            currentUserId="current-user"
-            onLike={(postId) => console.log('Like:', postId)}
-            onDislike={(postId) => console.log('Dislike:', postId)}
-            onReply={(postId, content) => console.log('Reply to:', postId, content)}
-            onEdit={(postId, content) => console.log('Edit:', postId, content)}
-            onDelete={(postId) => console.log('Delete:', postId)}
-            onMarkBestAnswer={(postId) => console.log('Best answer:', postId)}
-            onQuote={(postId) => console.log('Quote:', postId)}
+            currentUserId={user?.id}
+            onLike={(postId) => votePost(postId, 'up')}
+            onDislike={(postId) => votePost(postId, 'down')}
+            onReply={async (postId, content) => { if (id) { await createPost(id, content); fetchTopic(id); } }}
+            onEdit={async (postId, content) => { await editPost(postId, content); if (id) fetchTopic(id); }}
+            onDelete={async (postId) => { if (window.confirm('Delete this post?')) { await deletePost(postId); if (id) fetchTopic(id); } }}
+            onMarkBestAnswer={(postId) => markBestAnswer(postId)}
+            onQuote={(postId) => {
+              const post = allPosts.find(p => p.id === postId);
+              if (post) {
+                const quoted = `> ${post.content.split('\n').join('\n> ')}\n\n`;
+                setReplyContent(prev => prev + quoted);
+                document.getElementById('reply')?.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
           />
 
           {/* Reply Editor */}

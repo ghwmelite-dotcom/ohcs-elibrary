@@ -177,7 +177,9 @@ export const useSocialStore = create<SocialState & SocialActions>((set, get) => 
       // Optimistic update - add to following list
       const { following } = get();
       if (!following.find(u => u.id === userId)) {
-        // We don't have full user data, just mark as following
+        set((state) => ({
+          following: [...state.following, { id: userId, followedAt: new Date().toISOString() } as FollowingUser],
+        }));
       }
 
       return true;

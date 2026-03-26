@@ -66,6 +66,8 @@ interface ForumActions {
   createPost: (topicId: string, content: string, parentId?: string) => Promise<ForumPost | null>;
   votePost: (postId: string, voteType: 'up' | 'down') => Promise<void>;
   markBestAnswer: (postId: string) => Promise<void>;
+  editPost: (postId: string, content: string) => Promise<void>;
+  deletePost: (postId: string) => Promise<void>;
   subscribeTopic: (topicId: string) => Promise<void>;
   setFilter: (filter: Partial<ForumState['filter']>) => void;
   setError: (error: string | null) => void;
@@ -362,6 +364,56 @@ export const useForumStore = create<ForumStore>((set, get) => ({
     } catch (error) {
       console.error('Error marking best answer:', error);
       set({ error: error instanceof Error ? error.message : 'Failed to mark best answer' });
+    }
+  },
+
+  editPost: async (postId: string, content: string) => {
+    try {
+      const response = await authFetch(`${API_BASE}/forum/posts/${postId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Failed to edit post');
+      }
+
+      set((state) => ({
+        posts: state.posts.map((p) =>
+          p.id === postId ? { ...p, content, isEdited: true } : p
+        ),
+      }));
+    } catch (error) {
+      console.error('Error editing post:', error);
+      set({ error: error instanceof Error ? error.message : 'Failed to edit post' });
+    }
+  },
+
+  deletePost: async (postId: string) => {
+    try {
+      const response = await authFetch(`${API_BASE}/forum/posts/${postId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Failed to delete post');
+      }
+
+      set((state) => ({
+        posts: state.posts.filter((p) => p.id !== postId),
+        currentTopic: state.currentTopic
+          ? {
+              ...state.currentTopic,
+              postCount: Math.max(0, (state.currentTopic.postCount || 0) - 1),
+            }
+          : null,
+      }));
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      set({ error: error instanceof Error ? error.message : 'Failed to delete post' });
     }
   },
 
