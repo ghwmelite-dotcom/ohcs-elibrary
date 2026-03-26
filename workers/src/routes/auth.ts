@@ -11,6 +11,7 @@ import {
   type GmailCredentials,
 } from '../services/emailService';
 import { logAuthEvent, AuditActions } from '../services/auditService';
+import { blacklistToken } from '../middleware/auth';
 
 // Helper to get Gmail credentials from env
 function getGmailCredentials(env: any): GmailCredentials | undefined {
@@ -384,13 +385,13 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
       }
     }
 
-    // Check if user has 2FA enabled (bypass for super_admin)
+    // Check if user has 2FA enabled
     const twoFa = await c.env.DB.prepare(`
       SELECT secret, isEnabled FROM user_2fa WHERE userId = ? AND isEnabled = 1
     `).bind(user.id).first();
 
-    // If 2FA is enabled and user is NOT super_admin, require verification
-    if (twoFa && twoFa.isEnabled && user.role !== 'super_admin') {
+    // If 2FA is enabled, require verification (all roles including super_admin)
+    if (twoFa && twoFa.isEnabled) {
       // If TOTP code was provided, verify it
       if (totpCode) {
         const isValid = await verifyTOTP(twoFa.secret as string, totpCode);
@@ -1062,6 +1063,40 @@ authRoutes.post('/reset-password', zValidator('json', resetPasswordWithCodeSchem
       WHERE id = ?
     `).bind(passwordHash, user.id).run();
 
+    // Blacklist all active session tokens for this user (invalidate all sessions)
+    if (c.env.CACHE) {
+      try {
+        const sessions = await c.env.DB.prepare(`
+          SELECT token FROM sessions WHERE userId = ? AND expiresAt > datetime('now')
+        `).bind(user.id).all();
+
+        for (const session of sessions.results || []) {
+          if (session.token) {
+            try {
+              const sessionPayload = await verify(session.token as string, c.env.JWT_SECRET);
+              if (sessionPayload.exp) {
+                const remainingTtl = Math.max(0, (sessionPayload.exp as number) - Math.floor(Date.now() / 1000));
+                await blacklistToken(c.env.CACHE, session.token as string, remainingTtl);
+              }
+            } catch (_) {
+              // Token already expired or invalid — skip
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to blacklist sessions on password reset:', e);
+      }
+    }
+
+    // Delete all sessions for the user
+    try {
+      await c.env.DB.prepare(`
+        DELETE FROM sessions WHERE userId = ?
+      `).bind(user.id).run();
+    } catch (e) {
+      console.error('Failed to delete sessions on password reset:', e);
+    }
+
     // Log password reset activity
     try {
       await c.env.DB.prepare(`
@@ -1097,6 +1132,20 @@ authRoutes.post('/refresh', async (c) => {
 
     if (payload.type !== 'refresh') {
       return c.json({ error: 'Invalid token type' }, 401);
+    }
+
+    // Check if refresh token has been blacklisted
+    if (c.env.CACHE) {
+      try {
+        const { hashToken: hashTokenFn } = await import('../middleware/auth');
+        const key = `blacklist:${await hashTokenFn(refreshToken)}`;
+        const revoked = await c.env.CACHE.get(key);
+        if (revoked !== null) {
+          return c.json({ error: 'Token has been revoked' }, 401);
+        }
+      } catch (e) {
+        console.error('Refresh token blacklist check failed:', e);
+      }
     }
 
     // Verify session exists (using deployed DB column names)
@@ -1293,8 +1342,36 @@ authRoutes.post('/logout', async (c) => {
       // Try to get userId from token before invalidating
       const payload = await verify(token, c.env.JWT_SECRET);
       userId = payload.sub as string;
+
+      // Blacklist the access token so it cannot be reused
+      if (c.env.CACHE && payload.exp) {
+        const remainingTtl = Math.max(0, (payload.exp as number) - Math.floor(Date.now() / 1000));
+        try {
+          await blacklistToken(c.env.CACHE, token, remainingTtl);
+        } catch (e) {
+          console.error('Failed to blacklist access token:', e);
+        }
+      }
     } catch (e) {
       // Token might be expired, still try to delete session
+    }
+
+    // Also blacklist the refresh token if provided in the body
+    try {
+      const body = await c.req.json().catch(() => ({}));
+      if (body.refreshToken && c.env.CACHE) {
+        try {
+          const refreshPayload = await verify(body.refreshToken, c.env.JWT_SECRET);
+          if (refreshPayload.exp) {
+            const remainingTtl = Math.max(0, (refreshPayload.exp as number) - Math.floor(Date.now() / 1000));
+            await blacklistToken(c.env.CACHE, body.refreshToken, remainingTtl);
+          }
+        } catch (e) {
+          // Refresh token may be invalid/expired — still continue
+        }
+      }
+    } catch (e) {
+      // Body parsing failure is not critical
     }
 
     try {

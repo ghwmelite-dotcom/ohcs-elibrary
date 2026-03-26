@@ -78,6 +78,7 @@ export interface Env {
   GOOGLE_DRIVE_CLIENT_ID: string;
   GOOGLE_DRIVE_CLIENT_SECRET: string;
   GOOGLE_DRIVE_REDIRECT_URI: string;
+  CRON_SECRET: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -87,8 +88,8 @@ app.use('*', logger());
 app.use('*', prettyJSON());
 app.use('*', cors({
   origin: (origin) => {
-    // If no origin, allow (for direct API access)
-    if (!origin) return '*';
+    // No origin header (server-to-server or same-origin) — return default production origin
+    if (!origin) return 'https://ohcs-elibrary.pages.dev';
 
     const allowedOrigins = [
       'https://ohcs-elibrary.gov.gh',
@@ -101,9 +102,9 @@ app.use('*', cors({
     // Allow exact matches
     if (allowedOrigins.includes(origin)) return origin;
     // Allow any Cloudflare Pages deployment (main or preview)
-    if (origin.match(/^https:\/\/[a-z0-9-]+\.ohcs-elibrary\.pages\.dev$/)) return origin;
-    // Allow the origin anyway for document viewing (PDFs need this)
-    return origin;
+    if (/^https:\/\/[a-z0-9-]+\.ohcs-elibrary\.pages\.dev$/.test(origin)) return origin;
+    // Reject unknown origins — return production origin (will not match browser's Origin, blocking the request)
+    return 'https://ohcs-elibrary.pages.dev';
   },
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -125,7 +126,7 @@ app.get('/health', (c) => {
 // News aggregation trigger (secret-protected, for testing)
 app.get('/cron/aggregate-news', async (c) => {
   const secret = c.req.query('secret');
-  if (secret !== 'ohcs-news-2024') {
+  if (secret !== c.env.CRON_SECRET) {
     return c.json({ error: 'Invalid secret' }, 401);
   }
 
@@ -302,7 +303,7 @@ app.post('/api/v1/admin/news/generate-summaries', authMiddleware, async (c) => {
 // Secret-protected summary generation (for testing)
 app.get('/cron/generate-summaries', async (c) => {
   const secret = c.req.query('secret');
-  if (secret !== 'ohcs-news-2024') {
+  if (secret !== c.env.CRON_SECRET) {
     return c.json({ error: 'Invalid secret' }, 401);
   }
 
