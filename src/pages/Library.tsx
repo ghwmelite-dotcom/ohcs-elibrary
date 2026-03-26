@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
 import {
   Upload,
   BookOpen,
@@ -24,6 +23,11 @@ import { formatRelativeTime } from '@/utils/formatters';
 import { cn } from '@/utils/cn';
 import type { Document } from '@/types';
 
+// API base URL
+const API_BASE = import.meta.env.PROD
+  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  : '/api/v1';
+
 type LibraryTab = 'all' | 'bookmarked' | 'recent' | 'trending';
 
 export default function Library() {
@@ -32,6 +36,8 @@ export default function Library() {
     fetchCategories,
     fetchStats,
     fetchBookmarks,
+    bookmarkDocument,
+    removeBookmark: removeBookmarkAction,
     stats,
     recentlyViewed,
     bookmarks,
@@ -48,6 +54,32 @@ export default function Library() {
   const [activeTab, setActiveTab] = useState<LibraryTab>('all');
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [showViewer, setShowViewer] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    // Debounce search - 300ms
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+    searchTimerRef.current = setTimeout(() => {
+      if (query.trim()) {
+        fetchDocuments({ search: query.trim() });
+      } else {
+        fetchDocuments();
+      }
+    }, 300);
+  }, [fetchDocuments]);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, []);
 
   const handleViewDocument = (document: Document) => {
     setSelectedDocument(document);
@@ -59,21 +91,43 @@ export default function Library() {
     setTimeout(() => setSelectedDocument(null), 300);
   };
 
-  const handleBookmarkDocument = (documentId: string) => {
+  const handleBookmarkDocument = async (documentId: string) => {
     const isCurrentlyBookmarked = bookmarks.some((b) => b.documentId === documentId);
     if (isCurrentlyBookmarked) {
-      // removeBookmark would be called here
+      await removeBookmarkAction(documentId);
     } else {
-      // bookmarkDocument would be called here
+      await bookmarkDocument(documentId);
     }
   };
 
-  const handleDownloadDocument = (document: Document) => {
-    if (document.fileUrl) {
+  const handleDownloadDocument = async (document: Document) => {
+    const isLocalDocument = document.id.startsWith('local-');
+
+    if (isLocalDocument && document.fileUrl) {
       const link = window.document.createElement('a');
       link.href = document.fileUrl;
       link.download = document.fileName || document.title;
       link.click();
+      return;
+    }
+
+    try {
+      const token = useAuthStore.getState().token;
+      const response = await fetch(`${API_BASE}/documents/${document.id}/download`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!response.ok) throw new Error('Download failed');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = document.fileName || document.title;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(`${API_BASE}/documents/${document.id}/download`, '_blank');
     }
   };
 
@@ -195,6 +249,44 @@ export default function Library() {
               </Button>
             </motion.div>
           )}
+        </motion.div>
+
+        {/* Search Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="relative"
+        >
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search documents by title, description, or keywords..."
+              className={cn(
+                'w-full pl-12 pr-4 py-3.5 bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl',
+                'text-surface-900 dark:text-surface-50 placeholder:text-surface-400',
+                'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+                'shadow-sm hover:shadow-md transition-shadow text-sm'
+              )}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  fetchDocuments();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-surface-400 hover:text-surface-600 transition-colors"
+              >
+                <span className="sr-only">Clear search</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
         </motion.div>
 
         {/* Error State */}

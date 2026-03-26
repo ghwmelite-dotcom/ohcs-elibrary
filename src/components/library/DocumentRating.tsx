@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { motion } from 'framer-motion';
+import { useLibraryStore } from '@/stores/libraryStore';
 
 interface DocumentRatingProps {
   documentId: string;
@@ -15,17 +16,25 @@ interface DocumentRatingProps {
 
 export function DocumentRating({
   documentId,
-  currentRating,
-  totalRatings,
-  userRating,
+  currentRating: initialRating,
+  totalRatings: initialTotalRatings,
+  userRating: initialUserRating,
   onRate,
   readonly = false,
   size = 'md',
 }: DocumentRatingProps) {
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [localUserRating, setLocalUserRating] = useState<number | undefined>(initialUserRating);
+  const [localAvgRating, setLocalAvgRating] = useState(initialRating);
+  const [localTotalRatings, setLocalTotalRatings] = useState(initialTotalRatings);
+  const [ratingError, setRatingError] = useState<string | null>(null);
 
-  const displayRating = hoverRating ?? userRating ?? 0;
+  const { rateDocument } = useLibraryStore();
+
+  const displayRating = hoverRating ?? localUserRating ?? 0;
+  const currentRating = localAvgRating;
+  const totalRatings = localTotalRatings;
 
   const sizes = {
     sm: 'w-4 h-4',
@@ -36,10 +45,21 @@ export function DocumentRating({
   const handleRate = async (rating: number) => {
     if (readonly || isSubmitting) return;
     setIsSubmitting(true);
+    setRatingError(null);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await rateDocument(documentId, rating);
+      setLocalUserRating(rating);
+      // Optimistic update: recalculate average
+      const wasRated = localUserRating !== undefined;
+      const newTotal = wasRated ? localTotalRatings : localTotalRatings + 1;
+      const newAvg = wasRated
+        ? (localAvgRating * localTotalRatings - (localUserRating || 0) + rating) / localTotalRatings
+        : (localAvgRating * localTotalRatings + rating) / newTotal;
+      setLocalAvgRating(Math.round(newAvg * 10) / 10);
+      setLocalTotalRatings(newTotal);
       onRate?.(rating);
+    } catch {
+      setRatingError('Failed to submit rating. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -88,10 +108,13 @@ export function DocumentRating({
         </span>
       </div>
 
-      {userRating && !readonly && (
+      {localUserRating && !readonly && (
         <p className="text-xs text-surface-500 dark:text-surface-400">
-          You rated this document {userRating} star{userRating !== 1 && 's'}
+          You rated this document {localUserRating} star{localUserRating !== 1 && 's'}
         </p>
+      )}
+      {ratingError && (
+        <p className="text-xs text-error-500">{ratingError}</p>
       )}
     </div>
   );

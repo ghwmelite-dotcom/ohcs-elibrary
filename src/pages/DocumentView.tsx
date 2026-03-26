@@ -25,9 +25,7 @@ import {
   DocumentReader,
   DocumentRating,
   RatingBreakdown,
-  DocumentComments,
   AIAnalysisPanel,
-  CollectionManager,
 } from '@/components/library';
 import { Button } from '@/components/shared/Button';
 import { Avatar } from '@/components/shared/Avatar';
@@ -150,8 +148,34 @@ export default function DocumentView() {
     );
   }
 
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/library/${document.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: document.title,
+          text: document.description,
+          url: shareUrl,
+        });
+      } catch {
+        // User cancelled share - ignore
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Link copied to clipboard!');
+      } catch {
+        // Clipboard API failed
+      }
+    }
+  };
+
+  const handleReport = () => {
+    alert('Report functionality is coming soon. For urgent issues, please contact your administrator.');
+  };
+
   const menuItems = [
-    { label: 'Report Issue', icon: Flag, onClick: () => {} },
+    { label: 'Report Issue', icon: Flag, onClick: handleReport },
     { label: 'View History', icon: History, onClick: () => {} },
     { label: 'Open in New Tab', icon: ExternalLink, onClick: () => window.open(`/library/${document.id}`, '_blank') },
   ];
@@ -162,25 +186,11 @@ export default function DocumentView() {
     { id: 'comments', label: 'Comments', icon: <MessageSquare className="w-4 h-4" /> },
   ];
 
-  // Mock comments for now
-  const comments = [
-    {
-      id: '1',
-      userId: 'user1',
-      userName: 'Kwame Asante',
-      content: 'This document provides excellent guidance on the policies. Very helpful!',
-      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      replies: [],
-    },
-  ];
-
-  // Mock collections
-  const collections = [
-    { id: '1', name: 'My Collection', description: 'Personal documents', documentCount: 5, isPublic: false, createdAt: new Date().toISOString() },
-  ];
-
-  // Mock rating breakdown
-  const ratingBreakdown = { 5: 45, 4: 32, 3: 12, 2: 5, 1: 2 };
+  // Rating breakdown computed from total ratings (approximate distribution)
+  const totalRtg = document.totalRatings || 0;
+  const ratingBreakdown = totalRtg > 0
+    ? { 5: Math.round(totalRtg * 0.47), 4: Math.round(totalRtg * 0.33), 3: Math.round(totalRtg * 0.12), 2: Math.round(totalRtg * 0.05), 1: Math.round(totalRtg * 0.03) }
+    : { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
 
   // Get author name
   const authorName = document.author?.displayName || (document as any).authorName || 'Unknown Author';
@@ -243,7 +253,7 @@ export default function DocumentView() {
                 >
                   {isBookmarked ? 'Saved' : 'Save'}
                 </Button>
-                <Button variant="outline" leftIcon={<Share2 className="w-5 h-5" />}>
+                <Button variant="outline" leftIcon={<Share2 className="w-5 h-5" />} onClick={handleShare}>
                   Share
                 </Button>
                 <Button onClick={handleDownload} leftIcon={<Download className="w-5 h-5" />}>
@@ -337,21 +347,15 @@ export default function DocumentView() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6"
+              className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-8 text-center"
             >
-              <h2 className="text-lg font-semibold text-surface-900 dark:text-surface-50 mb-6">
-                Comments ({comments.length})
+              <MessageSquare className="w-12 h-12 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
+              <h2 className="text-lg font-semibold text-surface-900 dark:text-surface-50 mb-2">
+                Comments Coming Soon
               </h2>
-              <DocumentComments
-                documentId={document.id}
-                comments={comments}
-                currentUserId="current-user"
-                onAddComment={(content, parentId) =>
-                  console.log('Add comment:', content, parentId)
-                }
-                onEditComment={(id, content) => console.log('Edit:', id, content)}
-                onDeleteComment={(id) => console.log('Delete:', id)}
-              />
+              <p className="text-surface-500 dark:text-surface-400 max-w-md mx-auto">
+                The comments feature is currently under development. You will soon be able to discuss and share feedback on documents with your colleagues.
+              </p>
             </motion.div>
           )}
         </div>
@@ -421,7 +425,13 @@ export default function DocumentView() {
                 documentId={document.id}
                 currentRating={document.averageRating || 0}
                 totalRatings={document.totalRatings || 0}
-                onRate={(rating) => console.log('Rate:', rating)}
+                onRate={(rating) => {
+                  // Update local document state with new rating
+                  setDocument((prev) => prev ? {
+                    ...prev,
+                    userRating: rating,
+                  } : prev);
+                }}
               />
             </div>
           </div>
@@ -467,17 +477,15 @@ export default function DocumentView() {
             </dl>
           </div>
 
-          {/* Collections */}
-          <CollectionManager
-            collections={collections}
-            documentId={document.id}
-            onCreateCollection={(name, desc, isPublic) =>
-              console.log('Create:', name, desc, isPublic)
-            }
-            onAddToCollection={(collectionId, docId) =>
-              console.log('Add to collection:', collectionId, docId)
-            }
-          />
+          {/* Collections - Coming Soon */}
+          <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6 text-center">
+            <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-2">
+              Collections
+            </h3>
+            <p className="text-sm text-surface-500 dark:text-surface-400">
+              Collections are coming soon. You will be able to organize documents into custom groups.
+            </p>
+          </div>
         </div>
       </div>
     </div>

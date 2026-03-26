@@ -23,6 +23,11 @@ import { Dropdown } from '@/components/shared/Dropdown';
 import { cn } from '@/utils/cn';
 import { formatRelativeTime, formatFileSize, formatFileType } from '@/utils/formatters';
 
+// API base URL
+const API_BASE = import.meta.env.PROD
+  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  : '/api/v1';
+
 interface CategoryInfo {
   id: string;
   name: string;
@@ -99,9 +104,57 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
     }
   };
 
+  const handleDownload = async () => {
+    if (isLocalDocument && document.fileUrl) {
+      // Local document - use blob URL directly
+      const link = window.document.createElement('a');
+      link.href = document.fileUrl;
+      link.download = document.fileName || document.title;
+      link.click();
+      return;
+    }
+
+    try {
+      const token = useAuthStore.getState().token;
+      const response = await fetch(`${API_BASE}/documents/${document.id}/download`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!response.ok) throw new Error('Download failed');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = document.fileName || document.title;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // Fallback: open download URL directly
+      window.open(`${API_BASE}/documents/${document.id}/download`, '_blank');
+    }
+  };
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/library/${document.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: document.title,
+          text: document.description,
+          url: shareUrl,
+        });
+      } catch {
+        // User cancelled or share failed - ignore
+      }
+    } else {
+      await navigator.clipboard.writeText(shareUrl);
+    }
+  };
+
   const menuItems = [
-    { label: 'Share', icon: Share2, onClick: () => {} },
-    { label: 'Download', icon: Download, onClick: () => {} },
+    { label: 'Share', icon: Share2, onClick: handleShare },
+    { label: 'Download', icon: Download, onClick: handleDownload },
     {
       label: isBookmarked ? 'Remove Bookmark' : 'Add Bookmark',
       icon: isBookmarked ? BookmarkCheck : Bookmark,

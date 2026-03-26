@@ -20,7 +20,7 @@ import { useLibraryStore } from '@/stores/libraryStore';
 import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/utils/cn';
 import { formatFileSize } from '@/utils/formatters';
-import type { DocumentCategory } from '@/types';
+// DocumentCategory type not needed after removing local fallback
 
 // API base URL
 const API_BASE = import.meta.env.PROD
@@ -62,7 +62,7 @@ interface DocumentUploadProps {
 }
 
 export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
-  const { categories, addLocalDocument } = useLibraryStore();
+  const { categories } = useLibraryStore();
   const [files, setFiles] = useState<FileUpload[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -128,21 +128,6 @@ export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
 
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const simulateUpload = async (fileUpload: FileUpload, index: number) => {
-    // Simulate upload progress
-    for (let progress = 0; progress <= 100; progress += 10) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      setFiles((prev) =>
-        prev.map((f, i) =>
-          i === index ? { ...f, progress, status: 'uploading' } : f
-        )
-      );
-    }
-    setFiles((prev) =>
-      prev.map((f, i) => (i === index ? { ...f, status: 'success' } : f))
-    );
   };
 
   const uploadToCloud = async (
@@ -240,36 +225,31 @@ export function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
               idx === i ? { ...file, status: 'success' as const, progress: 100 } : file
             )
           );
+          // Refresh documents list after successful upload
+          useLibraryStore.getState().fetchDocuments();
+          useLibraryStore.getState().fetchStats();
+          useLibraryStore.getState().fetchCategories();
         } else {
-          // Cloud upload failed, fall back to local storage
-          // Simulate remaining progress for visual feedback
-          await simulateUpload(f, i);
-
-          // Create file URL for local storage (using object URL)
-          const fileUrl = URL.createObjectURL(f.file);
-
-          // Add document to local storage
-          addLocalDocument({
-            title: data.title + (validFiles.length > 1 ? ` (${i + 1})` : ''),
-            description: data.description,
-            category: data.categoryId as DocumentCategory,
-            accessLevel: data.accessLevel,
-            tags: data.tags ? data.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
-            fileName: f.file.name,
-            fileSize: f.file.size,
-            fileType: f.file.type,
-            fileUrl: fileUrl,
-          });
+          // Cloud upload failed - show error
+          setFiles((prev) =>
+            prev.map((file, idx) =>
+              idx === i ? { ...file, status: 'error' as const, error: 'Upload failed. Please check your connection and try again.' } : file
+            )
+          );
         }
       })
     );
 
-    // Close modal and reset
-    setTimeout(() => {
-      reset();
-      setFiles([]);
-      onClose();
-    }, 1000);
+    // Close modal and reset only if all uploads succeeded
+    const allSucceeded = files.every((f) => f.status === 'success' || f.status === 'error');
+    const anySucceeded = files.some((f) => f.status === 'success');
+    if (anySucceeded) {
+      setTimeout(() => {
+        reset();
+        setFiles([]);
+        onClose();
+      }, 1500);
+    }
   };
 
   const handleClose = () => {

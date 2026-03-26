@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLibraryStore } from '@/stores/libraryStore';
 import { cn } from '@/utils/cn';
@@ -40,9 +40,14 @@ const categoryIcons: Record<DocumentCategory, React.ComponentType<{ className?: 
 };
 
 export function CategoryFilter() {
-  const { categories, selectedCategory, setSelectedCategory, stats } = useLibraryStore();
+  const { categories, selectedCategory, setSelectedCategory, stats, fetchCategories } = useLibraryStore();
   const [isExpanded, setIsExpanded] = useState(true);
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+
+  // Fetch categories from API on mount (falls back to hardcoded in store)
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const getCategoryCount = (categoryId: DocumentCategory | null) => {
     if (!categoryId) return stats.totalDocuments;
