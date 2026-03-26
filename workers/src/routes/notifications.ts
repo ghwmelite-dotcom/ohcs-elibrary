@@ -160,31 +160,40 @@ app.get('/summary', async (c) => {
   }
 });
 
-// POST /notifications - Create a notification (internal use)
+// POST /notifications - Create a notification (internal use / admin only for cross-user)
 app.post('/', async (c) => {
-  const userId = c.get('user')?.id;
-  const body = await c.req.json();
+  const caller = c.get('user');
+  const userId = caller?.id;
 
-  const {
-    targetUserId,
-    type,
-    title,
-    message,
-    link,
-    actorId,
-    actorName,
-    actorAvatar,
-    resourceId,
-    resourceType,
-    priority = 'normal',
-    metadata,
-    expiresAt
-  } = body;
-
-  // Only allow creating notifications for self or if admin
-  const targetId = targetUserId || userId;
+  if (!userId) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
 
   try {
+    const body = await c.req.json();
+
+    const {
+      targetUserId,
+      type,
+      title,
+      message,
+      link,
+      actorId,
+      actorName,
+      actorAvatar,
+      resourceId,
+      resourceType,
+      priority = 'normal',
+      metadata,
+      expiresAt
+    } = body;
+
+    // Only admins may create notifications for other users
+    const targetId = targetUserId || userId;
+    if (targetId !== userId && caller?.role !== 'admin') {
+      return c.json({ error: 'Forbidden: cannot create notifications for other users' }, 403);
+    }
+
     const id = generateId();
 
     await c.env.DB.prepare(`
@@ -521,8 +530,16 @@ app.delete('/subscribe', async (c) => {
   }
 });
 
-// GET /notifications/templates - Get notification templates (admin)
+// GET /notifications/templates - Get notification templates (admin only)
 app.get('/templates', async (c) => {
+  const caller = c.get('user');
+  if (!caller?.id) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  if (caller.role !== 'admin') {
+    return c.json({ error: 'Forbidden: admin access required' }, 403);
+  }
+
   try {
     const templates = await c.env.DB.prepare(`
       SELECT * FROM notification_templates WHERE isActive = 1 ORDER BY type
@@ -559,19 +576,27 @@ app.post('/welcome', async (c) => {
   }
 });
 
-// Bulk create notifications (for system announcements)
+// Bulk create notifications (for system announcements — admin only)
 app.post('/bulk', async (c) => {
-  const body = await c.req.json();
-  const { userIds, type, title, message, link, priority = 'normal', metadata } = body;
-
-  if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
-    return c.json({ error: 'userIds array required' }, 400);
+  const caller = c.get('user');
+  if (!caller?.id) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  if (caller.role !== 'admin') {
+    return c.json({ error: 'Forbidden: admin access required' }, 403);
   }
 
   try {
-    const notifications = userIds.map(userId => ({
+    const body = await c.req.json();
+    const { userIds, type, title, message, link, priority = 'normal', metadata } = body;
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return c.json({ error: 'userIds array required' }, 400);
+    }
+
+    const notifications = userIds.map((uid: string) => ({
       id: generateId(),
-      userId,
+      userId: uid,
       type,
       title,
       message,

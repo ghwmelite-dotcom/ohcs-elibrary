@@ -170,7 +170,9 @@ dm.get('/messages/:conversationId', authMiddleware, async (c) => {
   const userId = c.get('user')?.id;
   const conversationId = c.req.param('conversationId');
   const { page = '1', limit = '50', before } = c.req.query();
-  const offset = (parseInt(page) - 1) * parseInt(limit);
+  const parsedPage = Math.max(1, parseInt(page) || 1);
+  const parsedLimit = Math.min(Math.max(1, parseInt(limit) || 50), 100);
+  const offset = (parsedPage - 1) * parsedLimit;
 
   try {
     // Verify user is part of conversation
@@ -199,7 +201,7 @@ dm.get('/messages/:conversationId', authMiddleware, async (c) => {
     }
 
     query += ` ORDER BY dm.createdAt DESC LIMIT ? OFFSET ?`;
-    params.push(parseInt(limit), offset);
+    params.push(parsedLimit, offset);
 
     const messages = await db.prepare(query).bind(...params).all();
 
@@ -229,9 +231,9 @@ dm.get('/messages/:conversationId', authMiddleware, async (c) => {
 
     return c.json({
       messages: messagesWithReactions,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      hasMore: messagesWithReactions.length === parseInt(limit),
+      page: parsedPage,
+      limit: parsedLimit,
+      hasMore: messagesWithReactions.length === parsedLimit,
     });
   } catch (error) {
     console.error('Error fetching messages:', error);
@@ -368,9 +370,13 @@ dm.put('/messages/:id', authMiddleware, async (c) => {
   const body = await c.req.json();
   const { content } = body;
 
+  if (!content || typeof content !== 'string' || content.trim().length === 0) {
+    return c.json({ error: 'Message content is required' }, 400);
+  }
+
   try {
     const message = await db.prepare(`
-      SELECT senderId FROM direct_messages WHERE id = ?
+      SELECT senderId FROM direct_messages WHERE id = ? AND isDeleted = 0
     `).bind(messageId).first();
 
     if (!message) {
@@ -384,7 +390,7 @@ dm.put('/messages/:id', authMiddleware, async (c) => {
     await db.prepare(`
       UPDATE direct_messages SET content = ?, isEdited = 1, updatedAt = datetime('now')
       WHERE id = ?
-    `).bind(content, messageId).run();
+    `).bind(content.trim(), messageId).run();
 
     return c.json({ success: true });
   } catch (error) {
@@ -441,6 +447,19 @@ dm.post('/messages/:id/reaction', authMiddleware, async (c) => {
   }
 
   try {
+    // Verify the message exists and the user is a participant in its conversation
+    const messageCheck = await db.prepare(`
+      SELECT dm.id
+      FROM direct_messages dm
+      JOIN dm_conversations dc ON dm.conversationId = dc.id
+      WHERE dm.id = ? AND dm.isDeleted = 0
+      AND (dc.user1Id = ? OR dc.user2Id = ?)
+    `).bind(messageId, userId, userId).first();
+
+    if (!messageCheck) {
+      return c.json({ error: 'Message not found or access denied' }, 404);
+    }
+
     const existing = await db.prepare(`
       SELECT id FROM dm_reactions WHERE messageId = ? AND userId = ? AND emoji = ?
     `).bind(messageId, userId, emoji).first();

@@ -229,7 +229,8 @@ chatRoutes.get('/rooms/:id/messages', requireAuth, async (c: AppContext) => {
     const { DB } = c.env;
     const userId = c.get('userId')!;
     const roomId = c.req.param('id');
-    const limit = Math.min(parseInt(c.req.query('limit') || '50'), 100);
+    const rawLimit = parseInt(c.req.query('limit') || '50');
+    const limit = Math.min(isNaN(rawLimit) ? 50 : rawLimit, 100);
     const before = c.req.query('before'); // For pagination
 
     // Check if user is a member (for private rooms)
@@ -274,14 +275,16 @@ chatRoutes.get('/rooms/:id/messages', requireAuth, async (c: AppContext) => {
     let reactions: any[] = [];
 
     if (messageIds.length > 0) {
+      // Build a safe parameterised IN clause — never interpolate user-controlled values.
+      // messageIds come from our own DB query, but we still use bind() for correctness.
       const placeholders = messageIds.map(() => '?').join(',');
-      const { results: reactionResults } = await DB.prepare(`
-        SELECT messageId, emoji, COUNT(*) as count,
-               GROUP_CONCAT(userId) as userIds
-        FROM chat_reactions
-        WHERE messageId IN (${placeholders})
-        GROUP BY messageId, emoji
-      `).bind(...messageIds).all();
+      const { results: reactionResults } = await DB.prepare(
+        `SELECT messageId, emoji, COUNT(*) as count,
+                GROUP_CONCAT(userId) as userIds
+         FROM chat_reactions
+         WHERE messageId IN (${placeholders})
+         GROUP BY messageId, emoji`
+      ).bind(...messageIds).all();
       reactions = reactionResults || [];
     }
 
@@ -501,7 +504,25 @@ chatRoutes.post('/messages/:id/reactions', requireAuth, async (c: AppContext) =>
 chatRoutes.get('/rooms/:id/members', requireAuth, async (c: AppContext) => {
   try {
     const { DB } = c.env;
+    const userId = c.get('userId')!;
     const roomId = c.req.param('id');
+
+    // Fetch the room and the caller's membership in one query
+    const room = await DB.prepare(`
+      SELECT r.type, crm.userId as isMember
+      FROM chat_rooms r
+      LEFT JOIN chat_room_members crm ON r.id = crm.roomId AND crm.userId = ?
+      WHERE r.id = ?
+    `).bind(userId, roomId).first<any>();
+
+    if (!room) {
+      return c.json({ error: 'Room not found' }, 404);
+    }
+
+    // Private rooms: only members may view the member list
+    if (room.type === 'private' && !room.isMember) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
 
     const { results } = await DB.prepare(`
       SELECT
@@ -525,6 +546,6 @@ chatRoutes.get('/rooms/:id/members', requireAuth, async (c: AppContext) => {
     return c.json(results || []);
   } catch (error) {
     console.error('Error fetching members:', error);
-    return c.json([]);
+    return c.json({ error: 'Failed to fetch members' }, 500);
   }
 });
