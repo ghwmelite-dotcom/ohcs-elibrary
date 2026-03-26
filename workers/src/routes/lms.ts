@@ -382,11 +382,30 @@ lms.post('/courses/:id/discussions', requireAuth);
 lms.post('/discussions/:id/replies', requireAuth);
 lms.post('/discussions/replies/:id/like', requireAuth);
 
+// Auth for quiz, question, submission, review, and other mutation endpoints
+lms.post('/quizzes/:id/start', requireAuth);
+lms.post('/quizzes/:id/submit', requireAuth);
+lms.post('/quizzes/:id/questions', requireAuth);
+lms.put('/quizzes/:id/questions/reorder', requireAuth);
+lms.put('/quizzes/:id', requireAuth);
+lms.put('/questions/:id', requireAuth);
+lms.delete('/questions/:id', requireAuth);
+lms.post('/submissions/:id/grade', requireAuth);
+lms.post('/lessons/:id/complete', requireAuth);
+lms.post('/assignments/:id/submit', requireAuth);
+lms.delete('/courses/:id/enroll', requireAuth);
+lms.post('/courses/:id/reviews', requireAuth);
+lms.delete('/courses/:id/reviews', requireAuth);
+lms.post('/reviews/:id/helpful', requireAuth);
+lms.post('/reviews/:id/respond', requireAuth);
+lms.put('/reviews/:id/hide', requireAuth);
+
 // Apply optional auth to catalog endpoints (to check enrollment status)
 lms.use('/courses', optionalAuth);
 lms.use('/courses/:id', optionalAuth);
 lms.use('/lessons/:id', optionalAuth);
 lms.use('/discussions/:id', optionalAuth);
+lms.use('/quizzes/:id', optionalAuth);
 
 // =====================================================
 // COURSE CATALOG (Student Endpoints)
@@ -2023,8 +2042,7 @@ lms.put('/questions/:id', async (c) => {
         hints = ?,
         points = ?,
         mediaUrl = ?,
-        mediaType = ?,
-        updatedAt = datetime('now')
+        mediaType = ?
       WHERE id = ?
     `).bind(
       questionType || null, question || null,
@@ -2252,7 +2270,7 @@ lms.get('/instructor/courses/:id/grades', async (c) => {
              ROW_NUMBER() OVER (PARTITION BY qa.userId, qa.quizId ORDER BY qa.percentage DESC) as rn
       FROM lms_quiz_attempts qa
       JOIN lms_quizzes q ON qa.quizId = q.id
-      WHERE q.courseId = ? AND qa.status = 'completed'
+      WHERE q.courseId = ? AND qa.status = 'graded'
     `).bind(courseId).all();
 
     // Get assignment submissions for all students
@@ -2414,7 +2432,7 @@ lms.get('/instructor/courses/:id/analytics', async (c) => {
       LEFT JOIN lms_quiz_attempts qa ON q.id = qa.quizId AND qa.status = 'graded'
       WHERE q.courseId = ?
       GROUP BY q.id, q.title
-      ORDER BY q.sortOrder ASC
+      ORDER BY q.title ASC
     `).bind(courseId).all();
 
     // Get assignment completion stats
@@ -3716,7 +3734,7 @@ lms.get('/courses/:id/reviews', async (c) => {
   try {
     // Get course info including review stats
     const course = await c.env.DB.prepare(`
-      SELECT id, title, averageRating, reviewCount FROM lms_courses WHERE id = ?
+      SELECT id, title, averageRating, ratingCount FROM lms_courses WHERE id = ?
     `).bind(courseId).first();
 
     if (!course) {
@@ -3773,7 +3791,7 @@ lms.get('/courses/:id/reviews', async (c) => {
       page,
       totalPages: Math.ceil(((countResult as any)?.count || 0) / limit),
       averageRating: (course as any).averageRating || 0,
-      totalReviews: (course as any).reviewCount || 0,
+      totalReviews: (course as any).ratingCount || 0,
       ratingDistribution,
       userReview,
     });
@@ -3840,7 +3858,7 @@ lms.post('/courses/:id/reviews', async (c) => {
 
     await c.env.DB.prepare(`
       UPDATE lms_courses
-      SET averageRating = ?, reviewCount = ?, updatedAt = ?
+      SET averageRating = ?, ratingCount = ?, updatedAt = ?
       WHERE id = ?
     `).bind(
       (ratingStats as any)?.avgRating || 0,
@@ -3851,7 +3869,7 @@ lms.post('/courses/:id/reviews', async (c) => {
 
     // Award XP for first review
     if (!existingReview) {
-      await awardLmsXp(c.env.DB, user.id, 15, 'course_review', courseId, 'Submitted course review');
+      await awardLmsXp(c.env.DB, user.id, 15, 'Submitted course review', courseId, 'lms_course_review');
     }
 
     return c.json({
@@ -3892,7 +3910,7 @@ lms.delete('/courses/:id/reviews', async (c) => {
 
     await c.env.DB.prepare(`
       UPDATE lms_courses
-      SET averageRating = ?, reviewCount = ?, updatedAt = ?
+      SET averageRating = ?, ratingCount = ?, updatedAt = ?
       WHERE id = ?
     `).bind(
       (ratingStats as any)?.avgRating || 0,
@@ -4031,7 +4049,7 @@ lms.put('/reviews/:id/hide', async (c) => {
 
     await c.env.DB.prepare(`
       UPDATE lms_courses
-      SET averageRating = ?, reviewCount = ?, updatedAt = ?
+      SET averageRating = ?, ratingCount = ?, updatedAt = ?
       WHERE id = ?
     `).bind(
       (ratingStats as any)?.avgRating || 0,
@@ -4295,7 +4313,7 @@ lms.get('/rubrics', requireAuth, async (c) => {
         (SELECT COUNT(*) FROM lms_assignments WHERE rubricId = r.id) as usageCount
       FROM lms_rubrics r
       LEFT JOIN users u ON r.instructorId = u.id
-      WHERE r.instructorId = ? OR r.isShared = 1
+      WHERE r.instructorId = ? OR r.isTemplate = 1
       ORDER BY r.updatedAt DESC
     `).bind(user.id).all();
 
@@ -4334,10 +4352,10 @@ lms.get('/rubrics/:id', requireAuth, async (c) => {
 
     // Check access
     const isOwner = (rubric as any).instructorId === user.id;
-    const isShared = (rubric as any).isShared;
+    const isSharedTemplate = (rubric as any).isTemplate;
     const isAdmin = isInstructor(user.role);
 
-    if (!isOwner && !isShared && !isAdmin) {
+    if (!isOwner && !isSharedTemplate && !isAdmin) {
       return c.json({ error: 'Not authorized to view this rubric' }, 403);
     }
 
@@ -4364,7 +4382,7 @@ lms.post('/rubrics', requireAuth, async (c) => {
   }
 
   try {
-    const { title, description, criteria, maxScore, isShared } = await c.req.json();
+    const { title, description, criteria, maxScore, isTemplate } = await c.req.json();
 
     if (!title || !criteria || !Array.isArray(criteria) || criteria.length === 0) {
       return c.json({ error: 'Title and at least one criterion are required' }, 400);
@@ -4375,7 +4393,7 @@ lms.post('/rubrics', requireAuth, async (c) => {
 
     const id = crypto.randomUUID();
     await c.env.DB.prepare(`
-      INSERT INTO lms_rubrics (id, title, description, criteria, maxScore, instructorId, isShared, createdAt, updatedAt)
+      INSERT INTO lms_rubrics (id, title, description, criteria, maxScore, instructorId, isTemplate, createdAt, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `).bind(
       id,
@@ -4384,7 +4402,7 @@ lms.post('/rubrics', requireAuth, async (c) => {
       JSON.stringify(criteria),
       maxScore || calculatedMaxScore,
       user.id,
-      isShared ? 1 : 0
+      isTemplate ? 1 : 0
     ).run();
 
     return c.json({ id, message: 'Rubric created successfully' }, 201);
@@ -4416,7 +4434,7 @@ lms.put('/rubrics/:id', requireAuth, async (c) => {
       return c.json({ error: 'Not authorized to update this rubric' }, 403);
     }
 
-    const { title, description, criteria, maxScore, isShared } = await c.req.json();
+    const { title, description, criteria, maxScore, isTemplate } = await c.req.json();
 
     // Calculate max score from criteria if not provided
     let calculatedMaxScore = maxScore;
@@ -4430,7 +4448,7 @@ lms.put('/rubrics/:id', requireAuth, async (c) => {
           description = COALESCE(?, description),
           criteria = COALESCE(?, criteria),
           maxScore = COALESCE(?, maxScore),
-          isShared = COALESCE(?, isShared),
+          isTemplate = COALESCE(?, isTemplate),
           updatedAt = datetime('now')
       WHERE id = ?
     `).bind(
@@ -4438,7 +4456,7 @@ lms.put('/rubrics/:id', requireAuth, async (c) => {
       description,
       criteria ? JSON.stringify(criteria) : null,
       calculatedMaxScore,
-      isShared !== undefined ? (isShared ? 1 : 0) : null,
+      isTemplate !== undefined ? (isTemplate ? 1 : 0) : null,
       rubricId
     ).run();
 
@@ -4511,7 +4529,7 @@ lms.post('/rubrics/:id/duplicate', requireAuth, async (c) => {
 
     const newId = crypto.randomUUID();
     await c.env.DB.prepare(`
-      INSERT INTO lms_rubrics (id, title, description, criteria, maxScore, instructorId, isShared, createdAt, updatedAt)
+      INSERT INTO lms_rubrics (id, title, description, criteria, maxScore, instructorId, isTemplate, createdAt, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?, 0, datetime('now'), datetime('now'))
     `).bind(
       newId,
