@@ -15,7 +15,7 @@ import {
   Loader2,
   RefreshCw,
 } from 'lucide-react';
-import { useCallStore, CallType, MediaDevice } from '@/stores/callStore';
+import type { CallType } from '@/stores/callStore';
 import { Avatar } from '@/components/shared/Avatar';
 import { Button } from '@/components/shared/Button';
 import { cn } from '@/utils/cn';
@@ -39,20 +39,14 @@ export function PreCallSetup({
   participantName,
   participantAvatar,
 }: PreCallSetupProps) {
-  const {
-    availableDevices,
-    selectedAudioInput,
-    selectedVideoInput,
-    deviceTestStream,
-    isTestingDevices,
-    permissionError,
-    enumerateDevices,
-    selectAudioInput,
-    selectVideoInput,
-    testDevices,
-    stopDeviceTest,
-    clearPermissionError,
-  } = useCallStore();
+  // Device management is handled locally in this component since
+  // the call store now focuses on WebRTC signaling
+  const [availableDevices, setAvailableDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedAudioInput, setSelectedAudioInput] = useState<string | null>(null);
+  const [selectedVideoInput, setSelectedVideoInput] = useState<string | null>(null);
+  const [deviceTestStream, setDeviceTestStream] = useState<MediaStream | null>(null);
+  const [isTestingDevices, setIsTestingDevices] = useState(false);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioAnalyzerRef = useRef<AnalyserNode | null>(null);
@@ -63,6 +57,14 @@ export function PreCallSetup({
   const [showDeviceSettings, setShowDeviceSettings] = useState(false);
   const [hasTestedDevices, setHasTestedDevices] = useState(false);
   const [testError, setTestError] = useState<string | null>(null);
+
+  // Local helper: stop test stream
+  const stopDeviceTest = () => {
+    if (deviceTestStream) {
+      deviceTestStream.getTracks().forEach((t) => t.stop());
+      setDeviceTestStream(null);
+    }
+  };
 
   // Get devices by type
   const audioInputs = availableDevices.filter((d) => d.kind === 'audioinput');
@@ -76,7 +78,6 @@ export function PreCallSetup({
     }
 
     return () => {
-      // Cleanup on unmount
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
@@ -132,13 +133,41 @@ export function PreCallSetup({
 
   const handleTestDevices = async () => {
     setTestError(null);
-    clearPermissionError();
+    setPermissionError(null);
+    setIsTestingDevices(true);
 
-    const result = await testDevices(callType);
-    setHasTestedDevices(true);
+    try {
+      const constraints: MediaStreamConstraints = {
+        audio: selectedAudioInput
+          ? { deviceId: { exact: selectedAudioInput } }
+          : true,
+        video:
+          callType === 'video'
+            ? selectedVideoInput
+              ? { deviceId: { exact: selectedVideoInput } }
+              : true
+            : false,
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      setDeviceTestStream(stream);
 
-    if (!result.success) {
-      setTestError(result.error || 'Failed to access devices');
+      // Refresh device list after permission grant
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      setAvailableDevices(
+        devices.filter((d) =>
+          ['audioinput', 'videoinput', 'audiooutput'].includes(d.kind)
+        )
+      );
+    } catch (err: any) {
+      const msg =
+        err.name === 'NotAllowedError'
+          ? 'Permission denied. Please allow camera/microphone access.'
+          : err.message || 'Failed to access devices';
+      setTestError(msg);
+      setPermissionError(msg);
+    } finally {
+      setIsTestingDevices(false);
+      setHasTestedDevices(true);
     }
   };
 
@@ -387,7 +416,7 @@ export function PreCallSetup({
                         icon={<Mic className="w-4 h-4" />}
                         devices={audioInputs}
                         selectedId={selectedAudioInput || audioInputs[0]?.deviceId}
-                        onSelect={(id) => selectAudioInput(id)}
+                        onSelect={(id) => setSelectedAudioInput(id)}
                       />
 
                       {/* Camera selection */}
@@ -397,7 +426,7 @@ export function PreCallSetup({
                           icon={<Video className="w-4 h-4" />}
                           devices={videoInputs}
                           selectedId={selectedVideoInput || videoInputs[0]?.deviceId}
-                          onSelect={(id) => selectVideoInput(id)}
+                          onSelect={(id) => setSelectedVideoInput(id)}
                         />
                       )}
 
@@ -463,7 +492,7 @@ function DeviceSelector({
 }: {
   label: string;
   icon: React.ReactNode;
-  devices: MediaDevice[];
+  devices: MediaDeviceInfo[];
   selectedId?: string;
   onSelect: (deviceId: string) => void;
 }) {

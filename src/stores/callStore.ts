@@ -1,760 +1,631 @@
 import { create } from 'zustand';
+import { useAuthStore } from '@/stores/authStore';
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 export type CallType = 'audio' | 'video';
-export type CallStatus = 'idle' | 'calling' | 'ringing' | 'connected' | 'ended' | 'declined' | 'missed' | 'busy';
+export type CallStatus =
+  | 'idle'
+  | 'calling'
+  | 'ringing'
+  | 'connecting'
+  | 'connected'
+  | 'ended';
 
-export interface CallParticipant {
+interface CallPeer {
   id: string;
-  displayName: string;
+  name: string;
   avatar?: string;
-  isMuted: boolean;
-  isVideoOff: boolean;
-  isSpeaking: boolean;
 }
 
-export interface ActiveCall {
-  id: string;
-  type: CallType;
-  roomId?: string;
-  roomName?: string;
-  initiatorId: string;
-  participants: CallParticipant[];
-  startTime?: Date;
-  status: CallStatus;
-  isIncoming: boolean;
-}
-
-export interface MediaDevice {
-  deviceId: string;
-  label: string;
-  kind: 'audioinput' | 'videoinput' | 'audiooutput';
+interface IncomingCall {
+  callId: string;
+  caller: CallPeer;
+  callType: CallType;
 }
 
 interface CallState {
-  activeCall: ActiveCall | null;
-  isAudioMuted: boolean;
-  isVideoOff: boolean;
-  isScreenSharing: boolean;
-  isSpeakerOn: boolean;
-  callDuration: number;
+  callId: string | null;
+  status: CallStatus;
+  callType: CallType;
   localStream: MediaStream | null;
-  remoteStreams: Map<string, MediaStream>;
-  permissionError: string | null;
-  availableDevices: MediaDevice[];
-  selectedAudioInput: string | null;
-  selectedVideoInput: string | null;
-  selectedAudioOutput: string | null;
-  isTestingDevices: boolean;
-  deviceTestStream: MediaStream | null;
+  remoteStream: MediaStream | null;
+  isMuted: boolean;
+  isVideoOff: boolean;
+  caller: CallPeer | null;
+  callee: CallPeer | null;
+  error: string | null;
+  incomingCall: IncomingCall | null;
+  callDuration: number;
 }
 
 interface CallActions {
-  // Call initiation
-  startCall: (params: {
-    type: CallType;
-    roomId: string;
-    roomName: string;
-    participants: CallParticipant[];
-  }) => Promise<void>;
-
-  // Incoming call handling
-  receiveCall: (call: ActiveCall) => void;
-  acceptCall: () => Promise<void>;
-  declineCall: () => void;
-
-  // Call controls
-  endCall: () => void;
+  startCall: (
+    targetUserId: string,
+    targetUserName: string,
+    callType: CallType,
+    targetAvatar?: string
+  ) => Promise<void>;
+  checkIncomingCalls: () => Promise<void>;
+  acceptCall: (callId: string) => Promise<void>;
+  rejectCall: (callId: string) => Promise<void>;
+  endCall: () => Promise<void>;
   toggleMute: () => void;
-  toggleVideo: () => Promise<void>;
-  toggleScreenShare: () => Promise<void>;
-  toggleSpeaker: () => void;
-
-  // Device management
-  enumerateDevices: () => Promise<void>;
-  selectAudioInput: (deviceId: string) => Promise<void>;
-  selectVideoInput: (deviceId: string) => Promise<void>;
-  selectAudioOutput: (deviceId: string) => void;
-  testDevices: (type: CallType) => Promise<{ success: boolean; error?: string }>;
-  stopDeviceTest: () => void;
-
-  // Internal
-  setCallStatus: (status: CallStatus) => void;
+  toggleVideo: () => void;
   updateCallDuration: () => void;
-  setLocalStream: (stream: MediaStream | null) => void;
-  addRemoteStream: (participantId: string, stream: MediaStream) => void;
-  removeRemoteStream: (participantId: string) => void;
   resetCall: () => void;
-  clearPermissionError: () => void;
 }
 
 type CallStore = CallState & CallActions;
 
-// Helper to check if we're in a secure context (HTTPS or localhost)
-const isSecureContext = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  return (
-    window.isSecureContext ||
-    window.location.protocol === 'https:' ||
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1'
-  );
-};
+// ─── API Helper ──────────────────────────────────────────────────────────────
 
-// Helper to check if mediaDevices API is available
-const isMediaDevicesSupported = (): boolean => {
-  return !!(
-    typeof navigator !== 'undefined' &&
-    navigator.mediaDevices &&
-    navigator.mediaDevices.getUserMedia
-  );
-};
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  'https://ohcs-elibrary-api.ghwmelite.workers.dev';
 
-// Helper to enumerate available devices
-const getAvailableDevices = async (): Promise<MediaDevice[]> => {
-  if (!isMediaDevicesSupported()) return [];
+async function callApi(
+  path: string,
+  options?: RequestInit
+): Promise<Response> {
+  const token = useAuthStore.getState().token;
+  return fetch(`${API_BASE}/api/v1/calls${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      ...options?.headers,
+    },
+  });
+}
 
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    return devices
-      .filter((d) => ['audioinput', 'videoinput', 'audiooutput'].includes(d.kind))
-      .map((d) => ({
-        deviceId: d.deviceId,
-        label: d.label || `${d.kind === 'audioinput' ? 'Microphone' : d.kind === 'videoinput' ? 'Camera' : 'Speaker'} ${d.deviceId.slice(0, 4)}`,
-        kind: d.kind as 'audioinput' | 'videoinput' | 'audiooutput',
-      }));
-  } catch (error) {
-    console.warn('Failed to enumerate devices:', error);
-    return [];
+// ─── WebRTC Helpers ──────────────────────────────────────────────────────────
+
+const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun2.l.google.com:19302' },
+];
+
+let peerConnection: RTCPeerConnection | null = null;
+let icePollInterval: ReturnType<typeof setInterval> | null = null;
+let answerPollInterval: ReturnType<typeof setInterval> | null = null;
+let incomingPollInterval: ReturnType<typeof setInterval> | null = null;
+let durationInterval: ReturnType<typeof setInterval> | null = null;
+
+function clearAllIntervals() {
+  if (icePollInterval) {
+    clearInterval(icePollInterval);
+    icePollInterval = null;
   }
-};
-
-// Main getUserMedia function with robust error handling
-const requestUserMedia = async (
-  type: CallType,
-  audioDeviceId?: string,
-  videoDeviceId?: string
-): Promise<{ stream: MediaStream | null; error: string | null }> => {
-  // Check for secure context
-  if (!isSecureContext()) {
-    return {
-      stream: null,
-      error:
-        'Camera and microphone access requires a secure connection (HTTPS). Please access the site via HTTPS or localhost.',
-    };
+  if (answerPollInterval) {
+    clearInterval(answerPollInterval);
+    answerPollInterval = null;
   }
-
-  // Check if mediaDevices is available
-  if (!isMediaDevicesSupported()) {
-    return {
-      stream: null,
-      error:
-        'Your browser does not support camera/microphone access. Please use a modern browser like Chrome, Firefox, Safari, or Edge.',
-    };
+  if (durationInterval) {
+    clearInterval(durationInterval);
+    durationInterval = null;
   }
+}
 
-  // Build constraints with optional device selection
-  const audioConstraints: MediaTrackConstraints | boolean = {
-    echoCancellation: true,
-    noiseSuppression: true,
-    autoGainControl: true,
-    ...(audioDeviceId ? { deviceId: { exact: audioDeviceId } } : {}),
-  };
-
-  const videoConstraints: MediaTrackConstraints | boolean =
-    type === 'video'
-      ? {
-          width: { ideal: 1280, max: 1920 },
-          height: { ideal: 720, max: 1080 },
-          frameRate: { ideal: 30, max: 60 },
-          facingMode: 'user',
-          ...(videoDeviceId ? { deviceId: { exact: videoDeviceId } } : {}),
-        }
-      : false;
-
-  const constraints: MediaStreamConstraints = {
-    audio: audioConstraints,
-    video: videoConstraints,
-  };
-
-  console.log('[CallStore] Requesting getUserMedia with constraints:', constraints);
-
-  try {
-    // Request media - this will trigger the browser's permission prompt if needed
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    console.log('[CallStore] getUserMedia succeeded:', stream.getTracks().map((t) => t.kind));
-    return { stream, error: null };
-  } catch (error: any) {
-    console.error('[CallStore] getUserMedia error:', error.name, error.message);
-    return { stream: null, error: getMediaErrorMessage(error, type) };
+function closePeerConnection() {
+  if (peerConnection) {
+    peerConnection.onicecandidate = null;
+    peerConnection.ontrack = null;
+    peerConnection.oniceconnectionstatechange = null;
+    peerConnection.close();
+    peerConnection = null;
   }
-};
+}
 
-// Get user-friendly error messages for different error types
-const getMediaErrorMessage = (error: any, type: CallType): string => {
-  const deviceType = type === 'video' ? 'camera and microphone' : 'microphone';
-
-  switch (error.name) {
-    case 'NotAllowedError':
-    case 'PermissionDeniedError':
-      return `${deviceType.charAt(0).toUpperCase() + deviceType.slice(1)} access was blocked. Click the camera/lock icon in your browser's address bar, set permissions to "Allow", then click "Try Again".`;
-
-    case 'NotFoundError':
-    case 'DevicesNotFoundError':
-      return type === 'video'
-        ? 'No camera or microphone found. Please connect a device and try again.'
-        : 'No microphone found. Please connect a microphone and try again.';
-
-    case 'NotReadableError':
-    case 'TrackStartError':
-      return `Your ${deviceType} is being used by another application. Please close other apps using your ${deviceType} and try again.`;
-
-    case 'OverconstrainedError':
-      return `Your ${deviceType} doesn't support the requested settings. Trying with default settings may help.`;
-
-    case 'TypeError':
-      return 'Invalid media settings. Please refresh the page and try again.';
-
-    case 'AbortError':
-      return 'The request was cancelled. Please try again.';
-
-    case 'SecurityError':
-      return 'Security error. Make sure the page is loaded over HTTPS.';
-
-    default:
-      return `Failed to access your ${deviceType}. Please check your device connections and browser permissions.`;
-  }
-};
-
-// Helper to get display media for screen sharing
-const getDisplayMedia = async (): Promise<{
-  stream: MediaStream | null;
-  error: string | null;
-}> => {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-    return {
-      stream: null,
-      error: 'Screen sharing is not supported in your browser.',
-    };
-  }
-
-  try {
-    const stream = await navigator.mediaDevices.getDisplayMedia({
-      video: {
-        cursor: 'always',
-        displaySurface: 'monitor',
-      } as any,
-      audio: {
-        suppressLocalAudioPlayback: false,
-      } as any,
-    });
-    return { stream, error: null };
-  } catch (error: any) {
-    console.error('[CallStore] getDisplayMedia error:', error);
-
-    if (error.name === 'NotAllowedError') {
-      return { stream: null, error: 'Screen sharing was cancelled.' };
-    }
-
-    return { stream: null, error: 'Failed to start screen sharing. Please try again.' };
-  }
-};
-
-// Stop all tracks in a stream
-const stopStream = (stream: MediaStream | null) => {
+function stopStream(stream: MediaStream | null) {
   if (stream) {
-    stream.getTracks().forEach((track) => {
-      track.stop();
-    });
+    stream.getTracks().forEach((track) => track.stop());
   }
+}
+
+// Helper to get user media with robust error handling
+async function requestUserMedia(
+  callType: CallType
+): Promise<MediaStream> {
+  const constraints: MediaStreamConstraints = {
+    audio: {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+    },
+    video:
+      callType === 'video'
+        ? {
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 },
+            frameRate: { ideal: 30 },
+            facingMode: 'user',
+          }
+        : false,
+  };
+
+  return navigator.mediaDevices.getUserMedia(constraints);
+}
+
+// ─── Store ───────────────────────────────────────────────────────────────────
+
+const initialState: CallState = {
+  callId: null,
+  status: 'idle',
+  callType: 'audio',
+  localStream: null,
+  remoteStream: null,
+  isMuted: false,
+  isVideoOff: false,
+  caller: null,
+  callee: null,
+  error: null,
+  incomingCall: null,
+  callDuration: 0,
 };
 
 export const useCallStore = create<CallStore>((set, get) => ({
-  // Initial state
-  activeCall: null,
-  isAudioMuted: false,
-  isVideoOff: false,
-  isScreenSharing: false,
-  isSpeakerOn: true,
-  callDuration: 0,
-  localStream: null,
-  remoteStreams: new Map(),
-  permissionError: null,
-  availableDevices: [],
-  selectedAudioInput: null,
-  selectedVideoInput: null,
-  selectedAudioOutput: null,
-  isTestingDevices: false,
-  deviceTestStream: null,
+  ...initialState,
 
-  // Enumerate available devices
-  enumerateDevices: async () => {
-    const devices = await getAvailableDevices();
-    set({ availableDevices: devices });
-  },
+  // ── Start an outgoing call ────────────────────────────────────────────────
 
-  // Test devices before starting a call
-  testDevices: async (type: CallType) => {
-    set({ isTestingDevices: true, permissionError: null });
+  startCall: async (targetUserId, targetUserName, callType, targetAvatar) => {
+    const { status } = get();
+    if (status !== 'idle') return;
 
-    const { selectedAudioInput, selectedVideoInput } = get();
-    const { stream, error } = await requestUserMedia(
-      type,
-      selectedAudioInput || undefined,
-      selectedVideoInput || undefined
-    );
-
-    if (error || !stream) {
-      set({ isTestingDevices: false, permissionError: error });
-      return { success: false, error: error || 'Failed to access devices' };
-    }
-
-    // Update device labels after getting permission
-    const devices = await getAvailableDevices();
-    set({ availableDevices: devices, deviceTestStream: stream, isTestingDevices: false });
-
-    return { success: true };
-  },
-
-  // Stop device test
-  stopDeviceTest: () => {
-    const { deviceTestStream } = get();
-    stopStream(deviceTestStream);
-    set({ deviceTestStream: null, isTestingDevices: false });
-  },
-
-  // Select audio input device
-  selectAudioInput: async (deviceId: string) => {
-    set({ selectedAudioInput: deviceId });
-
-    // If currently in a call, switch the audio track
-    const { localStream, activeCall } = get();
-    if (localStream && activeCall) {
-      try {
-        const newStream = await navigator.mediaDevices.getUserMedia({
-          audio: { deviceId: { exact: deviceId } },
-        });
-        const newAudioTrack = newStream.getAudioTracks()[0];
-
-        // Replace old audio track
-        const oldAudioTrack = localStream.getAudioTracks()[0];
-        if (oldAudioTrack) {
-          localStream.removeTrack(oldAudioTrack);
-          oldAudioTrack.stop();
-        }
-        localStream.addTrack(newAudioTrack);
-      } catch (error) {
-        console.error('[CallStore] Failed to switch audio input:', error);
-      }
-    }
-  },
-
-  // Select video input device
-  selectVideoInput: async (deviceId: string) => {
-    set({ selectedVideoInput: deviceId });
-
-    // If currently in a video call, switch the video track
-    const { localStream, activeCall, isVideoOff } = get();
-    if (localStream && activeCall && activeCall.type === 'video' && !isVideoOff) {
-      try {
-        const newStream = await navigator.mediaDevices.getUserMedia({
-          video: { deviceId: { exact: deviceId } },
-        });
-        const newVideoTrack = newStream.getVideoTracks()[0];
-
-        // Replace old video track
-        const oldVideoTrack = localStream.getVideoTracks()[0];
-        if (oldVideoTrack) {
-          localStream.removeTrack(oldVideoTrack);
-          oldVideoTrack.stop();
-        }
-        localStream.addTrack(newVideoTrack);
-      } catch (error) {
-        console.error('[CallStore] Failed to switch video input:', error);
-      }
-    }
-  },
-
-  // Select audio output device
-  selectAudioOutput: (deviceId: string) => {
-    set({ selectedAudioOutput: deviceId });
-    // Note: Setting audio output requires using setSinkId on audio/video elements
-    // This would be handled in the UI components
-  },
-
-  // Start a new call
-  startCall: async ({ type, roomId, roomName, participants }) => {
-    set({ permissionError: null });
-
-    // Enumerate devices first
-    await get().enumerateDevices();
-
-    const { selectedAudioInput, selectedVideoInput } = get();
-
-    // Request media permissions
-    const { stream, error } = await requestUserMedia(
-      type,
-      selectedAudioInput || undefined,
-      selectedVideoInput || undefined
-    );
-
-    if (error || !stream) {
-      set({ permissionError: error || 'Failed to access camera/microphone.' });
-      throw new Error(error || 'Failed to access camera/microphone.');
-    }
-
-    const call: ActiveCall = {
-      id: `call-${Date.now()}`,
-      type,
-      roomId,
-      roomName,
-      initiatorId: 'current-user',
-      participants,
+    set({
       status: 'calling',
-      isIncoming: false,
-    };
-
-    set({
-      activeCall: call,
-      localStream: stream,
-      isVideoOff: type === 'audio',
-      isAudioMuted: false,
-      callDuration: 0,
+      callType,
+      error: null,
+      callee: { id: targetUserId, name: targetUserName, avatar: targetAvatar },
     });
 
-    // Update device list after permission
-    await get().enumerateDevices();
+    try {
+      // 1. Capture local media
+      const localStream = await requestUserMedia(callType);
+      set({ localStream, isVideoOff: callType === 'audio' });
 
-    // Simulate connection after 2 seconds (in real app, this would be WebRTC signaling)
-    setTimeout(() => {
-      const currentCall = get().activeCall;
-      if (currentCall && currentCall.status === 'calling') {
-        set({
-          activeCall: {
-            ...currentCall,
-            status: 'connected',
-            startTime: new Date(),
-          },
-        });
+      // 2. Initiate call via API
+      const initiateRes = await callApi('/initiate', {
+        method: 'POST',
+        body: JSON.stringify({
+          targetUserId,
+          callType,
+        }),
+      });
+
+      if (!initiateRes.ok) {
+        const err = await initiateRes.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to initiate call');
       }
-    }, 2000);
-  },
 
-  // Receive an incoming call
-  receiveCall: (call) => {
-    set({
-      activeCall: {
-        ...call,
-        status: 'ringing',
-        isIncoming: true,
-      },
-      permissionError: null,
-    });
-  },
+      const { callId, iceServers } = await initiateRes.json();
+      set({ callId });
 
-  // Accept incoming call
-  acceptCall: async () => {
-    const { activeCall, selectedAudioInput, selectedVideoInput } = get();
-    if (!activeCall) return;
+      // 3. Create RTCPeerConnection
+      const rtcConfig: RTCConfiguration = {
+        iceServers: iceServers?.length ? iceServers : DEFAULT_ICE_SERVERS,
+      };
+      const pc = new RTCPeerConnection(rtcConfig);
+      peerConnection = pc;
 
-    set({ permissionError: null });
-
-    // Request media permissions
-    const { stream, error } = await requestUserMedia(
-      activeCall.type,
-      selectedAudioInput || undefined,
-      selectedVideoInput || undefined
-    );
-
-    if (error || !stream) {
-      set({ permissionError: error || 'Failed to access camera/microphone.' });
-      throw new Error(error || 'Failed to access camera/microphone.');
-    }
-
-    set({
-      activeCall: {
-        ...activeCall,
-        status: 'connected',
-        startTime: new Date(),
-      },
-      localStream: stream,
-      isVideoOff: activeCall.type === 'audio',
-      isAudioMuted: false,
-      callDuration: 0,
-    });
-
-    // Update device list
-    await get().enumerateDevices();
-  },
-
-  // Decline incoming call
-  declineCall: () => {
-    const { localStream, deviceTestStream } = get();
-
-    stopStream(localStream);
-    stopStream(deviceTestStream);
-
-    set({
-      activeCall: null,
-      localStream: null,
-      deviceTestStream: null,
-      remoteStreams: new Map(),
-      callDuration: 0,
-      permissionError: null,
-    });
-  },
-
-  // End active call
-  endCall: () => {
-    const { localStream, activeCall, deviceTestStream } = get();
-
-    stopStream(localStream);
-    stopStream(deviceTestStream);
-
-    // Update status briefly to show "ended" before clearing
-    if (activeCall) {
-      set({
-        activeCall: {
-          ...activeCall,
-          status: 'ended',
-        },
+      // 4. Add local tracks
+      localStream.getTracks().forEach((track) => {
+        pc.addTrack(track, localStream);
       });
-    }
 
-    // Clear after brief delay
-    setTimeout(() => {
-      set({
-        activeCall: null,
-        localStream: null,
-        deviceTestStream: null,
-        remoteStreams: new Map(),
-        isAudioMuted: false,
-        isVideoOff: false,
-        isScreenSharing: false,
-        callDuration: 0,
-        permissionError: null,
-      });
-    }, 1000);
-  },
+      // 5. Handle remote tracks
+      const remoteStream = new MediaStream();
+      set({ remoteStream });
 
-  // Toggle audio mute
-  toggleMute: () => {
-    const { localStream, isAudioMuted } = get();
+      pc.ontrack = (event) => {
+        event.streams[0]?.getTracks().forEach((track) => {
+          remoteStream.addTrack(track);
+        });
+        set({ remoteStream });
+      };
 
-    if (localStream) {
-      localStream.getAudioTracks().forEach((track) => {
-        track.enabled = isAudioMuted; // Toggle: if muted, enable; if not muted, disable
-      });
-    }
-
-    set({ isAudioMuted: !isAudioMuted });
-  },
-
-  // Toggle video
-  toggleVideo: async () => {
-    const { localStream, isVideoOff, activeCall, selectedVideoInput } = get();
-
-    if (!activeCall || activeCall.type !== 'video') return;
-
-    if (isVideoOff) {
-      // User wants to turn video ON
-      if (localStream) {
-        const videoTracks = localStream.getVideoTracks();
-        if (videoTracks.length > 0) {
-          // Just enable existing tracks
-          videoTracks.forEach((track) => {
-            track.enabled = true;
-          });
-          set({ isVideoOff: false, permissionError: null });
-        } else {
-          // Need to get new video stream
-          set({ permissionError: null });
-
+      // 6. ICE candidate handling — send each to the server
+      pc.onicecandidate = async (event) => {
+        if (event.candidate) {
           try {
-            const constraints: MediaStreamConstraints = {
-              video: {
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                ...(selectedVideoInput ? { deviceId: { exact: selectedVideoInput } } : {}),
-              },
-            };
-
-            const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-            const newVideoTrack = newStream.getVideoTracks()[0];
-
-            if (newVideoTrack) {
-              localStream.addTrack(newVideoTrack);
-            }
-
-            set({ isVideoOff: false, permissionError: null });
-          } catch (error: any) {
-            const errorMessage = getMediaErrorMessage(error, 'video');
-            set({ permissionError: errorMessage });
+            await callApi(`/${callId}/ice`, {
+              method: 'POST',
+              body: JSON.stringify({
+                candidate: event.candidate.toJSON(),
+                role: 'caller',
+              }),
+            });
+          } catch (err) {
+            console.warn('[CallStore] Failed to send ICE candidate:', err);
           }
         }
-      } else {
-        // No stream at all, request new one
-        set({ permissionError: null });
-        const { stream, error } = await requestUserMedia('video', undefined, selectedVideoInput || undefined);
+      };
 
-        if (error) {
-          set({ permissionError: error });
-          return;
-        }
+      // 7. Monitor connection state
+      pc.oniceconnectionstatechange = () => {
+        const state = pc.iceConnectionState;
+        console.log('[CallStore] ICE connection state:', state);
 
-        if (stream) {
-          set({ localStream: stream, isVideoOff: false, isAudioMuted: false, permissionError: null });
+        if (state === 'connected' || state === 'completed') {
+          set({ status: 'connected' });
+          // Start duration timer
+          if (!durationInterval) {
+            durationInterval = setInterval(() => {
+              get().updateCallDuration();
+            }, 1000);
+          }
+        } else if (state === 'failed' || state === 'disconnected') {
+          // Allow brief disconnections — only end on 'failed'
+          if (state === 'failed') {
+            set({ error: 'Connection failed. Please try again.' });
+            get().endCall();
+          }
         }
+      };
+
+      // 8. Create offer
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      // 9. Send offer to server
+      const offerRes = await callApi(`/${callId}/offer`, {
+        method: 'POST',
+        body: JSON.stringify({ sdp: offer }),
+      });
+
+      if (!offerRes.ok) {
+        throw new Error('Failed to store offer');
       }
-    } else {
-      // User wants to turn video OFF - just disable tracks (don't stop them)
-      if (localStream) {
-        localStream.getVideoTracks().forEach((track) => {
-          track.enabled = false;
-        });
-      }
-      set({ isVideoOff: true });
+
+      // 10. Poll for answer every 1s
+      set({ status: 'calling' });
+
+      answerPollInterval = setInterval(async () => {
+        try {
+          const answerRes = await callApi(`/${callId}/answer`);
+          if (answerRes.ok) {
+            const data = await answerRes.json();
+            if (data.sdp) {
+              // Answer received
+              if (answerPollInterval) {
+                clearInterval(answerPollInterval);
+                answerPollInterval = null;
+              }
+
+              set({ status: 'connecting' });
+
+              const answerDesc = new RTCSessionDescription(data.sdp);
+              await pc.setRemoteDescription(answerDesc);
+
+              // 11. Poll for remote ICE candidates
+              icePollInterval = setInterval(async () => {
+                try {
+                  const iceRes = await callApi(
+                    `/${callId}/ice?role=callee`
+                  );
+                  if (iceRes.ok) {
+                    const iceData = await iceRes.json();
+                    if (iceData.candidates?.length) {
+                      for (const candidate of iceData.candidates) {
+                        try {
+                          await pc.addIceCandidate(
+                            new RTCIceCandidate(candidate)
+                          );
+                        } catch (err) {
+                          console.warn(
+                            '[CallStore] Failed to add remote ICE candidate:',
+                            err
+                          );
+                        }
+                      }
+                    }
+                  }
+                } catch (err) {
+                  console.warn('[CallStore] ICE poll error:', err);
+                }
+              }, 1000);
+            }
+          }
+        } catch (err) {
+          console.warn('[CallStore] Answer poll error:', err);
+        }
+      }, 1000);
+    } catch (err: any) {
+      console.error('[CallStore] startCall error:', err);
+      set({
+        status: 'ended',
+        error: err.message || 'Failed to start call',
+      });
+      closePeerConnection();
+      clearAllIntervals();
+      stopStream(get().localStream);
+
+      // Auto-reset after showing error
+      setTimeout(() => {
+        set({ ...initialState });
+      }, 3000);
     }
   },
 
-  // Toggle screen sharing
-  toggleScreenShare: async () => {
-    const { isScreenSharing, localStream, activeCall, selectedAudioInput, selectedVideoInput } = get();
+  // ── Check for incoming calls ──────────────────────────────────────────────
 
-    if (!activeCall) return;
+  checkIncomingCalls: async () => {
+    const { status, incomingCall } = get();
+    // Don't check if already in a call or already have an incoming call
+    if (status !== 'idle' || incomingCall) return;
 
-    set({ permissionError: null });
+    try {
+      const res = await callApi('/incoming');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.call) {
+          set({
+            incomingCall: {
+              callId: data.call.callId,
+              caller: {
+                id: data.call.callerId,
+                name: data.call.callerName,
+                avatar: data.call.callerAvatar,
+              },
+              callType: data.call.callType,
+            },
+          });
+        }
+      }
+    } catch (err) {
+      // Silently fail — this is background polling
+      console.warn('[CallStore] Incoming call check failed:', err);
+    }
+  },
 
-    if (isScreenSharing) {
-      // Stop screen sharing, revert to camera
-      const { stream, error } = await requestUserMedia(
-        activeCall.type,
-        selectedAudioInput || undefined,
-        selectedVideoInput || undefined
+  // ── Accept an incoming call ───────────────────────────────────────────────
+
+  acceptCall: async (callId) => {
+    const { incomingCall } = get();
+    if (!incomingCall) return;
+
+    const callType = incomingCall.callType;
+
+    set({
+      status: 'connecting',
+      callId,
+      callType,
+      caller: incomingCall.caller,
+      incomingCall: null,
+      error: null,
+    });
+
+    try {
+      // 1. Get local media
+      const localStream = await requestUserMedia(callType);
+      set({ localStream, isVideoOff: callType === 'audio' });
+
+      // 2. Notify server we're accepting
+      const acceptRes = await callApi(`/${callId}/accept`, {
+        method: 'POST',
+      });
+
+      if (!acceptRes.ok) {
+        throw new Error('Failed to accept call');
+      }
+
+      // 3. Get the caller's offer
+      const offerRes = await callApi(`/${callId}/offer`);
+      if (!offerRes.ok) {
+        throw new Error('Failed to retrieve offer');
+      }
+
+      const offerData = await offerRes.json();
+
+      // 4. Create RTCPeerConnection
+      const iceServers = offerData.iceServers || DEFAULT_ICE_SERVERS;
+      const pc = new RTCPeerConnection({ iceServers });
+      peerConnection = pc;
+
+      // 5. Set remote description (the offer)
+      await pc.setRemoteDescription(
+        new RTCSessionDescription(offerData.sdp)
       );
 
-      stopStream(localStream);
-
-      if (error) {
-        set({ permissionError: error });
-      }
-
-      set({
-        localStream: stream,
-        isScreenSharing: false,
-        isVideoOff: !stream,
+      // 6. Add local tracks
+      localStream.getTracks().forEach((track) => {
+        pc.addTrack(track, localStream);
       });
-    } else {
-      // Start screen sharing
-      const { stream: screenStream, error } = await getDisplayMedia();
 
-      if (error) {
-        set({ permissionError: error });
-        return;
-      }
+      // 7. Handle remote tracks
+      const remoteStream = new MediaStream();
+      set({ remoteStream });
 
-      if (!screenStream) {
-        return;
-      }
-
-      // Keep audio from original stream
-      if (localStream) {
-        const audioTracks = localStream.getAudioTracks();
-        audioTracks.forEach((track) => {
-          // Clone the track so we don't affect the original
-          screenStream.addTrack(track);
+      pc.ontrack = (event) => {
+        event.streams[0]?.getTracks().forEach((track) => {
+          remoteStream.addTrack(track);
         });
+        set({ remoteStream });
+      };
 
-        // Stop only video tracks from original stream
-        localStream.getVideoTracks().forEach((track) => track.stop());
-      }
+      // 8. ICE candidate handling
+      pc.onicecandidate = async (event) => {
+        if (event.candidate) {
+          try {
+            await callApi(`/${callId}/ice`, {
+              method: 'POST',
+              body: JSON.stringify({
+                candidate: event.candidate.toJSON(),
+                role: 'callee',
+              }),
+            });
+          } catch (err) {
+            console.warn('[CallStore] Failed to send ICE candidate:', err);
+          }
+        }
+      };
 
-      // Handle when user stops sharing via browser UI
-      const videoTrack = screenStream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.onended = () => {
-          get().toggleScreenShare();
-        };
-      }
+      // 9. Monitor connection state
+      pc.oniceconnectionstatechange = () => {
+        const state = pc.iceConnectionState;
+        console.log('[CallStore] ICE connection state:', state);
 
-      set({
-        localStream: screenStream,
-        isScreenSharing: true,
-        isVideoOff: false,
-        permissionError: null,
+        if (state === 'connected' || state === 'completed') {
+          set({ status: 'connected' });
+          if (!durationInterval) {
+            durationInterval = setInterval(() => {
+              get().updateCallDuration();
+            }, 1000);
+          }
+        } else if (state === 'failed') {
+          set({ error: 'Connection failed.' });
+          get().endCall();
+        }
+      };
+
+      // 10. Create answer
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+
+      // 11. Send answer to server
+      const answerRes = await callApi(`/${callId}/answer`, {
+        method: 'POST',
+        body: JSON.stringify({ sdp: answer }),
       });
+
+      if (!answerRes.ok) {
+        throw new Error('Failed to send answer');
+      }
+
+      // 12. Poll for caller's ICE candidates
+      icePollInterval = setInterval(async () => {
+        try {
+          const iceRes = await callApi(`/${callId}/ice?role=caller`);
+          if (iceRes.ok) {
+            const iceData = await iceRes.json();
+            if (iceData.candidates?.length) {
+              for (const candidate of iceData.candidates) {
+                try {
+                  await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                } catch (err) {
+                  console.warn(
+                    '[CallStore] Failed to add remote ICE candidate:',
+                    err
+                  );
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('[CallStore] ICE poll error:', err);
+        }
+      }, 1000);
+    } catch (err: any) {
+      console.error('[CallStore] acceptCall error:', err);
+      set({
+        status: 'ended',
+        error: err.message || 'Failed to accept call',
+      });
+      closePeerConnection();
+      clearAllIntervals();
+      stopStream(get().localStream);
+
+      setTimeout(() => {
+        set({ ...initialState });
+      }, 3000);
     }
   },
 
-  // Toggle speaker (for mobile)
-  toggleSpeaker: () => {
-    set((state) => ({ isSpeakerOn: !state.isSpeakerOn }));
+  // ── Reject an incoming call ───────────────────────────────────────────────
+
+  rejectCall: async (callId) => {
+    try {
+      await callApi(`/${callId}/reject`, { method: 'POST' });
+    } catch (err) {
+      console.warn('[CallStore] Failed to reject call:', err);
+    }
+    set({ incomingCall: null });
   },
 
-  // Update call status
-  setCallStatus: (status) => {
-    const { activeCall } = get();
-    if (activeCall) {
-      set({
-        activeCall: {
-          ...activeCall,
-          status,
-        },
+  // ── End the current call ──────────────────────────────────────────────────
+
+  endCall: async () => {
+    const { callId, localStream, remoteStream } = get();
+
+    // Notify server
+    if (callId) {
+      try {
+        await callApi(`/${callId}/end`, { method: 'POST' });
+      } catch (err) {
+        console.warn('[CallStore] Failed to notify call end:', err);
+      }
+    }
+
+    // Cleanup WebRTC
+    closePeerConnection();
+    clearAllIntervals();
+    stopStream(localStream);
+    stopStream(remoteStream);
+
+    set({ status: 'ended' });
+
+    // Reset after brief "ended" display
+    setTimeout(() => {
+      set({ ...initialState });
+    }, 1500);
+  },
+
+  // ── Toggle mute ───────────────────────────────────────────────────────────
+
+  toggleMute: () => {
+    const { localStream, isMuted } = get();
+    if (localStream) {
+      localStream.getAudioTracks().forEach((track) => {
+        track.enabled = isMuted; // toggle: if muted → enable, if not → disable
       });
     }
+    set({ isMuted: !isMuted });
   },
 
-  // Update call duration
+  // ── Toggle video ──────────────────────────────────────────────────────────
+
+  toggleVideo: () => {
+    const { localStream, isVideoOff } = get();
+    if (localStream) {
+      localStream.getVideoTracks().forEach((track) => {
+        track.enabled = isVideoOff; // toggle
+      });
+    }
+    set({ isVideoOff: !isVideoOff });
+  },
+
+  // ── Duration timer ────────────────────────────────────────────────────────
+
   updateCallDuration: () => {
     set((state) => ({ callDuration: state.callDuration + 1 }));
   },
 
-  // Set local stream
-  setLocalStream: (stream) => {
-    set({ localStream: stream });
-  },
+  // ── Full reset ────────────────────────────────────────────────────────────
 
-  // Add remote stream
-  addRemoteStream: (participantId, stream) => {
-    set((state) => {
-      const newStreams = new Map(state.remoteStreams);
-      newStreams.set(participantId, stream);
-      return { remoteStreams: newStreams };
-    });
-  },
-
-  // Remove remote stream
-  removeRemoteStream: (participantId) => {
-    set((state) => {
-      const newStreams = new Map(state.remoteStreams);
-      newStreams.delete(participantId);
-      return { remoteStreams: newStreams };
-    });
-  },
-
-  // Reset call state
   resetCall: () => {
-    const { localStream, deviceTestStream } = get();
-
+    const { localStream, remoteStream } = get();
+    closePeerConnection();
+    clearAllIntervals();
     stopStream(localStream);
-    stopStream(deviceTestStream);
-
-    set({
-      activeCall: null,
-      isAudioMuted: false,
-      isVideoOff: false,
-      isScreenSharing: false,
-      isSpeakerOn: true,
-      callDuration: 0,
-      localStream: null,
-      deviceTestStream: null,
-      remoteStreams: new Map(),
-      permissionError: null,
-      isTestingDevices: false,
-    });
-  },
-
-  // Clear permission error
-  clearPermissionError: () => {
-    set({ permissionError: null });
+    stopStream(remoteStream);
+    set({ ...initialState });
   },
 }));
+
+// ─── Start / stop incoming call polling ──────────────────────────────────────
+
+export function startIncomingCallPolling() {
+  if (incomingPollInterval) return;
+  incomingPollInterval = setInterval(() => {
+    useCallStore.getState().checkIncomingCalls();
+  }, 3000);
+}
+
+export function stopIncomingCallPolling() {
+  if (incomingPollInterval) {
+    clearInterval(incomingPollInterval);
+    incomingPollInterval = null;
+  }
+}

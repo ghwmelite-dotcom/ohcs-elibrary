@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/stores/authStore';
-import { useCallStore, CallType } from '@/stores/callStore';
+import { useCallStore, type CallType } from '@/stores/callStore';
 import { usePresenceStore } from '@/stores/presenceStore';
 import { useToast } from '@/components/shared/Toast';
 import {
@@ -63,7 +63,9 @@ export default function Chat() {
   } = useChatStore();
 
   const {
-    activeCall,
+    status: callStatus,
+    callType: activeCallType,
+    callee: activeCallee,
     startCall,
     endCall,
   } = useCallStore();
@@ -182,43 +184,21 @@ export default function Chat() {
     setShowPreCallSetup(false);
 
     try {
-      // Create participants from room members (excluding current user)
-      const participants = roomMembers
-        .filter((member) => member.id !== user?.id)
-        .map((member) => ({
-          id: member.id,
-          displayName: member.displayName || member.name || 'Unknown',
-          avatar: member.avatar,
-          isMuted: false,
-          isVideoOff: pendingCallType === 'audio',
-          isSpeaking: false,
-        }));
+      // Pick the first other member as the call target
+      const target = roomMembers.find((m) => m.id !== user?.id);
+      const targetId = target?.id || 'room-call';
+      const targetName =
+        target?.displayName || target?.name || currentRoom.name;
+      const targetAvatar = target?.avatar;
 
-      // If no other participants, add room name as the call target
-      if (participants.length === 0) {
-        participants.push({
-          id: 'room-call',
-          displayName: currentRoom.name,
-          avatar: undefined,
-          isMuted: false,
-          isVideoOff: pendingCallType === 'audio',
-          isSpeaking: false,
-        });
-      }
-
-      await startCall({
-        type: pendingCallType,
-        roomId: currentRoom.id,
-        roomName: currentRoom.name,
-        participants,
-      });
+      await startCall(targetId, targetName, pendingCallType, targetAvatar);
 
       setShowCallModal(true);
 
       // When call connects, show full video call view for video calls
       if (pendingCallType === 'video') {
         setTimeout(() => {
-          if (useCallStore.getState().activeCall?.status === 'connected') {
+          if (useCallStore.getState().status === 'connected') {
             setShowCallModal(false);
             setShowVideoCall(true);
           }
@@ -226,21 +206,20 @@ export default function Chat() {
       }
     } catch (error: any) {
       console.error('Failed to start call:', error);
-      // The error is already handled in the call store and shown in the UI
     }
   };
 
   // Watch for call status changes
   useEffect(() => {
-    if (activeCall?.status === 'connected' && activeCall.type === 'video' && showCallModal) {
+    if (callStatus === 'connected' && activeCallType === 'video' && showCallModal) {
       setShowCallModal(false);
       setShowVideoCall(true);
     }
-    if (activeCall?.status === 'ended' || !activeCall) {
+    if (callStatus === 'ended' || callStatus === 'idle') {
       setShowCallModal(false);
       setShowVideoCall(false);
     }
-  }, [activeCall?.status, activeCall?.type, showCallModal]);
+  }, [callStatus, activeCallType, showCallModal]);
 
   useEffect(() => {
     fetchRooms();
@@ -898,7 +877,7 @@ export default function Chat() {
 
       {/* Full Video Call View */}
       <AnimatePresence>
-        {showVideoCall && activeCall && (
+        {showVideoCall && callStatus === 'connected' && (
           <VideoCallView
             onClose={() => {
               endCall();

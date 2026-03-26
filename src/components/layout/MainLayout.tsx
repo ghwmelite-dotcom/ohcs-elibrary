@@ -8,6 +8,11 @@ import { usePresenceStore } from '@/stores/presenceStore';
 import { useCartStore } from '@/stores/shopStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
+import {
+  startIncomingCallPolling,
+  stopIncomingCallPolling,
+} from '@/stores/callStore';
+import { IncomingCallModal } from '@/components/call/IncomingCallModal';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -97,6 +102,14 @@ export function MainLayout() {
     startHeartbeatPolling(30000); // 30 second intervals
     return () => stopHeartbeatPolling();
   }, [startHeartbeatPolling, stopHeartbeatPolling]);
+
+  // Poll for incoming calls when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      startIncomingCallPolling();
+      return () => stopIncomingCallPolling();
+    }
+  }, [isAuthenticated]);
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
@@ -220,6 +233,9 @@ export function MainLayout() {
       {/* Onboarding Tour */}
       <TourOverlay />
       <WelcomeTourTrigger />
+
+      {/* Incoming Call Modal */}
+      <IncomingCallModal />
     </div>
   );
 }

@@ -7,24 +7,17 @@ import {
   VideoOff,
   Mic,
   MicOff,
-  Monitor,
-  MonitorOff,
   Maximize2,
   Minimize2,
-  MoreVertical,
   Users,
   MessageSquare,
   Settings,
-  Volume2,
-  VolumeX,
   Grid,
   User,
   AlertTriangle,
   X,
-  Check,
-  ChevronDown,
 } from 'lucide-react';
-import { useCallStore, MediaDevice } from '@/stores/callStore';
+import { useCallStore } from '@/stores/callStore';
 import { Avatar } from '@/components/shared/Avatar';
 import { cn } from '@/utils/cn';
 
@@ -37,28 +30,25 @@ type ViewMode = 'speaker' | 'grid';
 
 export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
   const {
-    activeCall,
+    status,
+    callType,
+    callee,
+    caller,
     localStream,
-    isAudioMuted,
+    remoteStream,
+    isMuted,
     isVideoOff,
-    isScreenSharing,
-    isSpeakerOn,
     callDuration,
-    permissionError,
-    availableDevices,
-    selectedAudioInput,
-    selectedVideoInput,
-    updateCallDuration,
+    error: callError,
     toggleMute,
     toggleVideo,
-    toggleScreenShare,
-    toggleSpeaker,
     endCall,
-    clearPermissionError,
-    selectAudioInput,
-    selectVideoInput,
-    enumerateDevices,
   } = useCallStore();
+
+  // Compat aliases for the template below
+  const isAudioMuted = isMuted;
+  const isScreenSharing = false; // screen sharing not yet in new store
+  const isSpeakerOn = true;
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -68,14 +58,9 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
   const [showSettings, setShowSettings] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Device lists
-  const audioInputs = availableDevices.filter((d) => d.kind === 'audioinput');
-  const videoInputs = availableDevices.filter((d) => d.kind === 'videoinput');
-
-  // Enumerate devices on mount
-  useEffect(() => {
-    enumerateDevices();
-  }, [enumerateDevices]);
+  // Peer to display
+  const peer = callee || caller;
+  const isVideoCall = callType === 'video';
 
   // Attach local stream to video element
   useEffect(() => {
@@ -84,20 +69,7 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
     }
   }, [localStream]);
 
-  // Update call duration
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-
-    if (activeCall?.status === 'connected') {
-      interval = setInterval(() => {
-        updateCallDuration();
-      }, 1000);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [activeCall?.status, updateCallDuration]);
+  // Duration is tracked in the store already via durationInterval
 
   // Auto-hide controls after inactivity
   useEffect(() => {
@@ -153,10 +125,7 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
     onClose();
   };
 
-  if (!activeCall || activeCall.status !== 'connected') return null;
-
-  const mainParticipant = activeCall.participants[0];
-  const isVideoCall = activeCall.type === 'video';
+  if (status !== 'connected') return null;
 
   return (
     <motion.div
@@ -184,7 +153,7 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
                 </div>
                 <div className="h-4 w-px bg-white/20" />
                 <span className="text-white/80">
-                  {activeCall.roomName || mainParticipant?.displayName}
+                  {peer?.name || 'Call'}
                 </span>
               </div>
 
@@ -256,9 +225,9 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
         )}
       </AnimatePresence>
 
-      {/* Permission Error Banner */}
+      {/* Error Banner */}
       <AnimatePresence>
-        {permissionError && (
+        {callError && (
           <motion.div
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -267,15 +236,9 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
           >
             <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="font-medium">Camera/Microphone Access Required</p>
-              <p className="text-sm text-white/80 mt-1">{permissionError}</p>
+              <p className="font-medium">Call Error</p>
+              <p className="text-sm text-white/80 mt-1">{callError}</p>
             </div>
-            <button
-              onClick={clearPermissionError}
-              className="p-1 hover:bg-white/20 rounded transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -297,8 +260,8 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
             <div className="text-center">
               <div className="relative inline-block mb-6">
                 <Avatar
-                  name={mainParticipant?.displayName || 'Unknown'}
-                  src={mainParticipant?.avatar}
+                  name={peer?.name || 'Unknown'}
+                  src={peer?.avatar}
                   size="xl"
                   className="w-40 h-40 text-5xl"
                 />
@@ -310,7 +273,7 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
                 />
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">
-                {mainParticipant?.displayName || 'Unknown'}
+                {peer?.name || 'Unknown'}
               </h2>
               {isVideoOff && isVideoCall && (
                 <p className="text-white/60 flex items-center justify-center gap-2">
@@ -375,26 +338,6 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
                 </div>
 
                 <div className="space-y-4">
-                  {/* Microphone selection */}
-                  <DeviceSelector
-                    label="Microphone"
-                    icon={<Mic className="w-4 h-4" />}
-                    devices={audioInputs}
-                    selectedId={selectedAudioInput || audioInputs[0]?.deviceId}
-                    onSelect={(id) => selectAudioInput(id)}
-                  />
-
-                  {/* Camera selection */}
-                  {isVideoCall && (
-                    <DeviceSelector
-                      label="Camera"
-                      icon={<Video className="w-4 h-4" />}
-                      devices={videoInputs}
-                      selectedId={selectedVideoInput || videoInputs[0]?.deviceId}
-                      onSelect={(id) => selectVideoInput(id)}
-                    />
-                  )}
-
                   {/* Audio/Video status */}
                   <div className="pt-4 border-t border-surface-700">
                     <h4 className="text-xs font-medium text-white/60 uppercase tracking-wide mb-3">
@@ -415,14 +358,6 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
                           </span>
                         </div>
                       )}
-                      {isVideoCall && (
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-white/80">Screen Sharing</span>
-                          <span className={isScreenSharing ? 'text-primary-400' : 'text-white/40'}>
-                            {isScreenSharing ? 'Active' : 'Off'}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -437,14 +372,10 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
                         <span className="text-white">{formatDuration(callDuration)}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-white/80">Room</span>
+                        <span className="text-white/80">With</span>
                         <span className="text-white truncate max-w-[150px]">
-                          {activeCall.roomName}
+                          {peer?.name || 'Unknown'}
                         </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-white/80">Participants</span>
-                        <span className="text-white">{activeCall.participants.length + 1}</span>
                       </div>
                     </div>
                   </div>
@@ -466,7 +397,7 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
               <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-white">
-                    Participants ({activeCall.participants.length + 1})
+                    Participants (2)
                   </h3>
                   <button
                     onClick={() => setShowParticipants(false)}
@@ -501,38 +432,21 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
                     </div>
                   </div>
 
-                  {/* Other participants */}
-                  {activeCall.participants.map((participant) => (
-                    <div
-                      key={participant.id}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors"
-                    >
+                  {/* Remote peer */}
+                  {peer && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
                       <Avatar
-                        name={participant.displayName}
-                        src={participant.avatar}
+                        name={peer.name}
+                        src={peer.avatar}
                         size="sm"
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-white truncate">
-                          {participant.displayName}
+                          {peer.name}
                         </p>
                       </div>
-                      <div className="flex items-center gap-1">
-                        {participant.isMuted ? (
-                          <MicOff className="w-4 h-4 text-error-400" />
-                        ) : (
-                          <Mic className="w-4 h-4 text-success-400" />
-                        )}
-                        {isVideoCall && (
-                          participant.isVideoOff ? (
-                            <VideoOff className="w-4 h-4 text-error-400" />
-                          ) : (
-                            <Video className="w-4 h-4 text-success-400" />
-                          )
-                        )}
-                      </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -592,48 +506,6 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
                 </motion.button>
               )}
 
-              {/* Screen share - hidden on mobile */}
-              {isVideoCall && (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={toggleScreenShare}
-                  className={cn(
-                    'hidden sm:flex w-14 h-14 rounded-full items-center justify-center transition-colors',
-                    isScreenSharing
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-white/10 text-white hover:bg-white/20'
-                  )}
-                  title={isScreenSharing ? 'Stop sharing' : 'Share screen'}
-                >
-                  {isScreenSharing ? (
-                    <MonitorOff className="w-6 h-6" />
-                  ) : (
-                    <Monitor className="w-6 h-6" />
-                  )}
-                </motion.button>
-              )}
-
-              {/* Speaker toggle */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={toggleSpeaker}
-                className={cn(
-                  'w-11 h-11 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-colors',
-                  !isSpeakerOn
-                    ? 'bg-error-500/20 text-error-400'
-                    : 'bg-white/10 text-white hover:bg-white/20'
-                )}
-                title={isSpeakerOn ? 'Mute speaker' : 'Unmute speaker'}
-              >
-                {isSpeakerOn ? (
-                  <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
-                ) : (
-                  <VolumeX className="w-5 h-5 sm:w-6 sm:h-6" />
-                )}
-              </motion.button>
-
               {/* End call */}
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -671,72 +543,3 @@ export function VideoCallView({ onClose, onOpenChat }: VideoCallViewProps) {
   );
 }
 
-// Device selector dropdown component
-function DeviceSelector({
-  label,
-  icon,
-  devices,
-  selectedId,
-  onSelect,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  devices: MediaDevice[];
-  selectedId?: string;
-  onSelect: (deviceId: string) => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const selectedDevice = devices.find((d) => d.deviceId === selectedId) || devices[0];
-
-  return (
-    <div className="relative">
-      <label className="block text-xs font-medium text-white/60 mb-1">{label}</label>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          'w-full flex items-center justify-between gap-2 px-3 py-2.5',
-          'bg-surface-700 hover:bg-surface-600 rounded-lg transition-colors',
-          'text-left text-sm text-white'
-        )}
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-white/60 flex-shrink-0">{icon}</span>
-          <span className="truncate">{selectedDevice?.label || 'No device found'}</span>
-        </div>
-        <ChevronDown
-          className={cn('w-4 h-4 text-white/60 transition-transform', isOpen && 'rotate-180')}
-        />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && devices.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute z-10 top-full left-0 right-0 mt-1 bg-surface-700 rounded-lg shadow-lg overflow-hidden max-h-48 overflow-y-auto"
-          >
-            {devices.map((device) => (
-              <button
-                key={device.deviceId}
-                onClick={() => {
-                  onSelect(device.deviceId);
-                  setIsOpen(false);
-                }}
-                className={cn(
-                  'w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left transition-colors',
-                  device.deviceId === selectedId
-                    ? 'bg-primary-500/20 text-primary-300'
-                    : 'text-white hover:bg-surface-600'
-                )}
-              >
-                {device.deviceId === selectedId && <Check className="w-4 h-4 flex-shrink-0" />}
-                <span className="truncate">{device.label}</span>
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}

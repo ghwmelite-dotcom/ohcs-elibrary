@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, MoreVertical, Phone, Video, Loader2 } from 'lucide-react';
 import { useDMStore } from '@/stores/dmStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useCallStore } from '@/stores/callStore';
 import { EnhancedDirectMessage } from '@/types';
 import { Avatar } from '@/components/shared/Avatar';
 import { OnlineIndicator } from '@/components/presence/OnlineIndicator';
@@ -23,6 +24,8 @@ interface DMThreadProps {
 export function DMThread({ userId, onBack, className }: DMThreadProps) {
   const { user } = useAuthStore();
   const toast = useToast();
+  const startCall = useCallStore((s) => s.startCall);
+  const callStatus = useCallStore((s) => s.status);
   const {
     currentConversation,
     messages,
@@ -141,15 +144,43 @@ export function DMThread({ userId, onBack, className }: DMThreadProps) {
 
             <div className="flex items-center gap-1">
               <button
-                onClick={() => toast.info('Voice and video calls coming soon')}
-                className="p-2 rounded-lg text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                onClick={() => {
+                  if (callStatus !== 'idle') {
+                    toast.info('You are already in a call');
+                    return;
+                  }
+                  if (otherUser) {
+                    startCall(
+                      otherUser.id,
+                      otherUser.displayName || 'User',
+                      'audio',
+                      otherUser.avatar
+                    );
+                  }
+                }}
+                disabled={callStatus !== 'idle'}
+                className="p-2 rounded-lg text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Voice call"
               >
                 <Phone className="w-5 h-5" />
               </button>
               <button
-                onClick={() => toast.info('Voice and video calls coming soon')}
-                className="p-2 rounded-lg text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                onClick={() => {
+                  if (callStatus !== 'idle') {
+                    toast.info('You are already in a call');
+                    return;
+                  }
+                  if (otherUser) {
+                    startCall(
+                      otherUser.id,
+                      otherUser.displayName || 'User',
+                      'video',
+                      otherUser.avatar
+                    );
+                  }
+                }}
+                disabled={callStatus !== 'idle'}
+                className="p-2 rounded-lg text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Video call"
               >
                 <Video className="w-5 h-5" />
