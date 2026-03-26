@@ -701,7 +701,7 @@ documentsRoutes.post('/:id/rate', requireAuth, async (c: AppContext) => {
 
 // POST /documents/:id/analyze - AI analysis (production-ready)
 // Supports both local R2 files and Google Drive files
-documentsRoutes.post('/:id/analyze', async (c: AppContext) => {
+documentsRoutes.post('/:id/analyze', requireAuth, async (c: AppContext) => {
   try {
     const documentId = c.req.param('id');
     const { refresh } = await c.req.json().catch(() => ({ refresh: false }));
@@ -814,7 +814,7 @@ documentsRoutes.get('/:id/analysis', async (c: AppContext) => {
 
 // POST /documents/:id/chat - Ask questions about the document
 // Supports both local R2 files and Google Drive files
-documentsRoutes.post('/:id/chat', async (c: AppContext) => {
+documentsRoutes.post('/:id/chat', requireAuth, async (c: AppContext) => {
   try {
     const documentId = c.req.param('id');
     const userId = c.get('userId') || 'guest';
@@ -944,7 +944,7 @@ documentsRoutes.get('/:id/chat', async (c: AppContext) => {
 });
 
 // POST /documents/:id/chat/:messageId/feedback - Rate a chat answer
-documentsRoutes.post('/:id/chat/:messageId/feedback', async (c: AppContext) => {
+documentsRoutes.post('/:id/chat/:messageId/feedback', requireAuth, async (c: AppContext) => {
   try {
     const messageId = c.req.param('messageId');
     const { helpful } = await c.req.json();

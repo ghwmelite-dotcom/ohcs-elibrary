@@ -86,6 +86,20 @@ async function requireAdmin(c: AppContext, next: Next) {
 
 export const googleDriveRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
+// Allowed origins for CORS (must stay in sync with documents.ts)
+const ALLOWED_ORIGINS = [
+  'https://ohcs-elibrary.pages.dev',
+  'https://ohcs-elibrary.gov.gh',
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
+
+function isAllowedOrigin(origin: string): boolean {
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  if (origin.match(/^https:\/\/[a-z0-9]+\.ohcs-elibrary\.pages\.dev$/)) return true;
+  return false;
+}
+
 // Apply auth to all routes
 googleDriveRoutes.use('*', requireAuth);
 
@@ -189,7 +203,7 @@ googleDriveRoutes.post('/auth/callback', requireAdmin, async (c: AppContext) => 
     });
   } catch (error) {
     console.error('OAuth callback error:', error);
-    return c.json({ error: 'Failed to complete authentication', details: String(error) }, 500);
+    return c.json({ error: 'Failed to complete authentication' }, 500);
   }
 });
 
@@ -761,8 +775,12 @@ googleDriveRoutes.get('/stream/:documentId', async (c: AppContext) => {
     headers.set('Content-Disposition', `inline; filename="${document.fileName}"`);
     headers.set('Cache-Control', 'private, max-age=3600');
 
-    // CORS headers
-    headers.set('Access-Control-Allow-Origin', '*');
+    // CORS headers — restrict to known origins only
+    const origin = c.req.header('Origin') || '';
+    if (origin && isAllowedOrigin(origin)) {
+      headers.set('Access-Control-Allow-Origin', origin);
+      headers.set('Access-Control-Allow-Credentials', 'true');
+    }
 
     return new Response(response.body, { headers });
   } catch (error) {
@@ -798,7 +816,13 @@ googleDriveRoutes.get('/stream-direct/:connectionId/:fileId', async (c: AppConte
     headers.set('Content-Type', contentType);
     headers.set('Content-Disposition', `inline; filename="${fileMeta.name}"`);
     headers.set('Cache-Control', 'private, max-age=3600');
-    headers.set('Access-Control-Allow-Origin', '*');
+
+    // CORS headers — restrict to known origins only
+    const origin = c.req.header('Origin') || '';
+    if (origin && isAllowedOrigin(origin)) {
+      headers.set('Access-Control-Allow-Origin', origin);
+      headers.set('Access-Control-Allow-Credentials', 'true');
+    }
 
     return new Response(response.body, { headers });
   } catch (error) {

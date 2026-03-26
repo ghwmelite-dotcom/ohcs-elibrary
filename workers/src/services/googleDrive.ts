@@ -289,9 +289,11 @@ export async function listFolderContents(
   pageToken?: string,
   pageSize: number = 100
 ): Promise<DriveFolderContents> {
-  const query = folderId === 'root'
+  // Sanitize folderId: Drive file IDs are alphanumeric with underscores and hyphens.
+  const safeFolderId = folderId === 'root' ? 'root' : folderId.replace(/[^a-zA-Z0-9_\-]/g, '');
+  const query = safeFolderId === 'root'
     ? `'root' in parents and trashed = false`
-    : `'${folderId}' in parents and trashed = false`;
+    : `'${safeFolderId}' in parents and trashed = false`;
 
   const params = new URLSearchParams({
     q: query,
@@ -331,8 +333,8 @@ export async function listFolderContents(
 
   // Get folder info if not root
   let folder: DriveFolder | null = null;
-  if (folderId !== 'root') {
-    folder = await getFileMetadata(accessToken, folderId) as DriveFolder;
+  if (safeFolderId !== 'root') {
+    folder = await getFileMetadata(accessToken, safeFolderId) as DriveFolder;
   }
 
   return {
@@ -351,7 +353,7 @@ export async function getFileMetadata(accessToken: string, fileId: string): Prom
     fields: 'id, name, mimeType, size, createdTime, modifiedTime, webViewLink, webContentLink, thumbnailLink, iconLink, parents, description, owners',
   });
 
-  const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?${params.toString()}`, {
+  const response = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?${params.toString()}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -374,10 +376,16 @@ export async function searchFiles(
   folderId?: string,
   pageSize: number = 50
 ): Promise<DriveFile[]> {
-  let query = `name contains '${searchQuery.replace(/'/g, "\\'")}' and trashed = false`;
+  // Sanitize inputs for the Drive API query language:
+  // Escape backslashes first, then single-quotes, to prevent injection.
+  const safeQuery = searchQuery.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  // folderId must be a Drive file ID (alphanumeric + underscores/hyphens only).
+  const safeFolderId = folderId ? folderId.replace(/[^a-zA-Z0-9_\-]/g, '') : undefined;
 
-  if (folderId) {
-    query += ` and '${folderId}' in parents`;
+  let query = `name contains '${safeQuery}' and trashed = false`;
+
+  if (safeFolderId) {
+    query += ` and '${safeFolderId}' in parents`;
   }
 
   const params = new URLSearchParams({
@@ -411,11 +419,13 @@ export async function getFileContent(
   mimeType: string,
   exportAsPdf: boolean = false
 ): Promise<{ response: Response; contentType: string }> {
+  const safeFileId = encodeURIComponent(fileId);
+
   // For Google Docs native files, export to appropriate format
   if (GOOGLE_EXPORT_MIMES[mimeType]) {
     const exportMime = GOOGLE_EXPORT_MIMES[mimeType];
     const response = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=${encodeURIComponent(exportMime)}`,
+      `https://www.googleapis.com/drive/v3/files/${safeFileId}/export?mimeType=${encodeURIComponent(exportMime)}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -435,7 +445,7 @@ export async function getFileContent(
     try {
       // Try exporting as PDF using Google's export API
       const exportResponse = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=application/pdf`,
+        `https://www.googleapis.com/drive/v3/files/${safeFileId}/export?mimeType=application/pdf`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -456,7 +466,7 @@ export async function getFileContent(
 
   // For regular files, download directly
   const response = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+    `https://www.googleapis.com/drive/v3/files/${safeFileId}?alt=media`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -480,10 +490,12 @@ export async function extractTextFromDriveFile(
   mimeType: string
 ): Promise<string> {
   try {
+    const safeFileId = encodeURIComponent(fileId);
+
     // For Google Docs, export as plain text
     if (mimeType === DRIVE_MIME_TYPES.DOCUMENT) {
       const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=text/plain`,
+        `https://www.googleapis.com/drive/v3/files/${safeFileId}/export?mimeType=text/plain`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
