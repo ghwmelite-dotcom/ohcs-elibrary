@@ -3,11 +3,11 @@ import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/utils/cn';
 import { useUIStore } from '@/stores/uiStore';
-import { useNotificationStore } from '@/stores/notificationStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
 import { usePresenceStore } from '@/stores/presenceStore';
 import { useCartStore } from '@/stores/shopStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -62,7 +62,7 @@ const mobileNavItems = [
 
 export function MainLayout() {
   const { sidebar, isMobileMenuOpen, setMobileMenuOpen } = useUIStore();
-  const { fetchNotifications, fetchSummary } = useNotificationStore();
+  // Notification fetching is managed by useRealtimeNotifications() above.
   const { fetchStats, fetchLeaderboard } = useGamificationStore();
   const { startHeartbeatPolling, stopHeartbeatPolling } = usePresenceStore();
   const { fetchCart } = useCartStore();
@@ -74,23 +74,16 @@ export function MainLayout() {
     acceptNotification: acceptSmartNotification,
   } = useSmartWellnessNotifications();
 
-  // Fetch initial data and set up polling
+  // Real-time notification polling with page-visibility awareness.
+  // Replaces the inline setInterval below — polls every 30 s and automatically
+  // pauses when the tab is hidden, resuming immediately on tab focus.
+  useRealtimeNotifications();
+
+  // Fetch initial gamification data on mount (non-polling, one-shot).
   useEffect(() => {
-    fetchNotifications();
-    fetchSummary();
     fetchStats();
     fetchLeaderboard();
-
-    // Poll for new notifications every 30 seconds
-    const pollInterval = setInterval(() => {
-      fetchNotifications();
-      fetchSummary();
-    }, 30000);
-
-    return () => {
-      clearInterval(pollInterval);
-    };
-  }, [fetchNotifications, fetchSummary, fetchStats, fetchLeaderboard]);
+  }, [fetchStats, fetchLeaderboard]);
 
   // Fetch cart when user is authenticated
   useEffect(() => {
