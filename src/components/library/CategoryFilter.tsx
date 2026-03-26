@@ -62,32 +62,52 @@ export function CategoryFilter() {
 
   return (
     <>
-      {/* Mobile: Horizontal scrollable cards */}
+      {/* Mobile: Collapsible horizontal scrollable cards */}
       <div className="lg:hidden">
-        <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={() => setIsMobileExpanded(!isMobileExpanded)}
+          className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/25 mb-3"
+        >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/25">
-              <Filter className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-surface-900 dark:text-surface-50">
-                Browse Categories
-              </h3>
-              <p className="text-xs text-surface-500">{totalDocuments} documents available</p>
+            <Filter className="w-5 h-5" />
+            <div className="text-left">
+              <span className="text-sm font-bold">Categories</span>
+              {selectedCategoryData && (
+                <span className="text-xs text-primary-100 ml-2">
+                  ({selectedCategoryData.name})
+                </span>
+              )}
             </div>
           </div>
-          {selectedCategory && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setSelectedCategory(null)}
-              className="p-2 rounded-lg bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors"
+          <div className="flex items-center gap-2">
+            {selectedCategory && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={(e) => { e.stopPropagation(); setSelectedCategory(null); }}
+                className="px-2 py-0.5 text-xs bg-white/20 rounded-full"
+              >
+                Clear
+              </motion.span>
+            )}
+            <motion.div
+              animate={{ rotate: isMobileExpanded ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
             >
-              <X className="w-4 h-4 text-surface-500" />
-            </motion.button>
-          )}
-        </div>
+              <ChevronDown className="w-5 h-5" />
+            </motion.div>
+          </div>
+        </button>
+
+        <AnimatePresence>
+          {isMobileExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
 
         <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {/* All Documents Card */}
@@ -196,6 +216,9 @@ export function CategoryFilter() {
             );
           })}
         </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Desktop: Collapsible card with beautiful animations */}
