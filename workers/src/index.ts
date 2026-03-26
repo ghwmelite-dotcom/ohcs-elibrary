@@ -6,6 +6,7 @@ import { authMiddleware } from './middleware/auth';
 import { rateLimiter } from './middleware/rateLimit';
 import { aggregateNews, getAggregationStatus, generateArticleSummaries } from './services/newsAggregator';
 import { cleanupAnonymousSessions } from './routes/counselor';
+import { trackError } from './services/errorTracker';
 
 // Route imports
 import {
@@ -114,13 +115,89 @@ app.use('*', cors({
 // Rate limiting
 app.use('*', rateLimiter);
 
+// Request metrics middleware — tracks response times and error rates in KV
+app.use('*', async (c, next) => {
+  const start = Date.now();
+  await next();
+  const duration = Date.now() - start;
+
+  // Fire-and-forget metrics update to KV
+  try {
+    const cache = c.env.CACHE;
+    const today = new Date().toISOString().split('T')[0];
+    const key = `metrics:${today}`;
+    const existing = JSON.parse(await cache.get(key) || '{"requests":0,"totalMs":0,"errors":0}');
+    existing.requests++;
+    existing.totalMs += duration;
+    if (c.res.status >= 500) existing.errors++;
+    await cache.put(key, JSON.stringify(existing), { expirationTtl: 604800 }); // 7 days
+  } catch {
+    // Never fail the request for metrics
+  }
+});
+
 // Health check
-app.get('/health', (c) => {
+app.get('/health', async (c) => {
+  const timestamp = new Date().toISOString();
+
+  // --- D1 database check ---
+  let dbStatus: 'up' | 'down' = 'down';
+  let dbLatencyMs = 0;
+  try {
+    const dbStart = Date.now();
+    await c.env.DB.prepare('SELECT 1').first();
+    dbLatencyMs = Date.now() - dbStart;
+    dbStatus = 'up';
+  } catch {
+    dbStatus = 'down';
+  }
+
+  // --- R2 storage check ---
+  let r2Status: 'up' | 'down' = 'down';
+  try {
+    // head() returns null when key doesn't exist but the bucket is reachable;
+    // it throws only when the binding itself is broken.
+    await c.env.DOCUMENTS.head('health-check');
+    r2Status = 'up';
+  } catch {
+    r2Status = 'down';
+  }
+
+  // --- KV cache check ---
+  let kvStatus: 'up' | 'down' = 'down';
+  try {
+    await c.env.CACHE.get('health-probe');
+    kvStatus = 'up';
+    // Record heartbeat while we have a confirmed working KV connection
+    await c.env.CACHE.put('health:lastCheck', timestamp, { expirationTtl: 86400 });
+  } catch {
+    kvStatus = 'down';
+  }
+
+  // --- AI binding check ---
+  const aiStatus: 'up' | 'down' = c.env.AI ? 'up' : 'down';
+
+  // --- Overall status ---
+  const allUp = dbStatus === 'up' && r2Status === 'up' && kvStatus === 'up' && aiStatus === 'up';
+  const overallStatus: 'healthy' | 'degraded' | 'unhealthy' =
+    dbStatus === 'down'
+      ? 'unhealthy'
+      : allUp
+        ? 'healthy'
+        : 'degraded';
+
   return c.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
+    status: overallStatus,
+    timestamp,
     environment: c.env.ENVIRONMENT,
-  });
+    version: '1.0.0',
+    services: {
+      database: { status: dbStatus, latencyMs: dbLatencyMs },
+      r2Storage: { status: r2Status },
+      kvCache: { status: kvStatus },
+      ai: { status: aiStatus },
+    },
+  }, overallStatus === 'unhealthy' ? 503 : 200);
 });
 
 // News aggregation trigger (secret-protected, for testing)
@@ -329,9 +406,29 @@ app.notFound((c) => {
   }, 404);
 });
 
-// Error handler
+// Error handler with persistent error tracking
 app.onError((err, c) => {
-  console.error('Server error:', err);
+  const pathname = new URL(c.req.url).pathname;
+
+  // Fire-and-forget error tracking to KV
+  try {
+    trackError(c.env.CACHE, {
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      path: pathname,
+      method: c.req.method,
+      statusCode: 500,
+      message: err.message,
+      stack: err.stack?.slice(0, 500),
+      userId: c.get('user' as never)?.id || undefined,
+      ip: c.req.header('cf-connecting-ip') || undefined,
+      userAgent: c.req.header('user-agent')?.slice(0, 200) || undefined,
+    });
+  } catch {
+    // Never fail a request due to error tracking
+  }
+
+  console.error(`[ERROR] ${c.req.method} ${pathname}:`, err.message);
   return c.json({
     error: 'Internal Server Error',
     message: c.env.ENVIRONMENT === 'development' ? err.message : 'An unexpected error occurred',

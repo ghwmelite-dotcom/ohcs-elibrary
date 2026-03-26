@@ -5,6 +5,7 @@
 
 import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
+import { getRecentErrors, getErrorTrend, getErrorById } from '../services/errorTracker';
 
 interface Env {
   DB: D1Database;
@@ -496,21 +497,45 @@ analyticsRoutes.get('/recent-activity', async (c) => {
 // GET /analytics/quick-stats - Quick summary stats
 analyticsRoutes.get('/quick-stats', async (c) => {
   try {
-    const [downloads, peakUsers, uptime] = await Promise.all([
+    const [downloads, peakUsers] = await Promise.all([
       c.env.DB.prepare('SELECT COUNT(*) as count FROM document_views').first<{ count: number }>(),
       c.env.DB.prepare(`
         SELECT COUNT(DISTINCT userId) as count
         FROM audit_logs
         WHERE createdAt >= datetime('now', '-1 day')
       `).first<{ count: number }>(),
-      // Uptime would come from monitoring - placeholder
-      Promise.resolve({ value: 99.9 }),
     ]);
+
+    // Get real metrics from KV
+    const today = new Date().toISOString().split('T')[0];
+    const metricsRaw = await c.env.CACHE.get(`metrics:${today}`);
+    const metrics = metricsRaw ? JSON.parse(metricsRaw) : null;
+
+    // Calculate real average response time from today's data
+    const avgResponseTime = metrics && metrics.requests > 0
+      ? `${(metrics.totalMs / metrics.requests).toFixed(0)}ms`
+      : 'N/A';
+
+    // Calculate uptime from last 7 days of metrics
+    let totalRequests = 0;
+    let totalErrors = 0;
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(Date.now() - i * 86400000).toISOString().split('T')[0];
+      const dayMetrics = await c.env.CACHE.get(`metrics:${date}`);
+      if (dayMetrics) {
+        const parsed = JSON.parse(dayMetrics);
+        totalRequests += parsed.requests;
+        totalErrors += parsed.errors;
+      }
+    }
+    const uptime = totalRequests > 0
+      ? `${((1 - totalErrors / totalRequests) * 100).toFixed(2)}%`
+      : '100%';
 
     return c.json({
       data: {
-        avgResponseTime: '1.2s',
-        uptime: `${uptime.value}%`,
+        avgResponseTime,
+        uptime,
         peakUsersToday: peakUsers?.count || 0,
         totalDownloads: downloads?.count || 0,
       },
@@ -518,6 +543,94 @@ analyticsRoutes.get('/quick-stats', async (c) => {
   } catch (error) {
     console.error('Quick stats error:', error);
     return c.json({ error: 'Failed to fetch quick stats' }, 500);
+  }
+});
+
+// GET /analytics/metrics - Real-time platform metrics for admin dashboard
+analyticsRoutes.get('/metrics', async (c) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const todayRaw = await c.env.CACHE.get(`metrics:${today}`);
+    const todayMetrics = todayRaw ? JSON.parse(todayRaw) : { requests: 0, totalMs: 0, errors: 0 };
+
+    // Build 7-day trend
+    const trend: { date: string; requests: number; avgMs: number; errorRate: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(Date.now() - i * 86400000).toISOString().split('T')[0];
+      const raw = await c.env.CACHE.get(`metrics:${date}`);
+      const parsed = raw ? JSON.parse(raw) : { requests: 0, totalMs: 0, errors: 0 };
+      trend.push({
+        date,
+        requests: parsed.requests,
+        avgMs: parsed.requests > 0 ? Math.round(parsed.totalMs / parsed.requests) : 0,
+        errorRate: parsed.requests > 0 ? parseFloat(((parsed.errors / parsed.requests) * 100).toFixed(2)) : 0,
+      });
+    }
+
+    // Last health check heartbeat
+    const lastHealthCheck = await c.env.CACHE.get('health:lastCheck');
+
+    return c.json({
+      data: {
+        today: {
+          requests: todayMetrics.requests,
+          avgResponseTime: todayMetrics.requests > 0
+            ? `${Math.round(todayMetrics.totalMs / todayMetrics.requests)}ms`
+            : 'N/A',
+          errorRate: todayMetrics.requests > 0
+            ? `${((todayMetrics.errors / todayMetrics.requests) * 100).toFixed(2)}%`
+            : '0%',
+          errors: todayMetrics.errors,
+        },
+        trend,
+        lastHealthCheck: lastHealthCheck || null,
+      },
+    });
+  } catch (error) {
+    console.error('Metrics error:', error);
+    return c.json({ error: 'Failed to fetch metrics' }, 500);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Error Tracking Endpoints (admin only — protected by middleware above)
+// ---------------------------------------------------------------------------
+
+// GET /analytics/errors/recent — last 50 tracked errors
+analyticsRoutes.get('/errors/recent', async (c) => {
+  try {
+    const errors = await getRecentErrors(c.env.CACHE);
+    return c.json({ data: errors });
+  } catch (error) {
+    console.error('Recent errors fetch error:', error);
+    return c.json({ error: 'Failed to fetch recent errors' }, 500);
+  }
+});
+
+// GET /analytics/errors/trend — daily error counts for the last N days (default 7)
+analyticsRoutes.get('/errors/trend', async (c) => {
+  try {
+    const days = Math.min(parseInt(c.req.query('days') || '7', 10), 30);
+    const trend = await getErrorTrend(c.env.CACHE, days);
+    return c.json({ data: trend });
+  } catch (error) {
+    console.error('Error trend fetch error:', error);
+    return c.json({ error: 'Failed to fetch error trend' }, 500);
+  }
+});
+
+// GET /analytics/errors/:id — full detail for a single tracked error
+analyticsRoutes.get('/errors/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const trackedError = await getErrorById(c.env.CACHE, id);
+    if (!trackedError) {
+      return c.json({ error: 'Error not found' }, 404);
+    }
+    return c.json({ data: trackedError });
+  } catch (error) {
+    console.error('Error detail fetch error:', error);
+    return c.json({ error: 'Failed to fetch error detail' }, 500);
   }
 });
 
