@@ -1063,6 +1063,9 @@ app.get('/connected', async (c) => {
   }
 
   try {
+    // NOTE: connected_accounts table is not yet created by any migration.
+    // This query will fail gracefully until the social login feature is fully
+    // implemented and the table migration is applied.
     const accounts = await c.env.DB.prepare(`
       SELECT id, provider, email, displayName, avatar, lastUsedAt, connectedAt
       FROM connected_accounts
@@ -1070,7 +1073,12 @@ app.get('/connected', async (c) => {
     `).bind(userId).all();
 
     return c.json({ accounts: accounts.results });
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    // If the table doesn't exist yet, return an empty list rather than an error
+    if (message.includes('no such table')) {
+      return c.json({ accounts: [] });
+    }
     console.error('Error fetching connected accounts:', error);
     return c.json({ error: 'Failed to fetch connected accounts' }, 500);
   }
@@ -1098,7 +1106,12 @@ app.delete('/connected/:provider', async (c) => {
     `).bind(crypto.randomUUID(), userId, `Disconnected ${provider} account`).run();
 
     return c.json({ success: true });
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    // If the table doesn't exist yet, treat as a no-op
+    if (message.includes('no such table')) {
+      return c.json({ success: true });
+    }
     console.error('Error disconnecting account:', error);
     return c.json({ error: 'Failed to disconnect account' }, 500);
   }
