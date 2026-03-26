@@ -23,17 +23,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // TEMPORARY: Loud logging to diagnose production crash
-    console.error('========== ERROR BOUNDARY CAUGHT ==========');
-    console.error('ERROR MESSAGE:', error?.message);
-    console.error('ERROR STACK:', error?.stack);
-    console.error('COMPONENT STACK:', errorInfo?.componentStack);
-    console.error('============================================');
-    // Also show in an alert for visibility
-    try {
-      const msg = `CRASH: ${error?.message}\n\nStack: ${error?.stack?.slice(0, 500)}`;
-      alert(msg);
-    } catch {}
+    console.error('Error caught by boundary:', error, errorInfo);
   }
 
   handleReset = () => {

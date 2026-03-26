@@ -84,7 +84,7 @@ const navSections: NavSection[] = [
       { path: '/feed', label: 'Home', icon: Home, color: 'primary' },
       { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'slate' },
       { path: '/library', label: 'Document Library', icon: Library, color: 'amber', tag: { label: 'CORE', color: 'amber' } },
-      { path: '/bookmarks', label: 'My Bookmarks', icon: Bookmark, color: 'secondary' },
+      { path: '/bookmarks', label: 'My Bookmarks', icon: Bookmark, color: 'amber' },
     ],
   },
   {
@@ -498,7 +498,7 @@ export function Sidebar() {
   };
 
   const renderNavItem = (item: NavItem) => {
-    const colors = colorMap[item.color || 'slate'];
+    const colors = colorMap[item.color || 'slate'] || colorMap.slate;
     const badgeCount = item.hasBadge ? getBadgeCount(item.path) : 0;
     const Icon = item.icon;
     // Use translated label if an i18n key exists for this path
