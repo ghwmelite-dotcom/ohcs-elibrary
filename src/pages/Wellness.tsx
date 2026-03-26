@@ -1,5 +1,5 @@
 import { useEffect, useState, Component, type ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   Heart,
@@ -16,6 +16,8 @@ import {
   Mail,
   MapPin,
   X,
+  Trash2,
+  Lightbulb,
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
 import {
@@ -99,12 +101,44 @@ export default function Wellness() {
   const [selectedTopic, setSelectedTopic] = useState<CounselorTopic | undefined>();
   const [isStarting, setIsStarting] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [tips, setTips] = useState<string[]>([]);
+
+  // API base URL (matching wellnessStore pattern)
+  const API_BASE = import.meta.env.PROD
+    ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+    : '/api/v1';
+
+  // Helper to get auth token
+  const getAuthToken = (): string | null => {
+    try {
+      const authState = JSON.parse(localStorage.getItem('ohcs-auth-storage') || '{}');
+      return authState?.state?.token || localStorage.getItem('auth_token');
+    } catch {
+      return null;
+    }
+  };
 
   // Fetch data on mount
   useEffect(() => {
     if (isAuthenticated) {
       fetchSessions();
       fetchMoodHistory();
+
+      // Fetch personalized tips
+      const token = getAuthToken();
+      if (token) {
+        fetch(`${API_BASE}/counselor/tips`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((r) => r.json())
+          .then((data) => setTips(data.tips || []))
+          .catch(() => {
+            // fallback to hardcoded tips on error
+          });
+      }
     }
     fetchResources();
   }, [isAuthenticated, fetchSessions, fetchMoodHistory, fetchResources]);
@@ -129,6 +163,32 @@ export default function Wellness() {
 
   const handleQuickStart = () => {
     setShowNewSession(true);
+  };
+
+  const handleDeleteAllData = async () => {
+    if (deleteConfirmText !== 'DELETE') return;
+    setIsDeleting(true);
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE}/counselor/my-data`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        // Clear consent flag as well
+        localStorage.removeItem('wellness_consent_given');
+        setShowDeleteDialog(false);
+        setDeleteConfirmText('');
+        // Refresh data
+        fetchSessions();
+        fetchMoodHistory();
+        navigate('/wellness');
+      }
+    } catch {
+      // error
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Safely slice arrays with fallbacks
@@ -405,33 +465,32 @@ export default function Wellness() {
                 </div>
               </motion.div>
 
-              {/* Quick tips */}
+              {/* Quick tips — personalized when available, fallback to defaults */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
                 className="bg-white dark:bg-surface-800 rounded-xl p-5 border border-surface-200 dark:border-surface-700"
               >
-                <h3 className="font-semibold text-surface-900 dark:text-surface-100 mb-3">
-                  Quick Wellness Tips
+                <h3 className="font-semibold text-surface-900 dark:text-surface-100 mb-3 flex items-center gap-2">
+                  {tips.length > 0 && <Lightbulb className="w-4 h-4 text-amber-500" />}
+                  {tips.length > 0 ? 'Tips For You' : 'Quick Wellness Tips'}
                 </h3>
                 <ul className="space-y-2 text-sm text-surface-600 dark:text-surface-400">
-                  <li className="flex items-start gap-2">
-                    <span className="text-teal-500">•</span>
-                    Take short breaks every 90 minutes
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-teal-500">•</span>
-                    Stay hydrated throughout the day
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-teal-500">•</span>
-                    Practice deep breathing when stressed
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-teal-500">•</span>
-                    Connect with colleagues regularly
-                  </li>
+                  {(tips.length > 0
+                    ? tips
+                    : [
+                        'Take short breaks every 90 minutes',
+                        'Stay hydrated throughout the day',
+                        'Practice deep breathing when stressed',
+                        'Connect with colleagues regularly',
+                      ]
+                  ).map((tip, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="text-teal-500">•</span>
+                      {tip}
+                    </li>
+                  ))}
                 </ul>
               </motion.div>
 
@@ -485,6 +544,123 @@ export default function Wellness() {
             </div>
           </div>
         </div>
+
+        {/* Danger Zone — Delete all wellness data */}
+        {isAuthenticated && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="max-w-6xl mx-auto px-3 sm:px-4 pb-6"
+          >
+            <div className="rounded-xl border-2 border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 p-4 sm:p-6">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/50 shrink-0">
+                  <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-red-800 dark:text-red-300 text-base">
+                    Danger Zone
+                  </h3>
+                  <p className="text-sm text-red-700/80 dark:text-red-400/80 mt-1 mb-4">
+                    Permanently delete all your wellness data including chat history, mood entries, and bookmarks.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDeleteDialog(true)}
+                    className="border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/40 font-medium"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete My Wellness Data
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        <AnimatePresence>
+          {showDeleteDialog && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
+              onClick={() => { setShowDeleteDialog(false); setDeleteConfirmText(''); }}
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 100, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 100, scale: 0.95 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white dark:bg-surface-800 w-full sm:max-w-md sm:mx-4 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden"
+              >
+                {/* Mobile drag indicator */}
+                <div className="sm:hidden flex justify-center pt-3 pb-1">
+                  <div className="w-10 h-1 rounded-full bg-surface-300 dark:bg-surface-600" />
+                </div>
+
+                <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2.5 rounded-xl bg-red-100 dark:bg-red-900/50">
+                      <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-surface-900 dark:text-surface-100">
+                        Delete All Wellness Data
+                      </h2>
+                      <p className="text-xs text-red-600 dark:text-red-400 font-medium">
+                        This action cannot be undone
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-surface-600 dark:text-surface-400 mb-4 leading-relaxed">
+                    This will permanently delete all your wellness data including chat history, mood entries, and bookmarks. This cannot be undone.
+                  </p>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                      Type <span className="font-bold text-red-600 dark:text-red-400">DELETE</span> to confirm:
+                    </label>
+                    <input
+                      type="text"
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      placeholder="DELETE"
+                      className="w-full px-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900 text-surface-900 dark:text-surface-100 placeholder-surface-400 dark:placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="shrink-0 px-5 sm:px-6 py-4 bg-surface-50 dark:bg-surface-800/50 border-t border-surface-100 dark:border-surface-700/50">
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => { setShowDeleteDialog(false); setDeleteConfirmText(''); }}
+                      className="flex-1 py-2.5 text-sm touch-manipulation"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleDeleteAllData}
+                      disabled={deleteConfirmText !== 'DELETE' || isDeleting}
+                      isLoading={isDeleting}
+                      className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:bg-red-300 dark:disabled:bg-red-900/50 text-white text-sm touch-manipulation"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Everything
+                    </Button>
+                  </div>
+                  <div className="h-safe-area-inset-bottom" />
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* CSEAP Contact Modal - Fully Responsive */}
         {showContactModal && (

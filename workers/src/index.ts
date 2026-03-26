@@ -5,6 +5,7 @@ import { prettyJSON } from 'hono/pretty-json';
 import { authMiddleware } from './middleware/auth';
 import { rateLimiter } from './middleware/rateLimit';
 import { aggregateNews, getAggregationStatus, generateArticleSummaries } from './services/newsAggregator';
+import { cleanupAnonymousSessions } from './routes/counselor';
 
 // Route imports
 import {
@@ -394,6 +395,16 @@ export default {
             }
           } catch (digestError) {
             console.error('Email digest processing failed:', digestError);
+          }
+
+          // Cleanup old anonymous wellness sessions (older than 30 days)
+          try {
+            const cleanedUp = await cleanupAnonymousSessions(env.DB);
+            if (cleanedUp > 0) {
+              console.log(`Cleaned up ${cleanedUp} anonymous wellness sessions`);
+            }
+          } catch (cleanupError) {
+            console.error('Anonymous session cleanup failed:', cleanupError);
           }
         } catch (error) {
           console.error('Scheduled task failed:', error);

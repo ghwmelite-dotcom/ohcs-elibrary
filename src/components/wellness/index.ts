@@ -8,6 +8,7 @@ export { SessionCard } from './SessionCard';
 export { ChatMessage } from './ChatMessage';
 export { MoodChart } from './MoodChart';
 export { WellnessDashboardCard } from './WellnessDashboardCard';
+export { PrivacyConsent, hasWellnessConsent, setWellnessConsent } from './PrivacyConsent';
 
 // Enhanced Wellness Engagement Components
 export {

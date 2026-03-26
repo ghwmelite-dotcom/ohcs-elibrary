@@ -12,7 +12,7 @@ import {
   Info,
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
-import { DrSenaAvatar, ChatMessage, TopicSelector } from '@/components/wellness';
+import { DrSenaAvatar, ChatMessage, TopicSelector, PrivacyConsent, hasWellnessConsent } from '@/components/wellness';
 import { useWellnessStore } from '@/stores/wellnessStore';
 import { cn } from '@/utils/cn';
 import type { CounselorTopic } from '@/types';
@@ -44,6 +44,7 @@ export default function WellnessChat() {
   const [isNewSession, setIsNewSession] = useState(!sessionId);
   const [selectedTopic, setSelectedTopic] = useState<CounselorTopic | undefined>();
   const [isCreating, setIsCreating] = useState(false);
+  const [showPrivacyConsent, setShowPrivacyConsent] = useState(false);
 
   useEffect(() => {
     if (sessionId) {
@@ -67,6 +68,32 @@ export default function WellnessChat() {
   }, [input]);
 
   const handleStartSession = async () => {
+    // Check for privacy consent before creating session
+    if (!hasWellnessConsent()) {
+      setShowPrivacyConsent(true);
+      return;
+    }
+
+    setIsCreating(true);
+    const session = await createSession({
+      topic: selectedTopic,
+      isAnonymous,
+    });
+
+    if (session) {
+      navigate(`/wellness/chat/${session.id}`, { replace: true });
+      setIsNewSession(false);
+    }
+    setIsCreating(false);
+  };
+
+  const handlePrivacyAccepted = () => {
+    setShowPrivacyConsent(false);
+    // Now proceed to create the session
+    handleStartSessionAfterConsent();
+  };
+
+  const handleStartSessionAfterConsent = async () => {
     setIsCreating(true);
     const session = await createSession({
       topic: selectedTopic,
@@ -193,6 +220,11 @@ export default function WellnessChat() {
                 </Button>
               </div>
             </motion.div>
+
+            <PrivacyConsent
+              isOpen={showPrivacyConsent}
+              onAccept={handlePrivacyAccepted}
+            />
           </div>
         </div>
     );

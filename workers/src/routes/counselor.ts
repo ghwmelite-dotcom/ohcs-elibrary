@@ -18,6 +18,7 @@ interface Env {
   DB: D1Database;
   AI: any;
   JWT_SECRET: string;
+  CACHE: KVNamespace;
 }
 
 interface Variables {
@@ -110,6 +111,17 @@ counselorRoutes.post('/sessions', async (c: AppContext) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const { topic, mood, isAnonymous } = body;
+
+    // Rate limit: max 5 sessions per hour per user
+    if (c.env.CACHE) {
+      const rateLimitId = userId || (isAnonymous ? 'anon' : 'unknown');
+      const key = `ratelimit:wellness:session:${rateLimitId}`;
+      const count = parseInt(await c.env.CACHE.get(key) || '0');
+      if (count >= 5) {
+        return c.json({ error: 'Please slow down. You can create more sessions in a few minutes.' }, 429);
+      }
+      await c.env.CACHE.put(key, String(count + 1), { expirationTtl: 3600 });
+    }
 
     const sessionId = crypto.randomUUID();
     const anonymousId = isAnonymous ? crypto.randomUUID() : null;
@@ -238,6 +250,18 @@ counselorRoutes.post('/sessions/:id/messages', async (c: AppContext) => {
 
     if (!content?.trim()) {
       return c.json({ error: 'Message content required' }, 400);
+    }
+
+    // Rate limit: max 30 messages per hour per user/anonymousId
+    if (c.env.CACHE) {
+      const anonymousId = c.req.header('X-Anonymous-Id');
+      const rateLimitId = userId || anonymousId || 'unknown';
+      const key = `ratelimit:wellness:msg:${rateLimitId}`;
+      const count = parseInt(await c.env.CACHE.get(key) || '0');
+      if (count >= 30) {
+        return c.json({ error: 'Please slow down. You can send more messages in a few minutes.' }, 429);
+      }
+      await c.env.CACHE.put(key, String(count + 1), { expirationTtl: 3600 });
     }
 
     // Get session
@@ -809,6 +833,77 @@ counselorRoutes.get('/tips', requireAuth, async (c: AppContext) => {
       'Stay hydrated throughout the day',
       'Take a short walk if you can'
     ] });
+  }
+});
+
+// ============================================
+// DATA DELETION ROUTE
+// ============================================
+
+/**
+ * Delete all user's wellness data
+ * DELETE /counselor/my-data
+ */
+counselorRoutes.delete('/my-data', requireAuth, async (c: AppContext) => {
+  const { DB } = c.env;
+  const userId = c.get('userId')!;
+
+  try {
+    // Get user's session IDs for cascading deletes
+    const { results: sessionRows } = await DB.prepare(
+      `SELECT id FROM counselor_sessions WHERE userId = ?`
+    ).bind(userId).all();
+    const sessionIds = (sessionRows || []).map((s: any) => s.id);
+
+    let deletedMessages = 0;
+    let deletedEscalations = 0;
+
+    // Delete messages and escalations for each session
+    if (sessionIds.length > 0) {
+      for (const sid of sessionIds) {
+        const msgResult = await DB.prepare(
+          `DELETE FROM counselor_messages WHERE sessionId = ?`
+        ).bind(sid).run();
+        deletedMessages += msgResult.meta?.changes || 0;
+
+        const escResult = await DB.prepare(
+          `DELETE FROM counselor_escalations WHERE sessionId = ?`
+        ).bind(sid).run();
+        deletedEscalations += escResult.meta?.changes || 0;
+      }
+    }
+
+    // Delete sessions
+    const sessResult = await DB.prepare(
+      `DELETE FROM counselor_sessions WHERE userId = ?`
+    ).bind(userId).run();
+    const deletedSessions = sessResult.meta?.changes || 0;
+
+    // Delete mood entries
+    const moodResult = await DB.prepare(
+      `DELETE FROM mood_entries WHERE userId = ?`
+    ).bind(userId).run();
+    const deletedMoods = moodResult.meta?.changes || 0;
+
+    // Delete wellness bookmarks
+    const bookmarkResult = await DB.prepare(
+      `DELETE FROM wellness_bookmarks WHERE userId = ?`
+    ).bind(userId).run();
+    const deletedBookmarks = bookmarkResult.meta?.changes || 0;
+
+    return c.json({
+      success: true,
+      deleted: {
+        sessions: deletedSessions,
+        messages: deletedMessages,
+        moods: deletedMoods,
+        bookmarks: deletedBookmarks,
+        escalations: deletedEscalations,
+      },
+    });
+  } catch (error) {
+    console.error('Delete my data error:', error);
+    return c.json({ error: 'Failed to delete wellness data' }, 500);
   }
 });
 
@@ -1708,6 +1803,42 @@ function calculateTrend(moods: number[]): 'improving' | 'declining' | 'stable' |
   if (diff > 0.3) return 'improving';
   if (diff < -0.3) return 'declining';
   return 'stable';
+}
+
+// ============================================
+// ANONYMOUS SESSION CLEANUP (for cron)
+// ============================================
+
+/**
+ * Delete anonymous sessions older than 30 days.
+ * Called by the scheduled cron handler.
+ */
+export async function cleanupAnonymousSessions(db: D1Database): Promise<number> {
+  // Find anonymous sessions older than 30 days
+  const { results: oldSessions } = await db.prepare(`
+    SELECT id FROM counselor_sessions
+    WHERE isAnonymous = 1
+      AND createdAt < datetime('now', '-30 days')
+  `).all();
+
+  const sessionIds = (oldSessions || []).map((s: any) => s.id);
+  if (sessionIds.length === 0) return 0;
+
+  // Delete messages for old anonymous sessions
+  for (const sid of sessionIds) {
+    await db.prepare(
+      `DELETE FROM counselor_messages WHERE sessionId = ?`
+    ).bind(sid).run();
+  }
+
+  // Delete the sessions themselves
+  for (const sid of sessionIds) {
+    await db.prepare(
+      `DELETE FROM counselor_sessions WHERE id = ?`
+    ).bind(sid).run();
+  }
+
+  return sessionIds.length;
 }
 
 export default counselorRoutes;
