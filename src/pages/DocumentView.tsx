@@ -258,9 +258,11 @@ export default function DocumentView() {
                 <Button variant="outline" leftIcon={<Share2 className="w-5 h-5" />} onClick={handleShare}>
                   Share
                 </Button>
-                <Button onClick={handleDownload} leftIcon={<Download className="w-5 h-5" />}>
-                  Download
-                </Button>
+                {document.isDownloadable !== false && (
+                  <Button onClick={handleDownload} leftIcon={<Download className="w-5 h-5" />}>
+                    Download
+                  </Button>
+                )}
                 <Dropdown items={menuItems} align="right">
                   <button className="p-2.5 border border-surface-300 dark:border-surface-600 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors">
                     <MoreVertical className="w-5 h-5 text-surface-600 dark:text-surface-400" />

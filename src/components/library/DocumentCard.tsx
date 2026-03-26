@@ -154,7 +154,7 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
 
   const menuItems = [
     { label: 'Share', icon: Share2, onClick: handleShare },
-    { label: 'Download', icon: Download, onClick: handleDownload },
+    ...(document.isDownloadable !== false ? [{ label: 'Download', icon: Download, onClick: handleDownload }] : []),
     {
       label: isBookmarked ? 'Remove Bookmark' : 'Add Bookmark',
       icon: isBookmarked ? BookmarkCheck : Bookmark,
