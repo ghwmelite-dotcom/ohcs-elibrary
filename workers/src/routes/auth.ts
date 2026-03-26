@@ -161,13 +161,45 @@ const verifyEmailSchema = z.object({
   token: z.string(),
 });
 
-// Helper function to hash password
+// Helper function to hash password using PBKDF2 with random salt
 async function hashPassword(password: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
+
   const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']
+  );
+  const hashBuffer = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, 256
+  );
+  const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${saltHex}:${hashHex}`;
+}
+
+// Verify password against stored hash (supports both PBKDF2 and legacy SHA-256)
+async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
+  if (!storedHash.includes(':')) {
+    // Legacy SHA-256 hash (no salt) — compare directly
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const legacyHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    return legacyHash === storedHash;
+  }
+  const [saltHex, expectedHash] = storedHash.split(':');
+  const salt = new Uint8Array(saltHex.match(/.{2}/g)!.map(byte => parseInt(byte, 16)));
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']
+  );
+  const hashBuffer = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, 256
+  );
+  const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex === expectedHash;
 }
 
 // Verify Cloudflare Turnstile token
@@ -320,9 +352,9 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
     }
 
     // Verify password
-    const passwordHash = await hashPassword(password);
+    const passwordValid = await verifyPassword(password, user.passwordHash as string);
 
-    if (passwordHash !== user.passwordHash) {
+    if (!passwordValid) {
       // Log failed login attempt
       await logAuthEvent(c.env, AuditActions.AUTH_LOGIN_FAILED, {
         userId: user.id as string,
@@ -337,6 +369,19 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
         error: 'Invalid Credentials',
         message: 'Email or password is incorrect',
       }, 401);
+    }
+
+    // Transparently migrate legacy SHA-256 hash to PBKDF2
+    if (!(user.passwordHash as string).includes(':')) {
+      try {
+        const newHash = await hashPassword(password);
+        await c.env.DB.prepare(`
+          UPDATE users SET passwordHash = ? WHERE id = ?
+        `).bind(newHash, user.id).run();
+      } catch (e) {
+        // Migration is best-effort; don't block login
+        console.error('Failed to migrate password hash:', e);
+      }
     }
 
     // Check if user has 2FA enabled (bypass for super_admin)
