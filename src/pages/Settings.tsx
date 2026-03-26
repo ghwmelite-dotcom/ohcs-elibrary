@@ -27,7 +27,8 @@ import {
   AppearanceSettings,
   AIPreferences,
   StorageAnalytics,
-  AccountActivity
+  AccountActivity,
+  TwoFactorSetup
 } from '@/components/settings';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -229,18 +230,21 @@ export default function Settings() {
 
       case 'security':
         return (
-          <SecurityDashboard
-            sessions={sessions}
-            twoFactor={twoFactor}
-            isSessionsLoading={isSessionsLoading}
-            is2FALoading={is2FALoading}
-            onRevokeSession={revokeSession}
-            onRevokeAllSessions={revokeAllSessions}
-            onInitialize2FA={initializeTwoFactor}
-            onVerify2FA={verifyTwoFactor}
-            onDisable2FA={disableTwoFactor}
-            onChangePassword={changePassword}
-          />
+          <div className="space-y-6">
+            <SecurityDashboard
+              sessions={sessions}
+              twoFactor={twoFactor}
+              isSessionsLoading={isSessionsLoading}
+              is2FALoading={is2FALoading}
+              onRevokeSession={revokeSession}
+              onRevokeAllSessions={revokeAllSessions}
+              onInitialize2FA={initializeTwoFactor}
+              onVerify2FA={verifyTwoFactor}
+              onDisable2FA={disableTwoFactor}
+              onChangePassword={changePassword}
+            />
+            <TwoFactorSetup />
+          </div>
         );
 
       case 'notifications':

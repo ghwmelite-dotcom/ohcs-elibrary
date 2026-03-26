@@ -5,3 +5,4 @@ export { AppearanceSettings } from './AppearanceSettings';
 export { AIPreferences } from './AIPreferences';
 export { StorageAnalytics } from './StorageAnalytics';
 export { AccountActivity } from './AccountActivity';
+export { TwoFactorSetup } from './TwoFactorSetup';
