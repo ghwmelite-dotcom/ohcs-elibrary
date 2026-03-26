@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Clock, CheckCircle2, Flame, Gift, Trophy, Zap } from 'lucide-react';
+import { Target, Clock, CheckCircle2, Flame, Gift, Trophy, Zap, Plus } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { useGamificationStore } from '@/stores/gamificationStore';
 
 interface Challenge {
   id: string;
@@ -32,6 +34,19 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 export function WeeklyChallenges({ challenges, onChallengeClick }: WeeklyChallengesProps) {
+  const { updateChallengeProgress } = useGamificationStore();
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  const handleTrackProgress = async (e: React.MouseEvent, challenge: Challenge) => {
+    e.stopPropagation();
+    if (challenge.isCompleted || updatingId) return;
+
+    setUpdatingId(challenge.id);
+    const nextProgress = Math.min(challenge.currentProgress + 1, challenge.targetValue);
+    await updateChallengeProgress(challenge.id, nextProgress);
+    setUpdatingId(null);
+  };
+
   const getTimeRemaining = (endDate: string) => {
     const end = new Date(endDate);
     const now = new Date();
@@ -180,6 +195,29 @@ export function WeeklyChallenges({ challenges, onChallengeClick }: WeeklyChallen
                       />
                     </div>
                   </div>
+
+                  {/* Track Progress Button */}
+                  {!challenge.isCompleted && (
+                    <button
+                      onClick={(e) => handleTrackProgress(e, challenge)}
+                      disabled={updatingId === challenge.id}
+                      className={cn(
+                        'mt-3 w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg text-sm font-medium transition-colors',
+                        updatingId === challenge.id
+                          ? 'bg-surface-100 dark:bg-surface-700 text-surface-400 cursor-not-allowed'
+                          : 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900/50 border border-primary-200 dark:border-primary-800'
+                      )}
+                    >
+                      {updatingId === challenge.id ? (
+                        <span className="animate-pulse">Updating...</span>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4" />
+                          Track Progress
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>

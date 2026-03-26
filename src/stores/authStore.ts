@@ -205,6 +205,12 @@ export const useAuthStore = create<AuthStore>()(
             console.warn('Failed to create session record:', sessionError);
           }
 
+          // Fire-and-forget streak update — must not block login
+          fetch(`${API_BASE}/gamification/streak`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${data.accessToken}` },
+          }).catch(() => {/* streak failure is non-critical */});
+
           return { requires2FA: false };
         } catch (error) {
           throw error;
@@ -268,6 +274,12 @@ export const useAuthStore = create<AuthStore>()(
           localStorage.setItem('refresh_token', data.refreshToken);
           localStorage.setItem('auth_user', JSON.stringify(user));
           localStorage.setItem('demo_expiry', (Date.now() + 24 * 60 * 60 * 1000).toString());
+
+          // Fire-and-forget streak update — must not block login
+          fetch(`${API_BASE}/gamification/streak`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${data.accessToken}` },
+          }).catch(() => {/* streak failure is non-critical */});
 
         } catch (error) {
           console.error('Demo login error:', error);

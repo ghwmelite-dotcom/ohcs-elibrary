@@ -140,6 +140,7 @@ interface GamificationActions {
   fetchActivityHeatmap: () => Promise<void>;
   fetchActivities: (limit?: number) => Promise<void>;
   updateStreak: () => Promise<void>;
+  updateChallengeProgress: (challengeId: string, progress: number) => Promise<void>;
   awardXP: (amount: number, reason: string, sourceType: string, sourceId?: string) => void;
   checkAchievements: () => Promise<void>;
   dismissLevelUpModal: () => void;
@@ -418,6 +419,41 @@ export const useGamificationStore = create<GamificationStore>((set, get) => ({
       set({ activities });
     } catch (error) {
       console.error('Error fetching activities:', error);
+    }
+  },
+
+  updateChallengeProgress: async (challengeId: string, progress: number) => {
+    try {
+      const response = await authFetch(`${API_BASE}/gamification/challenges/${challengeId}/progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ progress }),
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const updated = await response.json();
+
+      // Optimistically update the challenge in state
+      set((state) => ({
+        challenges: state.challenges.map((c) =>
+          c.id === challengeId
+            ? {
+                ...c,
+                currentProgress: updated.currentProgress ?? progress,
+                isCompleted: updated.isCompleted ?? c.isCompleted,
+                completedAt: updated.completedAt ?? c.completedAt,
+              }
+            : c
+        ),
+      }));
+
+      // Refresh quick stats in case XP was awarded
+      get().fetchQuickStats();
+    } catch (error) {
+      console.error('Error updating challenge progress:', error);
     }
   },
 

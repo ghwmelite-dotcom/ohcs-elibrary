@@ -16,6 +16,12 @@ import {
   Award,
   Star,
   ChevronRight,
+  LogIn,
+  FileText,
+  Upload,
+  ThumbsUp,
+  UserPlus,
+  CheckCircle,
 } from 'lucide-react';
 import {
   LeaderboardTable,
@@ -35,6 +41,7 @@ import { Skeleton } from '@/components/shared/Skeleton';
 import { useAuthStore } from '@/stores/authStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
 import { cn } from '@/utils/cn';
+import { formatRelativeTime } from '@/utils/formatters';
 
 type Period = 'daily' | 'weekly' | 'monthly' | 'allTime';
 type LeaderboardType = 'national' | 'mda';
@@ -536,6 +543,93 @@ export default function Leaderboard() {
                 description={`Top ${userRank?.percentile || 0}% of users`}
                 delay={0.2}
               />
+            </div>
+
+            {/* Recent Activity Feed */}
+            <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 overflow-hidden">
+              <div className="p-4 border-b border-surface-200 dark:border-surface-700 flex items-center justify-between">
+                <h3 className="font-semibold text-surface-900 dark:text-white flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-yellow-500" />
+                  Recent Activity
+                </h3>
+                {activities.length > 0 && (
+                  <span className="text-xs text-surface-400">{activities.length} events</span>
+                )}
+              </div>
+
+              {activities.length === 0 ? (
+                <div className="p-10 text-center">
+                  <Zap className="w-10 h-10 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
+                  <p className="text-surface-500">No recent activity yet</p>
+                  <p className="text-sm text-surface-400 mt-1">Start reading, posting, and engaging to see your feed!</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-surface-100 dark:divide-surface-700">
+                  {activities.map((activity: any, index: number) => {
+                    const activityMeta: Record<string, { icon: React.ReactNode; color: string }> = {
+                      login: { icon: <LogIn className="w-4 h-4" />, color: 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' },
+                      document_read: { icon: <BookOpen className="w-4 h-4" />, color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' },
+                      document_upload: { icon: <Upload className="w-4 h-4" />, color: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' },
+                      forum_post: { icon: <MessageSquare className="w-4 h-4" />, color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400' },
+                      upvote_received: { icon: <ThumbsUp className="w-4 h-4" />, color: 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400' },
+                      group_join: { icon: <UserPlus className="w-4 h-4" />, color: 'bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400' },
+                      challenge_complete: { icon: <CheckCircle className="w-4 h-4" />, color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' },
+                      badge_earned: { icon: <Award className="w-4 h-4" />, color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400' },
+                    };
+
+                    const meta = activityMeta[activity.activityType] ?? {
+                      icon: <Star className="w-4 h-4" />,
+                      color: 'bg-surface-100 dark:bg-surface-700 text-surface-500',
+                    };
+
+                    return (
+                      <motion.div
+                        key={activity.id}
+                        initial={{ opacity: 0, x: -12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.04 }}
+                        className="flex items-center gap-4 px-4 py-3 hover:bg-surface-50 dark:hover:bg-surface-700/40 transition-colors"
+                      >
+                        {/* Activity Icon */}
+                        <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0', meta.color)}>
+                          {meta.icon}
+                        </div>
+
+                        {/* Description */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-surface-800 dark:text-surface-200 truncate">
+                            {activity.title || activity.activityType?.replace(/_/g, ' ')}
+                          </p>
+                          {activity.description && (
+                            <p className="text-xs text-surface-500 truncate mt-0.5">{activity.description}</p>
+                          )}
+                          <p className="text-xs text-surface-400 mt-0.5">
+                            {formatRelativeTime(activity.createdAt)}
+                          </p>
+                        </div>
+
+                        {/* XP Earned */}
+                        {(activity.xpEarned ?? 0) > 0 && (
+                          <span className="flex-shrink-0 flex items-center gap-1 text-sm font-bold text-success-600 dark:text-success-400">
+                            <Zap className="w-3.5 h-3.5" />
+                            +{activity.xpEarned}
+                          </span>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Load More */}
+              <div className="p-3 border-t border-surface-100 dark:border-surface-700 text-center">
+                <button
+                  onClick={() => fetchActivities(activities.length + 10)}
+                  className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+                >
+                  Load more activity
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
