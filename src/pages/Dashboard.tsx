@@ -829,19 +829,6 @@ export default function Dashboard() {
 
             <div className="flex items-center gap-3">
               <StreakDisplay streak={currentStreak} />
-              <Link
-                to="/notifications"
-                className="relative p-3 bg-white dark:bg-surface-800 rounded-xl shadow-sm hover:shadow-md transition-all"
-              >
-                <Bell className="w-5 h-5 text-surface-600 dark:text-surface-400" />
-                <motion.span
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-accent-500 text-white text-xs rounded-full flex items-center justify-center font-bold"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  3
-                </motion.span>
-              </Link>
             </div>
           </div>
         </motion.div>

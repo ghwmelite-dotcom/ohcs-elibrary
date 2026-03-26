@@ -77,9 +77,9 @@ export function Header() {
         !sidebar.isCollapsed && 'lg:left-64'
       )}
     >
-      <div className="h-full flex items-center justify-between px-3 lg:px-5">
-        {/* Left section — shrinks to give space to right */}
-        <div className="flex items-center gap-3 min-w-0 flex-shrink">
+      <div className="h-full flex items-center justify-between px-4 lg:px-6">
+        {/* Left section */}
+        <div className="flex items-center gap-4">
           <button
             onClick={toggleMobileMenu}
             aria-label="Open menu"
@@ -92,7 +92,7 @@ export function Header() {
           <button
             data-tour="search"
             onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}
-            className="hidden md:flex items-center gap-3 w-48 lg:w-64 xl:w-72 flex-shrink px-3 py-2 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-xl text-surface-500 dark:text-surface-300 transition-colors group"
+            className="hidden md:flex items-center gap-3 w-80 px-3 py-2 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-xl text-surface-500 dark:text-surface-300 transition-colors group"
           >
             <Search className="w-4 h-4" />
             <span className="text-sm">Search...</span>
@@ -111,92 +111,79 @@ export function Header() {
           </button>
         </div>
 
-        {/* Right section — never wrap, shrink gracefully */}
-        <div className="flex items-center flex-shrink-0">
-          {/* Group 1: XP Badge (desktop only) */}
+        {/* Right section */}
+        <div className="flex items-center gap-1.5 lg:gap-3">
+          {/* XP Display */}
           {stats && (
             <Link
               data-tour="xp-display"
               to="/leaderboard"
-              className="hidden xl:flex items-center gap-2 px-3 py-1.5 mr-3 bg-secondary-50 dark:bg-secondary-900/20 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-900/30 transition-colors border border-secondary-200/50 dark:border-secondary-800/50"
+              className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-secondary-50 dark:bg-secondary-900/20 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-900/30 transition-colors"
             >
-              <Sparkles className="w-3.5 h-3.5 text-secondary-500" />
-              <span className="text-xs font-semibold text-secondary-700 dark:text-secondary-300">
-                {stats.totalXP.toLocaleString()}
+              <Sparkles className="w-4 h-4 text-secondary-600 dark:text-secondary-400" />
+              <span className="text-sm font-medium text-secondary-700 dark:text-secondary-300">
+                {stats.totalXP.toLocaleString()} XP
               </span>
-              <span className="text-[10px] font-bold text-secondary-500 dark:text-secondary-400 bg-secondary-100 dark:bg-secondary-800/50 px-1.5 py-0.5 rounded">
-                LV{stats.level.level}
-              </span>
+              <Badge variant="secondary" size="sm">
+                Lvl {stats.level.level}
+              </Badge>
             </Link>
           )}
 
-          {/* Divider */}
-          <div className="hidden xl:block w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1.5" />
+          {/* Language Selector */}
+          <LanguageSelector />
 
-          {/* Group 2: Preferences (language + theme) */}
-          <div className="hidden md:flex items-center">
-            <LanguageSelector />
-            <div data-tour="theme-toggle">
-              <ThemeToggleHint variant="dashboard">
-                <AnimatedThemeToggle size="md" />
-              </ThemeToggleHint>
-            </div>
+          {/* Animated Theme Toggle with Discovery Hint */}
+          <div data-tour="theme-toggle">
+            <ThemeToggleHint variant="dashboard">
+              <AnimatedThemeToggle size="md" />
+            </ThemeToggleHint>
           </div>
 
-          {/* Divider */}
-          <div className="hidden lg:block w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
+          {/* Wishlist */}
+          <Link
+            to="/shop/wishlist"
+            className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+            aria-label={`Wishlist${wishlistCount > 0 ? ` (${wishlistCount} items)` : ''}`}
+          >
+            <Heart className={cn('w-5 h-5', wishlistCount > 0 && 'text-red-500')} />
+            {wishlistCount > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"
+              >
+                {wishlistCount > 9 ? '9+' : wishlistCount}
+              </motion.span>
+            )}
+          </Link>
 
-          {/* Group 3: Shop (wishlist + cart) — hidden on small screens */}
-          <div className="hidden lg:flex items-center">
-            <Link
-              to="/shop/wishlist"
-              className="relative p-2 text-surface-500 hover:text-red-500 dark:text-surface-400 dark:hover:text-red-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
-              aria-label={`Wishlist${wishlistCount > 0 ? ` (${wishlistCount} items)` : ''}`}
-            >
-              <Heart className={cn('w-[18px] h-[18px]', wishlistCount > 0 && 'text-red-500 fill-red-500')} />
-              {wishlistCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5"
-                >
-                  {wishlistCount > 9 ? '9+' : wishlistCount}
-                </motion.span>
-              )}
-            </Link>
+          {/* Cart */}
+          <Link
+            to="/shop/cart"
+            className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+            aria-label={`Shopping cart${cartCount > 0 ? ` (${cartCount} items)` : ''}`}
+          >
+            <ShoppingCart className="w-5 h-5" />
+            {cartCount > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-primary-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"
+              >
+                {cartCount > 9 ? '9+' : cartCount}
+              </motion.span>
+            )}
+          </Link>
 
-            <Link
-              to="/shop/cart"
-              className="relative p-2 text-surface-500 hover:text-primary-600 dark:text-surface-400 dark:hover:text-primary-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
-              aria-label={`Shopping cart${cartCount > 0 ? ` (${cartCount} items)` : ''}`}
-            >
-              <ShoppingCart className={cn('w-[18px] h-[18px]', cartCount > 0 && 'text-primary-600 dark:text-primary-400')} />
-              {cartCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-primary-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5"
-                >
-                  {cartCount > 9 ? '9+' : cartCount}
-                </motion.span>
-              )}
-            </Link>
-          </div>
-
-          {/* Divider */}
-          <div className="hidden sm:block w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
-
-          {/* Group 4: Social + Notifications */}
-          <div className="flex items-center">
-          {/* Friend requests — hidden on small mobile */}
-          <div className="hidden sm:block">
+          {/* Friend Requests */}
           <Dropdown
             trigger={
               <button
                 aria-label={`Friend requests${pendingRequests.length > 0 ? ` (${pendingRequests.length} pending)` : ''}`}
-                className="relative p-2 text-surface-500 hover:text-emerald-600 dark:text-surface-400 dark:hover:text-emerald-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
               >
-                <UserPlus className="w-[18px] h-[18px]" />
+                <UserPlus className="w-5 h-5" />
                 {pendingRequests.length > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
@@ -296,20 +283,19 @@ export function Header() {
               </Link>
             </div>
           </Dropdown>
-          </div> {/* End friend requests hidden wrapper */}
 
-          {/* Notifications — always visible */}
+          {/* Notifications */}
           <Dropdown
             trigger={
               <button
                 data-tour="notifications"
                 aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
-                className="relative p-2 text-surface-500 hover:text-amber-600 dark:text-surface-400 dark:hover:text-amber-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
               >
                 {unreadCount > 0 ? (
-                  <BellRing className="w-[18px] h-[18px] text-amber-500" />
+                  <BellRing className="w-5 h-5" />
                 ) : (
-                  <Bell className="w-[18px] h-[18px]" />
+                  <Bell className="w-5 h-5" />
                 )}
                 {unreadCount > 0 && (
                   <motion.span
@@ -410,18 +396,13 @@ export function Header() {
             </div>
           </Dropdown>
 
-          </div> {/* End Group 4: Social + Notifications */}
-
-          {/* Divider before profile */}
-          <div className="w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
-
-          {/* Group 5: User Menu */}
+          {/* User Menu */}
           {user && (
             <Dropdown
               trigger={
                 <button
                   data-tour="user-menu"
-                  className="flex items-center gap-2 p-1 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-xl transition-colors"
+                  className="flex items-center gap-2 p-1.5 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
                 >
                   <Avatar
                     src={user.avatar}
