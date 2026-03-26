@@ -1458,3 +1458,495 @@ documentsRoutes.put('/categories/reorder', requireAuth, async (c: AppContext) =>
     return c.json({ error: 'Failed to reorder categories' }, 500);
   }
 });
+
+// ============================================================
+// Document Comments API
+// ============================================================
+
+// GET /documents/:id/comments - List comments for a document (paginated, newest first)
+documentsRoutes.get('/:id/comments', async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const documentId = c.req.param('id');
+    const userId = c.get('userId') || 'guest';
+
+    const url = new URL(c.req.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 50);
+    const offset = (page - 1) * limit;
+
+    // Get total count of top-level comments
+    const countResult = await DB.prepare(`
+      SELECT COUNT(*) as total FROM document_comments
+      WHERE documentId = ? AND parentId IS NULL
+    `).bind(documentId).first<{ total: number }>();
+    const totalCount = countResult?.total || 0;
+
+    // Get top-level comments with author info and user like status
+    const { results: comments } = await DB.prepare(`
+      SELECT
+        dc.*,
+        u.displayName as authorName,
+        u.avatar as authorAvatar,
+        (SELECT COUNT(*) FROM document_comment_likes dcl WHERE dcl.commentId = dc.id AND dcl.userId = ?) as isLiked
+      FROM document_comments dc
+      LEFT JOIN users u ON dc.userId = u.id
+      WHERE dc.documentId = ? AND dc.parentId IS NULL
+      ORDER BY dc.createdAt DESC
+      LIMIT ? OFFSET ?
+    `).bind(userId, documentId, limit, offset).all();
+
+    // Get replies for each top-level comment
+    const commentsWithReplies = await Promise.all(
+      (comments || []).map(async (comment: any) => {
+        const { results: replies } = await DB.prepare(`
+          SELECT
+            dc.*,
+            u.displayName as authorName,
+            u.avatar as authorAvatar,
+            (SELECT COUNT(*) FROM document_comment_likes dcl WHERE dcl.commentId = dc.id AND dcl.userId = ?) as isLiked
+          FROM document_comments dc
+          LEFT JOIN users u ON dc.userId = u.id
+          WHERE dc.parentId = ?
+          ORDER BY dc.createdAt ASC
+        `).bind(userId, comment.id).all();
+
+        return {
+          ...comment,
+          isLiked: comment.isLiked > 0,
+          author: comment.authorName ? {
+            id: comment.userId,
+            displayName: comment.authorName,
+            avatar: comment.authorAvatar,
+          } : undefined,
+          replies: (replies || []).map((reply: any) => ({
+            ...reply,
+            isLiked: reply.isLiked > 0,
+            author: reply.authorName ? {
+              id: reply.userId,
+              displayName: reply.authorName,
+              avatar: reply.authorAvatar,
+            } : undefined,
+          })),
+        };
+      })
+    );
+
+    return c.json({
+      comments: commentsWithReplies,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+      limit,
+    });
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    return c.json({ error: 'Failed to fetch comments' }, 500);
+  }
+});
+
+// POST /documents/:id/comments - Add a comment (auth required)
+documentsRoutes.post('/:id/comments', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const documentId = c.req.param('id');
+    const userId = c.get('userId')!;
+    const body = await c.req.json();
+    const { content, parentId } = body;
+
+    if (!content || typeof content !== 'string' || !content.trim()) {
+      return c.json({ error: 'Comment content is required' }, 400);
+    }
+
+    // Verify document exists
+    const doc = await DB.prepare(`SELECT id FROM documents WHERE id = ?`).bind(documentId).first();
+    if (!doc) {
+      return c.json({ error: 'Document not found' }, 404);
+    }
+
+    // If replying, verify parent comment exists and belongs to same document
+    if (parentId) {
+      const parent = await DB.prepare(`
+        SELECT id FROM document_comments WHERE id = ? AND documentId = ?
+      `).bind(parentId, documentId).first();
+      if (!parent) {
+        return c.json({ error: 'Parent comment not found' }, 404);
+      }
+    }
+
+    const commentId = crypto.randomUUID();
+    await DB.prepare(`
+      INSERT INTO document_comments (id, documentId, userId, parentId, content, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(commentId, documentId, userId, parentId || null, content.trim()).run();
+
+    // Fetch the created comment with author info
+    const comment = await DB.prepare(`
+      SELECT dc.*, u.displayName as authorName, u.avatar as authorAvatar
+      FROM document_comments dc
+      LEFT JOIN users u ON dc.userId = u.id
+      WHERE dc.id = ?
+    `).bind(commentId).first();
+
+    return c.json({
+      ...comment,
+      isLiked: false,
+      author: comment?.authorName ? {
+        id: comment.userId,
+        displayName: comment.authorName,
+        avatar: comment.authorAvatar,
+      } : undefined,
+      replies: [],
+    }, 201);
+  } catch (error) {
+    console.error('Error creating comment:', error);
+    return c.json({ error: 'Failed to create comment' }, 500);
+  }
+});
+
+// DELETE /documents/:id/comments/:commentId - Delete own comment or admin delete
+documentsRoutes.delete('/:id/comments/:commentId', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const documentId = c.req.param('id');
+    const commentId = c.req.param('commentId');
+    const userId = c.get('userId')!;
+
+    // Get the comment
+    const comment = await DB.prepare(`
+      SELECT id, userId FROM document_comments WHERE id = ? AND documentId = ?
+    `).bind(commentId, documentId).first<{ id: string; userId: string }>();
+
+    if (!comment) {
+      return c.json({ error: 'Comment not found' }, 404);
+    }
+
+    // Only the comment author or an admin can delete
+    if (comment.userId !== userId && !isAdmin(c)) {
+      return c.json({ error: 'Forbidden', message: 'You can only delete your own comments' }, 403);
+    }
+
+    // Delete the comment (CASCADE will handle likes and child replies)
+    await DB.prepare(`DELETE FROM document_comments WHERE id = ?`).bind(commentId).run();
+
+    return c.json({ success: true, message: 'Comment deleted' });
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    return c.json({ error: 'Failed to delete comment' }, 500);
+  }
+});
+
+// POST /documents/:id/comments/:commentId/like - Toggle like on a comment
+documentsRoutes.post('/:id/comments/:commentId/like', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const documentId = c.req.param('id');
+    const commentId = c.req.param('commentId');
+    const userId = c.get('userId')!;
+
+    // Verify comment exists and belongs to document
+    const comment = await DB.prepare(`
+      SELECT id FROM document_comments WHERE id = ? AND documentId = ?
+    `).bind(commentId, documentId).first();
+
+    if (!comment) {
+      return c.json({ error: 'Comment not found' }, 404);
+    }
+
+    // Check if already liked
+    const existingLike = await DB.prepare(`
+      SELECT id FROM document_comment_likes WHERE commentId = ? AND userId = ?
+    `).bind(commentId, userId).first();
+
+    if (existingLike) {
+      // Unlike
+      await DB.prepare(`DELETE FROM document_comment_likes WHERE commentId = ? AND userId = ?`).bind(commentId, userId).run();
+      await DB.prepare(`UPDATE document_comments SET likesCount = MAX(0, likesCount - 1) WHERE id = ?`).bind(commentId).run();
+      return c.json({ liked: false });
+    } else {
+      // Like
+      const likeId = crypto.randomUUID();
+      await DB.prepare(`
+        INSERT INTO document_comment_likes (id, commentId, userId, createdAt) VALUES (?, ?, ?, datetime('now'))
+      `).bind(likeId, commentId, userId).run();
+      await DB.prepare(`UPDATE document_comments SET likesCount = likesCount + 1 WHERE id = ?`).bind(commentId).run();
+      return c.json({ liked: true });
+    }
+  } catch (error) {
+    console.error('Error toggling comment like:', error);
+    return c.json({ error: 'Failed to toggle like' }, 500);
+  }
+});
+
+// ============================================================
+// Document Collections API
+// ============================================================
+
+// GET /documents/collections - List user's collections
+// Note: This route is registered after /:id routes but Hono matches literal segments first
+documentsRoutes.get('/collections', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId')!;
+
+    const { results } = await DB.prepare(`
+      SELECT * FROM document_collections
+      WHERE userId = ?
+      ORDER BY updatedAt DESC
+    `).bind(userId).all();
+
+    return c.json(results || []);
+  } catch (error) {
+    console.error('Error fetching collections:', error);
+    return c.json({ error: 'Failed to fetch collections' }, 500);
+  }
+});
+
+// POST /documents/collections - Create a collection
+documentsRoutes.post('/collections', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const userId = c.get('userId')!;
+    const body = await c.req.json();
+    const { name, description, isPublic } = body;
+
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return c.json({ error: 'Collection name is required' }, 400);
+    }
+
+    const collectionId = crypto.randomUUID();
+    await DB.prepare(`
+      INSERT INTO document_collections (id, userId, name, description, isPublic, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(collectionId, userId, name.trim(), description || null, isPublic ? 1 : 0).run();
+
+    const collection = await DB.prepare(`SELECT * FROM document_collections WHERE id = ?`).bind(collectionId).first();
+    return c.json(collection, 201);
+  } catch (error) {
+    console.error('Error creating collection:', error);
+    return c.json({ error: 'Failed to create collection' }, 500);
+  }
+});
+
+// GET /documents/collections/:id - Get collection with its documents
+documentsRoutes.get('/collections/:id', async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const collectionId = c.req.param('id');
+    const userId = c.get('userId') || 'guest';
+
+    const collection = await DB.prepare(`
+      SELECT dc.*, u.displayName as ownerName
+      FROM document_collections dc
+      LEFT JOIN users u ON dc.userId = u.id
+      WHERE dc.id = ?
+    `).bind(collectionId).first();
+
+    if (!collection) {
+      return c.json({ error: 'Collection not found' }, 404);
+    }
+
+    // Only owner or public collections are viewable
+    if (!collection.isPublic && collection.userId !== userId && !isAdmin(c)) {
+      return c.json({ error: 'Forbidden', message: 'This collection is private' }, 403);
+    }
+
+    // Get documents in collection
+    const { results: documents } = await DB.prepare(`
+      SELECT d.*, dci.addedAt,
+        u.displayName as authorName,
+        u.avatar as authorAvatar
+      FROM document_collection_items dci
+      INNER JOIN documents d ON dci.documentId = d.id
+      LEFT JOIN users u ON d.authorId = u.id
+      WHERE dci.collectionId = ?
+      ORDER BY dci.addedAt DESC
+    `).bind(collectionId).all();
+
+    return c.json({
+      ...collection,
+      owner: collection.ownerName ? {
+        id: collection.userId,
+        displayName: collection.ownerName,
+      } : undefined,
+      documents: (documents || []).map((doc: any) => ({
+        ...doc,
+        tags: doc.tags ? JSON.parse(doc.tags) : [],
+        author: doc.authorName ? {
+          id: doc.authorId,
+          displayName: doc.authorName,
+          avatar: doc.authorAvatar,
+        } : undefined,
+      })),
+    });
+  } catch (error) {
+    console.error('Error fetching collection:', error);
+    return c.json({ error: 'Failed to fetch collection' }, 500);
+  }
+});
+
+// PUT /documents/collections/:id - Update a collection
+documentsRoutes.put('/collections/:id', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const collectionId = c.req.param('id');
+    const userId = c.get('userId')!;
+    const body = await c.req.json();
+    const { name, description, isPublic } = body;
+
+    // Verify ownership
+    const collection = await DB.prepare(`
+      SELECT id, userId FROM document_collections WHERE id = ?
+    `).bind(collectionId).first<{ id: string; userId: string }>();
+
+    if (!collection) {
+      return c.json({ error: 'Collection not found' }, 404);
+    }
+    if (collection.userId !== userId) {
+      return c.json({ error: 'Forbidden', message: 'You can only update your own collections' }, 403);
+    }
+
+    await DB.prepare(`
+      UPDATE document_collections
+      SET name = COALESCE(?, name),
+          description = COALESCE(?, description),
+          isPublic = COALESCE(?, isPublic),
+          updatedAt = datetime('now')
+      WHERE id = ?
+    `).bind(
+      name?.trim() || null,
+      description !== undefined ? description : null,
+      isPublic !== undefined ? (isPublic ? 1 : 0) : null,
+      collectionId
+    ).run();
+
+    const updated = await DB.prepare(`SELECT * FROM document_collections WHERE id = ?`).bind(collectionId).first();
+    return c.json(updated);
+  } catch (error) {
+    console.error('Error updating collection:', error);
+    return c.json({ error: 'Failed to update collection' }, 500);
+  }
+});
+
+// DELETE /documents/collections/:id - Delete a collection (owner only)
+documentsRoutes.delete('/collections/:id', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const collectionId = c.req.param('id');
+    const userId = c.get('userId')!;
+
+    const collection = await DB.prepare(`
+      SELECT id, userId FROM document_collections WHERE id = ?
+    `).bind(collectionId).first<{ id: string; userId: string }>();
+
+    if (!collection) {
+      return c.json({ error: 'Collection not found' }, 404);
+    }
+    if (collection.userId !== userId) {
+      return c.json({ error: 'Forbidden', message: 'You can only delete your own collections' }, 403);
+    }
+
+    // CASCADE will handle collection items
+    await DB.prepare(`DELETE FROM document_collections WHERE id = ?`).bind(collectionId).run();
+
+    return c.json({ success: true, message: 'Collection deleted' });
+  } catch (error) {
+    console.error('Error deleting collection:', error);
+    return c.json({ error: 'Failed to delete collection' }, 500);
+  }
+});
+
+// POST /documents/collections/:id/documents - Add document to collection
+documentsRoutes.post('/collections/:id/documents', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const collectionId = c.req.param('id');
+    const userId = c.get('userId')!;
+    const body = await c.req.json();
+    const { documentId } = body;
+
+    if (!documentId) {
+      return c.json({ error: 'documentId is required' }, 400);
+    }
+
+    // Verify collection ownership
+    const collection = await DB.prepare(`
+      SELECT id, userId FROM document_collections WHERE id = ?
+    `).bind(collectionId).first<{ id: string; userId: string }>();
+
+    if (!collection) {
+      return c.json({ error: 'Collection not found' }, 404);
+    }
+    if (collection.userId !== userId) {
+      return c.json({ error: 'Forbidden', message: 'You can only add to your own collections' }, 403);
+    }
+
+    // Verify document exists
+    const doc = await DB.prepare(`SELECT id FROM documents WHERE id = ?`).bind(documentId).first();
+    if (!doc) {
+      return c.json({ error: 'Document not found' }, 404);
+    }
+
+    // Add to collection (UNIQUE constraint prevents duplicates)
+    const itemId = crypto.randomUUID();
+    await DB.prepare(`
+      INSERT INTO document_collection_items (id, collectionId, documentId, addedAt)
+      VALUES (?, ?, ?, datetime('now'))
+    `).bind(itemId, collectionId, documentId).run();
+
+    // Update document count
+    await DB.prepare(`
+      UPDATE document_collections
+      SET documentCount = (SELECT COUNT(*) FROM document_collection_items WHERE collectionId = ?),
+          updatedAt = datetime('now')
+      WHERE id = ?
+    `).bind(collectionId, collectionId).run();
+
+    return c.json({ success: true, message: 'Document added to collection' }, 201);
+  } catch (error: any) {
+    if (error?.message?.includes('UNIQUE constraint')) {
+      return c.json({ error: 'Document already in collection' }, 409);
+    }
+    console.error('Error adding document to collection:', error);
+    return c.json({ error: 'Failed to add document to collection' }, 500);
+  }
+});
+
+// DELETE /documents/collections/:id/documents/:documentId - Remove document from collection
+documentsRoutes.delete('/collections/:id/documents/:documentId', requireAuth, async (c: AppContext) => {
+  try {
+    const { DB } = c.env;
+    const collectionId = c.req.param('id');
+    const documentId = c.req.param('documentId');
+    const userId = c.get('userId')!;
+
+    // Verify collection ownership
+    const collection = await DB.prepare(`
+      SELECT id, userId FROM document_collections WHERE id = ?
+    `).bind(collectionId).first<{ id: string; userId: string }>();
+
+    if (!collection) {
+      return c.json({ error: 'Collection not found' }, 404);
+    }
+    if (collection.userId !== userId) {
+      return c.json({ error: 'Forbidden', message: 'You can only remove from your own collections' }, 403);
+    }
+
+    await DB.prepare(`
+      DELETE FROM document_collection_items WHERE collectionId = ? AND documentId = ?
+    `).bind(collectionId, documentId).run();
+
+    // Update document count
+    await DB.prepare(`
+      UPDATE document_collections
+      SET documentCount = (SELECT COUNT(*) FROM document_collection_items WHERE collectionId = ?),
+          updatedAt = datetime('now')
+      WHERE id = ?
+    `).bind(collectionId, collectionId).run();
+
+    return c.json({ success: true, message: 'Document removed from collection' });
+  } catch (error) {
+    console.error('Error removing document from collection:', error);
+    return c.json({ error: 'Failed to remove document from collection' }, 500);
+  }
+});
