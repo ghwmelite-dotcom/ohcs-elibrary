@@ -4,21 +4,12 @@ compatibility_date = "2024-01-01"
 
 [vars]
 ENVIRONMENT = "development"
-JWT_SECRET = "ohcs-elibrary-jwt-secret-key-2024-production"
-RESEND_API_KEY = "re_KT4GJbwf_NhtRgQzS3dFQeK6r8oSGY5A3"
-# Gmail API credentials for email delivery
-GMAIL_CLIENT_ID = "393704243654-e5gjqadsn8spvc2ojdkk79h70ltcdvgm.apps.googleusercontent.com"
-GMAIL_CLIENT_SECRET = "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"
-GMAIL_REFRESH_TOKEN = "1//03j9dppcB5lIRCgYIARAAGAMSNwF-L9Ir1FHHO0D5DpYN4QqxAErekNS6kghF29ar2cVjVOkKZMIrskGehd0NfwSZ_BBoIVaYUaA"
-# Paystack payment gateway credentials (test mode)
-PAYSTACK_SECRET_KEY = "sk_test_7aa91fb0bf7031611e0d7c578d308bbcc5493ecc"
-PAYSTACK_PUBLIC_KEY = "pk_test_119f59063968b51884ee2a2868f20974982d5232"
-# Google Drive API credentials
-GOOGLE_DRIVE_CLIENT_ID = "539781967902-2vs31ks41h3sph7tcnl9trqtrf82fkqf.apps.googleusercontent.com"
-GOOGLE_DRIVE_CLIENT_SECRET = "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"
+# Non-secret config values only — all secrets set via `npx wrangler secret put <NAME>`
 GOOGLE_DRIVE_REDIRECT_URI = "https://ohcs-elibrary.pages.dev/admin/integrations/google-drive/callback"
-# Cron job authentication secret (replace with a strong value in production via Cloudflare dashboard secrets)
-CRON_SECRET = "b3f7a1d9-4e82-47c6-9f0b-8a2d5e6c1f34-e9c4b7a2-3d18-4f65-a0e7-6b9d2c8f5a71"
+# The following are set as encrypted Cloudflare secrets (not in this file):
+# JWT_SECRET, RESEND_API_KEY, GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET,
+# GMAIL_REFRESH_TOKEN, PAYSTACK_SECRET_KEY, PAYSTACK_PUBLIC_KEY,
+# GOOGLE_DRIVE_CLIENT_ID, GOOGLE_DRIVE_CLIENT_SECRET, CRON_SECRET
 
 # D1 Database binding
 [[d1_databases]]
