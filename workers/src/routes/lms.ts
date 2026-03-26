@@ -4563,4 +4563,189 @@ lms.post('/rubrics/:id/duplicate', requireAuth, async (c) => {
   }
 });
 
+// =====================================================
+// COURSE TEMPLATES
+// =====================================================
+
+// GET /lms/course-templates - List all course templates
+lms.get('/course-templates', async (c) => {
+  try {
+    const { category, level, search } = c.req.query();
+
+    let query = 'SELECT id, name, description, category, level, estimatedDuration, moduleStructure, objectives, tags, isOfficial, usageCount, createdAt FROM lms_course_templates WHERE 1=1';
+    const params: any[] = [];
+
+    if (category) {
+      query += ' AND category = ?';
+      params.push(category);
+    }
+
+    if (level) {
+      query += ' AND level = ?';
+      params.push(level);
+    }
+
+    if (search) {
+      query += ' AND (name LIKE ? OR description LIKE ? OR tags LIKE ?)';
+      const searchTerm = `%${search}%`;
+      params.push(searchTerm, searchTerm, searchTerm);
+    }
+
+    query += ' ORDER BY isOfficial DESC, usageCount DESC, name ASC';
+
+    const templates = await c.env.DB.prepare(query).bind(...params).all();
+
+    const results = (templates.results || []).map((t: any) => {
+      const structure = JSON.parse(t.moduleStructure || '[]');
+      const lessonCount = structure.reduce((acc: number, mod: any) => acc + (mod.lessons?.length || 0), 0);
+      return {
+        ...t,
+        moduleCount: structure.length,
+        lessonCount,
+        objectives: t.objectives ? JSON.parse(t.objectives) : [],
+        tags: t.tags ? JSON.parse(t.tags) : [],
+      };
+    });
+
+    return c.json({ templates: results });
+  } catch (error) {
+    console.error('Error fetching course templates:', error);
+    return c.json({ error: 'Failed to fetch templates' }, 500);
+  }
+});
+
+// GET /lms/course-templates/:id - Get a single template with full structure
+lms.get('/course-templates/:id', async (c) => {
+  const templateId = c.req.param('id');
+
+  try {
+    const template = await c.env.DB.prepare(`
+      SELECT * FROM lms_course_templates WHERE id = ?
+    `).bind(templateId).first();
+
+    if (!template) {
+      return c.json({ error: 'Template not found' }, 404);
+    }
+
+    const t = template as any;
+    const structure = JSON.parse(t.moduleStructure || '[]');
+    const lessonCount = structure.reduce((acc: number, mod: any) => acc + (mod.lessons?.length || 0), 0);
+
+    return c.json({
+      ...t,
+      moduleStructure: structure,
+      moduleCount: structure.length,
+      lessonCount,
+      objectives: t.objectives ? JSON.parse(t.objectives) : [],
+      tags: t.tags ? JSON.parse(t.tags) : [],
+    });
+  } catch (error) {
+    console.error('Error fetching template:', error);
+    return c.json({ error: 'Failed to fetch template' }, 500);
+  }
+});
+
+// POST /lms/course-templates/:id/use - Create a new course from a template
+lms.post('/course-templates/:id/use', requireAuth, async (c) => {
+  const user = c.get('user');
+  if (!user?.id || !isInstructor(user.role)) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  const templateId = c.req.param('id');
+
+  try {
+    const template = await c.env.DB.prepare(`
+      SELECT * FROM lms_course_templates WHERE id = ?
+    `).bind(templateId).first();
+
+    if (!template) {
+      return c.json({ error: 'Template not found' }, 404);
+    }
+
+    const t = template as any;
+    const moduleStructure = JSON.parse(t.moduleStructure || '[]');
+    const objectives = t.objectives ? JSON.parse(t.objectives) : null;
+    const tags = t.tags ? JSON.parse(t.tags) : null;
+
+    // 1. Create the course
+    const courseId = crypto.randomUUID();
+    const slug = t.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36);
+
+    await c.env.DB.prepare(`
+      INSERT INTO lms_courses
+        (id, title, slug, description, shortDescription, thumbnailUrl, instructorId, category, level, status, tags, objectives, estimatedDuration, passingScore, xpReward, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, 'draft', ?, ?, ?, 70, 100, datetime('now'), datetime('now'))
+    `).bind(
+      courseId,
+      t.name,
+      slug,
+      t.description,
+      t.description.substring(0, 200),
+      user.id,
+      t.category,
+      t.level,
+      tags ? JSON.stringify(tags) : null,
+      objectives ? JSON.stringify(objectives) : null,
+      t.estimatedDuration || 60
+    ).run();
+
+    // 2. Create modules and lessons from template structure
+    for (let mi = 0; mi < moduleStructure.length; mi++) {
+      const mod = moduleStructure[mi];
+      const moduleId = crypto.randomUUID();
+
+      await c.env.DB.prepare(`
+        INSERT INTO lms_modules (id, courseId, title, description, sortOrder, createdAt, updatedAt)
+        VALUES (?, ?, ?, NULL, ?, datetime('now'), datetime('now'))
+      `).bind(moduleId, courseId, mod.title, mi).run();
+
+      const lessons = mod.lessons || [];
+      for (let li = 0; li < lessons.length; li++) {
+        const lesson = lessons[li];
+        const lessonId = crypto.randomUUID();
+        const contentType = lesson.type === 'quiz' ? 'quiz' : 'text';
+        const placeholderContent = lesson.type === 'quiz'
+          ? null
+          : `<h2>${lesson.title}</h2><p>Add your content here. This lesson was generated from the "${t.name}" template.</p>`;
+
+        await c.env.DB.prepare(`
+          INSERT INTO lms_lessons
+            (id, moduleId, courseId, title, contentType, content, sortOrder, estimatedDuration, isRequired, isPreviewable, xpReward, createdAt, updatedAt)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0, 10, datetime('now'), datetime('now'))
+        `).bind(
+          lessonId, moduleId, courseId, lesson.title, contentType,
+          placeholderContent, li, lesson.duration || 10
+        ).run();
+
+        // Auto-create quiz for quiz-type lessons
+        if (contentType === 'quiz') {
+          const quizId = crypto.randomUUID();
+          await c.env.DB.prepare(`
+            INSERT INTO lms_quizzes
+              (id, lessonId, courseId, title, quizType, passingScore, maxAttempts, shuffleQuestions, shuffleOptions, showCorrectAnswers, showExplanations, xpReward, questionCount, totalPoints, createdAt, updatedAt)
+            VALUES (?, ?, ?, ?, 'standard', 70, 3, 0, 0, 1, 1, 25, 0, 0, datetime('now'), datetime('now'))
+          `).bind(quizId, lessonId, courseId, lesson.title).run();
+        }
+      }
+    }
+
+    // 3. Increment usage count
+    await c.env.DB.prepare(`
+      UPDATE lms_course_templates SET usageCount = usageCount + 1 WHERE id = ?
+    `).bind(templateId).run();
+
+    return c.json({
+      courseId,
+      slug,
+      title: t.name,
+      status: 'draft',
+      message: 'Course created from template successfully',
+    }, 201);
+  } catch (error) {
+    console.error('Error creating course from template:', error);
+    return c.json({ error: 'Failed to create course from template' }, 500);
+  }
+});
+
 export default lms;
