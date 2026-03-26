@@ -78,6 +78,51 @@ function requireAdmin(c: AppContext): boolean {
   return typeof role === 'string' && ['admin', 'super_admin', 'director'].includes(role);
 }
 
+// Check if user has a specific permission
+async function hasPermission(db: D1Database, userId: string, permission: string): Promise<boolean> {
+  const result = await db.prepare(
+    'SELECT 1 FROM user_permissions WHERE userId = ? AND permission = ? AND granted = 1'
+  ).bind(userId, permission).first();
+  return !!result;
+}
+
+// Log an audit event
+async function logAudit(
+  db: D1Database,
+  c: AppContext,
+  action: string,
+  category: string,
+  severity: string,
+  resourceType: string,
+  resourceId: string,
+  details: Record<string, unknown>
+): Promise<void> {
+  try {
+    const adminUser = c.get('user') as { id?: string; email?: string; role?: string } | undefined;
+    await db.prepare(`
+      INSERT INTO audit_logs (id, userId, userEmail, userRole, action, category, severity, resourceType, resourceId, metadata, ipAddress, userAgent, requestMethod, requestPath, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(
+      crypto.randomUUID(),
+      adminUser?.id || c.get('userId') || null,
+      adminUser?.email || null,
+      adminUser?.role || null,
+      action,
+      category,
+      severity,
+      resourceType,
+      resourceId,
+      JSON.stringify(details),
+      c.req.header('cf-connecting-ip') || 'unknown',
+      c.req.header('user-agent') || 'unknown',
+      c.req.method,
+      c.req.path
+    ).run();
+  } catch (err) {
+    console.error('Failed to write audit log:', err);
+  }
+}
+
 // GET /admin/users - List all users with pagination
 adminUsersRoutes.get('/', async (c: AppContext) => {
   if (!requireAdmin(c)) {
@@ -241,6 +286,13 @@ adminUsersRoutes.put('/:id', async (c: AppContext) => {
     const userId = c.req.param('id');
     const body = await c.req.json();
     const adminId = c.get('userId');
+    const user = c.get('user') as any;
+
+    // Permission check - super_admin bypasses
+    if (user.role !== 'super_admin') {
+      const permitted = await hasPermission(DB, user.id, 'edit_users');
+      if (!permitted) return c.json({ error: 'Insufficient permissions' }, 403);
+    }
 
     const { role, isActive, isSuspended, permissions, ...profileData } = body;
 
@@ -304,6 +356,12 @@ adminUsersRoutes.put('/:id', async (c: AppContext) => {
       }
     }
 
+    await logAudit(DB, c, 'user_profile_updated', 'user_management', 'info', 'user', userId, {
+      updatedFields: Object.keys(profileData).filter(k => allowedFields.includes(k)),
+      roleChanged: role !== undefined,
+      permissionsUpdated: !!permissions,
+    });
+
     return c.json({ success: true, message: 'User updated successfully' });
   } catch (error) {
     console.error('Error updating user:', error);
@@ -320,6 +378,14 @@ adminUsersRoutes.post('/:id/role', async (c: AppContext) => {
   try {
     const { DB } = c.env;
     const userId = c.req.param('id');
+    const adminUser = c.get('user') as any;
+
+    // Permission check - super_admin bypasses
+    if (adminUser.role !== 'super_admin') {
+      const permitted = await hasPermission(DB, adminUser.id, 'manage_user_roles');
+      if (!permitted) return c.json({ error: 'Insufficient permissions' }, 403);
+    }
+
     const { role } = await c.req.json();
 
     const validRoles = ['guest', 'user', 'contributor', 'moderator', 'librarian', 'counselor', 'admin', 'director', 'super_admin'];
@@ -327,9 +393,18 @@ adminUsersRoutes.post('/:id/role', async (c: AppContext) => {
       return c.json({ error: 'Invalid role' }, 400);
     }
 
+    // Fetch old role for audit log
+    const targetUser = await DB.prepare('SELECT role FROM users WHERE id = ?').bind(userId).first() as { role: string } | null;
+    const oldRole = targetUser?.role || 'unknown';
+
     await DB.prepare(`
       UPDATE users SET role = ?, updatedAt = datetime('now') WHERE id = ?
     `).bind(role, userId).run();
+
+    await logAudit(DB, c, 'user_role_changed', 'user_management', 'warning', 'user', userId, {
+      oldRole,
+      newRole: role,
+    });
 
     return c.json({ success: true, message: 'Role updated' });
   } catch (error) {
@@ -347,11 +422,24 @@ adminUsersRoutes.post('/:id/suspend', async (c: AppContext) => {
   try {
     const { DB } = c.env;
     const userId = c.req.param('id');
+    const adminUser = c.get('user') as any;
+
+    // Permission check - super_admin bypasses
+    if (adminUser.role !== 'super_admin') {
+      const permitted = await hasPermission(DB, adminUser.id, 'edit_users');
+      if (!permitted) return c.json({ error: 'Insufficient permissions' }, 403);
+    }
+
     const { suspend, reason } = await c.req.json();
 
     await DB.prepare(`
       UPDATE users SET isSuspended = ?, updatedAt = datetime('now') WHERE id = ?
     `).bind(suspend ? 1 : 0, userId).run();
+
+    await logAudit(DB, c, suspend ? 'user_suspended' : 'user_unsuspended', 'user_management', 'warning', 'user', userId, {
+      suspended: !!suspend,
+      reason: reason || null,
+    });
 
     return c.json({ success: true, message: suspend ? 'User suspended' : 'User unsuspended' });
   } catch (error) {
@@ -370,16 +458,32 @@ adminUsersRoutes.delete('/:id', async (c: AppContext) => {
     const { DB } = c.env;
     const userId = c.req.param('id');
     const adminId = c.get('userId');
+    const adminUser = c.get('user') as any;
+
+    // Permission check - super_admin bypasses
+    if (adminUser.role !== 'super_admin') {
+      const permitted = await hasPermission(DB, adminUser.id, 'delete_users');
+      if (!permitted) return c.json({ error: 'Insufficient permissions' }, 403);
+    }
 
     // Don't allow deleting yourself
     if (userId === adminId) {
       return c.json({ error: 'Cannot delete your own account' }, 400);
     }
 
+    // Fetch user info for audit before soft-deleting
+    const targetUser = await DB.prepare('SELECT email, displayName, role FROM users WHERE id = ?').bind(userId).first() as { email: string; displayName: string; role: string } | null;
+
     // Soft delete - just deactivate
     await DB.prepare(`
       UPDATE users SET isActive = 0, isSuspended = 1, updatedAt = datetime('now') WHERE id = ?
     `).bind(userId).run();
+
+    await logAudit(DB, c, 'user_deleted', 'user_management', 'warning', 'user', userId, {
+      deletedUserEmail: targetUser?.email || 'unknown',
+      deletedUserName: targetUser?.displayName || 'unknown',
+      deletedUserRole: targetUser?.role || 'unknown',
+    });
 
     return c.json({ success: true, message: 'User deleted' });
   } catch (error) {
@@ -398,6 +502,14 @@ adminUsersRoutes.post('/invite', async (c: AppContext) => {
     const { DB, RESEND_API_KEY } = c.env;
     const adminId = c.get('userId');
     const { email, role, permissions } = await c.req.json();
+
+    const adminUser = c.get('user') as any;
+
+    // Permission check - super_admin bypasses
+    if (adminUser.role !== 'super_admin') {
+      const permitted = await hasPermission(DB, adminUser.id, 'create_users');
+      if (!permitted) return c.json({ error: 'Insufficient permissions' }, 403);
+    }
 
     if (!email) {
       return c.json({ error: 'Email is required' }, 400);
@@ -480,10 +592,14 @@ adminUsersRoutes.post('/invite', async (c: AppContext) => {
       // Don't fail the request, invitation is still created
     }
 
+    await logAudit(DB, c, 'user_invited', 'user_management', 'info', 'invitation', email, {
+      invitedEmail: email,
+      assignedRole: role || 'admin',
+    });
+
     return c.json({
       success: true,
       message: 'Invitation sent successfully',
-      inviteUrl, // Return URL for testing
     });
   } catch (error) {
     console.error('Error creating invitation:', error);
