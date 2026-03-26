@@ -479,6 +479,16 @@ function SubmissionStatus({ submission, assignment }: SubmissionStatusProps) {
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
+// Convert a browser File to a base64 data URL
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function AssignmentPage() {
   const { courseId, assignmentId } = useParams<{ courseId: string; assignmentId: string }>();
   const navigate = useNavigate();
@@ -496,6 +506,8 @@ export default function AssignmentPage() {
   const [urls, setUrls] = useState<string[]>([]);
   const [newUrl, setNewUrl] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (assignmentId) {
@@ -517,12 +529,32 @@ export default function AssignmentPage() {
   const handleSubmit = async () => {
     if (!assignmentId || !assignment) return;
 
-    // TODO: Implement file upload to get URLs
-    // For now, just submit text content and URLs
+    setUploadError(null);
+
+    // Convert local File objects to base64 data URL metadata for submission
+    let uploadedFiles: { name: string; size: number; url: string }[] = [];
+    if (files.length > 0) {
+      setUploadProgress({ current: 0, total: files.length });
+      try {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          setUploadProgress({ current: i, total: files.length });
+          const dataUrl = await fileToDataUrl(file);
+          uploadedFiles.push({ name: file.name, size: file.size, url: dataUrl });
+          setUploadProgress({ current: i + 1, total: files.length });
+        }
+      } catch (err: any) {
+        setUploadError(err.message || 'Failed to process one or more files. Please try again.');
+        setUploadProgress(null);
+        return;
+      }
+      setUploadProgress(null);
+    }
+
     const result = await submitAssignment(assignmentId, {
       content: textContent || undefined,
       urls: urls.length > 0 ? urls : undefined,
-      // files would be uploaded and converted to URLs
+      files: uploadedFiles.length > 0 ? uploadedFiles : undefined,
     });
 
     if (result) {
@@ -716,6 +748,30 @@ export default function AssignmentPage() {
                     </div>
                   )}
 
+                  {/* Upload error */}
+                  {uploadError && (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <span>{uploadError}</span>
+                    </div>
+                  )}
+
+                  {/* Upload progress */}
+                  {uploadProgress && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-surface-500">
+                        <span>Preparing files… ({uploadProgress.current}/{uploadProgress.total})</span>
+                        <span>{Math.round((uploadProgress.current / uploadProgress.total) * 100)}%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-violet-500 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.round((uploadProgress.current / uploadProgress.total) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Submit Button */}
                   <div className="flex items-center justify-between pt-4 border-t border-surface-200 dark:border-surface-700">
                     <p className="text-sm text-surface-500">
@@ -725,16 +781,24 @@ export default function AssignmentPage() {
                     </p>
                     <Button
                       onClick={handleSubmit}
-                      disabled={isSending || (!textContent && files.length === 0 && urls.length === 0)}
+                      disabled={isSending || !!uploadProgress || (!textContent && files.length === 0 && urls.length === 0)}
                     >
-                      {isSending ? (
+                      {uploadProgress ? (
+                        <Spinner size="sm" className="mr-2" />
+                      ) : isSending ? (
                         <Spinner size="sm" className="mr-2" />
                       ) : submitSuccess ? (
                         <Check className="w-4 h-4 mr-2" />
                       ) : (
                         <Send className="w-4 h-4 mr-2" />
                       )}
-                      {submitSuccess ? 'Submitted!' : 'Submit Assignment'}
+                      {uploadProgress
+                        ? `Preparing files… (${uploadProgress.current}/${uploadProgress.total})`
+                        : isSending
+                        ? 'Submitting…'
+                        : submitSuccess
+                        ? 'Submitted!'
+                        : 'Submit Assignment'}
                     </Button>
                   </div>
                 </div>
