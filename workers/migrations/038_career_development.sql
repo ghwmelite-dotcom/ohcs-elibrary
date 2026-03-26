@@ -252,26 +252,5 @@ INSERT OR IGNORE INTO career_competencies (id, name, description, category, leve
   ('comp-verbal', 'Verbal Communication', 'Expresses ideas clearly and effectively in speech', 'Communication', 1, 'cyan', 'MessageSquare', '["Public Speaking","Presentation Skills"]', 1),
   ('comp-written', 'Written Communication', 'Produces clear, concise, and professional written documents', 'Communication', 1, 'cyan', 'MessageSquare', '["Business Writing","Report Writing for Civil Servants"]', 2);
 
--- ============================================================================
--- SEED DATA: Career Mentors
--- ============================================================================
-
-INSERT OR IGNORE INTO career_mentors (id, userId, title, grade, ministry, expertise, yearsOfService, specializations, availableFor, rating, totalMentees, activeMentees, isAvailable, bio) VALUES
-  ('mentor-1', 'mentor-user-1', 'Director of Administration', 'Director', 'Ministry of Finance',
-   '["Strategic Planning","Public Administration","Leadership Development","Policy Analysis"]',
-   28, '["Career Development","Executive Coaching","Change Management"]',
-   '["career_guidance","promotion_prep","leadership"]',
-   4.9, 45, 3, 1,
-   'With over 28 years in the Ghana Civil Service, I have guided numerous officers through career transitions and promotions. My approach focuses on developing well-rounded public servants who can lead with integrity.'),
-  ('mentor-2', 'mentor-user-2', 'Deputy Director, Human Resources', 'Deputy Director', 'Office of Head of Civil Service',
-   '["Human Resources","Talent Management","Performance Management","Training & Development"]',
-   22, '["HR Best Practices","Employee Relations","Competency Frameworks"]',
-   '["career_guidance","skill_development","promotion_prep"]',
-   4.8, 38, 4, 1,
-   'I specialize in helping civil servants understand HR systems and develop the competencies needed for career advancement. Let me help you navigate your career path effectively.'),
-  ('mentor-3', 'mentor-user-3', 'Chief IT Officer', 'Chief Director', 'Ministry of Communications',
-   '["Digital Transformation","IT Strategy","Project Management","Systems Architecture"]',
-   20, '["E-Government","Cybersecurity","Agile Methodologies"]',
-   '["skill_development","career_guidance","leadership"]',
-   4.7, 25, 2, 1,
-   'Leading Ghana''s digital transformation efforts has taught me the importance of continuous learning and adaptation. I help IT professionals navigate the evolving technology landscape in the public sector.');
+-- NOTE: Career mentors are created from real users via the API, not seeded here.
+-- The career_mentors table has a FK to users(id), so seed data would require existing user IDs.
