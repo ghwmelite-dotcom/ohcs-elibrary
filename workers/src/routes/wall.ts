@@ -415,6 +415,10 @@ wall.put('/posts/:id', authMiddleware, async (c) => {
   const body = await c.req.json();
   const { content } = body;
 
+  if (!content?.trim()) {
+    return c.json({ error: 'Content is required' }, 400);
+  }
+
   try {
     const post = await db.prepare(`SELECT authorId FROM wall_posts WHERE id = ?`).bind(postId).first();
 
@@ -429,7 +433,7 @@ wall.put('/posts/:id', authMiddleware, async (c) => {
     await db.prepare(`
       UPDATE wall_posts SET content = ?, isEdited = 1, updatedAt = datetime('now')
       WHERE id = ?
-    `).bind(content, postId).run();
+    `).bind(content.trim(), postId).run();
 
     return c.json({ success: true });
   } catch (error) {
@@ -716,6 +720,10 @@ wall.put('/comments/:id', authMiddleware, async (c) => {
   const body = await c.req.json();
   const { content } = body;
 
+  if (!content?.trim()) {
+    return c.json({ error: 'Content is required' }, 400);
+  }
+
   try {
     const comment = await db.prepare(`SELECT authorId FROM wall_comments WHERE id = ?`).bind(commentId).first();
 
@@ -730,7 +738,7 @@ wall.put('/comments/:id', authMiddleware, async (c) => {
     await db.prepare(`
       UPDATE wall_comments SET content = ?, isEdited = 1, updatedAt = datetime('now')
       WHERE id = ?
-    `).bind(content, commentId).run();
+    `).bind(content.trim(), commentId).run();
 
     return c.json({ success: true });
   } catch (error) {

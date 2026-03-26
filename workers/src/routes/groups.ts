@@ -480,6 +480,23 @@ groups.get('/:id/posts', optionalAuth, async (c) => {
   const userId = c.get('user')?.id;
 
   try {
+    // Enforce membership for non-open groups
+    const group = await db.prepare(`SELECT type FROM groups WHERE id = ? AND isArchived = 0`).bind(groupId).first();
+    if (!group) {
+      return c.json({ error: 'Group not found' }, 404);
+    }
+    if (group.type !== 'open' && group.type !== 'official') {
+      if (!userId) {
+        return c.json({ error: 'Authentication required to view this group\'s posts' }, 401);
+      }
+      const membership = await db.prepare(`
+        SELECT id FROM group_members WHERE groupId = ? AND userId = ? AND status = 'active'
+      `).bind(groupId, userId).first();
+      if (!membership) {
+        return c.json({ error: 'Must be a member to view posts in this group' }, 403);
+      }
+    }
+
     const posts = await db.prepare(`
       SELECT
         p.*,
@@ -651,6 +668,28 @@ groups.get('/posts/:postId/comments', optionalAuth, async (c) => {
   const userId = c.get('user')?.id;
 
   try {
+    // Enforce membership for non-open groups
+    const post = await db.prepare(`
+      SELECT p.groupId, g.type as groupType
+      FROM group_posts p
+      JOIN groups g ON p.groupId = g.id
+      WHERE p.id = ? AND p.isDeleted = 0
+    `).bind(postId).first();
+    if (!post) {
+      return c.json({ error: 'Post not found' }, 404);
+    }
+    if (post.groupType !== 'open' && post.groupType !== 'official') {
+      if (!userId) {
+        return c.json({ error: 'Authentication required to view comments in this group' }, 401);
+      }
+      const membership = await db.prepare(`
+        SELECT id FROM group_members WHERE groupId = ? AND userId = ? AND status = 'active'
+      `).bind(post.groupId, userId).first();
+      if (!membership) {
+        return c.json({ error: 'Must be a member to view comments in this group' }, 403);
+      }
+    }
+
     const comments = await db.prepare(`
       SELECT
         c.*,

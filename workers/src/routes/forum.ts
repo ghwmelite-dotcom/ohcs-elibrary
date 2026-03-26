@@ -356,9 +356,9 @@ forumRoutes.post('/topics', requireAuth, async (c: AppContext) => {
     // Award XP for creating topic
     try {
       await DB.prepare(`
-        INSERT INTO xp_transactions (userId, amount, reason, referenceId, referenceType, createdAt)
-        VALUES (?, 25, 'topic_created', ?, 'topic', datetime('now'))
-      `).bind(userId, topicId).run();
+        INSERT INTO xp_transactions (id, userId, amount, reason, referenceId, referenceType, createdAt)
+        VALUES (?, ?, 25, 'topic_created', ?, 'topic', datetime('now'))
+      `).bind(crypto.randomUUID(), userId, topicId).run();
 
       await DB.prepare(`
         UPDATE user_stats SET totalXp = totalXp + 25, forumTopics = forumTopics + 1, updatedAt = datetime('now')
@@ -434,9 +434,9 @@ forumRoutes.post('/topics/:id/posts', requireAuth, async (c: AppContext) => {
     // Award XP for posting
     try {
       await DB.prepare(`
-        INSERT INTO xp_transactions (userId, amount, reason, referenceId, referenceType, createdAt)
-        VALUES (?, 10, 'forum_post', ?, 'post', datetime('now'))
-      `).bind(userId, postId).run();
+        INSERT INTO xp_transactions (id, userId, amount, reason, referenceId, referenceType, createdAt)
+        VALUES (?, ?, 10, 'forum_post', ?, 'post', datetime('now'))
+      `).bind(crypto.randomUUID(), userId, postId).run();
 
       await DB.prepare(`
         UPDATE user_stats SET totalXp = totalXp + 10, forumPosts = forumPosts + 1, updatedAt = datetime('now')
@@ -514,9 +514,9 @@ forumRoutes.post('/posts/:id/vote', requireAuth, async (c: AppContext) => {
 
     // Create new vote
     await DB.prepare(`
-      INSERT INTO forum_votes (postId, userId, voteType, createdAt)
-      VALUES (?, ?, ?, datetime('now'))
-    `).bind(postId, userId, voteType).run();
+      INSERT INTO forum_votes (id, postId, userId, voteType, createdAt)
+      VALUES (?, ?, ?, ?, datetime('now'))
+    `).bind(crypto.randomUUID(), postId, userId, voteType).run();
 
     // Update post counts
     if (voteType === 'up') {
@@ -574,9 +574,9 @@ forumRoutes.post('/posts/:id/best-answer', requireAuth, async (c: AppContext) =>
     // Award XP to post author
     try {
       await DB.prepare(`
-        INSERT INTO xp_transactions (userId, amount, reason, referenceId, referenceType, createdAt)
-        VALUES (?, 50, 'best_answer', ?, 'post', datetime('now'))
-      `).bind(post.authorId, postId).run();
+        INSERT INTO xp_transactions (id, userId, amount, reason, referenceId, referenceType, createdAt)
+        VALUES (?, ?, 50, 'best_answer', ?, 'post', datetime('now'))
+      `).bind(crypto.randomUUID(), post.authorId, postId).run();
 
       await DB.prepare(`
         UPDATE user_stats SET totalXp = totalXp + 50, bestAnswers = bestAnswers + 1, updatedAt = datetime('now')
