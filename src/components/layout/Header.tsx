@@ -92,7 +92,7 @@ export function Header() {
           <button
             data-tour="search"
             onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}
-            className="hidden md:flex items-center gap-3 w-80 px-3 py-2 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-xl text-surface-500 dark:text-surface-300 transition-colors group"
+            className="hidden md:flex items-center gap-3 w-56 lg:w-72 xl:w-80 px-3 py-2 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-xl text-surface-500 dark:text-surface-300 transition-colors group"
           >
             <Search className="w-4 h-4" />
             <span className="text-sm">Search...</span>
@@ -131,10 +131,10 @@ export function Header() {
           )}
 
           {/* Divider */}
-          <div className="hidden xl:block w-px h-6 bg-surface-200 dark:bg-surface-700 mr-2" />
+          <div className="hidden xl:block w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1.5" />
 
           {/* Group 2: Preferences (language + theme) */}
-          <div className="hidden md:flex items-center gap-1 mr-1">
+          <div className="hidden md:flex items-center">
             <LanguageSelector />
             <div data-tour="theme-toggle">
               <ThemeToggleHint variant="dashboard">
@@ -144,7 +144,7 @@ export function Header() {
           </div>
 
           {/* Divider */}
-          <div className="hidden md:block w-px h-6 bg-surface-200 dark:bg-surface-700 mx-1" />
+          <div className="hidden md:block w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
 
           {/* Group 3: Shop (wishlist + cart) */}
           <div className="flex items-center gap-0.5">
@@ -184,10 +184,10 @@ export function Header() {
           </div>
 
           {/* Divider */}
-          <div className="w-px h-6 bg-surface-200 dark:bg-surface-700 mx-1" />
+          <div className="w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
 
           {/* Group 4: Social + Notifications */}
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center">
           <Dropdown
             trigger={
               <button
@@ -410,7 +410,7 @@ export function Header() {
           </div> {/* End Group 4: Social + Notifications */}
 
           {/* Divider before profile */}
-          <div className="w-px h-6 bg-surface-200 dark:bg-surface-700 mx-1.5" />
+          <div className="w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
 
           {/* Group 5: User Menu */}
           {user && (
