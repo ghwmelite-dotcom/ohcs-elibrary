@@ -77,9 +77,9 @@ export function Header() {
         !sidebar.isCollapsed && 'lg:left-64'
       )}
     >
-      <div className="h-full flex items-center justify-between px-3 lg:px-5 overflow-hidden">
-        {/* Left section */}
-        <div className="flex items-center gap-4">
+      <div className="h-full flex items-center justify-between px-3 lg:px-5">
+        {/* Left section — shrinks to give space to right */}
+        <div className="flex items-center gap-3 min-w-0 flex-shrink">
           <button
             onClick={toggleMobileMenu}
             aria-label="Open menu"
@@ -92,7 +92,7 @@ export function Header() {
           <button
             data-tour="search"
             onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}
-            className="hidden md:flex items-center gap-3 w-56 lg:w-72 xl:w-80 px-3 py-2 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-xl text-surface-500 dark:text-surface-300 transition-colors group"
+            className="hidden md:flex items-center gap-3 w-48 lg:w-64 xl:w-72 flex-shrink px-3 py-2 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-xl text-surface-500 dark:text-surface-300 transition-colors group"
           >
             <Search className="w-4 h-4" />
             <span className="text-sm">Search...</span>
