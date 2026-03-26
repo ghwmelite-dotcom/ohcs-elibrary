@@ -223,7 +223,7 @@ export function NewsCard({
           </Link>
 
           {/* AI Summary or Excerpt */}
-          {article.aiSummary ? (
+          {article.aiSummary?.trim() ? (
             <div className="mb-4 max-w-2xl">
               <div className="flex items-center gap-1 text-xs text-primary-300 font-medium mb-1">
                 <Sparkles className="w-3 h-3" />
@@ -361,7 +361,7 @@ export function NewsCard({
         </Link>
 
         {/* AI Summary or Excerpt */}
-        {article.aiSummary ? (
+        {article.aiSummary?.trim() ? (
           <div className="mb-3">
             <div className="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 font-medium mb-1">
               <Sparkles className="w-3 h-3" />

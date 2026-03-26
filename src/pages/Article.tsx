@@ -17,7 +17,8 @@ import {
   Loader2,
   Newspaper,
   Download,
-  WifiOff
+  WifiOff,
+  Sparkles
 } from 'lucide-react';
 import { TextToSpeech } from '@/components/news';
 import { useNewsStore } from '@/stores/newsStore';
@@ -44,6 +45,7 @@ export default function Article() {
   } = useNewsStore();
 
   const { isArticleSaved, toggleOffline, isOnline } = useOfflineArticles();
+  const [relatedFromApi, setRelatedFromApi] = useState<typeof articles>([]);
 
   useEffect(() => {
     if (articleId) {
@@ -57,6 +59,27 @@ export default function Article() {
       clearCurrentArticle();
     };
   }, [articleId, fetchArticle, clearCurrentArticle]);
+
+  // Fetch related articles from API when the store's article list is empty (direct navigation)
+  useEffect(() => {
+    if (!currentArticle) return;
+    if (articles.length > 0) {
+      setRelatedFromApi([]);
+      return;
+    }
+    const controller = new AbortController();
+    fetch(`/api/v1/news?category=${encodeURIComponent(currentArticle.category)}&limit=4`, {
+      signal: controller.signal,
+    })
+      .then((res) => res.json())
+      .then((data: { articles?: typeof articles }) => {
+        if (data.articles) {
+          setRelatedFromApi(data.articles.filter((a) => a.id !== currentArticle.id).slice(0, 3));
+        }
+      })
+      .catch(() => {/* ignore abort / network errors */});
+    return () => controller.abort();
+  }, [currentArticle, articles.length]);
 
   const handleCopyLink = async () => {
     await navigator.clipboard.writeText(window.location.href);
@@ -107,10 +130,10 @@ export default function Article() {
 
   const isSavedOffline = currentArticle ? isArticleSaved(currentArticle.id) : false;
 
-  // Get related articles (same category, different article)
-  const relatedArticles = articles
-    .filter(a => a.id !== articleId && a.category === currentArticle?.category)
-    .slice(0, 3);
+  // Get related articles: prefer store list, fall back to API results fetched on direct navigation
+  const relatedArticles = articles.length > 0
+    ? articles.filter(a => a.id !== articleId && a.category === currentArticle?.category).slice(0, 3)
+    : relatedFromApi;
 
   const shareUrl = encodeURIComponent(window.location.href);
   const shareTitle = encodeURIComponent(currentArticle?.title || '');
@@ -225,9 +248,24 @@ export default function Article() {
             </motion.h1>
 
             {/* Summary */}
-            <p className="text-lg text-surface-600 dark:text-surface-400 mb-6">
+            <p className="text-lg text-surface-600 dark:text-surface-400 mb-4">
               {currentArticle.summary}
             </p>
+
+            {/* AI Summary */}
+            {currentArticle.aiSummary?.trim() ? (
+              <div className="flex gap-3 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-xl mb-6">
+                <Sparkles className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-semibold text-primary-600 dark:text-primary-400 mb-1 uppercase tracking-wide">
+                    AI Summary
+                  </p>
+                  <p className="text-sm text-surface-700 dark:text-surface-300 leading-relaxed">
+                    {currentArticle.aiSummary}
+                  </p>
+                </div>
+              </div>
+            ) : null}
 
             {/* Meta */}
             <div className="flex flex-wrap items-center gap-4 text-sm text-surface-500">
@@ -326,7 +364,7 @@ export default function Article() {
                   <Download className="w-5 h-5" />
                 )}
                 <span className="text-sm font-medium hidden sm:inline">
-                  {isSavedOffline ? 'Offline' : 'Offline'}
+                  {isSavedOffline ? 'Saved Offline' : 'Save Offline'}
                 </span>
               </button>
 

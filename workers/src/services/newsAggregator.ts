@@ -640,10 +640,11 @@ export async function aggregateNews(env: Env): Promise<{
       }
     }
 
-    // Clean up old articles (older than 24 hours)
+    // Clean up old articles (older than 24 hours), but preserve bookmarked ones
     await env.DB.prepare(`
       DELETE FROM news_articles
       WHERE publishedAt < datetime('now', '-24 hours')
+        AND id NOT IN (SELECT articleId FROM news_bookmarks)
     `).run();
 
     return {

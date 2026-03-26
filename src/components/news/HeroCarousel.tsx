@@ -150,7 +150,7 @@ export function HeroCarousel({
                 transition={{ delay: 0.3 }}
                 className="max-w-2xl mb-4"
               >
-                {currentArticle.aiSummary ? (
+                {currentArticle.aiSummary?.trim() ? (
                   <div>
                     <div className="flex items-center gap-1 text-xs text-primary-300 font-medium mb-1">
                       <Sparkles className="w-3 h-3" />

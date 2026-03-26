@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Newspaper, Search, TrendingUp, Rss, AlertCircle, RefreshCw, WifiOff, Clock } from 'lucide-react';
@@ -11,10 +11,12 @@ import type { NewsCategory } from '@/types';
 
 export default function News() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [showBreakingNews, setShowBreakingNews] = useState(true);
   const [refreshingSourceId, setRefreshingSourceId] = useState<string | null>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     articles,
@@ -44,7 +46,18 @@ export default function News() {
     fetchArticles();
   }, []);
 
-  // Fetch articles when filters change
+  // Debounce search input — wait 300ms after the user stops typing
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchQuery]);
+
+  // Fetch articles when filters change (uses debounced search value)
   useEffect(() => {
     const category = selectedCategories.length === 1 ? selectedCategories[0] : undefined;
     const sourceId = selectedSources.length === 1 ? selectedSources[0] : undefined;
@@ -52,15 +65,15 @@ export default function News() {
     setFilter({
       category,
       sourceId,
-      search: searchQuery || undefined,
+      search: debouncedSearch || undefined,
     });
 
     fetchArticles({
       category,
       sourceId,
-      search: searchQuery || undefined,
+      search: debouncedSearch || undefined,
     });
-  }, [searchQuery, selectedCategories, selectedSources]);
+  }, [debouncedSearch, selectedCategories, selectedSources]);
 
   const handleCategoryToggle = (categoryId: string) => {
     setSelectedCategories((prev) =>
