@@ -30,68 +30,83 @@ auditRoutes.use('/*', requireRole(['admin', 'director', 'super_admin']));
  * GET /audit/logs - Query audit logs
  */
 auditRoutes.get('/logs', async (c) => {
-  const query: AuditLogQuery = {
-    userId: c.req.query('userId'),
-    action: c.req.query('action'),
-    category: c.req.query('category') as AuditLogQuery['category'],
-    severity: c.req.query('severity') as AuditLogQuery['severity'],
-    resourceType: c.req.query('resourceType'),
-    resourceId: c.req.query('resourceId'),
-    status: c.req.query('status') as AuditLogQuery['status'],
-    ipAddress: c.req.query('ipAddress'),
-    startDate: c.req.query('startDate'),
-    endDate: c.req.query('endDate'),
-    search: c.req.query('search'),
-    page: parseInt(c.req.query('page') || '1'),
-    limit: parseInt(c.req.query('limit') || '50'),
-  };
+  try {
+    const query: AuditLogQuery = {
+      userId: c.req.query('userId'),
+      action: c.req.query('action'),
+      category: c.req.query('category') as AuditLogQuery['category'],
+      severity: c.req.query('severity') as AuditLogQuery['severity'],
+      resourceType: c.req.query('resourceType'),
+      resourceId: c.req.query('resourceId'),
+      status: c.req.query('status') as AuditLogQuery['status'],
+      ipAddress: c.req.query('ipAddress'),
+      startDate: c.req.query('startDate'),
+      endDate: c.req.query('endDate'),
+      search: c.req.query('search'),
+      page: parseInt(c.req.query('page') || '1'),
+      limit: parseInt(c.req.query('limit') || '50'),
+    };
 
-  const result = await queryAuditLogs(c.env, query);
+    const result = await queryAuditLogs(c.env, query);
 
-  // Log this access
-  await logFromContext(c, 'admin.audit_logs_view', 'admin', {
-    metadata: { query },
-  });
+    // Log this access (non-blocking — don't fail the response if logging fails)
+    logFromContext(c, 'admin.audit_logs_view', 'admin', {
+      metadata: { query },
+    }).catch((e) => console.error('Failed to log audit access:', e));
 
-  return c.json(result);
+    return c.json(result);
+  } catch (error) {
+    console.error('Error querying audit logs:', error);
+    return c.json({ error: 'Failed to fetch audit logs' }, 500);
+  }
 });
 
 /**
  * GET /audit/logs/:id - Get single audit log entry
  */
 auditRoutes.get('/logs/:id', async (c) => {
-  const id = c.req.param('id');
+  try {
+    const id = c.req.param('id');
 
-  const log = await c.env.DB.prepare(`
-    SELECT * FROM audit_logs WHERE id = ?
-  `).bind(id).first();
+    const log = await c.env.DB.prepare(`
+      SELECT * FROM audit_logs WHERE id = ?
+    `).bind(id).first();
 
-  if (!log) {
-    return c.json({ error: 'Audit log not found' }, 404);
+    if (!log) {
+      return c.json({ error: 'Audit log not found' }, 404);
+    }
+
+    // Parse JSON fields
+    const parsedLog = {
+      ...log,
+      oldValue: log.oldValue ? JSON.parse(log.oldValue as string) : null,
+      newValue: log.newValue ? JSON.parse(log.newValue as string) : null,
+      changes: log.changes ? JSON.parse(log.changes as string) : null,
+      requestParams: log.requestParams ? JSON.parse(log.requestParams as string) : null,
+      metadata: log.metadata ? JSON.parse(log.metadata as string) : null,
+    };
+
+    return c.json(parsedLog);
+  } catch (error) {
+    console.error('Error fetching audit log:', error);
+    return c.json({ error: 'Failed to fetch audit log' }, 500);
   }
-
-  // Parse JSON fields
-  const parsedLog = {
-    ...log,
-    oldValue: log.oldValue ? JSON.parse(log.oldValue as string) : null,
-    newValue: log.newValue ? JSON.parse(log.newValue as string) : null,
-    changes: log.changes ? JSON.parse(log.changes as string) : null,
-    requestParams: log.requestParams ? JSON.parse(log.requestParams as string) : null,
-    metadata: log.metadata ? JSON.parse(log.metadata as string) : null,
-  };
-
-  return c.json(parsedLog);
 });
 
 /**
  * GET /audit/stats - Get audit log statistics
  */
 auditRoutes.get('/stats', async (c) => {
-  const days = parseInt(c.req.query('days') || '30');
+  try {
+    const days = parseInt(c.req.query('days') || '30');
 
-  const stats = await getAuditStats(c.env, days);
+    const stats = await getAuditStats(c.env, days);
 
-  return c.json(stats);
+    return c.json(stats);
+  } catch (error) {
+    console.error('Error fetching audit stats:', error);
+    return c.json({ error: 'Failed to fetch audit stats' }, 500);
+  }
 });
 
 /**
@@ -122,108 +137,128 @@ auditRoutes.get('/actions', async (c) => {
  * GET /audit/user/:userId - Get audit logs for specific user
  */
 auditRoutes.get('/user/:userId', async (c) => {
-  const userId = c.req.param('userId');
-  const page = parseInt(c.req.query('page') || '1');
-  const limit = parseInt(c.req.query('limit') || '50');
+  try {
+    const userId = c.req.param('userId');
+    const page = parseInt(c.req.query('page') || '1');
+    const limit = parseInt(c.req.query('limit') || '50');
 
-  const result = await queryAuditLogs(c.env, {
-    userId,
-    page,
-    limit,
-  });
+    const result = await queryAuditLogs(c.env, {
+      userId,
+      page,
+      limit,
+    });
 
-  // Get user info
-  const user = await c.env.DB.prepare(`
-    SELECT id, email, displayName, role FROM users WHERE id = ?
-  `).bind(userId).first();
+    // Get user info
+    const user = await c.env.DB.prepare(`
+      SELECT id, email, displayName, role FROM users WHERE id = ?
+    `).bind(userId).first();
 
-  return c.json({
-    user,
-    ...result,
-  });
+    return c.json({
+      user,
+      ...result,
+    });
+  } catch (error) {
+    console.error('Error fetching user audit logs:', error);
+    return c.json({ error: 'Failed to fetch user audit logs' }, 500);
+  }
 });
 
 /**
  * GET /audit/resource/:type/:id - Get audit logs for specific resource
  */
 auditRoutes.get('/resource/:type/:id', async (c) => {
-  const resourceType = c.req.param('type');
-  const resourceId = c.req.param('id');
-  const page = parseInt(c.req.query('page') || '1');
-  const limit = parseInt(c.req.query('limit') || '50');
+  try {
+    const resourceType = c.req.param('type');
+    const resourceId = c.req.param('id');
+    const page = parseInt(c.req.query('page') || '1');
+    const limit = parseInt(c.req.query('limit') || '50');
 
-  const result = await queryAuditLogs(c.env, {
-    resourceType,
-    resourceId,
-    page,
-    limit,
-  });
+    const result = await queryAuditLogs(c.env, {
+      resourceType,
+      resourceId,
+      page,
+      limit,
+    });
 
-  return c.json(result);
+    return c.json(result);
+  } catch (error) {
+    console.error('Error fetching resource audit logs:', error);
+    return c.json({ error: 'Failed to fetch resource audit logs' }, 500);
+  }
 });
 
 /**
  * GET /audit/security - Get security-related logs
  */
 auditRoutes.get('/security', async (c) => {
-  const page = parseInt(c.req.query('page') || '1');
-  const limit = parseInt(c.req.query('limit') || '50');
-  const severity = c.req.query('severity');
+  try {
+    const page = parseInt(c.req.query('page') || '1');
+    const limit = parseInt(c.req.query('limit') || '50');
+    const severity = c.req.query('severity');
 
-  const conditions = ['category IN (?, ?)'];
-  const params: any[] = ['security', 'auth'];
+    const conditions = ['category IN (?, ?)'];
+    const params: any[] = ['security', 'auth'];
 
-  if (severity) {
-    conditions.push('severity = ?');
-    params.push(severity);
+    if (severity) {
+      conditions.push('severity = ?');
+      params.push(severity);
+    }
+
+    // Only show warnings and above for security logs
+    if (!severity) {
+      conditions.push('severity IN (?, ?, ?)');
+      params.push('warning', 'error', 'critical');
+    }
+
+    const offset = (page - 1) * limit;
+
+    const countResult = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM audit_logs WHERE ${conditions.join(' AND ')}
+    `).bind(...params).first<{ count: number }>();
+
+    const logsResult = await c.env.DB.prepare(`
+      SELECT * FROM audit_logs
+      WHERE ${conditions.join(' AND ')}
+      ORDER BY createdAt DESC
+      LIMIT ? OFFSET ?
+    `).bind(...params, limit, offset).all();
+
+    return c.json({
+      logs: logsResult.results || [],
+      total: countResult?.count || 0,
+      page,
+      limit,
+      totalPages: Math.ceil((countResult?.count || 0) / limit),
+    });
+  } catch (error) {
+    console.error('Error fetching security audit logs:', error);
+    return c.json({ error: 'Failed to fetch security audit logs' }, 500);
   }
-
-  // Only show warnings and above for security logs
-  if (!severity) {
-    conditions.push('severity IN (?, ?, ?)');
-    params.push('warning', 'error', 'critical');
-  }
-
-  const offset = (page - 1) * limit;
-
-  const countResult = await c.env.DB.prepare(`
-    SELECT COUNT(*) as count FROM audit_logs WHERE ${conditions.join(' AND ')}
-  `).bind(...params).first<{ count: number }>();
-
-  const logsResult = await c.env.DB.prepare(`
-    SELECT * FROM audit_logs
-    WHERE ${conditions.join(' AND ')}
-    ORDER BY createdAt DESC
-    LIMIT ? OFFSET ?
-  `).bind(...params, limit, offset).all();
-
-  return c.json({
-    logs: logsResult.results || [],
-    total: countResult?.count || 0,
-    page,
-    limit,
-    totalPages: Math.ceil((countResult?.count || 0) / limit),
-  });
 });
 
 /**
  * GET /audit/activity/:userId - Get recent activity for user
  */
 auditRoutes.get('/activity/:userId', async (c) => {
-  const userId = c.req.param('userId');
-  const limit = parseInt(c.req.query('limit') || '20');
+  try {
+    const userId = c.req.param('userId');
+    const limit = parseInt(c.req.query('limit') || '20');
 
-  const logsResult = await c.env.DB.prepare(`
-    SELECT action, category, resourceType, resourceName, status, createdAt
-    FROM audit_logs
-    WHERE userId = ?
-    ORDER BY createdAt DESC
-    LIMIT ?
-  `).bind(userId, limit).all();
+    const logsResult = await c.env.DB.prepare(`
+      SELECT action, category, resourceType, resourceName, status, createdAt
+      FROM audit_logs
+      WHERE userId = ?
+      ORDER BY createdAt DESC
+      LIMIT ?
+    `).bind(userId, limit).all();
 
-  return c.json({
-    activities: logsResult.results || [],
-  });
+    return c.json({
+      activities: logsResult.results || [],
+    });
+  } catch (error) {
+    console.error('Error fetching user activity:', error);
+    return c.json({ error: 'Failed to fetch user activity' }, 500);
+  }
 });
 
 /**
@@ -248,27 +283,32 @@ auditRoutes.post('/cleanup', requireRole(['super_admin']), async (c) => {
  * GET /audit/settings - Get audit log settings
  */
 auditRoutes.get('/settings', async (c) => {
-  const settings = await c.env.DB.prepare(`
-    SELECT * FROM audit_settings WHERE id = 'default'
-  `).first();
+  try {
+    const settings = await c.env.DB.prepare(`
+      SELECT * FROM audit_settings WHERE id = 'default'
+    `).first();
 
-  if (!settings) {
+    if (!settings) {
+      return c.json({
+        retentionDays: 365,
+        logLevel: 'info',
+        enabledCategories: ['auth', 'user', 'document', 'admin', 'security', 'system'],
+        excludedActions: [],
+        anonymizeAfterDays: 90,
+      });
+    }
+
     return c.json({
-      retentionDays: 365,
-      logLevel: 'info',
-      enabledCategories: ['auth', 'user', 'document', 'admin', 'security', 'system'],
-      excludedActions: [],
-      anonymizeAfterDays: 90,
+      retentionDays: settings.retentionDays,
+      logLevel: settings.logLevel,
+      enabledCategories: JSON.parse(settings.enabledCategories as string),
+      excludedActions: JSON.parse(settings.excludedActions as string),
+      anonymizeAfterDays: settings.anonymizeAfterDays,
     });
+  } catch (error) {
+    console.error('Error fetching audit settings:', error);
+    return c.json({ error: 'Failed to fetch audit settings' }, 500);
   }
-
-  return c.json({
-    retentionDays: settings.retentionDays,
-    logLevel: settings.logLevel,
-    enabledCategories: JSON.parse(settings.enabledCategories as string),
-    excludedActions: JSON.parse(settings.excludedActions as string),
-    anonymizeAfterDays: settings.anonymizeAfterDays,
-  });
 });
 
 /**

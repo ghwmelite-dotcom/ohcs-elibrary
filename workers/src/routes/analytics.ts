@@ -27,7 +27,7 @@ const analyticsRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 analyticsRoutes.use('*', authMiddleware);
 analyticsRoutes.use('*', async (c, next) => {
   const user = c.get('user');
-  if (!user || !['admin', 'super_admin'].includes(user.role)) {
+  if (!user || !['admin', 'super_admin', 'director'].includes(user.role)) {
     return c.json({ error: 'Forbidden', message: 'Admin access required' }, 403);
   }
   await next();
@@ -142,15 +142,19 @@ analyticsRoutes.get('/user-growth', async (c) => {
     const months = parseInt(c.req.query('months') || '12');
 
     // Get user counts by month
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+    const startDateStr = startDate.toISOString();
+
     const result = await c.env.DB.prepare(`
       SELECT
         strftime('%Y-%m', createdAt) as month,
         COUNT(*) as count
       FROM users
-      WHERE createdAt >= datetime('now', '-${months} months')
+      WHERE createdAt >= ?
       GROUP BY strftime('%Y-%m', createdAt)
       ORDER BY month ASC
-    `).all<{ month: string; count: number }>();
+    `).bind(startDateStr).all<{ month: string; count: number }>();
 
     // Fill in missing months with 0
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

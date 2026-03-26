@@ -371,7 +371,12 @@ presence.get('/online-following', authMiddleware, async (c) => {
 // ============================================================================
 
 // Mark stale users as offline (users who haven't sent heartbeat in 2+ minutes)
-presence.post('/cleanup', async (c) => {
+// Restricted to admin roles only — prevents unauthenticated callers from wiping presence
+presence.post('/cleanup', authMiddleware, async (c) => {
+  const user = c.get('user');
+  if (!user || !['admin', 'super_admin', 'director'].includes(user.role)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
   const db = c.env.DB;
 
   try {

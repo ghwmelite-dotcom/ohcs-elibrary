@@ -60,7 +60,22 @@ const BACKUP_TABLES = [
 function requireAdmin(c: AppContext): boolean {
   const user = c.get('user') as { role?: string } | undefined;
   const role = user?.role;
-  return role === 'admin' || role === 'super_admin' || role === 'director';
+  return typeof role === 'string' && ['admin', 'super_admin', 'director'].includes(role);
+}
+
+// Check if user is super_admin (for destructive operations)
+function requireSuperAdmin(c: AppContext): boolean {
+  const user = c.get('user') as { role?: string } | undefined;
+  const role = user?.role;
+  return role === 'super_admin';
+}
+
+// Validate a table name against the allowlist to prevent SQL injection
+// (SQLite does not support parameterized identifiers, so we validate manually)
+function assertValidTable(table: string): void {
+  if (!BACKUP_TABLES.includes(table)) {
+    throw new Error(`Invalid table name: ${table}`);
+  }
 }
 
 // GET /backup - List all backups
@@ -124,6 +139,7 @@ backupRoutes.post('/', async (c: AppContext) => {
 
     for (const table of BACKUP_TABLES) {
       try {
+        assertValidTable(table); // Validate against allowlist before interpolating
         const { results } = await DB.prepare(`SELECT * FROM ${table}`).all();
         backupData[table] = results || [];
         tableStats[table] = results?.length || 0;
@@ -219,10 +235,10 @@ backupRoutes.get('/:id', async (c: AppContext) => {
   }
 });
 
-// POST /backup/restore/:id - Restore from a backup
+// POST /backup/restore/:id - Restore from a backup (super_admin only — destructive operation)
 backupRoutes.post('/restore/:id', async (c: AppContext) => {
-  if (!requireAdmin(c)) {
-    return c.json({ error: 'Unauthorized - Admin access required' }, 403);
+  if (!requireSuperAdmin(c)) {
+    return c.json({ error: 'Unauthorized - Super Admin access required for restore operations' }, 403);
   }
 
   try {
@@ -253,6 +269,7 @@ backupRoutes.post('/restore/:id', async (c: AppContext) => {
     // First, delete all data from tables (in reverse order to handle FK)
     for (const table of tablesToRestore) {
       try {
+        assertValidTable(table); // Validate against allowlist before interpolating
         const deleteResult = await DB.prepare(`DELETE FROM ${table}`).run();
         restoreStats[table] = { deleted: deleteResult.meta.changes || 0, inserted: 0 };
       } catch (e) {
@@ -267,6 +284,7 @@ backupRoutes.post('/restore/:id', async (c: AppContext) => {
       if (rows.length === 0) continue;
 
       try {
+        assertValidTable(table); // Validate against allowlist before interpolating
         // Get column names from first row
         const columns = Object.keys(rows[0]);
         const placeholders = columns.map(() => '?').join(', ');
@@ -388,6 +406,7 @@ export async function createScheduledBackup(env: Env): Promise<{ success: boolea
 
     for (const table of BACKUP_TABLES) {
       try {
+        assertValidTable(table); // Validate against allowlist before interpolating
         const { results } = await env.DB.prepare(`SELECT * FROM ${table}`).all();
         backupData[table] = results || [];
         tableStats[table] = results?.length || 0;

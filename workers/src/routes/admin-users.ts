@@ -73,8 +73,9 @@ const ALL_PERMISSIONS = [
 
 // Check if user is admin
 function requireAdmin(c: AppContext): boolean {
-  const role = c.get('userRole');
-  return ['admin', 'super_admin', 'director'].includes(role);
+  const user = c.get('user') as { role?: string } | undefined;
+  const role = user?.role;
+  return typeof role === 'string' && ['admin', 'super_admin', 'director'].includes(role);
 }
 
 // GET /admin/users - List all users with pagination

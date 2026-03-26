@@ -10,7 +10,7 @@ const app = new Hono<{ Bindings: Env }>();
 // GET /settings/system - Get system settings (admin only)
 app.get('/system', async (c) => {
   const user = c.get('user');
-  if (!user || !['admin', 'super_admin'].includes(user.role)) {
+  if (!user || !['admin', 'super_admin', 'director'].includes(user.role)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
@@ -79,7 +79,7 @@ app.get('/system', async (c) => {
 // PUT /settings/system - Update system settings (admin only)
 app.put('/system', async (c) => {
   const user = c.get('user');
-  if (!user || !['admin', 'super_admin'].includes(user.role)) {
+  if (!user || !['admin', 'super_admin', 'director'].includes(user.role)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
@@ -442,7 +442,7 @@ app.get('/2fa', async (c) => {
 
   try {
     const twoFa = await c.env.DB.prepare(`
-      SELECT isEnabled, backupCodesUsed, lastUsedAt, enabledAt FROM user_2fa WHERE userId = ?
+      SELECT isEnabled, backupCodesUsed, updatedAt FROM user_2fa WHERE userId = ?
     `).bind(userId).first();
 
     if (!twoFa) {
@@ -456,9 +456,8 @@ app.get('/2fa', async (c) => {
     return c.json({
       isEnabled: !!twoFa.isEnabled,
       hasBackupCodes: true,
-      backupCodesRemaining: 10 - (twoFa.backupCodesUsed || 0),
-      lastUsedAt: twoFa.lastUsedAt,
-      enabledAt: twoFa.enabledAt
+      backupCodesRemaining: 10 - ((twoFa.backupCodesUsed as number) || 0),
+      enabledAt: twoFa.updatedAt
     });
   } catch (error) {
     console.error('Error fetching 2FA status:', error);
@@ -1196,7 +1195,7 @@ app.get('/security-score', async (c) => {
   }
 
   try {
-    const [user, twoFa, sessions, recentActivity] = await Promise.all([
+    const [userRecord, twoFa, sessions, recentActivity] = await Promise.all([
       c.env.DB.prepare(`SELECT emailVerified, avatar, bio FROM users WHERE id = ?`).bind(userId).first(),
       c.env.DB.prepare(`SELECT isEnabled FROM user_2fa WHERE userId = ?`).bind(userId).first(),
       c.env.DB.prepare(`SELECT COUNT(*) as count FROM user_sessions WHERE userId = ? AND isRevoked = 0`).bind(userId).first(),
@@ -1212,7 +1211,7 @@ app.get('/security-score', async (c) => {
     const factors = [];
 
     // Email verified (+15)
-    if (user?.emailVerified) {
+    if (userRecord?.emailVerified) {
       score += 15;
       factors.push({ name: 'Email Verified', points: 15, status: 'complete' });
     } else {
@@ -1228,7 +1227,7 @@ app.get('/security-score', async (c) => {
     }
 
     // Profile complete (+10)
-    if (user?.avatar && user?.bio) {
+    if (userRecord?.avatar && userRecord?.bio) {
       score += 10;
       factors.push({ name: 'Profile Complete', points: 10, status: 'complete' });
     } else {
