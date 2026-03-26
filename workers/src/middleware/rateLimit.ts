@@ -16,7 +16,26 @@ const rateLimitConfigs: Record<string, RateLimitConfig> = {
   '/api/v1/auth/forgot-password': { windowMs: 60 * 60 * 1000, max: 3 },
   '/api/v1/documents': { windowMs: 60 * 1000, max: 30 },
   '/api/v1/chat': { windowMs: 60 * 1000, max: 60 },
+  '/api/v1/admin/users/invite': { windowMs: 60 * 60 * 1000, max: 20 }, // 20 per hour
+  '/api/v1/backup/restore': { windowMs: 60 * 60 * 1000, max: 2 }, // 2 per hour
+  '/api/v1/backup': { windowMs: 60 * 60 * 1000, max: 5 }, // 5 per hour (backup creation)
 };
+
+/**
+ * Simple KV-based rate limit check for use in individual route handlers.
+ * Returns true if the request is allowed, false if the limit has been exceeded.
+ */
+export async function checkRateLimit(
+  cache: KVNamespace,
+  key: string,
+  maxRequests: number,
+  windowSeconds: number,
+): Promise<boolean> {
+  const current = parseInt(await cache.get(key) || '0');
+  if (current >= maxRequests) return false;
+  await cache.put(key, String(current + 1), { expirationTtl: windowSeconds });
+  return true;
+}
 
 export async function rateLimiter(c: Context, next: Next) {
   const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';

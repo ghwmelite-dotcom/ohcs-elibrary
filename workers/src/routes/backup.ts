@@ -17,6 +17,20 @@ type AppContext = Context<{ Bindings: Env; Variables: Variables }>;
 
 export const backupRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
+// Compute SHA-256 hash of a string
+async function computeHash(content: string): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Simple KV-based rate limit check for admin operations
+async function checkRateLimit(cache: KVNamespace, key: string, maxRequests: number, windowSeconds: number): Promise<boolean> {
+  const current = parseInt(await cache.get(key) || '0');
+  if (current >= maxRequests) return false;
+  await cache.put(key, String(current + 1), { expirationTtl: windowSeconds });
+  return true;
+}
+
 // Tables to backup (in order for proper restoration)
 const BACKUP_TABLES = [
   'users',
@@ -127,7 +141,16 @@ backupRoutes.post('/', async (c: AppContext) => {
   }
 
   try {
-    const { DB, DOCUMENTS } = c.env;
+    const { DB, DOCUMENTS, CACHE } = c.env;
+    const user = c.get('user') as { id?: string } | undefined;
+    const userId = user?.id || 'unknown';
+
+    // Rate limit: max 5 backup creations per hour per user
+    const allowed = await checkRateLimit(CACHE, `ratelimit:backup:create:${userId}`, 5, 3600);
+    if (!allowed) {
+      return c.json({ error: 'Rate limit exceeded. Maximum 5 backups per hour. Try again later.' }, 429);
+    }
+
     const body = await c.req.json().catch(() => ({}));
     const backupType = body.type || 'manual';
 
@@ -157,32 +180,34 @@ backupRoutes.post('/', async (c: AppContext) => {
     const filename = `${backupType}_${timestamp}.json`;
     const backupKey = `backups/${filename}`;
 
-    const user = c.get('user') as { id?: string } | undefined;
     const backup = {
       version: '1.0',
       createdAt: new Date().toISOString(),
-      createdBy: user?.id || 'unknown',
+      createdBy: userId,
       type: backupType,
       tables: tableStats,
       data: backupData,
     };
 
-    // Store in R2
+    // Store in R2 with integrity hash
     const backupJson = JSON.stringify(backup, null, 2);
+    const contentHash = await computeHash(backupJson);
+
     await DOCUMENTS.put(backupKey, backupJson, {
       httpMetadata: {
         contentType: 'application/json',
       },
       customMetadata: {
         type: backupType,
-        createdBy: user?.id || 'unknown',
+        createdBy: userId,
+        contentHash,
       },
     });
 
     // Get the stored object to return size
     const storedObject = await DOCUMENTS.head(backupKey);
 
-    console.log(`Backup created: ${backupKey} (${formatBytes(storedObject?.size || 0)})`);
+    console.log(`Backup created: ${backupKey} (${formatBytes(storedObject?.size || 0)}) [hash: ${contentHash.slice(0, 12)}...]`);
 
     return c.json({
       success: true,
@@ -195,6 +220,7 @@ backupRoutes.post('/', async (c: AppContext) => {
         createdAt: new Date().toISOString(),
         tables: tableStats,
         totalRows: Object.values(tableStats).reduce((a, b) => a + b, 0),
+        contentHash,
       },
     });
   } catch (error) {
@@ -242,11 +268,30 @@ backupRoutes.post('/restore/:id', async (c: AppContext) => {
   }
 
   try {
-    const { DB, DOCUMENTS } = c.env;
+    const { DB, DOCUMENTS, CACHE } = c.env;
+    const user = c.get('user') as { id?: string } | undefined;
+    const userId = user?.id || 'unknown';
     const backupId = c.req.param('id');
     const backupKey = decodeURIComponent(backupId);
 
-    console.log(`Starting restore from: ${backupKey}`);
+    // Rate limit: max 2 restores per hour per user
+    const allowed = await checkRateLimit(CACHE, `ratelimit:backup:restore:${userId}`, 2, 3600);
+    if (!allowed) {
+      return c.json({ error: 'Rate limit exceeded. Maximum 2 restores per hour. Try again later.' }, 429);
+    }
+
+    // Require confirmation code to prevent accidental restores
+    const body = await c.req.json().catch(() => ({}));
+    const { confirmation } = body;
+    const expectedConfirmation = `RESTORE-${backupKey.slice(-8)}`;
+    if (confirmation !== expectedConfirmation) {
+      return c.json({
+        error: 'Invalid confirmation code. To confirm this destructive operation, provide the correct confirmation code.',
+        expected: expectedConfirmation,
+      }, 400);
+    }
+
+    console.log(`Starting restore from: ${backupKey} (initiated by: ${userId})`);
 
     // Get backup from R2
     const object = await DOCUMENTS.get(backupKey);
@@ -255,6 +300,18 @@ backupRoutes.post('/restore/:id', async (c: AppContext) => {
     }
 
     const backupJson = await object.text();
+
+    // Verify backup integrity via SHA-256 hash
+    const storedHash = object.customMetadata?.contentHash;
+    if (storedHash) {
+      const downloadHash = await computeHash(backupJson);
+      if (downloadHash !== storedHash) {
+        console.error(`Backup integrity check failed for ${backupKey}. Expected: ${storedHash}, Got: ${downloadHash}`);
+        return c.json({ error: 'Backup integrity check failed — file may be corrupted or tampered with' }, 400);
+      }
+      console.log(`Backup integrity verified for ${backupKey}`);
+    }
+
     const backup = JSON.parse(backupJson);
 
     if (!backup.data) {
@@ -309,6 +366,26 @@ backupRoutes.post('/restore/:id', async (c: AppContext) => {
     }
 
     console.log('Restore completed');
+
+    // Audit log the restore action
+    const auditEntry = {
+      action: 'backup_restore',
+      performedBy: userId,
+      backupKey,
+      backupCreatedAt: backup.createdAt,
+      backupType: backup.type,
+      restoredAt: new Date().toISOString(),
+      totalRestored: Object.values(restoreStats).reduce((a, b) => a + b.inserted, 0),
+    };
+    console.log(`AUDIT: ${JSON.stringify(auditEntry)}`);
+
+    // Persist audit log in KV for later review
+    try {
+      const auditKey = `audit:restore:${Date.now()}:${userId}`;
+      await CACHE.put(auditKey, JSON.stringify(auditEntry), { expirationTtl: 90 * 24 * 3600 }); // 90 days
+    } catch (auditErr) {
+      console.error('Failed to persist audit log:', auditErr);
+    }
 
     return c.json({
       success: true,
@@ -430,9 +507,10 @@ export async function createScheduledBackup(env: Env): Promise<{ success: boolea
     };
 
     const backupJson = JSON.stringify(backup, null, 2);
+    const contentHash = await computeHash(backupJson);
     await env.DOCUMENTS.put(backupKey, backupJson, {
       httpMetadata: { contentType: 'application/json' },
-      customMetadata: { type: 'auto', createdBy: 'system' },
+      customMetadata: { type: 'auto', createdBy: 'system', contentHash },
     });
 
     // Clean up old auto backups (keep last 7)
