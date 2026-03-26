@@ -413,6 +413,93 @@ export default function AdminSettings() {
   const [backupSuccess, setBackupSuccess] = useState<string | null>(null);
   const [restoringBackupId, setRestoringBackupId] = useState<string | null>(null);
 
+  // Holiday state
+  interface Holiday {
+    id: string;
+    title: string;
+    date: string;
+    description?: string;
+    isRecurring: boolean;
+  }
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [isLoadingHolidays, setIsLoadingHolidays] = useState(false);
+  const [holidayForm, setHolidayForm] = useState({ title: '', date: '', description: '', isRecurring: false });
+  const [isAddingHoliday, setIsAddingHoliday] = useState(false);
+  const [holidayError, setHolidayError] = useState<string | null>(null);
+  const [holidaySuccess, setHolidaySuccess] = useState<string | null>(null);
+
+  const fetchHolidays = async () => {
+    setIsLoadingHolidays(true);
+    try {
+      const response = await fetch(`${API_BASE}/calendar/holidays`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setHolidays(data.holidays || data || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch holidays:', error);
+    } finally {
+      setIsLoadingHolidays(false);
+    }
+  };
+
+  const addHoliday = async () => {
+    if (!holidayForm.title || !holidayForm.date) return;
+    setIsAddingHoliday(true);
+    setHolidayError(null);
+    setHolidaySuccess(null);
+    try {
+      const response = await fetch(`${API_BASE}/calendar/holidays`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(holidayForm),
+      });
+      if (response.ok) {
+        setHolidaySuccess('Holiday added successfully');
+        setHolidayForm({ title: '', date: '', description: '', isRecurring: false });
+        fetchHolidays();
+        setTimeout(() => setHolidaySuccess(null), 3000);
+      } else {
+        const error = await response.json();
+        setHolidayError(error.error || 'Failed to add holiday');
+      }
+    } catch {
+      setHolidayError('Failed to add holiday');
+    } finally {
+      setIsAddingHoliday(false);
+    }
+  };
+
+  const deleteHoliday = async (id: string) => {
+    try {
+      const response = await fetch(`${API_BASE}/calendar/holidays/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        setHolidaySuccess('Holiday deleted');
+        fetchHolidays();
+        setTimeout(() => setHolidaySuccess(null), 3000);
+      } else {
+        setHolidayError('Failed to delete holiday');
+      }
+    } catch {
+      setHolidayError('Failed to delete holiday');
+    }
+  };
+
+  // Fetch holidays when holidays tab is selected
+  useEffect(() => {
+    if (selectedTab === 'holidays') {
+      fetchHolidays();
+    }
+  }, [selectedTab]);
+
   // Fetch backups when backup tab is selected
   useEffect(() => {
     if (selectedTab === 'backup') {
@@ -681,6 +768,7 @@ export default function AdminSettings() {
     { id: 'integrations', label: 'Integrations', icon: Link2, color: '#F59E0B' },
     { id: 'appearance', label: 'Appearance', icon: Palette, color: '#EC4899' },
     { id: 'backup', label: 'Backup', icon: Archive, color: '#6366F1' },
+    { id: 'holidays', label: 'Holidays', icon: Calendar, color: '#F97316' },
     { id: 'system', label: 'System', icon: Server, color: '#14B8A6' },
   ];
 
@@ -1604,6 +1692,187 @@ export default function AdminSettings() {
                           </p>
                         </div>
                       </div>
+                    </div>
+                  </SettingSection>
+                </motion.div>
+              )}
+
+              {selectedTab === 'holidays' && (
+                <motion.div
+                  key="holidays"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  {/* Success/Error Messages */}
+                  <AnimatePresence>
+                    {holidaySuccess && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-2 p-4 bg-success-50 dark:bg-success-900/30 rounded-xl border border-success-200 dark:border-success-800"
+                      >
+                        <CheckCircle className="w-5 h-5 text-success-600" />
+                        <span className="text-success-700 dark:text-success-300">{holidaySuccess}</span>
+                        <button onClick={() => setHolidaySuccess(null)} className="ml-auto">
+                          <X className="w-4 h-4 text-success-600" />
+                        </button>
+                      </motion.div>
+                    )}
+                    {holidayError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-2 p-4 bg-error-50 dark:bg-error-900/30 rounded-xl border border-error-200 dark:border-error-800"
+                      >
+                        <AlertTriangle className="w-5 h-5 text-error-600" />
+                        <span className="text-error-700 dark:text-error-300">{holidayError}</span>
+                        <button onClick={() => setHolidayError(null)} className="ml-auto">
+                          <X className="w-4 h-4 text-error-600" />
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <SettingSection
+                    title="Add Holiday"
+                    description="Add public holidays to the platform calendar"
+                    icon={Calendar}
+                    iconColor="#F97316"
+                  >
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                            Holiday Title
+                          </label>
+                          <input
+                            type="text"
+                            value={holidayForm.title}
+                            onChange={(e) => setHolidayForm(prev => ({ ...prev, title: e.target.value }))}
+                            placeholder="e.g. Independence Day"
+                            className="w-full px-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-50 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                            Date
+                          </label>
+                          <input
+                            type="date"
+                            value={holidayForm.date}
+                            onChange={(e) => setHolidayForm(prev => ({ ...prev, date: e.target.value }))}
+                            className="w-full px-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                          Description (optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={holidayForm.description}
+                          onChange={(e) => setHolidayForm(prev => ({ ...prev, description: e.target.value }))}
+                          placeholder="Brief description of the holiday"
+                          className="w-full px-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-50 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <motion.button
+                            type="button"
+                            role="switch"
+                            aria-checked={holidayForm.isRecurring}
+                            onClick={() => setHolidayForm(prev => ({ ...prev, isRecurring: !prev.isRecurring }))}
+                            className={cn(
+                              'relative w-12 h-7 rounded-full transition-colors flex-shrink-0',
+                              holidayForm.isRecurring ? 'bg-primary-500' : 'bg-surface-300 dark:bg-surface-600'
+                            )}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <motion.span
+                              className="absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-sm"
+                              animate={{ x: holidayForm.isRecurring ? 20 : 0 }}
+                              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                            />
+                          </motion.button>
+                          <div>
+                            <span className="font-medium text-surface-900 dark:text-surface-50">Recurring</span>
+                            <p className="text-sm text-surface-500">Repeats every year on the same date</p>
+                          </div>
+                        </label>
+                        <Button
+                          onClick={addHoliday}
+                          disabled={!holidayForm.title || !holidayForm.date || isAddingHoliday}
+                          leftIcon={isAddingHoliday ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calendar className="w-4 h-4" />}
+                        >
+                          {isAddingHoliday ? 'Adding...' : 'Add Holiday'}
+                        </Button>
+                      </div>
+                    </div>
+                  </SettingSection>
+
+                  <SettingSection
+                    title="Holiday List"
+                    description="Manage platform holidays"
+                    icon={Calendar}
+                    iconColor="#10B981"
+                  >
+                    <div className="space-y-3">
+                      {isLoadingHolidays ? (
+                        <div className="p-8 text-center">
+                          <Loader2 className="w-8 h-8 animate-spin mx-auto text-surface-400 mb-2" />
+                          <p className="text-surface-500">Loading holidays...</p>
+                        </div>
+                      ) : holidays.length === 0 ? (
+                        <div className="p-8 text-center text-surface-500">
+                          <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                          <p>No holidays configured</p>
+                          <p className="text-sm mt-1">Add your first holiday above</p>
+                        </div>
+                      ) : (
+                        holidays.map((holiday) => (
+                          <div
+                            key={holiday.id}
+                            className="flex items-center justify-between p-4 rounded-xl bg-surface-50 dark:bg-surface-700/50 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                                <Calendar className="w-5 h-5 text-orange-600" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium text-surface-900 dark:text-surface-50">
+                                    {holiday.title}
+                                  </p>
+                                  {holiday.isRecurring && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">
+                                      Recurring
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-surface-500">
+                                  {new Date(holiday.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                  {holiday.description && ` — ${holiday.description}`}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteHoliday(holiday.id)}
+                              className="text-error-600 hover:text-error-700 hover:bg-error-50 dark:hover:bg-error-900/20"
+                              title="Delete holiday"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </SettingSection>
                 </motion.div>

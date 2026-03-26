@@ -133,6 +133,7 @@ const adminNavCategories: NavCategory[] = [
     color: '#EC4899',
     items: [
       { path: '/admin/wellness', label: 'Wellness Center', icon: Heart },
+      { path: '/admin/wellness/reports', label: 'Wellness Reports', icon: BarChart3 },
     ],
   },
   {
@@ -160,6 +161,7 @@ const adminNavCategories: NavCategory[] = [
     color: '#6B7280',
     items: [
       { path: '/admin/settings', label: 'Settings', icon: Settings },
+      { path: '/admin/backup', label: 'Backup & Restore', icon: HardDrive },
       { path: '/admin/audit', label: 'Audit Logs', icon: Shield },
     ],
   },
