@@ -59,6 +59,9 @@ export { googleDriveRoutes } from './googleDrive';
 // Sponsorship System
 export { sponsorshipRoutes } from './sponsorship';
 
+// Career Development System
+export { careerRoutes } from './career';
+
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
 

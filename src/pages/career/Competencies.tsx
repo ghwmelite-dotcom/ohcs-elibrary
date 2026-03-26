@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import {
@@ -19,10 +19,22 @@ import {
   ArrowRight,
   Star,
 } from 'lucide-react';
+import { useCareerStore } from '@/stores/careerStore';
 import { cn } from '@/utils/cn';
 
-// Ghana Civil Service Competency Framework (Official 7 Competencies)
-const competencyFramework = [
+// Icon map for dynamic icon rendering from API
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Users,
+  Briefcase,
+  BarChart3,
+  Star,
+  Shield,
+  MessageSquare,
+};
+
+// Fallback: Ghana Civil Service Competency Framework (Official 7 Competencies)
+// Used when API data hasn't loaded yet
+const fallbackCompetencyFramework = [
   {
     id: 'teamwork',
     category: 'Teamwork',
@@ -271,7 +283,7 @@ const competencyFramework = [
 ];
 
 interface CompetencyCardProps {
-  competency: typeof competencyFramework[0]['competencies'][0];
+  competency: typeof fallbackCompetencyFramework[0]['competencies'][0];
   categoryColor: string;
   index: number;
 }
@@ -395,11 +407,47 @@ function CompetencyCard({ competency, categoryColor, index }: CompetencyCardProp
 
 export default function Competencies() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const { competencyFramework: apiFramework, myAssessments, fetchCompetencies, fetchMyAssessments } = useCareerStore();
+
+  useEffect(() => {
+    fetchCompetencies();
+    fetchMyAssessments();
+  }, [fetchCompetencies, fetchMyAssessments]);
+
+  // Build a lookup of user assessments by competency ID
+  const assessmentMap: Record<string, number> = {};
+  for (const a of myAssessments) {
+    assessmentMap[a.competencyId] = a.rating;
+  }
+
+  // Use API framework if available, otherwise fallback
+  const competencyFramework = (apiFramework && apiFramework.length > 0)
+    ? apiFramework.map((cat: any) => ({
+        id: cat.id,
+        category: cat.category,
+        description: cat.description,
+        color: cat.color || 'blue',
+        icon: iconMap[cat.icon] || Briefcase,
+        competencies: (cat.competencies || []).map((comp: any) => ({
+          id: comp.id,
+          name: comp.name,
+          description: comp.description,
+          levels: [
+            { level: 1, title: 'Basic', description: 'Foundational understanding' },
+            { level: 2, title: 'Developing', description: 'Growing proficiency' },
+            { level: 3, title: 'Proficient', description: 'Consistent competence' },
+            { level: 4, title: 'Advanced', description: 'Expert level mastery' },
+          ],
+          userLevel: assessmentMap[comp.id] || 2,
+          relatedCourses: comp.relatedCourses || [],
+        })),
+      }))
+    : fallbackCompetencyFramework;
 
   // Calculate overall stats
-  const totalCompetencies = competencyFramework.reduce((sum, cat) => sum + cat.competencies.length, 0);
-  const avgLevel = competencyFramework.reduce((sum, cat) =>
-    sum + cat.competencies.reduce((s, c) => s + c.userLevel, 0), 0) / totalCompetencies;
+  const totalCompetencies = competencyFramework.reduce((sum: number, cat: any) => sum + cat.competencies.length, 0);
+  const avgLevel = competencyFramework.reduce((sum: number, cat: any) =>
+    sum + cat.competencies.reduce((s: number, c: any) => s + c.userLevel, 0), 0) / totalCompetencies;
 
   return (
     <div className="pb-12">
@@ -452,7 +500,7 @@ export default function Competencies() {
 
       {/* Competency Categories */}
       <div className="space-y-6">
-        {competencyFramework.map((category, catIndex) => {
+        {competencyFramework.map((category: any, catIndex: number) => {
           const Icon = category.icon;
           const isActive = activeCategory === category.id || activeCategory === null;
 
@@ -497,7 +545,7 @@ export default function Competencies() {
                     className="border-t border-surface-100 dark:border-surface-700"
                   >
                     <div className="p-5 space-y-3">
-                      {category.competencies.map((competency, index) => (
+                      {category.competencies.map((competency: any, index: number) => (
                         <CompetencyCard
                           key={competency.id}
                           competency={competency}
