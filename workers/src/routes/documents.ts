@@ -1083,20 +1083,52 @@ documentsRoutes.get('/:id/view', async (c: AppContext) => {
     headers.set('Content-Disposition', `inline; filename="${document.fileName}"`);
     headers.set('Cache-Control', 'private, max-age=3600'); // Private cache for authenticated content
 
-    // Allow embedding in iframes from our frontend domains
-    headers.set('Content-Security-Policy', "frame-ancestors 'self' https://ohcs-elibrary.pages.dev https://*.ohcs-elibrary.pages.dev https://ohcs-elibrary.gov.gh http://localhost:5173 http://localhost:3000");
-    headers.set('X-Frame-Options', 'ALLOWALL');
+    // Restrict document viewing to our frontend domains only (no direct URL access in new tabs)
+    const allowedFrameAncestors = [
+      'https://ohcs-elibrary.pages.dev',
+      'https://*.ohcs-elibrary.pages.dev',
+      'https://ohcselibrary.xyz',
+      'https://www.ohcselibrary.xyz',
+      'https://ohcs-elibrary.gov.gh',
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ].join(' ');
+    headers.set('Content-Security-Policy', `frame-ancestors ${allowedFrameAncestors}`);
+    // X-Frame-Options DENY for browsers that don't support CSP frame-ancestors
+    // (frame-ancestors takes precedence in modern browsers)
+    headers.set('X-Frame-Options', 'DENY');
+
+    // Prevent direct URL access — only allow when loaded inside our app's iframe
+    // Check Sec-Fetch-Dest header (modern browsers send this)
+    const fetchDest = c.req.header('Sec-Fetch-Dest');
+    const referer = c.req.header('Referer') || '';
+    const isIframeRequest = fetchDest === 'iframe' || fetchDest === 'object' || fetchDest === 'embed';
+    const isFromOurApp = referer.includes('ohcs-elibrary.pages.dev') ||
+                         referer.includes('ohcselibrary.xyz') ||
+                         referer.includes('ohcs-elibrary.gov.gh') ||
+                         referer.includes('localhost:5173') ||
+                         referer.includes('localhost:3000');
+
+    // Block direct navigation (user pasting URL in new tab)
+    if (fetchDest === 'document' && !isFromOurApp) {
+      return c.json({
+        error: 'Direct access not allowed',
+        message: 'Documents can only be viewed within the OHCS E-Library platform.'
+      }, 403);
+    }
+
+    // Prevent saving/printing via headers
+    headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    headers.set('X-Content-Type-Options', 'nosniff');
 
     // CORS headers - restrict to allowed origins only
     const origin = c.req.header('Origin') || '';
     if (origin && isAllowedOrigin(origin)) {
       headers.set('Access-Control-Allow-Origin', origin);
       headers.set('Access-Control-Allow-Credentials', 'true');
-    } else if (!origin) {
-      // Direct browser access (no Origin header) - use primary domain
+    } else if (!origin && isFromOurApp) {
       headers.set('Access-Control-Allow-Origin', 'https://ohcs-elibrary.pages.dev');
     }
-    // Note: If origin is not allowed, we don't set CORS headers (browser will block)
 
     return new Response(responseBody, { headers });
   } catch (error) {
@@ -1193,10 +1225,27 @@ documentsRoutes.get('/:id/download', async (c: AppContext) => {
       UPDATE documents SET downloads = downloads + 1 WHERE id = ?
     `).bind(documentId).run();
 
-    // Return file with proper CORS headers
+    // Block direct URL downloads — must come from our app
+    const referer = c.req.header('Referer') || '';
+    const isFromOurApp = referer.includes('ohcs-elibrary.pages.dev') ||
+                         referer.includes('ohcselibrary.xyz') ||
+                         referer.includes('ohcs-elibrary.gov.gh') ||
+                         referer.includes('localhost:5173') ||
+                         referer.includes('localhost:3000');
+    const fetchDest = c.req.header('Sec-Fetch-Dest');
+    if (fetchDest === 'document' && !isFromOurApp) {
+      return c.json({
+        error: 'Direct access not allowed',
+        message: 'Documents can only be downloaded from the OHCS E-Library platform.'
+      }, 403);
+    }
+
+    // Return file with proper headers
     const headers = new Headers();
     headers.set('Content-Type', contentType);
     headers.set('Content-Disposition', `attachment; filename="${document.fileName}"`);
+    headers.set('Cache-Control', 'no-store, private');
+    headers.set('X-Content-Type-Options', 'nosniff');
 
     // CORS headers for download
     const origin = c.req.header('Origin') || '';
