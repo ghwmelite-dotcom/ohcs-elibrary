@@ -412,9 +412,9 @@ gamificationRoutes.post('/challenges/:id/progress', requireAuth, async (c: AppCo
 
       if (!existing) {
         await DB.prepare(`
-          INSERT INTO xp_transactions (userId, amount, reason, referenceId, referenceType)
-          VALUES (?, ?, 'Challenge completed', ?, 'challenge')
-        `).bind(userId, challenge.xpReward, challengeId).run();
+          INSERT INTO xp_transactions (id, userId, amount, reason, referenceId, referenceType)
+          VALUES (?, ?, ?, 'Challenge completed', ?, 'challenge')
+        `).bind(crypto.randomUUID(), userId, challenge.xpReward, challengeId).run();
 
         await DB.prepare(`
           UPDATE user_stats SET totalXp = totalXp + ? WHERE userId = ?

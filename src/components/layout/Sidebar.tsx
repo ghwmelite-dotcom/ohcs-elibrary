@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
   Library,
+  Bookmark,
   MessageSquare,
   MessagesSquare,
   Users,
@@ -82,6 +83,7 @@ const navSections: NavSection[] = [
       { path: '/feed', label: 'Home', icon: Home, color: 'primary' },
       { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'slate' },
       { path: '/library', label: 'Document Library', icon: Library, color: 'amber', tag: { label: 'CORE', color: 'amber' } },
+      { path: '/bookmarks', label: 'My Bookmarks', icon: Bookmark, color: 'secondary' },
     ],
   },
   {
