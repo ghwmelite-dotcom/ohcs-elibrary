@@ -1,0 +1,58 @@
+{
+  "nav": {
+    "home": "Fie",
+    "library": "Nhoma Korabea",
+    "courses": "Adesua",
+    "forum": "Nkɔmmɔbɔ",
+    "chat": "Nkɔmmɔ",
+    "news": "Nsɛm Foforo",
+    "wellness": "Apɔmuden",
+    "research": "Nhwehwɛmu",
+    "shop": "Sotɔ",
+    "settings": "Nhyehyɛe",
+    "profile": "Me Ho Nsɛm",
+    "logout": "Fi mu",
+    "login": "Bra mu",
+    "register": "Kyerɛw din"
+  },
+  "common": {
+    "search": "Hwehwɛ",
+    "loading": "Ɛreloade...",
+    "error": "Biribi akɔ basaa",
+    "retry": "Bɔ mmɔden bio",
+    "save": "Kora so",
+    "cancel": "Gyae",
+    "delete": "Pepa",
+    "edit": "Sesa",
+    "create": "Yɛ foforo",
+    "submit": "De kɔ",
+    "back": "San kɔ",
+    "next": "Nea edi hɔ",
+    "viewAll": "Hwɛ nyinaa",
+    "noResults": "Yɛanhunu hwee",
+    "comingSoon": "Ɛreba ntɛm"
+  },
+  "auth": {
+    "email": "Email Adrɛs",
+    "password": "Ahintasɛm",
+    "loginTitle": "Akwaaba Bio",
+    "loginSubtitle": "Bra wo OHCS E-Library akontaa mu",
+    "registerTitle": "Bue Akontaa Foforo",
+    "forgotPassword": "Woawerɛ wo ahintasɛm?",
+    "rememberMe": "Kae me"
+  },
+  "wellness": {
+    "title": "Apɔmuden Korabea",
+    "chatWithDrSena": "Kasa kyerɛ Dr. Sena",
+    "moodTracker": "Wo ho te sɛn nnɛ?",
+    "resources": "Apɔmuden Nhoma",
+    "crisis": "Wohia mmoa ntɛm? Frɛ 112"
+  },
+  "library": {
+    "title": "Nhoma Korabea",
+    "upload": "Fa Nhoma Bra",
+    "download": "Twe",
+    "bookmark": "Hyɛ agyirae",
+    "categories": "Nkyekyɛmu"
+  }
+}

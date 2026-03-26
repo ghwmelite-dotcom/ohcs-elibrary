@@ -32,6 +32,7 @@ import { Badge } from '@/components/shared/Badge';
 import { Dropdown, DropdownItem, DropdownDivider, DropdownLabel } from '@/components/shared/Dropdown';
 import { AnimatedThemeToggle } from '@/components/shared/AnimatedThemeToggle';
 import { ThemeToggleHint } from '@/components/shared/ThemeToggleHint';
+import { LanguageSelector } from '@/components/layout/LanguageSelector';
 import { formatRelativeTime } from '@/utils/formatters';
 
 export function Header() {
@@ -128,6 +129,9 @@ export function Header() {
               </Badge>
             </Link>
           )}
+
+          {/* Language Selector */}
+          <LanguageSelector />
 
           {/* Animated Theme Toggle with Discovery Hint */}
           <div data-tour="theme-toggle">

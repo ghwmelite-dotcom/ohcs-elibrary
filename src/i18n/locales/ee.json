@@ -1,0 +1,58 @@
+{
+  "nav": {
+    "home": "Acasa",
+    "library": "Agbalẽdzife",
+    "courses": "Nusr\u0254sr\u0254e",
+    "forum": "Numedodo",
+    "chat": "Dze\u0256o\u0256o",
+    "news": "Nyatakaka Yeye",
+    "wellness": "L\u0251menya\u014b\u014b",
+    "research": "Nudzodzro",
+    "shop": "N\u0254n\u0254\u0192esi",
+    "settings": "Dodoawo",
+    "profile": "Nye \u014bu Nyawo",
+    "logout": "Do go me",
+    "login": "Ge eme",
+    "register": "De \u014bk\u0254 na"
+  },
+  "common": {
+    "search": "Di",
+    "loading": "Le agbem\u0254m...",
+    "error": "N\u0254nane va dzi",
+    "retry": "Gbugb\u0254 te esi",
+    "save": "Dz\u0254",
+    "cancel": "Tsi edzi",
+    "delete": "Tutui",
+    "edit": "Tr\u0254 ase",
+    "create": "W\u0254 yeye",
+    "submit": "De asi",
+    "back": "Tr\u0254 yi megbe",
+    "next": "Eye \u0256e si gbena",
+    "viewAll": "Kp\u0254 kata",
+    "noResults": "Mekp\u0254 nane o",
+    "comingSoon": "\u0190le gbagbem"
+  },
+  "auth": {
+    "email": "Email Adr\u025bs",
+    "password": "N\u0254vi\u0256e\u014bugbe",
+    "loginTitle": "W\u0254ez\u0254 Va",
+    "loginSubtitle": "Ge wo OHCS E-Library akawunta me",
+    "registerTitle": "W\u0254 Akawunta Yeye",
+    "forgotPassword": "\u014bk\u0254 wo n\u0254vi\u0256e\u014bugbe \u014bu\u0256i?",
+    "rememberMe": "D\u0254 nye se"
+  },
+  "wellness": {
+    "title": "L\u0251menya\u014b\u014b Kofi",
+    "chatWithDrSena": "Dze \u0256o kple Dr. Sena",
+    "moodTracker": "Al\u025b nuka le dzi na wb nk\u025b?",
+    "resources": "L\u0251menya\u014b\u014b Nutinya",
+    "crisis": "Ehia kp\u025bkp\u025b? Yo 112"
+  },
+  "library": {
+    "title": "Agbalẽdzife",
+    "upload": "Ts\u0254 agbalẽ dzi",
+    "download": "De agbalẽ di",
+    "bookmark": "De dzesi\u0192iam na",
+    "categories": "Ha wo"
+  }
+}

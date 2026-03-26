@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { Mail, Lock, AlertCircle, BadgeCheck, Shield, ArrowLeft, Play } from 'lucide-react';
 import {
   loginSchema,
@@ -19,6 +20,7 @@ type LoginMode = 'email' | 'staffId';
 
 export function LoginForm() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { login, loginDemo, verify2FA, cancel2FA, twoFA } = useAuthStore();
   const toast = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -262,10 +264,10 @@ export function LoginForm() {
     <div>
       <div className="text-center mb-8">
         <h2 className="text-2xl font-heading font-bold text-surface-900 dark:text-surface-50">
-          Welcome Back
+          {t('auth.loginTitle')}
         </h2>
         <p className="mt-2 text-surface-600 dark:text-surface-400">
-          Sign in to your OHCS E-Library account
+          {t('auth.loginSubtitle')}
         </p>
       </div>
 

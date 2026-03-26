@@ -1,0 +1,58 @@
+{
+  "nav": {
+    "home": "Shi",
+    "library": "Wiemɔi Kotsɛ",
+    "courses": "Suumɔ",
+    "forum": "Kɛhaa Bii",
+    "chat": "Shika",
+    "news": "Hee Fɛɛo",
+    "wellness": "Shikpɔŋ Naa",
+    "research": "Atsɛ Suumɔ",
+    "shop": "Poŋ",
+    "settings": "Jɛmaŋ",
+    "profile": "Mi Hee",
+    "logout": "Pue fi",
+    "login": "Ba mli",
+    "register": "Ŋmaa tsɛ"
+  },
+  "common": {
+    "search": "Kɛ",
+    "loading": "Enaa hewalɛ...",
+    "error": "Nɔkɔ ko yɛ dzaa",
+    "retry": "Gbɛ shishi",
+    "save": "Yoo",
+    "cancel": "Mɛni",
+    "delete": "Dzɛɛ",
+    "edit": "Sane",
+    "create": "Yɛ fɛɛo",
+    "submit": "Naa",
+    "back": "Shia",
+    "next": "Ni ahi",
+    "viewAll": "Kɛ shiɛ bo",
+    "noResults": "Yɛ kɛ ko hewale",
+    "comingSoon": "Eba"
+  },
+  "auth": {
+    "email": "Email Adrɛs",
+    "password": "Obaayelɛ Shikpɔŋ",
+    "loginTitle": "Aai Ojogbaŋ",
+    "loginSubtitle": "Ba wo OHCS E-Library akawuntsu mli",
+    "registerTitle": "Yɛ Akawuntsu Fɛɛo",
+    "forgotPassword": "Wo obaayelɛ shikpɔŋ ahi wɛrɛ?",
+    "rememberMe": "Tsɛɛ mi"
+  },
+  "wellness": {
+    "title": "Shikpɔŋ Naa Kotsɛ",
+    "chatWithDrSena": "Shika kɛ Dr. Sena",
+    "moodTracker": "Nɛɛ bo eshɛ fɛɛ eni?",
+    "resources": "Shikpɔŋ Naa Wiemɔi",
+    "crisis": "Ehia kpɛkpɛ? Yɛlɛ 112"
+  },
+  "library": {
+    "title": "Wiemɔi Kotsɛ",
+    "upload": "Kɛ wiemɔ gbɛ",
+    "download": "Sɔɔ wiemɔ",
+    "bookmark": "Hyɛ adzesi",
+    "categories": "Hiɛfɛɛmɔ"
+  }
+}

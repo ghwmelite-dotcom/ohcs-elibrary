@@ -1,0 +1,58 @@
+{
+  "nav": {
+    "home": "Home",
+    "library": "Document Library",
+    "courses": "Courses",
+    "forum": "Forum",
+    "chat": "Chat",
+    "news": "News",
+    "wellness": "Wellness Center",
+    "research": "Research Hub",
+    "shop": "E-Shop",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register"
+  },
+  "common": {
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try Again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "viewAll": "View All",
+    "noResults": "No results found",
+    "comingSoon": "Coming Soon"
+  },
+  "auth": {
+    "email": "Email Address",
+    "password": "Password",
+    "loginTitle": "Welcome Back",
+    "loginSubtitle": "Sign in to your OHCS E-Library account",
+    "registerTitle": "Create Account",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember me"
+  },
+  "wellness": {
+    "title": "Wellness Center",
+    "chatWithDrSena": "Chat with Dr. Sena",
+    "moodTracker": "How are you feeling today?",
+    "resources": "Wellness Resources",
+    "crisis": "Need immediate help? Call 112"
+  },
+  "library": {
+    "title": "Document Library",
+    "upload": "Upload Document",
+    "download": "Download",
+    "bookmark": "Bookmark",
+    "categories": "Categories"
+  }
+}

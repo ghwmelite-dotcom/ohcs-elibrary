@@ -1,0 +1,58 @@
+{
+  "nav": {
+    "home": "Gida",
+    "library": "Dakin Littattafai",
+    "courses": "Darussa",
+    "forum": "Dandalin Tattaunawa",
+    "chat": "Hira",
+    "news": "Labarai",
+    "wellness": "Lafiya",
+    "research": "Bincike",
+    "shop": "Shago",
+    "settings": "Saituna",
+    "profile": "Bayanan Ka",
+    "logout": "Fita",
+    "login": "Shiga",
+    "register": "Yi Rajista"
+  },
+  "common": {
+    "search": "Bincika",
+    "loading": "Ana lodawa...",
+    "error": "Wani abu ya faru kuskure",
+    "retry": "Sake Gwadawa",
+    "save": "Ajiye",
+    "cancel": "Soke",
+    "delete": "Goge",
+    "edit": "Gyara",
+    "create": "Ƙirƙira",
+    "submit": "Aika",
+    "back": "Koma Baya",
+    "next": "Na Gaba",
+    "viewAll": "Duba Duka",
+    "noResults": "Ba a sami sakamako ba",
+    "comingSoon": "Yana Zuwa Ba Da Daɗewa Ba"
+  },
+  "auth": {
+    "email": "Adireshin Imel",
+    "password": "Kalmar Sirri",
+    "loginTitle": "Barka Da Dawowa",
+    "loginSubtitle": "Shiga asusun ka na OHCS E-Library",
+    "registerTitle": "Buɗe Sabon Asusu",
+    "forgotPassword": "Ka manta kalmar sirri?",
+    "rememberMe": "Tuna ni"
+  },
+  "wellness": {
+    "title": "Cibiyar Lafiya",
+    "chatWithDrSena": "Yi hira da Dr. Sena",
+    "moodTracker": "Yaya jikin ka yake yau?",
+    "resources": "Albarkatu na Lafiya",
+    "crisis": "Kana bukatar taimako na gaggawa? Kira 112"
+  },
+  "library": {
+    "title": "Dakin Littattafai",
+    "upload": "Ɗora Takarda",
+    "download": "Sauke",
+    "bookmark": "Yi Alama",
+    "categories": "Rukunoni"
+  }
+}

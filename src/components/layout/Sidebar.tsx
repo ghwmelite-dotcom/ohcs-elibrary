@@ -43,6 +43,7 @@ import {
   Medal,
   type LucideIcon,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import { useUIStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -430,9 +431,25 @@ function BadgeCount({ count }: { count: number }) {
   );
 }
 
+// Map sidebar paths to i18n keys for translatable nav items
+const navI18nKeys: Record<string, string> = {
+  '/feed': 'nav.home',
+  '/library': 'nav.library',
+  '/courses': 'nav.courses',
+  '/chat': 'nav.chat',
+  '/forum': 'nav.forum',
+  '/news': 'nav.news',
+  '/wellness': 'nav.wellness',
+  '/research-hub': 'nav.research',
+  '/shop': 'nav.shop',
+  '/settings': 'nav.settings',
+  '/profile': 'nav.profile',
+};
+
 export function Sidebar() {
   const { sidebar, setSidebarCollapsed } = useUIStore();
   const { user, logout } = useAuthStore();
+  const { t } = useTranslation();
   const { summary } = useNotificationStore();
   const unreadCount = summary?.unreadTotal || 0;
   const { newArticlesCount, checkForNewArticles, markNewsAsViewed } = useNewsStore();
@@ -484,6 +501,9 @@ export function Sidebar() {
     const colors = colorMap[item.color || 'slate'];
     const badgeCount = item.hasBadge ? getBadgeCount(item.path) : 0;
     const Icon = item.icon;
+    // Use translated label if an i18n key exists for this path
+    const i18nKey = navI18nKeys[item.path];
+    const translatedItem = i18nKey ? { ...item, label: t(i18nKey) } : item;
 
     return (
       <li key={item.path}>
@@ -498,11 +518,11 @@ export function Sidebar() {
               isCollapsed && 'justify-center px-2'
             )
           }
-          title={isCollapsed ? item.label : undefined}
+          title={isCollapsed ? translatedItem.label : undefined}
         >
           {({ isActive }) => (
             <NavItemContent
-              item={item}
+              item={translatedItem}
               isActive={isActive}
               isCollapsed={isCollapsed}
               badgeCount={badgeCount}
