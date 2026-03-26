@@ -112,78 +112,89 @@ export function Header() {
         </div>
 
         {/* Right section */}
-        <div className="flex items-center gap-1.5 lg:gap-3">
-          {/* XP Display */}
+        <div className="flex items-center">
+          {/* Group 1: XP Badge (desktop only) */}
           {stats && (
             <Link
               data-tour="xp-display"
               to="/leaderboard"
-              className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-secondary-50 dark:bg-secondary-900/20 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-900/30 transition-colors"
+              className="hidden xl:flex items-center gap-2 px-3 py-1.5 mr-3 bg-secondary-50 dark:bg-secondary-900/20 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-900/30 transition-colors border border-secondary-200/50 dark:border-secondary-800/50"
             >
-              <Sparkles className="w-4 h-4 text-secondary-600 dark:text-secondary-400" />
-              <span className="text-sm font-medium text-secondary-700 dark:text-secondary-300">
-                {stats.totalXP.toLocaleString()} XP
+              <Sparkles className="w-3.5 h-3.5 text-secondary-500" />
+              <span className="text-xs font-semibold text-secondary-700 dark:text-secondary-300">
+                {stats.totalXP.toLocaleString()}
               </span>
-              <Badge variant="secondary" size="sm">
-                Lvl {stats.level.level}
-              </Badge>
+              <span className="text-[10px] font-bold text-secondary-500 dark:text-secondary-400 bg-secondary-100 dark:bg-secondary-800/50 px-1.5 py-0.5 rounded">
+                LV{stats.level.level}
+              </span>
             </Link>
           )}
 
-          {/* Language Selector */}
-          <LanguageSelector />
+          {/* Divider */}
+          <div className="hidden xl:block w-px h-6 bg-surface-200 dark:bg-surface-700 mr-2" />
 
-          {/* Animated Theme Toggle with Discovery Hint */}
-          <div data-tour="theme-toggle">
-            <ThemeToggleHint variant="dashboard">
-              <AnimatedThemeToggle size="md" />
-            </ThemeToggleHint>
+          {/* Group 2: Preferences (language + theme) */}
+          <div className="hidden md:flex items-center gap-1 mr-1">
+            <LanguageSelector />
+            <div data-tour="theme-toggle">
+              <ThemeToggleHint variant="dashboard">
+                <AnimatedThemeToggle size="md" />
+              </ThemeToggleHint>
+            </div>
           </div>
 
-          {/* Wishlist */}
-          <Link
-            to="/shop/wishlist"
-            className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
-            aria-label={`Wishlist${wishlistCount > 0 ? ` (${wishlistCount} items)` : ''}`}
-          >
-            <Heart className={cn('w-5 h-5', wishlistCount > 0 && 'text-red-500')} />
-            {wishlistCount > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"
-              >
-                {wishlistCount > 9 ? '9+' : wishlistCount}
-              </motion.span>
-            )}
-          </Link>
+          {/* Divider */}
+          <div className="hidden md:block w-px h-6 bg-surface-200 dark:bg-surface-700 mx-1" />
 
-          {/* Cart */}
-          <Link
-            to="/shop/cart"
-            className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
-            aria-label={`Shopping cart${cartCount > 0 ? ` (${cartCount} items)` : ''}`}
-          >
-            <ShoppingCart className="w-5 h-5" />
-            {cartCount > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-primary-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"
-              >
-                {cartCount > 9 ? '9+' : cartCount}
-              </motion.span>
-            )}
-          </Link>
+          {/* Group 3: Shop (wishlist + cart) */}
+          <div className="flex items-center gap-0.5">
+            <Link
+              to="/shop/wishlist"
+              className="relative p-2 text-surface-500 hover:text-red-500 dark:text-surface-400 dark:hover:text-red-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+              aria-label={`Wishlist${wishlistCount > 0 ? ` (${wishlistCount} items)` : ''}`}
+            >
+              <Heart className={cn('w-[18px] h-[18px]', wishlistCount > 0 && 'text-red-500 fill-red-500')} />
+              {wishlistCount > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5"
+                >
+                  {wishlistCount > 9 ? '9+' : wishlistCount}
+                </motion.span>
+              )}
+            </Link>
 
-          {/* Friend Requests */}
+            <Link
+              to="/shop/cart"
+              className="relative p-2 text-surface-500 hover:text-primary-600 dark:text-surface-400 dark:hover:text-primary-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+              aria-label={`Shopping cart${cartCount > 0 ? ` (${cartCount} items)` : ''}`}
+            >
+              <ShoppingCart className={cn('w-[18px] h-[18px]', cartCount > 0 && 'text-primary-600 dark:text-primary-400')} />
+              {cartCount > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-primary-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5"
+                >
+                  {cartCount > 9 ? '9+' : cartCount}
+                </motion.span>
+              )}
+            </Link>
+          </div>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-surface-200 dark:bg-surface-700 mx-1" />
+
+          {/* Group 4: Social + Notifications */}
+          <div className="flex items-center gap-0.5">
           <Dropdown
             trigger={
               <button
                 aria-label={`Friend requests${pendingRequests.length > 0 ? ` (${pendingRequests.length} pending)` : ''}`}
-                className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                className="relative p-2 text-surface-500 hover:text-emerald-600 dark:text-surface-400 dark:hover:text-emerald-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
               >
-                <UserPlus className="w-5 h-5" />
+                <UserPlus className="w-[18px] h-[18px]" />
                 {pendingRequests.length > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
@@ -290,12 +301,12 @@ export function Header() {
               <button
                 data-tour="notifications"
                 aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
-                className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                className="relative p-2 text-surface-500 hover:text-amber-600 dark:text-surface-400 dark:hover:text-amber-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
               >
                 {unreadCount > 0 ? (
-                  <BellRing className="w-5 h-5" />
+                  <BellRing className="w-[18px] h-[18px] text-amber-500" />
                 ) : (
-                  <Bell className="w-5 h-5" />
+                  <Bell className="w-[18px] h-[18px]" />
                 )}
                 {unreadCount > 0 && (
                   <motion.span
@@ -396,13 +407,18 @@ export function Header() {
             </div>
           </Dropdown>
 
-          {/* User Menu */}
+          </div> {/* End Group 4: Social + Notifications */}
+
+          {/* Divider before profile */}
+          <div className="w-px h-6 bg-surface-200 dark:bg-surface-700 mx-1.5" />
+
+          {/* Group 5: User Menu */}
           {user && (
             <Dropdown
               trigger={
                 <button
                   data-tour="user-menu"
-                  className="flex items-center gap-2 p-1.5 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                  className="flex items-center gap-2 p-1 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-xl transition-colors"
                 >
                   <Avatar
                     src={user.avatar}
