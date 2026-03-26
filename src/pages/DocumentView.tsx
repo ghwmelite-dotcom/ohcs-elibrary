@@ -26,6 +26,8 @@ import {
   DocumentRating,
   RatingBreakdown,
   AIAnalysisPanel,
+  DocumentComments,
+  CollectionManager,
 } from '@/components/library';
 import { Button } from '@/components/shared/Button';
 import { Avatar } from '@/components/shared/Avatar';
@@ -347,15 +349,8 @@ export default function DocumentView() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-8 text-center"
             >
-              <MessageSquare className="w-12 h-12 text-surface-300 dark:text-surface-600 mx-auto mb-4" />
-              <h2 className="text-lg font-semibold text-surface-900 dark:text-surface-50 mb-2">
-                Comments Coming Soon
-              </h2>
-              <p className="text-surface-500 dark:text-surface-400 max-w-md mx-auto">
-                The comments feature is currently under development. You will soon be able to discuss and share feedback on documents with your colleagues.
-              </p>
+              <DocumentComments documentId={document.id} />
             </motion.div>
           )}
         </div>
@@ -477,15 +472,8 @@ export default function DocumentView() {
             </dl>
           </div>
 
-          {/* Collections - Coming Soon */}
-          <div className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6 text-center">
-            <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-2">
-              Collections
-            </h3>
-            <p className="text-sm text-surface-500 dark:text-surface-400">
-              Collections are coming soon. You will be able to organize documents into custom groups.
-            </p>
-          </div>
+          {/* Collections */}
+          <CollectionManager documentId={document.id} />
         </div>
       </div>
     </div>
