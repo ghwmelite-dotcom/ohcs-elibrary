@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 
 const orderRoutes = new Hono();
+const webhookRoutes = new Hono();
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -96,6 +97,63 @@ async function verifyPaystackTransaction(secretKey: string, reference: string) {
   });
 
   return response.json();
+}
+
+async function verifyPaystackSignature(
+  secretKey: string,
+  body: string,
+  providedSignature: string
+): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secretKey),
+    { name: 'HMAC', hash: 'SHA-512' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(body));
+  const hashHex = Array.from(new Uint8Array(signature))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return hashHex === providedSignature;
+}
+
+/**
+ * Decrement stock and increment sales count for all items in an order.
+ * Called ONLY after payment is verified (webhook or manual verify).
+ *
+ * Payment flow:
+ *   1. POST /checkout  -> creates order with status 'pending' (NO stock change)
+ *   2. Payment verified (webhook or POST /checkout/verify) -> decrement stock + update status
+ */
+async function decrementStockAndRecordSales(db: any, orderId: string): Promise<void> {
+  const orderItems = await db
+    .prepare(
+      `SELECT oi.productId, oi.quantity, p.trackInventory
+       FROM shop_order_items oi
+       JOIN shop_products p ON oi.productId = p.id
+       WHERE oi.orderId = ?`
+    )
+    .bind(orderId)
+    .all();
+
+  for (const item of orderItems.results || []) {
+    if (item.trackInventory) {
+      await db
+        .prepare(
+          `UPDATE shop_products SET stockQuantity = stockQuantity - ? WHERE id = ?`
+        )
+        .bind(item.quantity, item.productId)
+        .run();
+    }
+    await db
+      .prepare(
+        `UPDATE shop_products SET salesCount = salesCount + ? WHERE id = ?`
+      )
+      .bind(item.quantity, item.productId)
+      .run();
+  }
 }
 
 // ============================================================================
@@ -508,17 +566,8 @@ orderRoutes.post('/checkout', async (c) => {
         now
       ).run();
 
-      // Update product stock
-      if (items.find((i: any) => i.productId === item.productId)?.trackInventory) {
-        await c.env.DB.prepare(`
-          UPDATE shop_products SET stockQuantity = stockQuantity - ? WHERE id = ?
-        `).bind(item.quantity, item.productId).run();
-      }
-
-      // Update product sales count
-      await c.env.DB.prepare(`
-        UPDATE shop_products SET salesCount = salesCount + ? WHERE id = ?
-      `).bind(item.quantity, item.productId).run();
+      // NOTE: Stock decrement and sales count are NOT updated here.
+      // They happen ONLY after payment is verified (webhook or manual verify).
     }
 
     // Update discount code usage
@@ -718,6 +767,9 @@ orderRoutes.post('/checkout/verify', zValidator('json', verifyPaymentSchema), as
       WHERE id = ?
     `).bind(now, now, now, order.id).run();
 
+    // Decrement stock and record sales now that payment is confirmed
+    await decrementStockAndRecordSales(c.env.DB, order.id as string);
+
     return c.json({
       success: true,
       message: 'Payment verified successfully',
@@ -902,4 +954,113 @@ orderRoutes.get('/:orderNumber/download/:itemId', async (c) => {
   }
 });
 
-export { orderRoutes };
+// ============================================================================
+// PAYSTACK WEBHOOK (No auth middleware — server-to-server, HMAC-verified)
+// ============================================================================
+
+// Full path: POST /api/v1/shop/webhooks/paystack
+webhookRoutes.post('/paystack', async (c) => {
+  // Read raw body for HMAC verification (must happen before parsing)
+  const rawBody = await c.req.text();
+  const signature = c.req.header('x-paystack-signature') || '';
+
+  if (!signature) {
+    // Return 200 to avoid Paystack retries, but log the issue
+    console.error('Webhook received without x-paystack-signature header');
+    return c.json({ status: 'ignored' }, 200);
+  }
+
+  // Verify HMAC-SHA512 signature
+  const isValid = await verifyPaystackSignature(
+    c.env.PAYSTACK_SECRET_KEY,
+    rawBody,
+    signature
+  );
+
+  if (!isValid) {
+    console.error('Webhook signature verification failed');
+    return c.json({ status: 'invalid signature' }, 200);
+  }
+
+  // Parse event
+  let event: any;
+  try {
+    event = JSON.parse(rawBody);
+  } catch {
+    console.error('Webhook body is not valid JSON');
+    return c.json({ status: 'invalid body' }, 200);
+  }
+
+  // Only handle charge.success events
+  if (event.event !== 'charge.success') {
+    return c.json({ status: 'ignored', event: event.event }, 200);
+  }
+
+  const data = event.data;
+  if (!data?.reference) {
+    console.error('Webhook charge.success missing reference');
+    return c.json({ status: 'missing reference' }, 200);
+  }
+
+  try {
+    // Find the order by reference (orderNumber)
+    const order = await c.env.DB.prepare(
+      `SELECT id, orderNumber, total, paymentStatus FROM shop_orders WHERE orderNumber = ?`
+    )
+      .bind(data.reference)
+      .first();
+
+    if (!order) {
+      console.error('Webhook: order not found for reference', data.reference);
+      return c.json({ status: 'order not found' }, 200);
+    }
+
+    // Already processed — idempotent
+    if (order.paymentStatus === 'paid') {
+      return c.json({ status: 'already processed' }, 200);
+    }
+
+    // Verify amount matches (Paystack sends amount in pesewas/kobo)
+    const paidAmount = data.amount / 100;
+    if (Math.abs(paidAmount - (order.total as number)) > 0.01) {
+      console.error('Webhook: amount mismatch', {
+        paid: paidAmount,
+        expected: order.total,
+        reference: data.reference,
+      });
+      return c.json({ status: 'amount mismatch' }, 200);
+    }
+
+    const now = new Date().toISOString();
+
+    // Update payment record
+    await c.env.DB.prepare(
+      `UPDATE shop_payments
+       SET status = 'successful', providerTransactionId = ?, completedAt = ?
+       WHERE orderId = ?`
+    )
+      .bind(String(data.id), now, order.id)
+      .run();
+
+    // Update order status
+    await c.env.DB.prepare(
+      `UPDATE shop_orders
+       SET status = 'confirmed', paymentStatus = 'paid', paidAt = ?, confirmedAt = ?, updatedAt = ?
+       WHERE id = ?`
+    )
+      .bind(now, now, now, order.id)
+      .run();
+
+    // Decrement stock and record sales now that payment is confirmed
+    await decrementStockAndRecordSales(c.env.DB, order.id as string);
+
+    console.log('Webhook: order confirmed', order.orderNumber);
+    return c.json({ status: 'success' }, 200);
+  } catch (error) {
+    console.error('Webhook processing error:', error);
+    // Return 200 so Paystack does not endlessly retry on application errors
+    return c.json({ status: 'error' }, 200);
+  }
+});
+
+export { orderRoutes, webhookRoutes };

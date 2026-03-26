@@ -51,7 +51,7 @@ export { analyticsRoutes } from './analytics';
 export { sellerRoutes } from './shop-seller';
 export { productRoutes } from './shop-products';
 export { cartRoutes } from './shop-cart';
-export { orderRoutes } from './shop-orders';
+export { orderRoutes, webhookRoutes } from './shop-orders';
 
 // Google Drive Integration
 export { googleDriveRoutes } from './googleDrive';

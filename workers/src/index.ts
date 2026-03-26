@@ -52,6 +52,7 @@ import {
   productRoutes,
   cartRoutes,
   orderRoutes,
+  webhookRoutes,
   // Google Drive Integration
   googleDriveRoutes,
   // Sponsorship System
@@ -230,6 +231,9 @@ app.route('/api/v1/shop/products', productRoutes);
 app.use('/api/v1/shop/cart', authMiddleware);
 app.use('/api/v1/shop/cart/*', authMiddleware);
 app.route('/api/v1/shop/cart', cartRoutes);
+// Paystack webhook — NO auth middleware (server-to-server, HMAC-verified)
+// Mounted on a separate path so it is NOT caught by the orders auth middleware.
+app.route('/api/v1/shop/webhooks', webhookRoutes);
 app.use('/api/v1/shop/orders', authMiddleware);
 app.use('/api/v1/shop/orders/*', authMiddleware);
 app.route('/api/v1/shop/orders', orderRoutes);
