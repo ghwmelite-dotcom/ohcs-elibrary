@@ -352,6 +352,7 @@ counselorRoutes.post('/sessions/:id/messages', async (c: AppContext) => {
 counselorRoutes.post('/sessions/:id/feedback', async (c: AppContext) => {
   const { DB } = c.env;
   const sessionId = c.req.param('id');
+  const userId = c.get('userId');
 
   try {
     const body = await c.req.json();
@@ -359,6 +360,24 @@ counselorRoutes.post('/sessions/:id/feedback', async (c: AppContext) => {
 
     if (!messageId || helpful === undefined) {
       return c.json({ error: 'messageId and helpful required' }, 400);
+    }
+
+    // Verify caller has access to this session before updating feedback
+    const session = await DB.prepare(`
+      SELECT id, userId, anonymousId, isAnonymous FROM counselor_sessions WHERE id = ?
+    `).bind(sessionId).first<any>();
+
+    if (!session) {
+      return c.json({ error: 'Session not found' }, 404);
+    }
+
+    const anonymousId = c.req.header('X-Anonymous-Id');
+    if (session.isAnonymous) {
+      if (session.anonymousId !== anonymousId) {
+        return c.json({ error: 'Unauthorized' }, 403);
+      }
+    } else if (session.userId !== userId) {
+      return c.json({ error: 'Unauthorized' }, 403);
     }
 
     await DB.prepare(`
@@ -387,13 +406,22 @@ counselorRoutes.post('/sessions/:id/escalate', async (c: AppContext) => {
     const body = await c.req.json().catch(() => ({}));
     const { reason, urgency } = body;
 
-    // Get session to verify access
+    // Get session and verify caller has access
     const session = await DB.prepare(`
       SELECT * FROM counselor_sessions WHERE id = ?
     `).bind(sessionId).first<any>();
 
     if (!session) {
       return c.json({ error: 'Session not found' }, 404);
+    }
+
+    const anonymousId = c.req.header('X-Anonymous-Id');
+    if (session.isAnonymous) {
+      if (session.anonymousId !== anonymousId) {
+        return c.json({ error: 'Unauthorized' }, 403);
+      }
+    } else if (session.userId !== userId) {
+      return c.json({ error: 'Unauthorized' }, 403);
     }
 
     // Create escalation
@@ -434,10 +462,29 @@ counselorRoutes.post('/sessions/:id/escalate', async (c: AppContext) => {
 counselorRoutes.patch('/sessions/:id', async (c: AppContext) => {
   const { DB } = c.env;
   const sessionId = c.req.param('id');
+  const userId = c.get('userId');
 
   try {
     const body = await c.req.json();
     const { status, title } = body;
+
+    // Verify caller has access to this session before allowing update
+    const session = await DB.prepare(`
+      SELECT id, userId, anonymousId, isAnonymous FROM counselor_sessions WHERE id = ?
+    `).bind(sessionId).first<any>();
+
+    if (!session) {
+      return c.json({ error: 'Session not found' }, 404);
+    }
+
+    const anonymousId = c.req.header('X-Anonymous-Id');
+    if (session.isAnonymous) {
+      if (session.anonymousId !== anonymousId) {
+        return c.json({ error: 'Unauthorized' }, 403);
+      }
+    } else if (session.userId !== userId) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
 
     const updates: string[] = [];
     const params: any[] = [];
