@@ -5,7 +5,8 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { authMiddleware } from '../middleware/auth';
+import { verify } from 'hono/jwt';
+import { authMiddleware, blacklistToken } from '../middleware/auth';
 import {
   generateSecret,
   generateTOTPUri,
@@ -20,7 +21,56 @@ import {
 type Env = {
   DB: D1Database;
   JWT_SECRET: string;
+  CACHE: KVNamespace;
 };
+
+// ============================================
+// AES-GCM Encryption for 2FA Secrets at Rest
+// ============================================
+
+async function encryptSecret(plaintext: string, encryptionKey: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(encryptionKey.slice(0, 32).padEnd(32, '0')),
+    { name: 'AES-GCM' },
+    false,
+    ['encrypt']
+  );
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    keyMaterial,
+    encoder.encode(plaintext)
+  );
+  const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('');
+  const ctHex = Array.from(new Uint8Array(ciphertext)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${ivHex}:${ctHex}`;
+}
+
+async function decryptSecret(encrypted: string, encryptionKey: string): Promise<string> {
+  const [ivHex, ctHex] = encrypted.split(':');
+  if (!ivHex || !ctHex) return encrypted; // Plaintext fallback for legacy data
+  // Legacy plaintext secrets won't have a valid hex IV of exactly 24 chars (12 bytes)
+  if (ivHex.length !== 24) return encrypted;
+  try {
+    const iv = new Uint8Array(ivHex.match(/.{2}/g)!.map(b => parseInt(b, 16)));
+    const ct = new Uint8Array(ctHex.match(/.{2}/g)!.map(b => parseInt(b, 16)));
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(encryptionKey.slice(0, 32).padEnd(32, '0')),
+      { name: 'AES-GCM' },
+      false,
+      ['decrypt']
+    );
+    const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, keyMaterial, ct);
+    return new TextDecoder().decode(plaintext);
+  } catch {
+    // Decryption failed — treat as plaintext (legacy data)
+    return encrypted;
+  }
+}
 
 const twoFactorRoutes = new Hono<{ Bindings: Env }>();
 
@@ -92,12 +142,15 @@ twoFactorRoutes.post('/setup', async (c) => {
     const secret = generateSecret();
     const uri = generateTOTPUri(secret, user.email);
 
-    // Store secret temporarily (not enabled yet)
+    // Encrypt secret before storing at rest
+    const encryptedSecret = await encryptSecret(secret, c.env.JWT_SECRET);
+
+    // Store encrypted secret temporarily (not enabled yet)
     await c.env.DB.prepare(`
       UPDATE users
       SET twoFactorSecret = ?
       WHERE id = ?
-    `).bind(secret, userId).run();
+    `).bind(encryptedSecret, userId).run();
 
     return c.json({
       secret,
@@ -154,8 +207,11 @@ twoFactorRoutes.post('/enable', async (c) => {
       return c.json({ error: 'Please start 2FA setup first' }, 400);
     }
 
+    // Decrypt secret before verification
+    const decryptedSecret = await decryptSecret(user.twoFactorSecret, c.env.JWT_SECRET);
+
     // Verify the code
-    const isValid = await verifyTOTP(user.twoFactorSecret, code);
+    const isValid = await verifyTOTP(decryptedSecret, code);
 
     if (!isValid) {
       // Log failed attempt
@@ -195,6 +251,22 @@ twoFactorRoutes.post('/enable', async (c) => {
       c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown',
       c.req.header('User-Agent') || 'unknown'
     ).run();
+
+    // Blacklist current token — security state changed, force re-auth
+    if (c.env.CACHE) {
+      try {
+        const currentToken = c.req.header('Authorization')?.replace('Bearer ', '');
+        if (currentToken) {
+          const payload = await verify(currentToken, c.env.JWT_SECRET);
+          if (payload.exp) {
+            const remainingTtl = Math.max(0, (payload.exp as number) - Math.floor(Date.now() / 1000));
+            await blacklistToken(c.env.CACHE, currentToken, remainingTtl);
+          }
+        }
+      } catch (_) {
+        // Best effort — don't fail the enable response
+      }
+    }
 
     return c.json({
       success: true,
@@ -257,7 +329,8 @@ twoFactorRoutes.post('/disable', async (c) => {
 
     // Optionally verify 2FA code
     if (code && user.twoFactorSecret) {
-      const isValidCode = await verifyTOTP(user.twoFactorSecret, code);
+      const decryptedSecret = await decryptSecret(user.twoFactorSecret, c.env.JWT_SECRET);
+      const isValidCode = await verifyTOTP(decryptedSecret, code);
       if (!isValidCode) {
         return c.json({ error: 'Invalid 2FA code' }, 400);
       }
@@ -278,6 +351,22 @@ twoFactorRoutes.post('/disable', async (c) => {
       DELETE FROM two_factor_trusted_devices
       WHERE userId = ?
     `).bind(userId).run();
+
+    // Blacklist current token — security state changed, force re-auth
+    if (c.env.CACHE) {
+      try {
+        const currentToken = c.req.header('Authorization')?.replace('Bearer ', '');
+        if (currentToken) {
+          const payload = await verify(currentToken, c.env.JWT_SECRET);
+          if (payload.exp) {
+            const remainingTtl = Math.max(0, (payload.exp as number) - Math.floor(Date.now() / 1000));
+            await blacklistToken(c.env.CACHE, currentToken, remainingTtl);
+          }
+        }
+      } catch (_) {
+        // Best effort
+      }
+    }
 
     return c.json({
       success: true,
@@ -343,12 +432,15 @@ twoFactorRoutes.post('/verify', async (c) => {
       return c.json({ error: 'Too many attempts. Please wait a minute.' }, 429);
     }
 
+    // Decrypt secret before verification
+    const decryptedSecret = await decryptSecret(user.twoFactorSecret, c.env.JWT_SECRET);
+
     let isValid = false;
     let attemptType = 'totp';
 
     // First try as TOTP code
     if (code.length === 6 && /^\d+$/.test(code)) {
-      isValid = await verifyTOTP(user.twoFactorSecret, code);
+      isValid = await verifyTOTP(decryptedSecret, code);
     }
 
     // If not valid, try as backup code
@@ -532,8 +624,11 @@ twoFactorRoutes.post('/backup-codes/regenerate', async (c) => {
       return c.json({ error: '2FA is not enabled' }, 400);
     }
 
+    // Decrypt secret before verification
+    const decryptedSecret = await decryptSecret(user.twoFactorSecret, c.env.JWT_SECRET);
+
     // Verify TOTP code
-    const isValid = await verifyTOTP(user.twoFactorSecret, code);
+    const isValid = await verifyTOTP(decryptedSecret, code);
     if (!isValid) {
       return c.json({ error: 'Invalid verification code' }, 401);
     }

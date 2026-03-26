@@ -14,6 +14,35 @@ declare module 'hono' {
   }
 }
 
+/**
+ * Hash a token to a short key for the KV blacklist.
+ * Uses SHA-256, truncated to 16 hex chars to keep KV keys compact.
+ */
+export async function hashToken(token: string): Promise<string> {
+  const data = new TextEncoder().encode(token);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+}
+
+/**
+ * Add a token to the KV blacklist. TTL should match the token's remaining lifetime.
+ */
+export async function blacklistToken(cache: KVNamespace, token: string, ttlSeconds: number): Promise<void> {
+  if (ttlSeconds <= 0) return;
+  const key = `blacklist:${await hashToken(token)}`;
+  await cache.put(key, '1', { expirationTtl: ttlSeconds });
+}
+
+/**
+ * Check whether a token has been blacklisted (revoked).
+ */
+async function isTokenBlacklisted(cache: KVNamespace, token: string): Promise<boolean> {
+  const key = `blacklist:${await hashToken(token)}`;
+  const value = await cache.get(key);
+  return value !== null;
+}
+
 export async function authMiddleware(c: Context, next: Next) {
   const authHeader = c.req.header('Authorization');
 
@@ -42,6 +71,22 @@ export async function authMiddleware(c: Context, next: Next) {
         error: 'Unauthorized',
         message: 'Token has expired',
       }, 401);
+    }
+
+    // Check token blacklist (revoked tokens)
+    if (c.env.CACHE) {
+      try {
+        const revoked = await isTokenBlacklisted(c.env.CACHE, token);
+        if (revoked) {
+          return c.json({
+            error: 'Unauthorized',
+            message: 'Token has been revoked',
+          }, 401);
+        }
+      } catch (e) {
+        // Blacklist check failure should not block auth — fail open
+        console.error('Token blacklist check failed:', e);
+      }
     }
 
     // Set user in context
@@ -75,13 +120,26 @@ export async function optionalAuth(c: Context, next: Next) {
       if (payload && payload.sub) {
         // Check token expiration
         if (!payload.exp || Date.now() < payload.exp * 1000) {
-          // Set user in context if token is valid
-          c.set('user', {
-            id: payload.sub as string,
-            email: payload.email as string,
-            role: payload.role as string,
-            mda: payload.mda as string | undefined,
-          });
+          // Check blacklist before setting user context
+          let revoked = false;
+          if (c.env.CACHE) {
+            try {
+              const key = `blacklist:${await hashToken(token)}`;
+              revoked = (await c.env.CACHE.get(key)) !== null;
+            } catch (_) {
+              // Fail open
+            }
+          }
+
+          if (!revoked) {
+            // Set user in context if token is valid
+            c.set('user', {
+              id: payload.sub as string,
+              email: payload.email as string,
+              role: payload.role as string,
+              mda: payload.mda as string | undefined,
+            });
+          }
         }
       }
     } catch (error) {

@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
+import { verify } from 'hono/jwt';
+import { blacklistToken } from '../middleware/auth';
 
 interface Env {
   DB: D1Database;
@@ -435,6 +437,34 @@ adminUsersRoutes.post('/:id/suspend', async (c: AppContext) => {
     await DB.prepare(`
       UPDATE users SET isSuspended = ?, updatedAt = datetime('now') WHERE id = ?
     `).bind(suspend ? 1 : 0, userId).run();
+
+    // When suspending, blacklist all active session tokens for the user
+    if (suspend && c.env.CACHE) {
+      try {
+        const sessions = await DB.prepare(`
+          SELECT token FROM sessions WHERE userId = ? AND expiresAt > datetime('now')
+        `).bind(userId).all();
+
+        for (const session of sessions.results || []) {
+          if (session.token) {
+            try {
+              const sessionPayload = await verify(session.token as string, c.env.JWT_SECRET);
+              if (sessionPayload.exp) {
+                const remainingTtl = Math.max(0, (sessionPayload.exp as number) - Math.floor(Date.now() / 1000));
+                await blacklistToken(c.env.CACHE, session.token as string, remainingTtl);
+              }
+            } catch (_) {
+              // Token already expired or invalid
+            }
+          }
+        }
+
+        // Also delete the sessions from DB
+        await DB.prepare(`DELETE FROM sessions WHERE userId = ?`).bind(userId).run();
+      } catch (e) {
+        console.error('Failed to blacklist sessions on suspend:', e);
+      }
+    }
 
     await logAudit(DB, c, suspend ? 'user_suspended' : 'user_unsuspended', 'user_management', 'warning', 'user', userId, {
       suspended: !!suspend,

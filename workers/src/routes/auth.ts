@@ -11,7 +11,55 @@ import {
   type GmailCredentials,
 } from '../services/emailService';
 import { logAuthEvent, AuditActions } from '../services/auditService';
-import { blacklistToken } from '../middleware/auth';
+import { blacklistToken, hashToken } from '../middleware/auth';
+
+// =====================================================
+// AES-GCM Encryption for 2FA Secrets at Rest
+// =====================================================
+
+async function encryptSecret(plaintext: string, encryptionKey: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(encryptionKey.slice(0, 32).padEnd(32, '0')),
+    { name: 'AES-GCM' },
+    false,
+    ['encrypt']
+  );
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    keyMaterial,
+    encoder.encode(plaintext)
+  );
+  const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('');
+  const ctHex = Array.from(new Uint8Array(ciphertext)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${ivHex}:${ctHex}`;
+}
+
+async function decryptSecret(encrypted: string, encryptionKey: string): Promise<string> {
+  const [ivHex, ctHex] = encrypted.split(':');
+  if (!ivHex || !ctHex) return encrypted; // Plaintext fallback for legacy data
+  // Legacy plaintext secrets won't have a valid hex IV of exactly 24 chars (12 bytes)
+  if (ivHex.length !== 24) return encrypted;
+  try {
+    const iv = new Uint8Array(ivHex.match(/.{2}/g)!.map(b => parseInt(b, 16)));
+    const ct = new Uint8Array(ctHex.match(/.{2}/g)!.map(b => parseInt(b, 16)));
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(encryptionKey.slice(0, 32).padEnd(32, '0')),
+      { name: 'AES-GCM' },
+      false,
+      ['decrypt']
+    );
+    const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, keyMaterial, ct);
+    return new TextDecoder().decode(plaintext);
+  } catch {
+    // Decryption failed — treat as plaintext (legacy data)
+    return encrypted;
+  }
+}
 
 // Helper to get Gmail credentials from env
 function getGmailCredentials(env: any): GmailCredentials | undefined {
@@ -340,16 +388,16 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
 
       return c.json({
         error: 'Invalid Credentials',
-        message: 'Email or password is incorrect',
+        message: 'Invalid email or password',
       }, 401);
     }
 
-    // Check if account is active
+    // Check if account is active — use generic message to prevent account enumeration
     if (!user.isActive) {
       return c.json({
-        error: 'Account Inactive',
-        message: 'Your account has been deactivated',
-      }, 403);
+        error: 'Invalid Credentials',
+        message: 'Invalid email or password',
+      }, 401);
     }
 
     // Verify password
@@ -368,7 +416,7 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
 
       return c.json({
         error: 'Invalid Credentials',
-        message: 'Email or password is incorrect',
+        message: 'Invalid email or password',
       }, 401);
     }
 
@@ -394,7 +442,8 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
     if (twoFa && twoFa.isEnabled) {
       // If TOTP code was provided, verify it
       if (totpCode) {
-        const isValid = await verifyTOTP(twoFa.secret as string, totpCode);
+        const decryptedSecret = await decryptSecret(twoFa.secret as string, c.env.JWT_SECRET);
+        const isValid = await verifyTOTP(decryptedSecret, totpCode);
         if (!isValid) {
           return c.json({
             error: '2FA Error',
@@ -530,7 +579,7 @@ authRoutes.post('/login/verify-2fa', zValidator('json', verify2FASchema), async 
     `).bind(userId).first();
 
     if (!user) {
-      return c.json({ error: 'User not found' }, 401);
+      return c.json({ error: 'Invalid Credentials', message: 'Invalid email or password' }, 401);
     }
 
     // Get 2FA info
@@ -559,8 +608,9 @@ authRoutes.post('/login/verify-2fa', zValidator('json', verify2FASchema), async 
         `).bind(JSON.stringify(hashedCodes), usedCount, userId).run();
       }
     } else {
-      // Verify TOTP code
-      isValid = await verifyTOTP(twoFa.secret as string, code);
+      // Decrypt secret and verify TOTP code
+      const decryptedSecret = await decryptSecret(twoFa.secret as string, c.env.JWT_SECRET);
+      isValid = await verifyTOTP(decryptedSecret, code);
     }
 
     if (!isValid) {
@@ -1137,8 +1187,7 @@ authRoutes.post('/refresh', async (c) => {
     // Check if refresh token has been blacklisted
     if (c.env.CACHE) {
       try {
-        const { hashToken: hashTokenFn } = await import('../middleware/auth');
-        const key = `blacklist:${await hashTokenFn(refreshToken)}`;
+        const key = `blacklist:${await hashToken(refreshToken)}`;
         const revoked = await c.env.CACHE.get(key);
         if (revoked !== null) {
           return c.json({ error: 'Token has been revoked' }, 401);

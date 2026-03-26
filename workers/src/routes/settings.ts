@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
+import { verify } from 'hono/jwt';
 import type { Env } from '../index';
+import { blacklistToken } from '../middleware/auth';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -486,7 +488,10 @@ app.post('/2fa/setup', async (c) => {
     const accountName = (userRecord?.email as string) || 'user@ohcs.gov.gh';
     const otpauthUrl = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(accountName)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
 
-    // Store secret (not enabled yet)
+    // Encrypt secret before storing at rest
+    const encryptedSecret = await encryptSecret(secret, c.env.JWT_SECRET);
+
+    // Store encrypted secret (not enabled yet)
     const existing = await c.env.DB.prepare(`
       SELECT id FROM user_2fa WHERE userId = ?
     `).bind(userId).first();
@@ -494,11 +499,11 @@ app.post('/2fa/setup', async (c) => {
     if (existing) {
       await c.env.DB.prepare(`
         UPDATE user_2fa SET secret = ?, isEnabled = 0 WHERE userId = ?
-      `).bind(secret, userId).run();
+      `).bind(encryptedSecret, userId).run();
     } else {
       await c.env.DB.prepare(`
         INSERT INTO user_2fa (id, userId, secret, isEnabled) VALUES (?, ?, ?, 0)
-      `).bind(crypto.randomUUID(), userId, secret).run();
+      `).bind(crypto.randomUUID(), userId, encryptedSecret).run();
     }
 
     return c.json({
@@ -531,8 +536,11 @@ app.post('/2fa/verify', async (c) => {
       return c.json({ error: '2FA not initialized' }, 400);
     }
 
+    // Decrypt secret before verification
+    const decryptedSecret = await decryptSecret(twoFa.secret as string, c.env.JWT_SECRET);
+
     // Verify TOTP code
-    const isValid = await verifyTOTP(twoFa.secret as string, code);
+    const isValid = await verifyTOTP(decryptedSecret, code);
 
     if (!isValid) {
       return c.json({ error: 'Invalid verification code. Please try again.' }, 400);
@@ -582,8 +590,11 @@ app.delete('/2fa', async (c) => {
       return c.json({ error: '2FA not enabled' }, 400);
     }
 
+    // Decrypt secret before verification
+    const decryptedSecret = await decryptSecret(twoFa.secret as string, c.env.JWT_SECRET);
+
     // Verify TOTP code
-    const isValid = await verifyTOTP(twoFa.secret as string, code);
+    const isValid = await verifyTOTP(decryptedSecret, code);
     if (!isValid) {
       return c.json({ error: 'Invalid verification code. Please enter a valid code from your authenticator app.' }, 400);
     }
@@ -674,8 +685,11 @@ app.post('/2fa/backup/regenerate', async (c) => {
       return c.json({ error: '2FA not enabled' }, 400);
     }
 
+    // Decrypt secret before verification
+    const decryptedSecret = await decryptSecret(twoFa.secret as string, c.env.JWT_SECRET);
+
     // Verify current TOTP code before regenerating backup codes
-    const isValid = await verifyTOTP(twoFa.secret as string, code);
+    const isValid = await verifyTOTP(decryptedSecret, code);
     if (!isValid) {
       return c.json({ error: 'Invalid verification code' }, 400);
     }
@@ -1332,6 +1346,45 @@ app.post('/password', async (c) => {
       UPDATE user_sessions SET isRevoked = 1 WHERE userId = ? AND isCurrent = 0
     `).bind(userId).run();
 
+    // Blacklist all active session tokens for this user (force re-login)
+    if (c.env.CACHE) {
+      try {
+        const sessions = await c.env.DB.prepare(`
+          SELECT token FROM sessions WHERE userId = ? AND expiresAt > datetime('now')
+        `).bind(userId).all();
+
+        for (const session of sessions.results || []) {
+          if (session.token) {
+            try {
+              const sessionPayload = await verify(session.token as string, c.env.JWT_SECRET);
+              if (sessionPayload.exp) {
+                const remainingTtl = Math.max(0, (sessionPayload.exp as number) - Math.floor(Date.now() / 1000));
+                await blacklistToken(c.env.CACHE, session.token as string, remainingTtl);
+              }
+            } catch (_) {
+              // Token already expired or invalid
+            }
+          }
+        }
+
+        // Also blacklist the current request's access token
+        const currentToken = c.req.header('Authorization')?.replace('Bearer ', '');
+        if (currentToken) {
+          try {
+            const currentPayload = await verify(currentToken, c.env.JWT_SECRET);
+            if (currentPayload.exp) {
+              const remainingTtl = Math.max(0, (currentPayload.exp as number) - Math.floor(Date.now() / 1000));
+              await blacklistToken(c.env.CACHE, currentToken, remainingTtl);
+            }
+          } catch (_) {
+            // Best effort
+          }
+        }
+      } catch (e) {
+        console.error('Failed to blacklist tokens on password change:', e);
+      }
+    }
+
     return c.json({ success: true });
   } catch (error) {
     console.error('Error changing password:', error);
@@ -1391,6 +1444,54 @@ function parseUserAgent(ua: string): {
   }
 
   return { browser, browserVersion, os, osVersion, deviceType };
+}
+
+// =====================================================
+// AES-GCM Encryption for 2FA Secrets at Rest
+// =====================================================
+
+async function encryptSecret(plaintext: string, encryptionKey: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(encryptionKey.slice(0, 32).padEnd(32, '0')),
+    { name: 'AES-GCM' },
+    false,
+    ['encrypt']
+  );
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    keyMaterial,
+    encoder.encode(plaintext)
+  );
+  const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('');
+  const ctHex = Array.from(new Uint8Array(ciphertext)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${ivHex}:${ctHex}`;
+}
+
+async function decryptSecret(encrypted: string, encryptionKey: string): Promise<string> {
+  const [ivHex, ctHex] = encrypted.split(':');
+  if (!ivHex || !ctHex) return encrypted; // Plaintext fallback for legacy data
+  // Legacy plaintext secrets won't have a valid hex IV of exactly 24 chars (12 bytes)
+  if (ivHex.length !== 24) return encrypted;
+  try {
+    const iv = new Uint8Array(ivHex.match(/.{2}/g)!.map(b => parseInt(b, 16)));
+    const ct = new Uint8Array(ctHex.match(/.{2}/g)!.map(b => parseInt(b, 16)));
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(encryptionKey.slice(0, 32).padEnd(32, '0')),
+      { name: 'AES-GCM' },
+      false,
+      ['decrypt']
+    );
+    const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, keyMaterial, ct);
+    return new TextDecoder().decode(plaintext);
+  } catch {
+    // Decryption failed — treat as plaintext (legacy data)
+    return encrypted;
+  }
 }
 
 // =====================================================

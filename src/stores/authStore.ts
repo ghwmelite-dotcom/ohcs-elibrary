@@ -567,8 +567,9 @@ export const useAuthStore = create<AuthStore>()(
 
       logout: async () => {
         const token = get().token;
+        const currentRefreshToken = get().refreshToken;
 
-        // Call logout API if we have a token
+        // Call logout API if we have a token — send refresh token in body for server-side blacklisting
         if (token) {
           try {
             await fetch(`${API_BASE}/auth/logout`, {
@@ -577,6 +578,9 @@ export const useAuthStore = create<AuthStore>()(
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
               },
+              body: JSON.stringify({
+                refreshToken: currentRefreshToken || undefined,
+              }),
             });
           } catch (e) {
             // Ignore logout API errors
@@ -587,6 +591,7 @@ export const useAuthStore = create<AuthStore>()(
         localStorage.removeItem('auth_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('auth_user');
+        localStorage.removeItem('demo_expiry');
 
         set({
           user: null,
