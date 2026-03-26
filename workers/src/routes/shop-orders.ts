@@ -87,7 +87,7 @@ async function initializePaystackTransaction(
 }
 
 async function verifyPaystackTransaction(secretKey: string, reference: string) {
-  const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+  const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${secretKey}`,
@@ -237,8 +237,8 @@ orderRoutes.post('/checkout/discount', async (c) => {
 
     const discount = await c.env.DB.prepare(`
       SELECT
-        id, code, type, value, minPurchase, maxDiscount,
-        usageLimit, usageCount, startDate, endDate, isActive
+        id, code, discountType, discountValue, minimumPurchase, maximumDiscount,
+        usageLimit, usageCount, startsAt, expiresAt, isActive
       FROM shop_discount_codes
       WHERE code = ? AND isActive = 1
     `).bind(code.toUpperCase()).first();
@@ -248,13 +248,13 @@ orderRoutes.post('/checkout/discount', async (c) => {
     }
 
     const now = new Date();
-    if (discount.startDate && new Date(discount.startDate) > now) {
+    if (discount.startsAt && new Date(discount.startsAt as string) > now) {
       return c.json({ error: 'Discount code is not yet active' }, 400);
     }
-    if (discount.endDate && new Date(discount.endDate) < now) {
+    if (discount.expiresAt && new Date(discount.expiresAt as string) < now) {
       return c.json({ error: 'Discount code has expired' }, 400);
     }
-    if (discount.usageLimit && discount.usageCount >= discount.usageLimit) {
+    if (discount.usageLimit && (discount.usageCount as number) >= (discount.usageLimit as number)) {
       return c.json({ error: 'Discount code usage limit reached' }, 400);
     }
 
@@ -272,10 +272,10 @@ orderRoutes.post('/checkout/discount', async (c) => {
       discount: {
         id: discount.id,
         code: discount.code,
-        type: discount.type, // 'percentage' or 'fixed'
-        value: discount.value,
-        minPurchase: discount.minPurchase,
-        maxDiscount: discount.maxDiscount,
+        type: discount.discountType, // 'percentage' or 'fixed_amount'
+        value: discount.discountValue,
+        minPurchase: discount.minimumPurchase,
+        maxDiscount: discount.maximumDiscount,
       },
     });
   } catch (error) {
@@ -410,22 +410,22 @@ orderRoutes.post('/checkout', async (c) => {
     let discountCodeId = null;
     if (checkoutData.discountCode) {
       const discountResult = await c.env.DB.prepare(`
-        SELECT id, type, value, minPurchase, maxDiscount
+        SELECT id, discountType, discountValue, minimumPurchase, maximumDiscount
         FROM shop_discount_codes
         WHERE code = ? AND isActive = 1
       `).bind(checkoutData.discountCode.toUpperCase()).first();
 
       if (discountResult) {
-        if (!discountResult.minPurchase || subtotal >= discountResult.minPurchase) {
-          if (discountResult.type === 'percentage') {
-            discount = subtotal * (discountResult.value / 100);
+        if (!discountResult.minimumPurchase || subtotal >= (discountResult.minimumPurchase as number)) {
+          if (discountResult.discountType === 'percentage') {
+            discount = subtotal * ((discountResult.discountValue as number) / 100);
           } else {
-            discount = discountResult.value;
+            discount = discountResult.discountValue as number;
           }
-          if (discountResult.maxDiscount && discount > discountResult.maxDiscount) {
-            discount = discountResult.maxDiscount;
+          if (discountResult.maximumDiscount && discount > (discountResult.maximumDiscount as number)) {
+            discount = discountResult.maximumDiscount as number;
           }
-          discountCodeId = discountResult.id;
+          discountCodeId = discountResult.id as string;
         }
       }
     }
@@ -612,15 +612,13 @@ orderRoutes.post('/checkout', async (c) => {
         WHERE id = ?
       `).bind(paystackResult.data.reference, paystackResult.data.access_code, paymentId).run();
     } else {
-      // Paystack initialization failed - include error in response
-      console.error('Paystack initialization failed:', paystackResult);
+      // Paystack initialization failed - log full details, return safe message
+      console.error('Paystack initialization failed:', JSON.stringify(paystackResult));
       return c.json({
         success: false,
-        error: 'Payment gateway initialization failed',
-        paystackError: paystackResult.message || 'Unknown Paystack error',
-        details: JSON.stringify(paystackResult),
+        error: 'Payment gateway initialization failed. Please try again or contact support.',
         orderNumber,
-      }, 400);
+      }, 502);
     }
 
     return c.json({
@@ -640,7 +638,6 @@ orderRoutes.post('/checkout', async (c) => {
     console.error('Error creating order:', error);
     return c.json({
       error: 'Failed to create order',
-      details: error?.message || String(error)
     }, 500);
   }
 });
@@ -687,6 +684,20 @@ orderRoutes.post('/checkout/verify', zValidator('json', verifyPaymentSchema), as
       return c.json({
         error: 'Payment verification failed',
         details: paystackResult.message || 'Transaction not successful'
+      }, 400);
+    }
+
+    // Validate that the amount paid matches the order total (amount is in pesewas/kobo)
+    const paidAmountInCurrency = paystackResult.data.amount / 100;
+    if (Math.abs(paidAmountInCurrency - (order.total as number)) > 0.01) {
+      console.error('Payment amount mismatch:', {
+        paid: paidAmountInCurrency,
+        expected: order.total,
+        orderNumber: order.orderNumber,
+      });
+      return c.json({
+        error: 'Payment amount mismatch',
+        details: 'The amount paid does not match the order total',
       }, 400);
     }
 

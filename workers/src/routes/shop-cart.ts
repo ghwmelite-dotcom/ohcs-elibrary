@@ -167,7 +167,6 @@ cartRoutes.post('/', zValidator('json', addToCartSchema), async (c) => {
     console.error('Error adding to cart:', error);
     return c.json({
       error: 'Failed to add to cart',
-      details: error?.message || String(error)
     }, 500);
   }
 });

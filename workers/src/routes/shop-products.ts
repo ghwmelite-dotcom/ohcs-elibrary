@@ -15,7 +15,7 @@ const createProductSchema = z.object({
   categoryId: z.string().uuid(),
 
   // Pricing
-  price: z.number().min(0),
+  price: z.number().min(0.01, 'Price must be greater than zero'),
   compareAtPrice: z.number().min(0).optional(),
   currency: z.string().default('GHS'),
 
@@ -247,12 +247,12 @@ productRoutes.get('/:id', async (c) => {
 
   const productId = c.req.param('id');
 
-  const seller = await getSellerProfile(c, user.userId);
-  if (!seller) {
-    return c.json({ error: 'Seller profile not found' }, 404);
-  }
-
   try {
+    const seller = await getSellerProfile(c, user.userId);
+    if (!seller) {
+      return c.json({ error: 'Seller profile not found' }, 404);
+    }
+
     const product = await c.env.DB.prepare(`
       SELECT
         p.*,
@@ -1492,7 +1492,7 @@ productRoutes.post('/reviews', async (c) => {
       SELECT oi.id
       FROM shop_order_items oi
       JOIN shop_orders o ON oi.orderId = o.id
-      WHERE oi.productId = ? AND o.userId = ? AND o.paymentStatus = 'completed'
+      WHERE oi.productId = ? AND o.userId = ? AND o.paymentStatus = 'paid'
       LIMIT 1
     `).bind(productId, user.id).first();
 
@@ -1810,7 +1810,7 @@ productRoutes.get('/reviews/can-review/:productId', async (c) => {
       SELECT oi.id, o.createdAt as purchaseDate
       FROM shop_order_items oi
       JOIN shop_orders o ON oi.orderId = o.id
-      WHERE oi.productId = ? AND o.userId = ? AND o.paymentStatus = 'completed'
+      WHERE oi.productId = ? AND o.userId = ? AND o.paymentStatus = 'paid'
       LIMIT 1
     `).bind(productId, user.id).first();
 
@@ -1844,7 +1844,21 @@ productRoutes.post('/reviews/:reviewId/helpful', async (c) => {
       return c.json({ error: 'Review not found' }, 404);
     }
 
-    // Update helpful count (simplified - could track individual votes)
+    // Check if user already voted on this review
+    const existingVote = await c.env.DB.prepare(`
+      SELECT id FROM shop_review_votes WHERE reviewId = ? AND userId = ?
+    `).bind(reviewId, user.id).first();
+
+    if (existingVote) {
+      return c.json({ error: 'You have already voted on this review' }, 400);
+    }
+
+    // Record vote and update helpful count
+    await c.env.DB.prepare(`
+      INSERT INTO shop_review_votes (id, reviewId, userId, isHelpful, createdAt)
+      VALUES (?, ?, ?, 1, datetime('now'))
+    `).bind(crypto.randomUUID(), reviewId, user.id).run();
+
     await c.env.DB.prepare(`
       UPDATE shop_product_reviews
       SET helpfulCount = helpfulCount + 1

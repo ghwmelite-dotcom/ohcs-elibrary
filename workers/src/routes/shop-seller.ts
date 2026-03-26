@@ -492,8 +492,10 @@ sellerRoutes.get('/admin/applications', async (c) => {
 
   try {
     let whereClause = '';
+    const queryBindings: any[] = [];
     if (status !== 'all') {
-      whereClause = `WHERE sa.status = '${status}'`;
+      whereClause = 'WHERE sa.status = ?';
+      queryBindings.push(status);
     }
 
     const applications = await c.env.DB.prepare(`
@@ -515,11 +517,11 @@ sellerRoutes.get('/admin/applications', async (c) => {
         END,
         sa.submittedAt DESC
       LIMIT ? OFFSET ?
-    `).bind(limit, offset).all();
+    `).bind(...queryBindings, limit, offset).all();
 
     const countResult = await c.env.DB.prepare(`
       SELECT COUNT(*) as total FROM seller_applications sa ${whereClause}
-    `).first();
+    `).bind(...queryBindings).first();
 
     // Get status counts
     const statusCounts = await c.env.DB.prepare(`
@@ -745,8 +747,10 @@ sellerRoutes.get('/admin/sellers', async (c) => {
 
   try {
     let whereClause = '';
+    const sellerBindings: any[] = [];
     if (status !== 'all') {
-      whereClause = `WHERE sp.status = '${status}'`;
+      whereClause = 'WHERE sp.status = ?';
+      sellerBindings.push(status);
     }
 
     const sellers = await c.env.DB.prepare(`
@@ -760,11 +764,11 @@ sellerRoutes.get('/admin/sellers', async (c) => {
       ${whereClause}
       ORDER BY sp.createdAt DESC
       LIMIT ? OFFSET ?
-    `).bind(limit, offset).all();
+    `).bind(...sellerBindings, limit, offset).all();
 
     const countResult = await c.env.DB.prepare(`
       SELECT COUNT(*) as total FROM seller_profiles sp ${whereClause}
-    `).first();
+    `).bind(...sellerBindings).first();
 
     return c.json({
       sellers: sellers.results,
