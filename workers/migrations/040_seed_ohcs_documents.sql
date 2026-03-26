@@ -1,6 +1,10 @@
 -- Seed Document Library with real Ghana Civil Service documents from ohcs.gov.gh
 -- Uses INSERT OR IGNORE for idempotent re-runs
 
+-- Ensure system user exists for authorId FK
+INSERT OR IGNORE INTO users (id, email, passwordHash, displayName, firstName, lastName, role, isActive, createdAt, updatedAt)
+VALUES ('system', 'system@ohcs.gov.gh', 'SYSTEM_NO_LOGIN', 'OHCS System', 'OHCS', 'System', 'admin', 1, datetime('now'), datetime('now'));
+
 -- ============================================================================
 -- COMPLIANCE & LEGAL (4 documents)
 -- ============================================================================

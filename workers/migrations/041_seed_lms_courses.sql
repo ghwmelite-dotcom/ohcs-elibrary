@@ -1,6 +1,10 @@
 -- Migration 041: Seed 5 LMS courses for Ghana Civil Service training
 -- Courses, modules, and lessons with real educational content
 
+-- Ensure system user exists for instructorId FK
+INSERT OR IGNORE INTO users (id, email, passwordHash, displayName, firstName, lastName, role, isActive, createdAt, updatedAt)
+VALUES ('system', 'system@ohcs.gov.gh', 'SYSTEM_NO_LOGIN', 'OHCS System', 'OHCS', 'System', 'admin', 1, datetime('now'), datetime('now'));
+
 -- =====================================================
 -- COURSE 1: Public Service Ethics & Integrity
 -- =====================================================
