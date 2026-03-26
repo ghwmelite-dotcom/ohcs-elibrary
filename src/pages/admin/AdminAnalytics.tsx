@@ -37,11 +37,20 @@ import {
   Trophy,
   Sparkles,
   Loader2,
+  Server,
+  Database,
+  HardDrive,
+  Wifi,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  MonitorDot,
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
 import { cn } from '@/utils/cn';
 import { format, subDays, subHours } from 'date-fns';
 import { useAnalyticsStore } from '@/stores/analyticsStore';
+import { useAuthStore } from '@/stores/authStore';
 import type { ActivityItem as ActivityItemType, TopContent as TopContentType, MDAStats } from '@/types/analytics';
 
 // Animated Background Component
@@ -480,6 +489,465 @@ function TopContentCard({ item, rank }: { item: TopContentType; rank: number }) 
   );
 }
 
+// ─── Types for monitoring data ────────────────────────────────────────────────
+
+interface ServiceHealth {
+  status: 'up' | 'down';
+  latencyMs?: number;
+}
+
+interface HealthCheckResponse {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  timestamp: string;
+  environment: string;
+  version: string;
+  services: {
+    database: ServiceHealth;
+    r2Storage: ServiceHealth;
+    kvCache: ServiceHealth;
+    ai: ServiceHealth;
+  };
+}
+
+interface QuickStatsResponse {
+  requests: number;
+  avgResponseTimeMs: number;
+  uptimePercent: number;
+}
+
+interface ErrorTrendItem {
+  date: string;
+  count: number;
+}
+
+interface RecentErrorItem {
+  id: string;
+  path: string;
+  message: string;
+  timestamp: string;
+  statusCode: number;
+}
+
+// ─── SystemHealthPanel component ──────────────────────────────────────────────
+
+const API_URL = import.meta.env.VITE_API_URL || '';
+
+function ServiceStatusBadge({ status }: { status: 'up' | 'down' | 'unknown' }) {
+  if (status === 'up') {
+    return (
+      <span className="flex items-center gap-1 text-success-600 dark:text-success-400 text-xs font-semibold">
+        <CheckCircle className="w-3.5 h-3.5" />
+        Operational
+      </span>
+    );
+  }
+  if (status === 'down') {
+    return (
+      <span className="flex items-center gap-1 text-error-600 dark:text-error-400 text-xs font-semibold">
+        <XCircle className="w-3.5 h-3.5" />
+        Down
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-1 text-surface-400 text-xs font-semibold">
+      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+      Checking…
+    </span>
+  );
+}
+
+interface ServiceCardProps {
+  label: string;
+  icon: React.ElementType;
+  iconColor: string;
+  status: 'up' | 'down' | 'unknown';
+  latencyMs?: number;
+  delay: number;
+}
+
+function ServiceCard({ label, icon: Icon, iconColor, status, latencyMs, delay }: ServiceCardProps) {
+  const borderColor =
+    status === 'up'
+      ? 'border-success-200 dark:border-success-800/50'
+      : status === 'down'
+        ? 'border-error-200 dark:border-error-800/50'
+        : 'border-surface-200 dark:border-surface-700';
+
+  const bgGlow =
+    status === 'up'
+      ? 'bg-success-50 dark:bg-success-900/10'
+      : status === 'down'
+        ? 'bg-error-50 dark:bg-error-900/10'
+        : 'bg-surface-50 dark:bg-surface-800';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.35 }}
+      className={cn(
+        'rounded-2xl p-5 border shadow-sm flex flex-col gap-3',
+        borderColor,
+        bgGlow
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{ backgroundColor: `${iconColor}15` }}
+        >
+          <Icon className="w-5 h-5" style={{ color: iconColor }} />
+        </div>
+        <ServiceStatusBadge status={status} />
+      </div>
+      <div>
+        <p className="font-semibold text-surface-900 dark:text-surface-50">{label}</p>
+        {latencyMs !== undefined && status === 'up' && (
+          <p className="text-xs text-surface-400 mt-0.5">{latencyMs} ms latency</p>
+        )}
+        {status === 'down' && (
+          <p className="text-xs text-error-500 mt-0.5">Service unreachable</p>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function SystemHealthPanel() {
+  const [health, setHealth] = useState<HealthCheckResponse | null>(null);
+  const [reqMetrics, setReqMetrics] = useState<QuickStatsResponse | null>(null);
+  const [errorTrend, setErrorTrend] = useState<ErrorTrendItem[] | null>(null);
+  const [recentErrors, setRecentErrors] = useState<RecentErrorItem[] | null>(null);
+  const [loadingHealth, setLoadingHealth] = useState(true);
+  const [errorTrendUnavailable, setErrorTrendUnavailable] = useState(false);
+  const [recentErrorsUnavailable, setRecentErrorsUnavailable] = useState(false);
+
+  const token = useAuthStore.getState().token;
+
+  const authHeaders: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  const fetchAll = useCallback(async () => {
+    setLoadingHealth(true);
+
+    // Health check (public endpoint — no auth needed)
+    try {
+      const res = await fetch(`${API_URL}/health`);
+      if (res.ok) setHealth(await res.json());
+    } catch {
+      // Network error — leave health as null
+    }
+
+    // Quick stats (auth-protected)
+    try {
+      const res = await fetch(`${API_URL}/api/v1/analytics/quick-stats`, { headers: authHeaders });
+      if (res.ok) setReqMetrics(await res.json());
+    } catch {
+      // Non-fatal
+    }
+
+    // Error trend (may not exist yet — graceful 404 handling)
+    try {
+      const res = await fetch(`${API_URL}/api/v1/analytics/errors/trend`, { headers: authHeaders });
+      if (res.status === 404 || res.status === 501) {
+        setErrorTrendUnavailable(true);
+      } else if (res.ok) {
+        setErrorTrend(await res.json());
+      }
+    } catch {
+      setErrorTrendUnavailable(true);
+    }
+
+    // Recent errors (may not exist yet — graceful 404 handling)
+    try {
+      const res = await fetch(`${API_URL}/api/v1/analytics/errors/recent`, { headers: authHeaders });
+      if (res.status === 404 || res.status === 501) {
+        setRecentErrorsUnavailable(true);
+      } else if (res.ok) {
+        setRecentErrors(await res.json());
+      }
+    } catch {
+      setRecentErrorsUnavailable(true);
+    }
+
+    setLoadingHealth(false);
+  }, []);
+
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
+
+  const overallStatusColor =
+    health?.status === 'healthy'
+      ? '#10B981'
+      : health?.status === 'degraded'
+        ? '#F59E0B'
+        : health?.status === 'unhealthy'
+          ? '#EF4444'
+          : '#6B7280';
+
+  const overallStatusLabel =
+    health?.status === 'healthy'
+      ? 'All Systems Operational'
+      : health?.status === 'degraded'
+        ? 'Partial Outage'
+        : health?.status === 'unhealthy'
+          ? 'Major Outage'
+          : 'Checking…';
+
+  const serviceList: Omit<ServiceCardProps, 'delay'>[] = [
+    {
+      label: 'D1 Database',
+      icon: Database,
+      iconColor: '#3B82F6',
+      status: health ? health.services.database.status : 'unknown',
+      latencyMs: health?.services.database.latencyMs,
+    },
+    {
+      label: 'R2 Storage',
+      icon: HardDrive,
+      iconColor: '#8B5CF6',
+      status: health ? health.services.r2Storage.status : 'unknown',
+    },
+    {
+      label: 'KV Cache',
+      icon: Server,
+      iconColor: '#10B981',
+      status: health ? health.services.kvCache.status : 'unknown',
+    },
+    {
+      label: 'AI (Workers AI)',
+      icon: Sparkles,
+      iconColor: '#F59E0B',
+      status: health ? health.services.ai.status : 'unknown',
+    },
+  ];
+
+  const maxErrorCount = errorTrend ? Math.max(...errorTrend.map(e => e.count), 1) : 1;
+
+  return (
+    <div className="space-y-6">
+      {/* Overall Status Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between bg-white dark:bg-surface-800 rounded-2xl p-5 shadow-sm"
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: `${overallStatusColor}15` }}
+          >
+            <Activity className="w-6 h-6" style={{ color: overallStatusColor }} />
+          </div>
+          <div>
+            <p className="text-sm text-surface-500 dark:text-surface-400">Overall Status</p>
+            <p className="text-lg font-bold text-surface-900 dark:text-surface-50">{overallStatusLabel}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          {health && (
+            <div className="hidden sm:flex flex-col items-end">
+              <p className="text-xs text-surface-400">Last checked</p>
+              <p className="text-sm font-medium text-surface-700 dark:text-surface-300">
+                {new Date(health.timestamp).toLocaleTimeString()}
+              </p>
+            </div>
+          )}
+          <button
+            onClick={fetchAll}
+            disabled={loadingHealth}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-100 dark:bg-surface-700 text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={cn('w-4 h-4', loadingHealth && 'animate-spin')} />
+            Refresh
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Service Status Cards */}
+      <div>
+        <h3 className="text-sm font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-3">
+          Service Status
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {serviceList.map((svc, i) => (
+            <ServiceCard key={svc.label} {...svc} delay={i * 0.07} />
+          ))}
+        </div>
+      </div>
+
+      {/* Request Metrics */}
+      <div>
+        <h3 className="text-sm font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-3">
+          Request Metrics (Today)
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[
+            {
+              label: "Today's Requests",
+              value: reqMetrics ? reqMetrics.requests.toLocaleString() : '—',
+              icon: Wifi,
+              color: '#3B82F6',
+            },
+            {
+              label: 'Avg Response Time',
+              value: reqMetrics ? `${reqMetrics.avgResponseTimeMs} ms` : '—',
+              icon: Zap,
+              color: '#10B981',
+            },
+            {
+              label: 'Uptime',
+              value: reqMetrics ? `${reqMetrics.uptimePercent.toFixed(2)}%` : '—',
+              icon: Activity,
+              color: '#006B3F',
+            },
+          ].map((item, i) => (
+            <motion.div
+              key={item.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.28 + i * 0.07 }}
+              className="bg-white dark:bg-surface-800 rounded-2xl p-5 shadow-sm flex items-center gap-4"
+            >
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: `${item.color}15` }}
+              >
+                <item.icon className="w-5 h-5" style={{ color: item.color }} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-surface-900 dark:text-surface-50">{item.value}</p>
+                <p className="text-xs text-surface-500 mt-0.5">{item.label}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Error Trend Chart */}
+      <div className="bg-white dark:bg-surface-800 rounded-2xl p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h3 className="font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-error-500" />
+              Error Trend (7 days)
+            </h3>
+            <p className="text-sm text-surface-500 mt-0.5">Server-side 5xx errors per day</p>
+          </div>
+        </div>
+
+        {errorTrendUnavailable ? (
+          <div className="flex items-center justify-center h-40 rounded-xl border-2 border-dashed border-surface-200 dark:border-surface-700">
+            <div className="text-center">
+              <AlertTriangle className="w-8 h-8 text-surface-300 mx-auto mb-2" />
+              <p className="text-sm font-medium text-surface-500">Error tracking not available</p>
+              <p className="text-xs text-surface-400 mt-1">This feature will be enabled in a future release.</p>
+            </div>
+          </div>
+        ) : errorTrend === null ? (
+          <div className="flex items-center justify-center h-40">
+            <Loader2 className="w-6 h-6 animate-spin text-surface-400" />
+          </div>
+        ) : (
+          <div className="flex items-end gap-2 h-40">
+            {errorTrend.map((point, i) => {
+              const pct = (point.count / maxErrorCount) * 100;
+              return (
+                <div key={point.date} className="flex-1 flex flex-col items-center gap-2">
+                  <div className="w-full flex items-end justify-center h-32">
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: `${Math.max(pct, 2)}%` }}
+                      transition={{ delay: i * 0.06, duration: 0.5, ease: 'easeOut' }}
+                      className="w-full max-w-[32px] rounded-t-md bg-error-400 dark:bg-error-500 relative group cursor-pointer"
+                    >
+                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-surface-900 text-white px-2 py-0.5 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        {point.count} errors
+                      </div>
+                    </motion.div>
+                  </div>
+                  <span className="text-[10px] text-surface-400 font-medium">
+                    {new Date(point.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Recent Errors */}
+      <div className="bg-white dark:bg-surface-800 rounded-2xl p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h3 className="font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-error-500" />
+              Recent Errors
+            </h3>
+            <p className="text-sm text-surface-500 mt-0.5">Last 10 server errors</p>
+          </div>
+        </div>
+
+        {recentErrorsUnavailable ? (
+          <div className="flex items-center justify-center h-32 rounded-xl border-2 border-dashed border-surface-200 dark:border-surface-700">
+            <div className="text-center">
+              <AlertTriangle className="w-8 h-8 text-surface-300 mx-auto mb-2" />
+              <p className="text-sm font-medium text-surface-500">Error tracking not available</p>
+              <p className="text-xs text-surface-400 mt-1">This feature will be enabled in a future release.</p>
+            </div>
+          </div>
+        ) : recentErrors === null ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="w-6 h-6 animate-spin text-surface-400" />
+          </div>
+        ) : recentErrors.length === 0 ? (
+          <div className="flex items-center justify-center h-32 rounded-xl border-2 border-dashed border-success-200 dark:border-success-800/50 bg-success-50 dark:bg-success-900/10">
+            <div className="text-center">
+              <CheckCircle className="w-8 h-8 text-success-500 mx-auto mb-2" />
+              <p className="text-sm font-medium text-success-600 dark:text-success-400">No recent errors</p>
+            </div>
+          </div>
+        ) : (
+          <div className="divide-y divide-surface-100 dark:divide-surface-700/50">
+            {recentErrors.map((err, i) => (
+              <motion.div
+                key={err.id}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className="flex items-start gap-3 py-3"
+              >
+                <div className="w-8 h-8 rounded-lg bg-error-100 dark:bg-error-900/30 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-error-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-mono font-semibold text-surface-700 dark:text-surface-300 truncate max-w-[200px]">
+                      {err.path}
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-error-100 dark:bg-error-900/40 text-error-600 dark:text-error-400">
+                      {err.statusCode}
+                    </span>
+                  </div>
+                  <p className="text-sm text-surface-600 dark:text-surface-400 truncate mt-0.5">{err.message}</p>
+                </div>
+                <p className="text-xs text-surface-400 flex-shrink-0 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {new Date(err.timestamp).toLocaleTimeString()}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminAnalytics() {
   const [selectedTab, setSelectedTab] = useState('overview');
   const [dateRange, setDateRange] = useState('30d');
@@ -597,6 +1065,7 @@ export default function AdminAnalytics() {
     { id: 'content', label: 'Content', icon: FileText },
     { id: 'engagement', label: 'Engagement', icon: Activity },
     { id: 'mdas', label: 'MDAs', icon: Building2 },
+    { id: 'monitoring', label: 'Monitoring', icon: MonitorDot },
   ];
 
   const dateRanges = [
@@ -700,8 +1169,23 @@ export default function AdminAnalytics() {
           })}
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        {/* ── Monitoring Tab ── */}
+        <AnimatePresence mode="wait">
+          {selectedTab === 'monitoring' && (
+            <motion.div
+              key="monitoring"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <SystemHealthPanel />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Stats Grid — hidden on Monitoring tab */}
+        <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4', selectedTab === 'monitoring' && 'hidden')}>
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -714,8 +1198,8 @@ export default function AdminAnalytics() {
           ))}
         </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content — hidden on Monitoring tab */}
+        <div className={cn('grid grid-cols-1 lg:grid-cols-3 gap-6', selectedTab === 'monitoring' && 'hidden')}>
           {/* User Growth Chart */}
           <div className="lg:col-span-2 bg-white dark:bg-surface-800 rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
@@ -767,8 +1251,8 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        {/* Second Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {/* Second Row — hidden on Monitoring tab */}
+        <div className={cn('grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6', selectedTab === 'monitoring' && 'hidden')}>
           {/* Content Distribution */}
           <div className="bg-white dark:bg-surface-800 rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
@@ -852,8 +1336,8 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        {/* Activity Heatmap */}
-        <div className="bg-white dark:bg-surface-800 rounded-2xl p-6 shadow-sm">
+        {/* Activity Heatmap — hidden on Monitoring tab */}
+        <div className={cn('bg-white dark:bg-surface-800 rounded-2xl p-6 shadow-sm', selectedTab === 'monitoring' && 'hidden')}>
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
@@ -879,8 +1363,8 @@ export default function AdminAnalytics() {
           <HeatMap data={heatMapData} />
         </div>
 
-        {/* MDA Leaderboard */}
-        <div className="bg-white dark:bg-surface-800 rounded-2xl p-6 shadow-sm">
+        {/* MDA Leaderboard — hidden on Monitoring tab */}
+        <div className={cn('bg-white dark:bg-surface-800 rounded-2xl p-6 shadow-sm', selectedTab === 'monitoring' && 'hidden')}>
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="font-semibold text-surface-900 dark:text-surface-50 flex items-center gap-2">
@@ -916,8 +1400,8 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        {/* Quick Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Quick Stats Row — hidden on Monitoring tab */}
+        <div className={cn('grid grid-cols-2 md:grid-cols-4 gap-4', selectedTab === 'monitoring' && 'hidden')}>
           {quickStatsDisplay.map((item) => (
             <motion.div
               key={item.label}
