@@ -77,7 +77,7 @@ export function Header() {
         !sidebar.isCollapsed && 'lg:left-64'
       )}
     >
-      <div className="h-full flex items-center justify-between px-4 lg:px-6">
+      <div className="h-full flex items-center justify-between px-3 lg:px-5 overflow-hidden">
         {/* Left section */}
         <div className="flex items-center gap-4">
           <button
@@ -111,8 +111,8 @@ export function Header() {
           </button>
         </div>
 
-        {/* Right section */}
-        <div className="flex items-center">
+        {/* Right section — never wrap, shrink gracefully */}
+        <div className="flex items-center flex-shrink-0">
           {/* Group 1: XP Badge (desktop only) */}
           {stats && (
             <Link
@@ -144,10 +144,10 @@ export function Header() {
           </div>
 
           {/* Divider */}
-          <div className="hidden md:block w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
+          <div className="hidden lg:block w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
 
-          {/* Group 3: Shop (wishlist + cart) */}
-          <div className="flex items-center gap-0.5">
+          {/* Group 3: Shop (wishlist + cart) — hidden on small screens */}
+          <div className="hidden lg:flex items-center">
             <Link
               to="/shop/wishlist"
               className="relative p-2 text-surface-500 hover:text-red-500 dark:text-surface-400 dark:hover:text-red-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
@@ -184,10 +184,12 @@ export function Header() {
           </div>
 
           {/* Divider */}
-          <div className="w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
+          <div className="hidden sm:block w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
 
           {/* Group 4: Social + Notifications */}
           <div className="flex items-center">
+          {/* Friend requests — hidden on small mobile */}
+          <div className="hidden sm:block">
           <Dropdown
             trigger={
               <button
@@ -294,8 +296,9 @@ export function Header() {
               </Link>
             </div>
           </Dropdown>
+          </div> {/* End friend requests hidden wrapper */}
 
-          {/* Notifications */}
+          {/* Notifications — always visible */}
           <Dropdown
             trigger={
               <button
