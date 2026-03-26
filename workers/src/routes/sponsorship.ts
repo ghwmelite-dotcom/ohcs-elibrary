@@ -312,14 +312,17 @@ sponsorshipRoutes.get('/sponsors/:slug/public', async (c) => {
 
 // Get open scholarships
 sponsorshipRoutes.get('/scholarships', async (c) => {
-  const status = c.req.query('status') || 'open';
+  const VALID_STATUSES = ['open', 'closed', 'awarded', 'completed', 'cancelled', 'draft'];
+  const rawStatus = c.req.query('status') || 'open';
+  const status = VALID_STATUSES.includes(rawStatus) ? rawStatus : 'open';
   const page = parseInt(c.req.query('page') || '1');
   const limit = parseInt(c.req.query('limit') || '20');
   const offset = (page - 1) * limit;
   const featured = c.req.query('featured');
 
   try {
-    let whereClause = `WHERE s.status = '${status}'`;
+    const params: any[] = [status];
+    let whereClause = 'WHERE s.status = ?';
     if (featured === 'true') {
       whereClause += ' AND s.isFeatured = 1';
     }
@@ -335,11 +338,11 @@ sponsorshipRoutes.get('/scholarships', async (c) => {
       ${whereClause}
       ORDER BY s.isFeatured DESC, s.applicationDeadline ASC
       LIMIT ? OFFSET ?
-    `).bind(limit, offset).all();
+    `).bind(...params, limit, offset).all();
 
     const countResult = await c.env.DB.prepare(`
       SELECT COUNT(*) as total FROM scholarships s ${whereClause}
-    `).first();
+    `).bind(...params).first();
 
     return c.json({
       scholarships: scholarships.results.map((s: any) => ({
@@ -751,7 +754,9 @@ sponsorshipRoutes.get('/dashboard/applications', async (c) => {
   const user = getUserFromToken(c);
   const accessKey = c.req.query('key');
   const scholarshipId = c.req.query('scholarshipId');
-  const status = c.req.query('status');
+  const VALID_APP_STATUSES = ['draft', 'submitted', 'under_review', 'shortlisted', 'interview', 'approved', 'rejected', 'withdrawn'];
+  const rawStatus = c.req.query('status');
+  const status = rawStatus && VALID_APP_STATUSES.includes(rawStatus) ? rawStatus : null;
   const page = parseInt(c.req.query('page') || '1');
   const limit = parseInt(c.req.query('limit') || '20');
   const offset = (page - 1) * limit;
@@ -773,12 +778,15 @@ sponsorshipRoutes.get('/dashboard/applications', async (c) => {
       return c.json({ error: 'Sponsor not found or unauthorized' }, 404);
     }
 
-    let whereClause = `WHERE s.sponsorId = '${sponsor.id}'`;
+    const whereParams: any[] = [sponsor.id];
+    let whereClause = 'WHERE s.sponsorId = ?';
     if (scholarshipId) {
-      whereClause += ` AND sa.scholarshipId = '${scholarshipId}'`;
+      whereClause += ' AND sa.scholarshipId = ?';
+      whereParams.push(scholarshipId);
     }
     if (status) {
-      whereClause += ` AND sa.status = '${status}'`;
+      whereClause += ' AND sa.status = ?';
+      whereParams.push(status);
     }
 
     const applications = await c.env.DB.prepare(`
@@ -793,14 +801,14 @@ sponsorshipRoutes.get('/dashboard/applications', async (c) => {
       ${whereClause}
       ORDER BY sa.submittedAt DESC
       LIMIT ? OFFSET ?
-    `).bind(limit, offset).all();
+    `).bind(...whereParams, limit, offset).all();
 
     const countResult = await c.env.DB.prepare(`
       SELECT COUNT(*) as total
       FROM scholarship_applications sa
       JOIN scholarships s ON sa.scholarshipId = s.id
       ${whereClause}
-    `).first();
+    `).bind(...whereParams).first();
 
     // Get status counts
     const statusCounts = await c.env.DB.prepare(`
@@ -926,19 +934,26 @@ sponsorshipRoutes.get('/admin/sponsors', async (c) => {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
-  const status = c.req.query('status') || 'all';
-  const tier = c.req.query('tier');
+  const VALID_SPONSOR_STATUSES = ['pending', 'active', 'suspended', 'expired'];
+  const rawStatus = c.req.query('status') || 'all';
+  const status = rawStatus === 'all' ? 'all' : (VALID_SPONSOR_STATUSES.includes(rawStatus) ? rawStatus : 'all');
+  const VALID_TIER_SLUGS = ['platinum', 'gold', 'silver', 'bronze'];
+  const rawTier = c.req.query('tier');
+  const tier = rawTier && VALID_TIER_SLUGS.includes(rawTier) ? rawTier : null;
   const page = parseInt(c.req.query('page') || '1');
   const limit = parseInt(c.req.query('limit') || '20');
   const offset = (page - 1) * limit;
 
   try {
+    const whereParams: any[] = [];
     let whereClause = 'WHERE 1=1';
     if (status !== 'all') {
-      whereClause += ` AND s.status = '${status}'`;
+      whereClause += ' AND s.status = ?';
+      whereParams.push(status);
     }
     if (tier) {
-      whereClause += ` AND t.slug = '${tier}'`;
+      whereClause += ' AND t.slug = ?';
+      whereParams.push(tier);
     }
 
     const sponsors = await c.env.DB.prepare(`
@@ -958,13 +973,13 @@ sponsorshipRoutes.get('/admin/sponsors', async (c) => {
         t.sortOrder ASC,
         s.createdAt DESC
       LIMIT ? OFFSET ?
-    `).bind(limit, offset).all();
+    `).bind(...whereParams, limit, offset).all();
 
     const countResult = await c.env.DB.prepare(`
       SELECT COUNT(*) as total FROM sponsors s
       JOIN sponsorship_tiers t ON s.tierId = t.id
       ${whereClause}
-    `).first();
+    `).bind(...whereParams).first();
 
     // Get status counts
     const statusCounts = await c.env.DB.prepare(`

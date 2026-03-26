@@ -72,15 +72,21 @@ recognition.get('/', optionalAuth, async (c) => {
       params.push(mdaId, mdaId);
     }
     if (period) {
-      const periodMap: Record<string, string> = {
-        today: "date('now')",
-        week: "date('now', '-7 days')",
-        month: "date('now', '-30 days')",
-        quarter: "date('now', '-90 days')",
-        year: "date('now', '-365 days')",
+      const periodOffsetMap: Record<string, string> = {
+        today: '0 days',
+        week: '-7 days',
+        month: '-30 days',
+        quarter: '-90 days',
+        year: '-365 days',
       };
-      if (periodMap[period]) {
-        whereClause += ` AND r.createdAt >= ${periodMap[period]}`;
+      const periodOffset = periodOffsetMap[period];
+      if (periodOffset) {
+        if (period === 'today') {
+          whereClause += ` AND date(r.createdAt) = date('now')`;
+        } else {
+          whereClause += ` AND r.createdAt >= date('now', ?)`;
+          params.push(periodOffset);
+        }
       }
     }
 
