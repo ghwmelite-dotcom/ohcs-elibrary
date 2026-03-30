@@ -943,7 +943,7 @@ function LoginFormContent({ isDark, onClose }: { isDark: boolean; onClose: () =>
       await loginDemo();
       toast.success('Welcome!', 'Signed in with demo account (24hr access).');
       onClose();
-      navigate('/dashboard');
+      navigate('/feed');
     } catch (error) {
       toast.error('Demo Login Failed', 'Unable to start demo session. Please try again.');
     }
@@ -965,7 +965,7 @@ function LoginFormContent({ isDark, onClose }: { isDark: boolean; onClose: () =>
       await login(data);
       toast.success('Welcome back!', 'You have successfully signed in.');
       onClose();
-      navigate('/dashboard');
+      navigate('/feed');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to sign in';
       setServerError(message);
@@ -982,7 +982,7 @@ function LoginFormContent({ isDark, onClose }: { isDark: boolean; onClose: () =>
       });
       toast.success('Welcome back!', 'You have successfully signed in.');
       onClose();
-      navigate('/dashboard');
+      navigate('/feed');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to sign in';
       setServerError(message);

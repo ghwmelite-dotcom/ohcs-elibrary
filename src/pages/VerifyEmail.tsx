@@ -21,7 +21,7 @@ export default function VerifyEmail() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/feed');
     } else if (!pendingVerification.email) {
       navigate('/');
     }
@@ -91,7 +91,7 @@ export default function VerifyEmail() {
       setIsSuccess(true);
       // Redirect after a short delay
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/feed');
       }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Verification failed');

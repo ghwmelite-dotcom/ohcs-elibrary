@@ -107,7 +107,7 @@ export function RegisterForm() {
       } else {
         // Auto-logged in, go to dashboard
         toast.success('Welcome!', 'Your account has been created.');
-        navigate('/dashboard');
+        navigate('/feed');
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Registration failed';

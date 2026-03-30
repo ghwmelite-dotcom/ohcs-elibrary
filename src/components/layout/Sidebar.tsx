@@ -26,6 +26,7 @@ import {
   BookOpen,
   BadgeCheck,
   Home,
+  Network,
   Brain,
   Compass,
   Calendar,
@@ -81,7 +82,7 @@ interface NavSection {
 const navSections: NavSection[] = [
   {
     items: [
-      { path: '/feed', label: 'Home', icon: Home, color: 'primary' },
+      { path: '/feed', label: 'My Network', icon: Network, color: 'primary' },
       { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'slate' },
       { path: '/library', label: 'Document Library', icon: Library, color: 'amber', tag: { label: 'CORE', color: 'amber' } },
       { path: '/bookmarks', label: 'My Bookmarks', icon: Bookmark, color: 'amber' },
@@ -433,7 +434,7 @@ function BadgeCount({ count }: { count: number }) {
 
 // Map sidebar paths to i18n keys for translatable nav items
 const navI18nKeys: Record<string, string> = {
-  '/feed': 'nav.home',
+  '/feed': 'nav.myNetwork',
   '/library': 'nav.library',
   '/courses': 'nav.courses',
   '/chat': 'nav.chat',

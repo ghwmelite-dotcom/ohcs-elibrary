@@ -68,7 +68,7 @@ export function LoginForm() {
         return;
       }
       toast.success('Welcome back!', 'You have successfully signed in.');
-      navigate('/dashboard');
+      navigate('/feed');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to sign in';
       setServerError(message);
@@ -90,7 +90,7 @@ export function LoginForm() {
         return;
       }
       toast.success('Welcome back!', 'You have successfully signed in.');
-      navigate('/dashboard');
+      navigate('/feed');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to sign in';
       setServerError(message);
@@ -134,7 +134,7 @@ export function LoginForm() {
       setServerError(null);
       await verify2FA(verificationCode);
       toast.success('Welcome back!', 'You have successfully signed in.');
-      navigate('/dashboard');
+      navigate('/feed');
     } catch (error) {
       const message = error instanceof Error ? error.message : '2FA verification failed';
       setServerError(message);
@@ -163,7 +163,7 @@ export function LoginForm() {
     try {
       await loginDemo();
       toast.success('Welcome!', 'Signed in with demo account (24hr access).');
-      navigate('/dashboard');
+      navigate('/feed');
     } catch (error) {
       toast.error('Demo Login Failed', 'Unable to start demo session. Please try again.');
     }
