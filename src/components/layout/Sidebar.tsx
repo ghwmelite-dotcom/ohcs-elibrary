@@ -434,7 +434,6 @@ function BadgeCount({ count }: { count: number }) {
 
 // Map sidebar paths to i18n keys for translatable nav items
 const navI18nKeys: Record<string, string> = {
-  '/feed': 'nav.myNetwork',
   '/library': 'nav.library',
   '/courses': 'nav.courses',
   '/chat': 'nav.chat',
