@@ -209,6 +209,27 @@ app.post('/', async (c) => {
       expiresAt || null
     ).run();
 
+    // Fire-and-forget: deliver via Telegram if enabled
+    c.executionCtx.waitUntil(
+      (async () => {
+        try {
+          const { deliverTelegramNotification } = await import('../services/telegramService');
+          await deliverTelegramNotification(c.env, targetId, {
+            id,
+            type: type || 'system',
+            title,
+            message,
+            link: link || undefined,
+            actorName: actorName || undefined,
+            priority: priority || 'normal',
+            metadata: metadata || undefined,
+          });
+        } catch (err) {
+          console.error('Telegram delivery failed:', err);
+        }
+      })()
+    );
+
     return c.json({ success: true, id });
   } catch (error) {
     console.error('Error creating notification:', error);
@@ -379,6 +400,7 @@ app.get('/preferences', async (c) => {
       soundEnabled: Boolean((prefs as any).soundEnabled),
       quietHoursEnabled: Boolean((prefs as any).quietHoursEnabled),
       emailDigestEnabled: Boolean((prefs as any).emailDigestEnabled),
+      telegramEnabled: Boolean((prefs as any).telegramEnabled),
       categoryPreferences: JSON.parse((prefs as any).categoryPreferences || '{}')
     });
   } catch (error) {
@@ -407,6 +429,7 @@ app.put('/preferences', async (c) => {
     emailDigestEnabled,
     emailDigestFrequency,
     emailDigestTime,
+    telegramEnabled,
     categoryPreferences
   } = body;
 
@@ -429,6 +452,7 @@ app.put('/preferences', async (c) => {
           emailDigestEnabled = ?,
           emailDigestFrequency = ?,
           emailDigestTime = ?,
+          telegramEnabled = ?,
           categoryPreferences = ?,
           updatedAt = datetime('now')
         WHERE userId = ?
@@ -443,6 +467,7 @@ app.put('/preferences', async (c) => {
         emailDigestEnabled ? 1 : 0,
         emailDigestFrequency || 'daily',
         emailDigestTime || '08:00',
+        telegramEnabled ? 1 : 0,
         JSON.stringify(categoryPreferences || {}),
         userId
       ).run();
@@ -453,8 +478,8 @@ app.put('/preferences', async (c) => {
           id, userId, emailEnabled, pushEnabled, inAppEnabled, soundEnabled,
           quietHoursEnabled, quietHoursStart, quietHoursEnd,
           emailDigestEnabled, emailDigestFrequency, emailDigestTime,
-          categoryPreferences
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          telegramEnabled, categoryPreferences
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
         id, userId,
         emailEnabled ? 1 : 0,
@@ -467,6 +492,7 @@ app.put('/preferences', async (c) => {
         emailDigestEnabled ? 1 : 0,
         emailDigestFrequency || 'daily',
         emailDigestTime || '08:00',
+        telegramEnabled ? 1 : 0,
         JSON.stringify(categoryPreferences || {})
       ).run();
     }
@@ -615,6 +641,25 @@ app.post('/bulk', async (c) => {
         notif.message, notif.link, notif.priority, notif.metadata
       ).run();
     }
+
+    // Fire-and-forget: deliver bulk via Telegram
+    c.executionCtx.waitUntil(
+      (async () => {
+        try {
+          const { deliverBulkTelegramNotification } = await import('../services/telegramService');
+          await deliverBulkTelegramNotification(c.env, {
+            id: `bulk_${Date.now()}`,
+            type: type || 'announcement',
+            title,
+            message,
+            link: link || undefined,
+            priority: priority || 'normal',
+          }, userIds);
+        } catch (err) {
+          console.error('Telegram bulk delivery failed:', err);
+        }
+      })()
+    );
 
     return c.json({ success: true, count: notifications.length });
   } catch (error) {
