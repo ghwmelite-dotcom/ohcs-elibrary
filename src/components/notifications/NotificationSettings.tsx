@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Bell,
   MessageSquare,
+  MessageCircle,
   FileText,
   Users,
   Award,
@@ -16,24 +17,27 @@ import {
   VolumeX
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { TelegramConnect } from './TelegramConnect';
+import { useNotificationStore } from '@/stores/notificationStore';
 
 interface NotificationPreferences {
   email: boolean;
   push: boolean;
   inApp: boolean;
   sound: boolean;
+  telegram: boolean;
   quietHours: {
     enabled: boolean;
     start: string;
     end: string;
   };
   categories: {
-    messages: { email: boolean; push: boolean; inApp: boolean };
-    documents: { email: boolean; push: boolean; inApp: boolean };
-    forum: { email: boolean; push: boolean; inApp: boolean };
-    groups: { email: boolean; push: boolean; inApp: boolean };
-    achievements: { email: boolean; push: boolean; inApp: boolean };
-    system: { email: boolean; push: boolean; inApp: boolean };
+    messages: { email: boolean; push: boolean; inApp: boolean; telegram: boolean };
+    documents: { email: boolean; push: boolean; inApp: boolean; telegram: boolean };
+    forum: { email: boolean; push: boolean; inApp: boolean; telegram: boolean };
+    groups: { email: boolean; push: boolean; inApp: boolean; telegram: boolean };
+    achievements: { email: boolean; push: boolean; inApp: boolean; telegram: boolean };
+    system: { email: boolean; push: boolean; inApp: boolean; telegram: boolean };
   };
 }
 
@@ -52,23 +56,31 @@ export function NotificationSettings({
       push: true,
       inApp: true,
       sound: true,
+      telegram: false,
       quietHours: {
         enabled: false,
         start: '22:00',
         end: '07:00',
       },
       categories: {
-        messages: { email: true, push: true, inApp: true },
-        documents: { email: true, push: false, inApp: true },
-        forum: { email: false, push: true, inApp: true },
-        groups: { email: true, push: true, inApp: true },
-        achievements: { email: false, push: true, inApp: true },
-        system: { email: true, push: true, inApp: true },
+        messages: { email: true, push: true, inApp: true, telegram: false },
+        documents: { email: true, push: false, inApp: true, telegram: true },
+        forum: { email: false, push: true, inApp: true, telegram: false },
+        groups: { email: true, push: true, inApp: true, telegram: false },
+        achievements: { email: false, push: true, inApp: true, telegram: false },
+        system: { email: true, push: true, inApp: true, telegram: true },
       },
     }
   );
 
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Telegram integration
+  const { telegramStatus, isTelegramLoading, fetchTelegramStatus, linkTelegram, unlinkTelegram } = useNotificationStore();
+
+  useEffect(() => {
+    fetchTelegramStatus();
+  }, [fetchTelegramStatus]);
 
   const updatePreference = (path: string, value: boolean | string) => {
     setHasChanges(true);
@@ -142,7 +154,7 @@ export function NotificationSettings({
 
         <div className="space-y-4">
           {/* Delivery Methods */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <label className="flex items-center gap-3 p-3 border border-surface-200 dark:border-surface-700 rounded-lg cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors">
               <input
                 type="checkbox"
@@ -181,6 +193,19 @@ export function NotificationSettings({
                 In-App
               </span>
             </label>
+
+            <label className="flex items-center gap-3 p-3 border border-surface-200 dark:border-surface-700 rounded-lg cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors">
+              <input
+                type="checkbox"
+                checked={preferences.telegram}
+                onChange={(e) => updatePreference('telegram', e.target.checked)}
+                className="w-4 h-4 rounded border-surface-300 text-[#0088cc] focus:ring-[#0088cc]/50"
+              />
+              <MessageCircle className="w-5 h-5 text-[#0088cc]" />
+              <span className="text-sm font-medium text-surface-900 dark:text-surface-50">
+                Telegram
+              </span>
+            </label>
           </div>
 
           {/* Sound */}
@@ -212,6 +237,15 @@ export function NotificationSettings({
           </div>
         </div>
       </section>
+
+      {/* Telegram Connection */}
+      <TelegramConnect
+        telegramStatus={telegramStatus}
+        isLoading={isTelegramLoading}
+        onLink={linkTelegram}
+        onUnlink={unlinkTelegram}
+        onRefreshStatus={fetchTelegramStatus}
+      />
 
       {/* Quiet Hours */}
       <section className="bg-white dark:bg-surface-800 rounded-xl shadow-elevation-1 p-6">
@@ -276,11 +310,12 @@ export function NotificationSettings({
 
         <div className="divide-y divide-surface-200 dark:divide-surface-700">
           {/* Header */}
-          <div className="grid grid-cols-4 gap-4 px-4 py-2 bg-surface-50 dark:bg-surface-700/50 text-xs font-medium text-surface-500 uppercase">
+          <div className="grid grid-cols-5 gap-4 px-4 py-2 bg-surface-50 dark:bg-surface-700/50 text-xs font-medium text-surface-500 uppercase">
             <div>Category</div>
             <div className="text-center">Email</div>
             <div className="text-center">Push</div>
             <div className="text-center">In-App</div>
+            <div className="text-center">TG</div>
           </div>
 
           {/* Categories */}
@@ -289,7 +324,7 @@ export function NotificationSettings({
             return (
               <div
                 key={category.id}
-                className="grid grid-cols-4 gap-4 px-4 py-3 items-center hover:bg-surface-50 dark:hover:bg-surface-700/30 transition-colors"
+                className="grid grid-cols-5 gap-4 px-4 py-3 items-center hover:bg-surface-50 dark:hover:bg-surface-700/30 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <category.icon className="w-5 h-5 text-surface-500" />
@@ -330,6 +365,16 @@ export function NotificationSettings({
                       updatePreference(`categories.${category.id}.inApp`, e.target.checked)
                     }
                     className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500"
+                  />
+                </div>
+                <div className="text-center">
+                  <input
+                    type="checkbox"
+                    checked={prefs.telegram}
+                    onChange={(e) =>
+                      updatePreference(`categories.${category.id}.telegram`, e.target.checked)
+                    }
+                    className="w-4 h-4 rounded border-surface-300 text-[#0088cc] focus:ring-[#0088cc]/50"
                   />
                 </div>
               </div>
