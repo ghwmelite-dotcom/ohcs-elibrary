@@ -92,7 +92,7 @@ export function Header() {
           <button
             data-tour="search"
             onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}
-            className="hidden md:flex items-center gap-3 w-80 px-3 py-2 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-xl text-surface-500 dark:text-surface-300 transition-colors group"
+            className="hidden md:flex items-center gap-3 w-80 min-w-[160px] px-3 py-2 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-xl text-surface-500 dark:text-surface-300 transition-colors group flex-shrink"
           >
             <Search className="w-4 h-4" />
             <span className="text-sm">Search...</span>
@@ -112,7 +112,7 @@ export function Header() {
         </div>
 
         {/* Right section */}
-        <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">
+        <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-3 flex-shrink-0">
           {/* XP Display */}
           {stats && (
             <Link
