@@ -7,3 +7,4 @@ export { NotificationTimeline } from './NotificationTimeline';
 export { NotificationActivityChart } from './NotificationActivityChart';
 export { PushNotificationManager } from './PushNotificationManager';
 export { NewsletterSubscription } from './NewsletterSubscription';
+export { TelegramConnect } from './TelegramConnect';
