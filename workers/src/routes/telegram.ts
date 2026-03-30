@@ -318,7 +318,7 @@ async function handleStart(
     const welcome =
       '👋 *Welcome to OHCS E\\-Library Bot\\!*\n\n' +
       'To receive notifications here, link your account on the platform:\n' +
-      '1\\. Sign in at [ohcs\\-elibrary\\.pages\\.dev](https://ohcs-elibrary.pages.dev)\n' +
+      '1\\. Sign in at [ohcselibrary\\.xyz](https://www.ohcselibrary.xyz)\n' +
       '2\\. Go to *Settings → Notifications → Telegram*\n' +
       '3\\. Click *Connect Telegram* to get a link token';
     await sendTelegramMessage(botToken, chatId, welcome, 'MarkdownV2');
@@ -642,7 +642,7 @@ async function handleSettings(botToken: string, chatId: string): Promise<void> {
     botToken,
     chatId,
     '⚙️ Manage your notification settings on the platform:\n' +
-    '[Open Notification Settings](https://ohcs-elibrary.pages.dev/settings/notifications)',
+    '[Open Notification Settings](https://www.ohcselibrary.xyz/settings/notifications)',
     'MarkdownV2',
   );
 }
