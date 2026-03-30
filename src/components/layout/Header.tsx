@@ -179,9 +179,6 @@ export function Header() {
             )}
           </Link>
 
-          {/* Separator */}
-          <div className="hidden lg:block w-px h-6 bg-surface-200 dark:bg-surface-700" />
-
           {/* Friend Requests */}
           <Dropdown
             trigger={
