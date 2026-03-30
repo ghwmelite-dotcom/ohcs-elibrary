@@ -597,6 +597,7 @@ export async function setBotCommands(botToken: string): Promise<TelegramAPIRespo
       { command: 'mute',        description: 'Mute all notifications temporarily' },
       { command: 'unmute',      description: 'Resume notifications' },
       { command: 'status',      description: 'Show your current notification status' },
+      { command: 'settings',    description: 'Open notification settings' },
       { command: 'help',        description: 'Show available commands' },
     ],
   });
