@@ -8,3 +8,4 @@ export { NotificationActivityChart } from './NotificationActivityChart';
 export { PushNotificationManager } from './PushNotificationManager';
 export { NewsletterSubscription } from './NewsletterSubscription';
 export { TelegramConnect } from './TelegramConnect';
+export { TelegramBanner } from './TelegramBanner';

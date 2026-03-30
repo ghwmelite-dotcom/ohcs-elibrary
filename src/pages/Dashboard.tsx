@@ -39,6 +39,7 @@ import { useGamificationStore } from '@/stores/gamificationStore';
 import { useLibraryStore } from '@/stores/libraryStore';
 import { useForumStore } from '@/stores/forumStore';
 import { EnhancedWellnessDashboardCard } from '@/components/wellness';
+import { TelegramBanner } from '@/components/notifications';
 import { cn } from '@/utils/cn';
 
 // ============================================================================
@@ -832,6 +833,9 @@ export default function Dashboard() {
             </div>
           </div>
         </motion.div>
+
+        {/* Telegram Setup Banner */}
+        <TelegramBanner />
 
         {/* Level Progress */}
         <motion.div
