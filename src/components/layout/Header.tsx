@@ -112,7 +112,7 @@ export function Header() {
         </div>
 
         {/* Right section */}
-        <div className="flex items-center gap-1.5 lg:gap-3">
+        <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">
           {/* XP Display */}
           {stats && (
             <Link
@@ -132,6 +132,9 @@ export function Header() {
 
           {/* Language Selector */}
           <LanguageSelector />
+
+          {/* Separator */}
+          <div className="hidden lg:block w-px h-6 bg-surface-200 dark:bg-surface-700" />
 
           {/* Animated Theme Toggle with Discovery Hint */}
           <div data-tour="theme-toggle">
@@ -175,6 +178,9 @@ export function Header() {
               </motion.span>
             )}
           </Link>
+
+          {/* Separator */}
+          <div className="hidden lg:block w-px h-6 bg-surface-200 dark:bg-surface-700" />
 
           {/* Friend Requests */}
           <Dropdown
