@@ -293,7 +293,7 @@ export function Header() {
               <button
                 data-tour="notifications"
                 aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
-                className="relative p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                className="relative p-2 -ml-1 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
               >
                 {unreadCount > 0 ? (
                   <BellRing className="w-5 h-5" />
