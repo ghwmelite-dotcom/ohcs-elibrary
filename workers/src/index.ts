@@ -63,6 +63,8 @@ import {
   careerRoutes,
   // WebRTC Signaling (Voice/Video Calls)
   callRoutes,
+  // Telegram Notifications
+  telegramRoutes,
 } from './routes';
 
 export interface Env {
@@ -82,6 +84,9 @@ export interface Env {
   GOOGLE_DRIVE_CLIENT_SECRET: string;
   GOOGLE_DRIVE_REDIRECT_URI: string;
   CRON_SECRET: string;
+  // Telegram Bot
+  TELEGRAM_BOT_TOKEN?: string;
+  TELEGRAM_WEBHOOK_SECRET?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -339,6 +344,12 @@ app.route('/api/v1/career', careerRoutes);
 // Call routes handle their own auth internally
 app.route('/api/v1/calls', callRoutes);
 
+// Telegram Bot — webhook is public (validated by secret header), link/status require auth
+app.use('/api/v1/telegram/link', authMiddleware);
+app.use('/api/v1/telegram/status', authMiddleware);
+app.use('/api/v1/telegram/setup-webhook', authMiddleware);
+app.route('/api/v1/telegram', telegramRoutes);
+
 // News aggregation admin endpoints
 app.post('/api/v1/admin/news/aggregate', authMiddleware, async (c) => {
   try {
@@ -509,6 +520,17 @@ export default {
             }
           } catch (cleanupError) {
             console.error('Anonymous session cleanup failed:', cleanupError);
+          }
+
+          // Cleanup expired Telegram link tokens and old delivery logs
+          try {
+            const { cleanupTelegramData } = await import('./services/telegramService');
+            const telegramCleanup = await cleanupTelegramData(env);
+            if (telegramCleanup.tokensDeleted > 0 || telegramCleanup.logsDeleted > 0) {
+              console.log('Telegram cleanup completed:', telegramCleanup);
+            }
+          } catch (telegramCleanupError) {
+            console.error('Telegram cleanup failed:', telegramCleanupError);
           }
         } catch (error) {
           console.error('Scheduled task failed:', error);

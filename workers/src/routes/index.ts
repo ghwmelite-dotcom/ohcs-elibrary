@@ -65,6 +65,9 @@ export { careerRoutes } from './career';
 // WebRTC Signaling (Voice/Video Calls)
 export { callRoutes } from './calls';
 
+// Telegram Notifications
+export { telegramRoutes } from './telegram';
+
 // Placeholder exports - implement full functionality as needed
 import { Hono } from 'hono';
 
