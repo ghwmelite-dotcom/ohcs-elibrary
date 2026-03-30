@@ -20,10 +20,10 @@ interface Env {
 interface TelegramAccount {
   id: string;
   userId: string;
-  telegramChatId: string;
+  chatId: string;
   telegramUsername: string | null;
-  isActive: number; // 1 = active, 0 = inactive
-  isMuted: number;  // 1 = muted
+  status: string;        // 'active' | 'inactive' | 'blocked'
+  mutedUntil: string | null; // ISO datetime or null
 }
 
 interface NotificationInput {
@@ -31,9 +31,9 @@ interface NotificationInput {
   type: string;
   title: string;
   message: string;
-  link: string | null;
-  priority: string;
-  actorName: string | null;
+  link?: string;
+  priority?: string;
+  actorName?: string;
 }
 
 interface NotificationPreferences {
@@ -41,13 +41,7 @@ interface NotificationPreferences {
   quietHoursEnabled: number;
   quietHoursStart: string | null;
   quietHoursEnd: string | null;
-  // per-category toggles (1 = enabled)
-  documentsEnabled: number;
-  messagesEnabled: number;
-  forumEnabled: number;
-  groupsEnabled: number;
-  achievementsEnabled: number;
-  systemEnabled: number;
+  categoryPreferences: string | null; // JSON string
 }
 
 interface SendResult {
@@ -338,7 +332,7 @@ export async function logDelivery(
     const id = generateId('tdl');
     await env.DB.prepare(`
       INSERT INTO telegram_delivery_logs
-        (id, userId, chatId, notificationId, telegramMessageId, status, errorMessage, createdAt)
+        (id, userId, chatId, notificationId, telegramMessageId, status, errorMessage, sentAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `).bind(
       id,
@@ -385,9 +379,9 @@ export async function deliverTelegramNotification(
 
   // 1. Fetch the user's linked Telegram account.
   const account = await env.DB.prepare(`
-    SELECT id, userId, telegramChatId, telegramUsername, isActive, isMuted
+    SELECT id, userId, chatId, telegramUsername, status, mutedUntil
     FROM telegram_accounts
-    WHERE userId = ? AND isActive = 1
+    WHERE userId = ? AND status = 'active'
     LIMIT 1
   `).bind(userId).first() as TelegramAccount | null;
 
@@ -395,10 +389,10 @@ export async function deliverTelegramNotification(
     return { ok: false, error: 'No active Telegram account linked' };
   }
 
-  const chatId = account.telegramChatId;
+  const chatId = account.chatId;
 
   // 2. Check mute status.
-  if (account.isMuted === 1) {
+  if (account.mutedUntil && new Date(account.mutedUntil) > new Date()) {
     await logDelivery(env, {
       userId,
       chatId,
@@ -417,12 +411,7 @@ export async function deliverTelegramNotification(
       quietHoursEnabled,
       quietHoursStart,
       quietHoursEnd,
-      documentsEnabled,
-      messagesEnabled,
-      forumEnabled,
-      groupsEnabled,
-      achievementsEnabled,
-      systemEnabled
+      categoryPreferences
     FROM notification_preferences
     WHERE userId = ?
     LIMIT 1
@@ -440,19 +429,25 @@ export async function deliverTelegramNotification(
     return { ok: false, error: 'Telegram notifications disabled' };
   }
 
-  // Check per-category preference toggle.
+  // Check per-category preference toggle from categoryPreferences JSON.
   const category = mapTypeToCategory(notification.type);
-  const categoryKey = `${category}Enabled` as keyof NotificationPreferences;
-  if (categoryKey in prefs && prefs[categoryKey] === 0) {
-    await logDelivery(env, {
-      userId,
-      chatId,
-      notificationId: notification.id,
-      messageId: null,
-      status: 'skipped',
-      errorMessage: `Category '${category}' disabled`,
-    });
-    return { ok: false, error: `Category '${category}' disabled` };
+  if (prefs.categoryPreferences) {
+    try {
+      const cats = JSON.parse(prefs.categoryPreferences);
+      if (cats[category] && cats[category].telegram === false) {
+        await logDelivery(env, {
+          userId,
+          chatId,
+          notificationId: notification.id,
+          messageId: null,
+          status: 'skipped',
+          errorMessage: `Category '${category}' disabled`,
+        });
+        return { ok: false, error: `Category '${category}' disabled` };
+      }
+    } catch {
+      // Invalid JSON — deliver anyway
+    }
   }
 
   // 4. Check quiet hours.
@@ -493,7 +488,7 @@ export async function deliverTelegramNotification(
   if (!result.ok && result.error?.includes('403')) {
     try {
       await env.DB.prepare(`
-        UPDATE telegram_accounts SET isActive = 0 WHERE userId = ?
+        UPDATE telegram_accounts SET status = 'inactive', updatedAt = datetime('now') WHERE userId = ?
       `).bind(userId).run();
       console.warn(`telegram: bot blocked by user ${userId}, account marked inactive`);
     } catch (dbErr) {
@@ -629,7 +624,7 @@ export async function cleanupTelegramData(env: Env): Promise<{ tokensDeleted: nu
   try {
     const logResult = await env.DB.prepare(`
       DELETE FROM telegram_delivery_logs
-      WHERE createdAt < datetime('now', '-30 days')
+      WHERE sentAt < datetime('now', '-30 days')
     `).run();
     logsDeleted = logResult.meta?.changes ?? 0;
   } catch (err) {
