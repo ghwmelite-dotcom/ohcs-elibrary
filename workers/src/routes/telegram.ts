@@ -498,7 +498,12 @@ async function handleStatusCommand(env: any, botToken: string, chatId: string): 
   } | null;
 
   const safeName = escapeMarkdownV2(row.displayName ?? 'N/A');
-  const safeEmail = escapeMarkdownV2(row.email ?? 'N/A');
+  // Mask email for privacy (e.g., k***e@example.com)
+  const email = row.email ?? 'N/A';
+  const maskedEmail = email.includes('@')
+    ? email[0] + '***' + email.slice(email.indexOf('@') - 1)
+    : email;
+  const safeEmail = escapeMarkdownV2(maskedEmail);
   const safeLinkedAt = escapeMarkdownV2(row.linkedAt ?? 'N/A');
   const statusEmoji = row.status === 'active' ? '🟢' : '🔴';
 
