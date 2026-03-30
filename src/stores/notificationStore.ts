@@ -92,13 +92,14 @@ export interface NotificationPreferences {
   emailDigestEnabled: boolean;
   emailDigestFrequency: 'instant' | 'daily' | 'weekly' | 'never';
   emailDigestTime: string;
+  telegramEnabled: boolean;
   categoryPreferences: {
-    messages: { email: boolean; push: boolean; inApp: boolean };
-    documents: { email: boolean; push: boolean; inApp: boolean };
-    forum: { email: boolean; push: boolean; inApp: boolean };
-    groups: { email: boolean; push: boolean; inApp: boolean };
-    achievements: { email: boolean; push: boolean; inApp: boolean };
-    system: { email: boolean; push: boolean; inApp: boolean };
+    messages: { email: boolean; push: boolean; inApp: boolean; telegram: boolean };
+    documents: { email: boolean; push: boolean; inApp: boolean; telegram: boolean };
+    forum: { email: boolean; push: boolean; inApp: boolean; telegram: boolean };
+    groups: { email: boolean; push: boolean; inApp: boolean; telegram: boolean };
+    achievements: { email: boolean; push: boolean; inApp: boolean; telegram: boolean };
+    system: { email: boolean; push: boolean; inApp: boolean; telegram: boolean };
   };
 }
 
@@ -129,6 +130,17 @@ interface NotificationState {
   pushSubscription: PushSubscription | null;
   isPushSupported: boolean;
 
+  // Telegram
+  telegramStatus: {
+    linked: boolean;
+    status?: string;
+    username?: string;
+    firstName?: string;
+    mutedUntil?: string;
+    linkedAt?: string;
+  } | null;
+  isTelegramLoading: boolean;
+
   // Actions
   fetchNotifications: (page?: number, append?: boolean) => Promise<void>;
   fetchSummary: () => Promise<void>;
@@ -144,6 +156,9 @@ interface NotificationState {
   subscribeToPush: () => Promise<boolean>;
   unsubscribeFromPush: () => Promise<void>;
   checkPushSupport: () => void;
+  fetchTelegramStatus: () => Promise<void>;
+  linkTelegram: () => Promise<{ deepLink: string; token: string; expiresAt: string } | null>;
+  unlinkTelegram: () => Promise<void>;
   addNotification: (notification: Notification) => void;
   reset: () => void;
 }
@@ -159,13 +174,14 @@ const defaultPreferences: NotificationPreferences = {
   emailDigestEnabled: true,
   emailDigestFrequency: 'daily',
   emailDigestTime: '08:00',
+  telegramEnabled: false,
   categoryPreferences: {
-    messages: { email: true, push: true, inApp: true },
-    documents: { email: true, push: false, inApp: true },
-    forum: { email: false, push: true, inApp: true },
-    groups: { email: true, push: true, inApp: true },
-    achievements: { email: false, push: true, inApp: true },
-    system: { email: true, push: true, inApp: true }
+    messages: { email: true, push: true, inApp: true, telegram: false },
+    documents: { email: true, push: false, inApp: true, telegram: true },
+    forum: { email: false, push: true, inApp: true, telegram: false },
+    groups: { email: true, push: true, inApp: true, telegram: false },
+    achievements: { email: false, push: true, inApp: true, telegram: false },
+    system: { email: true, push: true, inApp: true, telegram: true }
   }
 };
 
@@ -187,6 +203,8 @@ export const useNotificationStore = create<NotificationState>()(
       error: null,
       pushSubscription: null,
       isPushSupported: false,
+      telegramStatus: null,
+      isTelegramLoading: false,
 
       // Fetch notifications with pagination
       fetchNotifications: async (page = 1, append = false) => {
@@ -421,6 +439,55 @@ export const useNotificationStore = create<NotificationState>()(
         set({ isPushSupported });
       },
 
+      fetchTelegramStatus: async () => {
+        try {
+          set({ isTelegramLoading: true });
+          const res = await authFetch(`${API_BASE}/telegram/status`);
+          if (res.ok) {
+            const data = await res.json();
+            set({ telegramStatus: data });
+          }
+        } catch (err) {
+          console.error('Failed to fetch Telegram status:', err);
+        } finally {
+          set({ isTelegramLoading: false });
+        }
+      },
+
+      linkTelegram: async () => {
+        try {
+          set({ isTelegramLoading: true });
+          const res = await authFetch(`${API_BASE}/telegram/link`, {
+            method: 'POST',
+          });
+          if (res.ok) {
+            return await res.json();
+          }
+          return null;
+        } catch (err) {
+          console.error('Failed to generate Telegram link:', err);
+          return null;
+        } finally {
+          set({ isTelegramLoading: false });
+        }
+      },
+
+      unlinkTelegram: async () => {
+        try {
+          set({ isTelegramLoading: true });
+          const res = await authFetch(`${API_BASE}/telegram/link`, {
+            method: 'DELETE',
+          });
+          if (res.ok) {
+            set({ telegramStatus: { linked: false } });
+          }
+        } catch (err) {
+          console.error('Failed to unlink Telegram:', err);
+        } finally {
+          set({ isTelegramLoading: false });
+        }
+      },
+
       // Subscribe to push notifications
       subscribeToPush: async () => {
         if (!get().isPushSupported) return false;
@@ -564,7 +631,9 @@ export const useNotificationStore = create<NotificationState>()(
           isPreferencesLoading: false,
           filter: 'all',
           typeFilter: null,
-          error: null
+          error: null,
+          telegramStatus: null,
+          isTelegramLoading: false,
         });
       }
     }),
