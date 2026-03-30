@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useSocialStore } from '@/stores/socialStore';
 import { usePresenceStore } from '@/stores/presenceStore';
+import { useUIStore } from '@/stores/uiStore';
 import { WallFeed } from '@/components/wall/WallFeed';
 import { SuggestedUsers } from '@/components/social/SuggestedUsers';
 import { TelegramBanner } from '@/components/notifications';
@@ -231,6 +232,23 @@ export default function Wall() {
   const { user } = useAuthStore();
   const { fetchFollowing, fetchFollowers, fetchConnections, fetchPendingRequests } = useSocialStore();
   const { startHeartbeatPolling, stopHeartbeatPolling } = usePresenceStore();
+  const { sidebar, setSidebarCollapsed } = useUIStore();
+
+  // Auto-collapse the app sidebar on feed page to give the 3-column layout more room
+  useEffect(() => {
+    const wasCollapsed = sidebar.isCollapsed;
+    if (!wasCollapsed) {
+      setSidebarCollapsed(true);
+    }
+    return () => {
+      // Restore sidebar when leaving feed
+      if (!wasCollapsed) {
+        setSidebarCollapsed(false);
+      }
+    };
+    // Only run on mount/unmount — intentionally exclude deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     fetchFollowing();
@@ -246,13 +264,13 @@ export default function Wall() {
 
   return (
     <div className="min-h-screen bg-surface-100/60 dark:bg-surface-900">
-      <div className="max-w-[1128px] mx-auto px-4 py-4 sm:py-6">
+      <div className="max-w-[1280px] mx-auto px-4 py-4 sm:py-6">
 
         {/* Telegram Banner */}
         <TelegramBanner />
 
         {/* 3-Column LinkedIn Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[225px_1fr_300px] gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_300px] gap-5">
 
           {/* ── Left Sidebar ── */}
           <aside className="hidden lg:block space-y-2">
