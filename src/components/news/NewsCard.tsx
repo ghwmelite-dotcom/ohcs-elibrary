@@ -15,7 +15,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { formatRelativeTime } from '@/utils/formatters';
+import { formatRelativeTime, decodeHTMLEntities } from '@/utils/formatters';
 
 interface NewsArticle {
   id: string;
@@ -187,7 +187,7 @@ export function NewsCard({
         {/* Background Image */}
         <ArticleImage
           src={article.imageUrl || ''}
-          alt={article.title}
+          alt={decodeHTMLEntities(article.title)}
           className="aspect-[16/9] md:aspect-[21/9]"
           category={article.category}
         />
@@ -218,7 +218,7 @@ export function NewsCard({
 
           <Link to={`/news/${article.id}`}>
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 line-clamp-2 group-hover:underline">
-              {article.title}
+              {decodeHTMLEntities(article.title)}
             </h2>
           </Link>
 
@@ -286,7 +286,7 @@ export function NewsCard({
         {(article.imageUrl || true) && (
           <ArticleImage
             src={article.imageUrl || ''}
-            alt={article.title}
+            alt={decodeHTMLEntities(article.title)}
             className="w-20 h-20 flex-shrink-0 rounded-lg"
             category={article.category}
           />
@@ -295,7 +295,7 @@ export function NewsCard({
         <div className="flex-1 min-w-0">
           <Link to={`/news/${article.id}`}>
             <h3 className="font-medium text-surface-900 dark:text-surface-50 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-              {article.title}
+              {decodeHTMLEntities(article.title)}
             </h3>
           </Link>
           <div className="flex items-center gap-2 mt-1 text-xs text-surface-500">
@@ -328,7 +328,7 @@ export function NewsCard({
       <Link to={`/news/${article.id}`} className="block aspect-video overflow-hidden">
         <ArticleImage
           src={article.imageUrl || ''}
-          alt={article.title}
+          alt={decodeHTMLEntities(article.title)}
           className="w-full h-full transition-transform duration-300 group-hover:scale-105"
           category={article.category}
         />
@@ -356,7 +356,7 @@ export function NewsCard({
 
         <Link to={`/news/${article.id}`}>
           <h3 className="font-semibold text-surface-900 dark:text-surface-50 mb-2 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-            {article.title}
+            {decodeHTMLEntities(article.title)}
           </h3>
         </Link>
 

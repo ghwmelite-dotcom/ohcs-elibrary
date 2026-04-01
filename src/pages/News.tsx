@@ -6,7 +6,7 @@ import { NewsFeed, CategoryFilter, SourceFilter, BreakingNews, HeroCarousel, Tre
 import { RefreshableContainer, OfflineStatusBadge } from '@/components/shared';
 import { useNewsStore } from '@/stores/newsStore';
 import { useOfflineArticles } from '@/hooks/useOfflineArticles';
-import { formatRelativeTime } from '@/utils/formatters';
+import { formatRelativeTime, decodeHTMLEntities } from '@/utils/formatters';
 import type { NewsCategory } from '@/types';
 
 export default function News() {
@@ -371,7 +371,7 @@ export default function News() {
                         <span className="text-xs text-surface-500 capitalize">{article.category}</span>
                       </div>
                       <h4 className="font-medium text-surface-900 dark:text-surface-50 line-clamp-2 mb-2">
-                        {article.title}
+                        {decodeHTMLEntities(article.title)}
                       </h4>
                       <div className="flex items-center gap-2 text-xs text-surface-500">
                         <Clock className="w-3 h-3" />

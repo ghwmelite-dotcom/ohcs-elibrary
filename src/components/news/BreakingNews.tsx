@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, ChevronLeft, ChevronRight, X, ExternalLink } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { decodeHTMLEntities } from '@/utils/formatters';
 
 interface BreakingNewsItem {
   id: string;
@@ -90,7 +91,7 @@ export function BreakingNews({
                   to={`/news/${currentItem.id}`}
                   className="text-sm font-medium hover:underline truncate flex-1"
                 >
-                  {currentItem.title}
+                  {decodeHTMLEntities(currentItem.title)}
                 </Link>
                 <span className="text-xs text-accent-200 flex-shrink-0">
                   — {currentItem.source}
@@ -178,7 +179,7 @@ export function NewsTicker({ items, speed = 'normal' }: NewsTicker) {
             className="inline-flex items-center mx-8 hover:text-primary-400 transition-colors"
           >
             <span className="w-2 h-2 bg-accent-500 rounded-full mr-3" />
-            <span className="text-sm">{item.title}</span>
+            <span className="text-sm">{decodeHTMLEntities(item.title)}</span>
           </Link>
         ))}
       </motion.div>

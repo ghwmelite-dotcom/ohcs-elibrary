@@ -271,3 +271,14 @@ export function formatFileType(mimeType: string): string {
 
   return 'File';
 }
+
+/**
+ * Decode HTML entities in text (&#8211; → –, &amp; → &, etc.)
+ * Handles numeric (&#123;), hex (&#x1F;), and named entities.
+ */
+export function decodeHTMLEntities(text: string): string {
+  if (!text || !text.includes('&')) return text;
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  return textarea.value;
+}

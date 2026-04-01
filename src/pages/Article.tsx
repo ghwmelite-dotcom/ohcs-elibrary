@@ -23,7 +23,7 @@ import {
 import { TextToSpeech } from '@/components/news';
 import { useNewsStore } from '@/stores/newsStore';
 import { useOfflineArticles } from '@/hooks/useOfflineArticles';
-import { formatDate, formatRelativeTime } from '@/utils/formatters';
+import { formatDate, formatRelativeTime, decodeHTMLEntities } from '@/utils/formatters';
 import { cn } from '@/utils/cn';
 
 export default function Article() {
@@ -244,12 +244,12 @@ export default function Article() {
               animate={{ opacity: 1, y: 0 }}
               className="text-3xl md:text-4xl font-bold text-surface-900 dark:text-surface-50 mb-4"
             >
-              {currentArticle.title}
+              {decodeHTMLEntities(currentArticle.title)}
             </motion.h1>
 
             {/* Summary */}
             <p className="text-lg text-surface-600 dark:text-surface-400 mb-4">
-              {currentArticle.summary}
+              {decodeHTMLEntities(currentArticle.summary)}
             </p>
 
             {/* AI Summary */}
@@ -503,7 +503,7 @@ export default function Article() {
                     </div>
                   )}
                   <h3 className="font-medium text-surface-900 dark:text-surface-50 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                    {related.title}
+                    {decodeHTMLEntities(related.title)}
                   </h3>
                   <p className="text-sm text-surface-500 mt-1">
                     {related.source?.name || 'Unknown'} • {formatRelativeTime(related.publishedAt)}

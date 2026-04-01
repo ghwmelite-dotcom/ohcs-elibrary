@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Clock, TrendingUp, Sparkles, Pause, Play } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { formatRelativeTime } from '@/utils/formatters';
+import { formatRelativeTime, decodeHTMLEntities } from '@/utils/formatters';
 
 interface FeaturedArticle {
   id: string;
@@ -139,7 +139,7 @@ export function HeroCarousel({
                   transition={{ delay: 0.2 }}
                   className="text-2xl md:text-4xl font-bold text-white mb-3 line-clamp-2 hover:underline max-w-4xl"
                 >
-                  {currentArticle.title}
+                  {decodeHTMLEntities(currentArticle.title)}
                 </motion.h2>
               </Link>
 

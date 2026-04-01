@@ -222,12 +222,21 @@ function extractImageFromContent(content: string): string | null {
 function cleanText(text: string): string {
   return text
     .replace(/<[^>]+>/g, '') // Remove HTML tags
+    .replace(/&#(\d+);/g, (_m, code) => String.fromCharCode(parseInt(code, 10))) // Decode numeric entities (&#8211; → –)
+    .replace(/&#x([0-9a-fA-F]+);/g, (_m, code) => String.fromCharCode(parseInt(code, 16))) // Decode hex entities (&#x2014; → —)
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&nbsp;/g, ' ')
+    .replace(/&rsquo;/g, '\u2019')
+    .replace(/&lsquo;/g, '\u2018')
+    .replace(/&rdquo;/g, '\u201D')
+    .replace(/&ldquo;/g, '\u201C')
+    .replace(/&ndash;/g, '\u2013')
+    .replace(/&mdash;/g, '\u2014')
+    .replace(/&hellip;/g, '\u2026')
     .replace(/\s+/g, ' ') // Normalize whitespace
     .trim();
 }
