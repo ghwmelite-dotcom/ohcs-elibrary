@@ -1069,7 +1069,7 @@ export interface UseMutationOptions<TData, TVariables> {
 }
 
 // ============================================================================
-// Wellness & Counselor Types (AI Counselor "Dr. Sena")
+// Wellness & Counselor Types (AI Counselor "Kaya")
 // ============================================================================
 
 export type CounselorTopic =

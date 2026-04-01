@@ -48,7 +48,7 @@ export function PrivacyConsent({ isOpen, onAccept }: PrivacyConsentProps) {
     {
       icon: MessageCircle,
       title: 'Messages & Conversations',
-      description: 'Your chat messages with Dr. Sena to provide contextual support.',
+      description: 'Your chat messages with Kaya to provide contextual support.',
       color: 'teal',
     },
     {

@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/shared/Button';
-import { DrSenaAvatar } from './DrSenaAvatar';
+import { KayaAvatar } from './KayaAvatar';
 import { useWellnessStore } from '@/stores/wellnessStore';
 import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/utils/cn';
@@ -297,14 +297,14 @@ export function EnhancedWellnessDashboardCard() {
       />
 
       <div className="relative z-10 p-5 md:p-6">
-        {/* Header with Dr. Sena */}
+        {/* Header with Kaya */}
         <div className="flex items-start gap-4 mb-5">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 200 }}
           >
-            <DrSenaAvatar size="md" mood={todayMood ? 'happy' : 'neutral'} />
+            <KayaAvatar size="md" mood={todayMood ? 'happy' : 'neutral'} />
           </motion.div>
 
           <div className="flex-1 min-w-0">
@@ -428,7 +428,7 @@ export function EnhancedWellnessDashboardCard() {
             className="flex-1 bg-white text-teal-700 hover:bg-white/90 font-semibold shadow-lg"
           >
             <MessageCircle className="w-4 h-4 mr-2" />
-            Chat with Dr. Sena
+            Chat with Kaya
           </Button>
           <Button
             variant="outline"
@@ -455,7 +455,7 @@ export function ActivityNudge({ onDismiss, onAccept }: ActivityNudgeProps) {
   const nudgeMessages = [
     { text: "You've been focused for a while! Take a mental break?", icon: Coffee },
     { text: "Great progress! How about a quick wellness check-in?", icon: Heart },
-    { text: "Dr. Sena is here if you need to chat about anything.", icon: MessageCircle },
+    { text: "Kaya is here if you need to chat about anything.", icon: MessageCircle },
     { text: "Remember: breaks boost productivity. Ready for one?", icon: Wind },
   ];
 
@@ -486,7 +486,7 @@ export function ActivityNudge({ onDismiss, onAccept }: ActivityNudgeProps) {
             transition={{ duration: 2, repeat: Infinity }}
             className="p-2 bg-white/20 rounded-xl"
           >
-            <DrSenaAvatar size="sm" mood="listening" />
+            <KayaAvatar size="sm" mood="listening" />
           </motion.div>
 
           <div className="flex-1">

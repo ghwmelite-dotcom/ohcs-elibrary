@@ -26,7 +26,7 @@ import {
   SessionCard,
   ResourceCard,
   TopicSelector,
-  DrSenaAvatar,
+  KayaAvatar,
 } from '@/components/wellness';
 import { useWellnessStore } from '@/stores/wellnessStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -215,7 +215,7 @@ export default function Wellness() {
               </h1>
             </div>
             <p className="text-sm sm:text-base text-surface-600 dark:text-surface-400 max-w-2xl">
-              Your safe space for mental wellness support. Chat with Dr. Sena, our AI wellness companion,
+              Your safe space for mental wellness support. Chat with Kaya, our AI wellness companion,
               or explore self-help resources curated for Ghana's civil servants.
             </p>
           </motion.div>
@@ -229,10 +229,10 @@ export default function Wellness() {
             >
               <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <div className="hidden sm:block">
-                  <DrSenaAvatar size="lg" mood="happy" />
+                  <KayaAvatar size="lg" mood="happy" />
                 </div>
                 <div className="sm:hidden">
-                  <DrSenaAvatar size="md" mood="happy" />
+                  <KayaAvatar size="md" mood="happy" />
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl font-bold text-surface-900 dark:text-surface-100">
@@ -440,7 +440,7 @@ export default function Wellness() {
                 </motion.div>
               )}
 
-              {/* About Dr. Sena */}
+              {/* About Kaya */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -448,18 +448,18 @@ export default function Wellness() {
                 className="bg-gradient-to-br from-teal-50 to-purple-50 dark:from-teal-950/30 dark:to-purple-950/30 rounded-xl p-5 border border-surface-200 dark:border-surface-700"
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <DrSenaAvatar size="sm" mood="neutral" />
-                  <h3 className="font-semibold text-surface-900 dark:text-surface-100">About Dr. Sena</h3>
+                  <KayaAvatar size="sm" mood="neutral" />
+                  <h3 className="font-semibold text-surface-900 dark:text-surface-100">About Kaya</h3>
                 </div>
                 <p className="text-sm text-surface-600 dark:text-surface-400 mb-4">
-                  Dr. Sena is your AI wellness companion.
+                  Kaya is your AI wellness companion.
                   Trained to provide supportive conversations and coping strategies,
-                  Dr. Sena is available 24/7 to listen and help.
+                  Kaya is available 24/7 to listen and help.
                 </p>
                 <div className="flex items-start gap-2 text-xs text-surface-500 dark:text-surface-400">
                   <Info className="w-4 h-4 shrink-0 mt-0.5" />
                   <p>
-                    Dr. Sena is not a replacement for professional mental health care.
+                    Kaya is not a replacement for professional mental health care.
                     For serious concerns, please speak with our counseling unit.
                   </p>
                 </div>

@@ -43,7 +43,7 @@ export const AI_DEFAULTS = {
     max_tokens: 900,
     temperature: 0.7,
   },
-  /** Dr. Sena wellness counselor */
+  /** Kaya wellness counselor */
   counselor: {
     model: AI_MODELS.HEAVY,
     response: { max_tokens: 500, temperature: 0.85 },

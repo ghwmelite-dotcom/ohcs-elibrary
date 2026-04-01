@@ -397,7 +397,7 @@ export default function Sponsorship() {
     { icon: Brain, title: 'Ozzy AI Assistant', description: 'Intelligent Q&A powered by document knowledge base with citations', color: 'green' as const },
     { icon: BookOpen, title: 'Document Library', description: 'Centralized repository with AI-powered search and analysis', color: 'gold' as const },
     { icon: GraduationCap, title: 'Learning Management', description: 'Complete LMS with courses, certifications, and learning paths', color: 'green' as const },
-    { icon: Heart, title: 'Dr. Sena Wellness Hub', description: 'AI wellness companion for mental health support and mood tracking', color: 'red' as const },
+    { icon: Heart, title: 'Kaya Wellness Hub', description: 'AI wellness companion for mental health support and mood tracking', color: 'red' as const },
     { icon: FlaskConical, title: 'Research Lab', description: 'AI-assisted policy research with collaboration tools', color: 'gold' as const },
     { icon: Users, title: 'Collaboration Suite', description: 'Forums, real-time chat, groups, and social networking', color: 'green' as const },
     { icon: Trophy, title: 'Gamification', description: 'XP, badges, leaderboards driving engagement and recognition', color: 'gold' as const },

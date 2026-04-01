@@ -1,5 +1,7 @@
 // Wellness component exports
-export { DrSenaAvatar } from './DrSenaAvatar';
+export { KayaAvatar } from './KayaAvatar';
+// Legacy alias kept for any external references — prefer KayaAvatar
+export { KayaAvatar as DrSenaAvatar } from './KayaAvatar';
 export { MoodSelector } from './MoodSelector';
 export { TopicSelector } from './TopicSelector';
 export { WelcomeCard } from './WelcomeCard';

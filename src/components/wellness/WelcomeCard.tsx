@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { MessageCircle, History, BookOpen, Sparkles, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/shared/Button';
-import { DrSenaAvatar } from './DrSenaAvatar';
+import { KayaAvatar } from './KayaAvatar';
 import { MoodSelector } from './MoodSelector';
 import { useWellnessStore } from '@/stores/wellnessStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -37,7 +37,7 @@ export function WelcomeCard({ onStartChat }: WelcomeCardProps) {
   const quickActions = [
     {
       icon: MessageCircle,
-      label: 'Chat with Dr. Sena',
+      label: 'Chat with Kaya',
       description: 'Start a new conversation',
       onClick: () => {
         if (onStartChat) {
@@ -70,13 +70,13 @@ export function WelcomeCard({ onStartChat }: WelcomeCardProps) {
       animate={{ opacity: 1, y: 0 }}
       className="bg-gradient-to-br from-teal-50 via-white to-purple-50 dark:from-teal-950/30 dark:via-surface-900 dark:to-purple-950/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border border-surface-200 dark:border-surface-800"
     >
-      {/* Header with Dr. Sena */}
+      {/* Header with Kaya */}
       <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div className="hidden xs:block">
-          <DrSenaAvatar size="lg" mood="happy" />
+          <KayaAvatar size="lg" mood="happy" />
         </div>
         <div className="xs:hidden">
-          <DrSenaAvatar size="md" mood="happy" />
+          <KayaAvatar size="md" mood="happy" />
         </div>
         <div className="flex-1 min-w-0">
           <motion.h2
@@ -92,7 +92,7 @@ export function WelcomeCard({ onStartChat }: WelcomeCardProps) {
             transition={{ delay: 0.1 }}
             className="text-sm sm:text-base text-surface-600 dark:text-surface-400 mt-0.5 sm:mt-1"
           >
-            I'm Dr. Sena, your AI wellness companion. How are you feeling today?
+            I'm Kaya, your AI wellness companion. How are you feeling today?
           </motion.p>
         </div>
 
