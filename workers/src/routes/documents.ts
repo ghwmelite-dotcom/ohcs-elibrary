@@ -542,7 +542,7 @@ documentsRoutes.post('/', requireAuth, async (c: AppContext) => {
       isDownloadable ? 1 : 0
     ).run();
 
-    // Add to Ozzy embedding queue for RAG processing
+    // Add to GUIDE embedding queue for RAG processing
     try {
       await DB.prepare(`
         INSERT INTO embedding_queue (id, documentId, status, priority, createdAt)

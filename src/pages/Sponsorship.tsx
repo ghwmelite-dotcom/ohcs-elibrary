@@ -394,7 +394,7 @@ export default function Sponsorship() {
 
   // Features data
   const features = [
-    { icon: Brain, title: 'Ozzy AI Assistant', description: 'Intelligent Q&A powered by document knowledge base with citations', color: 'green' as const },
+    { icon: Brain, title: 'GUIDE AI Assistant', description: 'Intelligent Q&A powered by document knowledge base with citations', color: 'green' as const },
     { icon: BookOpen, title: 'Document Library', description: 'Centralized repository with AI-powered search and analysis', color: 'gold' as const },
     { icon: GraduationCap, title: 'Learning Management', description: 'Complete LMS with courses, certifications, and learning paths', color: 'green' as const },
     { icon: Heart, title: 'Kaya Wellness Hub', description: 'AI wellness companion for mental health support and mood tracking', color: 'red' as const },

@@ -224,7 +224,7 @@ export function MainLayout() {
       {/* Floating Wellness Pulse (subtle ambient reminder) */}
       <WellnessPulse onClick={() => window.location.href = '/wellness'} />
 
-      {/* Ozzy AI Knowledge Assistant Widget */}
+      {/* GUIDE AI Knowledge Assistant Widget */}
       <OzzyWidget />
 
       {/* Global Search Modal (Ctrl+K) */}

@@ -1,6 +1,6 @@
 /**
  * OzzyChatMessage Component
- * Message bubble for Ozzy chat with citation support
+ * Message bubble for GUIDE chat with citation support
  */
 
 import { motion } from 'framer-motion';
@@ -166,7 +166,7 @@ export function OzzyTypingIndicator() {
       <OzzyAvatar size="md" state="thinking" />
       <div className="bg-white dark:bg-surface-800 rounded-2xl rounded-tl-sm px-4 py-3 border border-surface-200 dark:border-surface-700">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm text-surface-500 dark:text-surface-400">Ozzy is thinking</span>
+          <span className="text-sm text-surface-500 dark:text-surface-400">GUIDE is thinking</span>
           <div className="flex gap-1">
             {[0, 1, 2].map((i) => (
               <motion.div

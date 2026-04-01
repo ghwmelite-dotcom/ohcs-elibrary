@@ -2302,7 +2302,7 @@ export interface ResearchSearchResult {
 // Re-export Recognition Types
 export * from './recognition';
 
-// Re-export Ozzy AI Assistant Types
+// Re-export GUIDE AI Assistant Types
 export * from './ozzy';
 
 // Re-export LMS Types

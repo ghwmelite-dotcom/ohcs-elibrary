@@ -1,6 +1,6 @@
 /**
- * Ozzy AI Knowledge Assistant Store
- * Zustand store for managing Ozzy chat state
+ * GUIDE AI Knowledge Assistant Store
+ * Zustand store for managing GUIDE chat state
  */
 
 import { create } from 'zustand';

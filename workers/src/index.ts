@@ -35,7 +35,7 @@ import {
   presenceRoutes,
   // Peer Recognition System
   recognitionRoutes,
-  // AI Knowledge Assistant "Ozzy"
+  // AI Knowledge Assistant "GUIDE"
   ozzyRoutes,
   // Learning Management System (LMS)
   lmsRoutes,
@@ -278,8 +278,8 @@ app.route('/api/v1/presence', presenceRoutes);
 // Recognition routes handle their own auth (some endpoints are public)
 app.route('/api/v1/recognition', recognitionRoutes);
 
-// AI Knowledge Assistant "Ozzy"
-// Ozzy routes handle their own auth
+// AI Knowledge Assistant "GUIDE"
+// GUIDE routes handle their own auth
 app.route('/api/v1/ozzy', ozzyRoutes);
 
 // Learning Management System (LMS)
@@ -482,7 +482,7 @@ export default {
             console.log('Scheduled backup completed:', backupResult);
           }
 
-          // Process Ozzy embedding queue (every 15 min cron)
+          // Process GUIDE embedding queue (every 15 min cron)
           try {
             const { processEmbeddingQueue } = await import('./services/aiOzzy');
             const embeddingResult = await processEmbeddingQueue(env, 10);

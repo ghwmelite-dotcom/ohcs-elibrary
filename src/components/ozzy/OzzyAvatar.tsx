@@ -1,6 +1,6 @@
 /**
  * OzzyAvatar Component
- * Profile avatar for the AI Knowledge Assistant - Ozzy
+ * Profile avatar for the AI Knowledge Assistant - GUIDE
  */
 
 import { motion } from 'framer-motion';
@@ -52,10 +52,10 @@ export function OzzyAvatar({ size = 'md', state = 'idle', className }: OzzyAvata
         />
       )}
 
-      {/* Ozzy Profile Image */}
+      {/* GUIDE Profile Image */}
       <img
         src="/images/avatars/ozzy.png"
-        alt="Ozzy - Knowledge Assistant"
+        alt="GUIDE — Government User Intelligence & Document Engine"
         className="w-full h-full object-cover"
       />
 

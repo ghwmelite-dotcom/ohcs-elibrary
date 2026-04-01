@@ -92,10 +92,10 @@ export function OzzyMiniChat({ onClose, onMaximize }: OzzyMiniChatProps) {
         <OzzyAvatar size="sm" state={isTyping ? 'thinking' : 'idle'} />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-surface-900 dark:text-white text-sm">
-            Ask Ozzy
+            Ask GUIDE
           </h3>
           <p className="text-xs text-surface-500 dark:text-surface-400 truncate">
-            Civil Service Knowledge Assistant
+            Government User Intelligence & Document Engine
           </p>
         </div>
         <div className="flex items-center gap-1">
@@ -122,7 +122,7 @@ export function OzzyMiniChat({ onClose, onMaximize }: OzzyMiniChatProps) {
           <div className="text-center py-4">
             <OzzyAvatar size="lg" className="mx-auto mb-3" />
             <p className="text-sm text-surface-600 dark:text-surface-400 mb-3">
-              Hi! I'm Ozzy. Ask me about policies, procedures, or regulations.
+              Hi! I'm GUIDE. Ask me about policies, procedures, or regulations.
             </p>
             <SuggestedQuestionsCompact
               suggestions={suggestions}

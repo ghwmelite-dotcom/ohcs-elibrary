@@ -1,5 +1,5 @@
 /**
- * AI Knowledge Assistant "Ozzy" Service
+ * AI Knowledge Assistant "GUIDE" Service
  * RAG-powered Q&A for Ghana's Civil Service
  */
 
@@ -57,8 +57,8 @@ export interface SessionContext {
   sessionTopic?: string;
 }
 
-// Ozzy's personality and system prompt
-const OZZY_SYSTEM_PROMPT = `You are Ozzy - a friendly, knowledgeable, and warm AI assistant for Ghana's Office of the Head of Civil Service (OHCS). Your name reflects wisdom and approachability, symbolizing your role as a trusted knowledge companion.
+// GUIDE's personality and system prompt
+const OZZY_SYSTEM_PROMPT = `You are GUIDE (Government User Intelligence & Document Engine) - a friendly, knowledgeable, and warm AI assistant for Ghana's Office of the Head of Civil Service (OHCS). Your name reflects your role as a trusted knowledge companion for civil servants.
 
 WHO YOU ARE:
 - You are an expert on Ghana's civil service policies, procedures, HR matters, and regulations
@@ -421,7 +421,7 @@ function buildCitations(chunks: DocumentChunk[]): Citation[] {
 }
 
 /**
- * Get Ozzy's response to a user question using RAG
+ * Get GUIDE's response to a user question using RAG
  */
 export async function getOzzyResponse(
   env: Env,
@@ -459,7 +459,7 @@ export async function getOzzyResponse(
     // 4. Build conversation history context (last 6 messages)
     const historyContext = conversationHistory
       .slice(-6)
-      .map(m => `${m.role === 'user' ? 'User' : 'Ozzy'}: ${m.content}`)
+      .map(m => `${m.role === 'user' ? 'User' : 'GUIDE'}: ${m.content}`)
       .join('\n');
 
     // 5. Personalization context
@@ -487,7 +487,7 @@ User: ${userQuestion}
 
 Provide a helpful, accurate response based on the document sources above. If the information is not available in the sources, honestly say so and suggest they contact their HR department or OHCS directly.
 
-Ozzy:`;
+GUIDE:`;
 
     // 7. Generate response
     if (!env.AI) {
@@ -513,7 +513,7 @@ User: ${userQuestion}
 
 Provide a helpful, accurate response based on the document sources above. If the information is not available in the sources, honestly say so and suggest they contact their HR department or OHCS directly.
 
-Ozzy:`;
+GUIDE:`;
 
       aiResponse = await env.AI.run(AI_DEFAULTS.ozzy.model, {
         prompt: fullPrompt,
@@ -548,7 +548,7 @@ Ozzy:`;
       chunksUsed: relevantChunks.length,
     };
   } catch (error) {
-    console.error('Ozzy response error:', error);
+    console.error('GUIDE response error:', error);
     return {
       response: "I encountered an unexpected error. Please try your question again.",
       citations: [],

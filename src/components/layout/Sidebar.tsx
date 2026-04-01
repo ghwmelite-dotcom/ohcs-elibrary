@@ -147,7 +147,7 @@ const navSections: NavSection[] = [
   {
     title: 'AI Tools',
     items: [
-      { path: '/ozzy', label: 'Ask Ozzy', icon: Sparkles, color: 'yellow', tag: { label: 'AI', color: 'gradient', pulse: true } },
+      { path: '/ozzy', label: 'Ask GUIDE', icon: Sparkles, color: 'yellow', tag: { label: 'AI', color: 'gradient', pulse: true } },
       { path: '/research-hub', label: 'Research Hub', icon: Brain, color: 'purple', tag: { label: 'AI', color: 'gradient' } },
     ],
   },

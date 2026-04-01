@@ -1,5 +1,5 @@
 /**
- * Ozzy AI Knowledge Assistant Types
+ * GUIDE AI Knowledge Assistant Types
  */
 
 // Session topics

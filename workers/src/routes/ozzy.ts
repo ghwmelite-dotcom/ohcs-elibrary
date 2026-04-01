@@ -1,5 +1,5 @@
 /**
- * Ozzy AI Knowledge Assistant Routes
+ * GUIDE AI Knowledge Assistant Routes
  * /api/v1/ozzy/*
  */
 

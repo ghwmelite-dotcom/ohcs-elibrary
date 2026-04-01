@@ -1,5 +1,5 @@
 /**
- * Ozzy AI Knowledge Assistant Page
+ * GUIDE AI Knowledge Assistant Page
  * Full-page chat interface for civil service Q&A
  */
 
@@ -247,10 +247,10 @@ export default function Ozzy() {
 
           <div className="flex-1">
             <h1 className="text-lg font-semibold text-surface-900 dark:text-white">
-              Ozzy
+              GUIDE
             </h1>
             <p className="text-sm text-surface-500 dark:text-surface-400">
-              Your Civil Service Knowledge Assistant
+              Government User Intelligence & Document Engine
             </p>
           </div>
 
@@ -293,7 +293,7 @@ export default function Ozzy() {
                 className="text-center max-w-md"
               >
                 <h2 className="text-xl font-semibold text-surface-900 dark:text-white mb-2">
-                  Hello! I'm Ozzy
+                  Hello! I'm GUIDE
                 </h2>
                 <p className="text-surface-600 dark:text-surface-400 mb-6">
                   Your knowledgeable guide to Ghana's civil service policies, procedures, and regulations.
@@ -357,7 +357,7 @@ export default function Ozzy() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask Ozzy a question..."
+              placeholder="Ask GUIDE a question..."
               disabled={isSending}
               rows={1}
               className={cn(
@@ -388,7 +388,7 @@ export default function Ozzy() {
           </div>
 
           <p className="mt-2 text-xs text-center text-surface-400 dark:text-surface-500">
-            Ozzy uses AI to search documents. Always verify important information with official sources.
+            GUIDE uses AI to search documents. Always verify important information with official sources.
           </p>
         </div>
       </main>

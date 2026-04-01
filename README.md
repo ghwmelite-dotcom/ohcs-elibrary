@@ -164,7 +164,7 @@ Demo users get access to:
 ### AI Models (Cloudflare Workers AI)
 | Model | Tier | Purpose |
 |-------|------|---------|
-| `@cf/qwen/qwq-32b` | Heavy | Research, counseling (Kaya), Ozzy RAG, document Q&A |
+| `@cf/qwen/qwq-32b` | Heavy | Research, counseling (Kaya), GUIDE RAG, document Q&A |
 | `@cf/meta/llama-4-scout-17b-16e-instruct` | Light | Document summaries, topic extraction, news summarization |
 | `@cf/baai/bge-m3` | Embedding | Multilingual document embeddings for RAG search (1024-dim) |
 

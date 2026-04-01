@@ -37,7 +37,7 @@ export const AI_DEFAULTS = {
     max_tokens: 700,
     temperature: 0.4,
   },
-  /** Ozzy knowledge assistant (RAG) */
+  /** GUIDE knowledge assistant (RAG) */
   ozzy: {
     model: AI_MODELS.HEAVY,
     max_tokens: 900,

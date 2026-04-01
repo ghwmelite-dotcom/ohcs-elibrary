@@ -31,7 +31,7 @@ export function OzzyWidget() {
 
         if (isOnOzzyPage) {
           // If on Ozzy page, focus the input
-          const input = document.querySelector('textarea[placeholder*="Ozzy"]') as HTMLTextAreaElement;
+          const input = document.querySelector('textarea[placeholder*="GUIDE"]') as HTMLTextAreaElement;
           input?.focus();
         } else {
           setIsOpen((prev) => !prev);
@@ -171,7 +171,7 @@ export function OzzyWidget() {
                 'pointer-events-none'
               )}
             >
-              Ask Ozzy
+              Ask GUIDE
               <span className="ml-2 text-xs text-surface-400">
                 Ctrl+K
               </span>
