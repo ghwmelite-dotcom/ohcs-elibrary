@@ -136,10 +136,36 @@ export default function Notifications() {
       )}
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-2 mb-6 border-b border-surface-200 dark:border-surface-700 pb-4">
+      <div
+        role="tablist"
+        aria-label="Notification sections"
+        className="flex flex-wrap gap-2 mb-6 border-b border-surface-200 dark:border-surface-700 pb-4"
+        onKeyDown={(e) => {
+          const tabIds = tabs.map((t) => t.id);
+          const currentIndex = tabIds.indexOf(activeTab);
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            const next = tabIds[(currentIndex + 1) % tabIds.length];
+            setActiveTab(next);
+          } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            const prev = tabIds[(currentIndex - 1 + tabIds.length) % tabIds.length];
+            setActiveTab(prev);
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            setActiveTab(tabIds[0]);
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            setActiveTab(tabIds[tabIds.length - 1]);
+          }
+        }}
+      >
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            tabIndex={activeTab === tab.id ? 0 : -1}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
               'flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all',

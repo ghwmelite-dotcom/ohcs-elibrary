@@ -38,6 +38,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useGamificationStore } from '@/stores/gamificationStore';
 import { useLibraryStore } from '@/stores/libraryStore';
 import { useForumStore } from '@/stores/forumStore';
+import { useGroupsStore } from '@/stores/groupsStore';
 import { EnhancedWellnessDashboardCard } from '@/components/wellness';
 import { TelegramBanner } from '@/components/notifications';
 import { cn } from '@/utils/cn';
@@ -48,34 +49,6 @@ import { cn } from '@/utils/cn';
 function AnimatedBackground() {
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      {/* Floating gradient orbs */}
-      <motion.div
-        className="absolute w-[500px] h-[500px] rounded-full"
-        style={{
-          background: 'radial-gradient(circle, rgba(0, 107, 63, 0.12) 0%, transparent 70%)',
-          top: '-5%',
-          left: '-10%',
-        }}
-        animate={{
-          y: [0, 30, 0],
-          scale: [1, 1.1, 1],
-        }}
-        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.div
-        className="absolute w-[400px] h-[400px] rounded-full"
-        style={{
-          background: 'radial-gradient(circle, rgba(252, 209, 22, 0.08) 0%, transparent 70%)',
-          bottom: '10%',
-          right: '-5%',
-        }}
-        animate={{
-          y: [0, -20, 0],
-          scale: [1.1, 1, 1.1],
-        }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-      />
-
       {/* Subtle grid */}
       <div
         className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]"
@@ -123,57 +96,23 @@ function PremiumLevelProgress({ level, levelName, currentXP, requiredXP, totalXP
         }}
       />
 
-      {/* Animated patterns */}
-      <motion.div
+      {/* Static dot pattern */}
+      <div
         className="absolute inset-0 opacity-10"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
         }}
-        animate={{ x: [0, 60], y: [0, 60] }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
       />
-
-      {/* Floating particles */}
-      {[...Array(6)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-secondary-400 rounded-full"
-          style={{
-            left: `${20 + i * 15}%`,
-            top: '50%',
-          }}
-          animate={{
-            y: [-20, -40, -20],
-            opacity: [0.3, 0.8, 0.3],
-            scale: [1, 1.5, 1],
-          }}
-          transition={{
-            duration: 3 + i * 0.5,
-            repeat: Infinity,
-            delay: i * 0.3,
-          }}
-        />
-      ))}
 
       <div className="relative p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
           <div className="flex items-center gap-3 sm:gap-4">
             {/* Level badge */}
-            <motion.div
-              className="relative"
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 4, repeat: Infinity }}
-            >
+            <div className="relative">
               <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-secondary-400 to-secondary-600 flex items-center justify-center shadow-lg">
                 <span className="text-xl sm:text-2xl font-bold text-surface-900">{level}</span>
               </div>
-              {/* Glow ring */}
-              <motion.div
-                className="absolute -inset-1 rounded-2xl border-2 border-secondary-400"
-                animate={{ opacity: [0.3, 0.7, 0.3] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-            </motion.div>
+            </div>
 
             <div className="min-w-0 flex-1">
               <h3 className="text-lg sm:text-xl font-bold text-white truncate">{levelName}</h3>
@@ -197,27 +136,11 @@ function PremiumLevelProgress({ level, levelName, currentXP, requiredXP, totalXP
           <motion.div
             className="absolute inset-y-0 left-0 rounded-full"
             style={{
-              background: 'linear-gradient(90deg, #FCD116, #f59e0b, #FCD116)',
-              backgroundSize: '200% 100%',
+              background: 'linear-gradient(90deg, #FCD116, #f59e0b)',
             }}
             initial={{ width: 0 }}
-            animate={isInView ? {
-              width: `${progress}%`,
-              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-            } : {}}
-            transition={{
-              width: { duration: 1.5, ease: 'easeOut' },
-              backgroundPosition: { duration: 3, repeat: Infinity, ease: 'linear' },
-            }}
-          />
-          {/* Shine effect */}
-          <motion.div
-            className="absolute inset-0"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
-            }}
-            animate={{ x: ['-100%', '200%'] }}
-            transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+            animate={isInView ? { width: `${progress}%` } : {}}
+            transition={{ duration: 1.5, ease: 'easeOut' }}
           />
         </div>
 
@@ -232,6 +155,37 @@ function PremiumLevelProgress({ level, levelName, currentXP, requiredXP, totalXP
 }
 
 // ============================================================================
+// SPARKLINE
+// ============================================================================
+function Sparkline({ data, color = '#10b981' }: { data: number[]; color?: string }) {
+  const w = 64;
+  const h = 20;
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data, 0);
+  const range = max - min || 1;
+  const points = data
+    .map((v, i) => {
+      const x = (i / (data.length - 1)) * w;
+      const y = h - ((v - min) / range) * (h - 4) - 2;
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  return (
+    <svg width={w} height={h} className="mt-1 opacity-60" aria-hidden="true">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// ============================================================================
 // STAT CARD
 // ============================================================================
 interface StatCardProps {
@@ -242,92 +196,50 @@ interface StatCardProps {
   glow?: string;
   link: string;
   delay?: number;
+  sparkData?: number[];
 }
 
-function StatCard({ label, value, icon: Icon, color, glow, link, delay = 0 }: StatCardProps) {
+function StatCard({ label, value, icon: Icon, color, glow, link, delay = 0, sparkData }: StatCardProps) {
   const ref = useRef<HTMLAnchorElement>(null);
   const isInView = useInView(ref, { once: true });
-  const [isHovered, setIsHovered] = useState(false);
-  const glowColor = glow || `${color}40`;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
-      transition={{ delay, type: 'spring', stiffness: 100 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay, duration: 0.4, ease: 'easeOut' }}
     >
       <Link
         ref={ref}
         to={link}
-        className="group block relative overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-surface-800/90 backdrop-blur-xl border border-surface-200/50 dark:border-surface-700/50 p-3 sm:p-4 md:p-5 transition-all duration-300"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        style={{
-          boxShadow: isHovered
-            ? `0 20px 40px -12px ${glowColor}, 0 0 0 1px ${color}30`
-            : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        }}
+        className="group block relative overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-surface-800/90 backdrop-blur-xl border border-surface-200/50 dark:border-surface-700/50 p-3 sm:p-4 md:p-5 transition-all duration-300 hover:shadow-lg"
       >
-        {/* Hover glow */}
-        <motion.div
-          className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-          style={{
-            background: `radial-gradient(circle at 50% 50%, ${glowColor}, transparent 70%)`,
-            filter: 'blur(20px)',
-          }}
-        />
 
         <div className="relative flex items-center gap-2 sm:gap-3 md:gap-4">
           {/* Icon with glow */}
-          <motion.div
+          <div
             className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: `${color}15` }}
-            animate={{
-              rotate: isHovered ? [0, -10, 10, -5, 5, 0] : 0,
-              scale: isHovered ? 1.1 : 1
-            }}
-            transition={{
-              rotate: { duration: 0.5 },
-              scale: { type: 'spring', stiffness: 400 }
-            }}
           >
-            {/* Icon glow */}
-            <motion.div
-              className="absolute inset-0 rounded-xl"
-              style={{
-                boxShadow: isHovered ? `0 0 20px ${glowColor}` : 'none',
-                transition: 'box-shadow 0.3s ease'
-              }}
-            />
             <Icon
               className="w-5 h-5 sm:w-6 sm:h-6 relative z-10 transition-all duration-300"
-              style={{
-                color,
-                filter: isHovered ? `drop-shadow(0 0 8px ${glowColor})` : 'none'
-              }}
+              style={{ color }}
             />
-          </motion.div>
+          </div>
 
           {/* Content */}
           <div className="min-w-0 flex-1">
-            <motion.p
-              className="text-lg sm:text-xl md:text-2xl font-bold text-surface-900 dark:text-surface-50 truncate"
-              initial={{ scale: 0.8 }}
-              animate={isInView ? { scale: 1 } : {}}
-              transition={{ delay: delay + 0.2, type: 'spring' }}
-            >
+            <p className="text-lg sm:text-xl md:text-2xl font-bold text-surface-900 dark:text-surface-50 truncate">
               {typeof value === 'number' ? value.toLocaleString() : value}
-            </motion.p>
+            </p>
             <p className="text-xs sm:text-sm text-surface-500 truncate">{label}</p>
+            {sparkData && <Sparkline data={sparkData} color={color} />}
           </div>
 
           {/* Arrow - hidden on mobile */}
-          <motion.div
-            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 hidden sm:block"
-            animate={{ x: isHovered ? 0 : -5, opacity: isHovered ? 1 : 0 }}
-          >
+          <div className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 hidden sm:block opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" style={{ color }} />
-          </motion.div>
+          </div>
         </div>
       </Link>
     </motion.div>
@@ -339,22 +251,11 @@ function StatCard({ label, value, icon: Icon, color, glow, link, delay = 0 }: St
 // ============================================================================
 function StreakDisplay({ streak }: { streak: number }) {
   return (
-    <motion.div
-      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20"
-      whileHover={{ scale: 1.05 }}
-    >
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          rotate: [0, 5, -5, 0],
-        }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-      >
-        <Flame className="w-5 h-5 text-orange-500" />
-      </motion.div>
+    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20">
+      <Flame className="w-5 h-5 text-orange-500" />
       <span className="font-bold text-orange-600 dark:text-orange-400">{streak}</span>
       <span className="text-sm text-surface-600 dark:text-surface-400">day streak</span>
-    </motion.div>
+    </div>
   );
 }
 
@@ -448,8 +349,6 @@ interface ActivityItemProps {
 }
 
 function ActivityItem({ type, message, time, delay = 0 }: ActivityItemProps) {
-  const [isHovered, setIsHovered] = useState(false);
-
   const icons = {
     xp: Zap,
     badge: Star,
@@ -457,32 +356,14 @@ function ActivityItem({ type, message, time, delay = 0 }: ActivityItemProps) {
     document: BookOpen,
   };
 
-  // Vibrant color configurations with glows
-  const colors = {
-    xp: {
-      bg: 'from-emerald-400 to-green-500',
-      glow: 'rgba(16,185,129,0.5)',
-      color: '#10b981'
-    },
-    badge: {
-      bg: 'from-amber-400 to-yellow-500',
-      glow: 'rgba(245,158,11,0.5)',
-      color: '#f59e0b'
-    },
-    forum: {
-      bg: 'from-cyan-400 to-blue-500',
-      glow: 'rgba(6,182,212,0.5)',
-      color: '#06b6d4'
-    },
-    document: {
-      bg: 'from-violet-400 to-purple-500',
-      glow: 'rgba(139,92,246,0.5)',
-      color: '#8b5cf6'
-    },
+  const colorBgs = {
+    xp: 'from-emerald-400 to-green-500',
+    badge: 'from-amber-400 to-yellow-500',
+    forum: 'from-cyan-400 to-blue-500',
+    document: 'from-violet-400 to-purple-500',
   };
 
   const Icon = icons[type];
-  const color = colors[type];
 
   return (
     <motion.div
@@ -490,30 +371,12 @@ function ActivityItem({ type, message, time, delay = 0 }: ActivityItemProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
       className="flex items-start gap-3 group"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      <motion.div
-        className={cn('relative w-9 h-9 rounded-lg flex items-center justify-center text-white bg-gradient-to-br', color.bg)}
-        animate={{
-          rotate: isHovered ? [0, -8, 8, -4, 4, 0] : 0,
-          scale: isHovered ? 1.15 : 1
-        }}
-        transition={{
-          rotate: { duration: 0.5 },
-          scale: { type: 'spring', stiffness: 400 }
-        }}
-        style={{
-          boxShadow: isHovered ? `0 8px 20px -4px ${color.glow}` : '0 2px 4px rgba(0,0,0,0.1)'
-        }}
+      <div
+        className={cn('w-9 h-9 rounded-lg flex items-center justify-center text-white bg-gradient-to-br flex-shrink-0', colorBgs[type])}
       >
-        <Icon
-          className="w-4 h-4 relative z-10"
-          style={{
-            filter: isHovered ? `drop-shadow(0 0 6px rgba(255,255,255,0.6))` : 'none'
-          }}
-        />
-      </motion.div>
+        <Icon className="w-4 h-4" />
+      </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-100 transition-colors">
           {message}
@@ -539,64 +402,27 @@ interface QuickActionProps {
   delay?: number;
 }
 
-function QuickAction({ label, icon: Icon, link, color, glow, delay = 0 }: QuickActionProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const glowColor = glow || `${color}40`;
-
+function QuickAction({ label, icon: Icon, link, color, delay = 0 }: QuickActionProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay, type: 'spring', stiffness: 100 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.3, ease: 'easeOut' }}
     >
       <Link
         to={link}
-        className="group flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-white dark:bg-surface-800/90 backdrop-blur-xl border border-surface-200/50 dark:border-surface-700/50 transition-all duration-300"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        style={{
-          boxShadow: isHovered
-            ? `0 15px 30px -10px ${glowColor}, 0 0 0 1px ${color}20`
-            : '0 2px 4px rgba(0,0,0,0.05)',
-        }}
+        className="group flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-white dark:bg-surface-800/90 backdrop-blur-xl border border-surface-200/50 dark:border-surface-700/50 transition-all duration-300 hover:shadow-lg"
       >
-        {/* Hover glow effect */}
-        <motion.div
-          className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{
-            background: `radial-gradient(circle at 50% 30%, ${glowColor}, transparent 70%)`,
-            filter: 'blur(15px)',
-          }}
-        />
-        <motion.div
+        <div
           className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg sm:rounded-xl flex items-center justify-center"
           style={{ backgroundColor: `${color}15` }}
-          animate={{
-            rotate: isHovered ? [0, -8, 8, -4, 4, 0] : 0,
-            scale: isHovered ? 1.15 : 1
-          }}
-          transition={{
-            rotate: { duration: 0.5 },
-            scale: { type: 'spring', stiffness: 400 }
-          }}
         >
-          {/* Glow ring */}
-          <motion.div
-            className="absolute inset-0 rounded-xl"
-            style={{
-              boxShadow: isHovered ? `0 0 20px ${glowColor}` : 'none',
-              transition: 'box-shadow 0.3s ease'
-            }}
-          />
           <Icon
-            className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 relative z-10 transition-all duration-300"
-            style={{
-              color,
-              filter: isHovered ? `drop-shadow(0 0 8px ${glowColor})` : 'none'
-            }}
+            className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 transition-colors duration-300"
+            style={{ color }}
           />
-        </motion.div>
-        <span className="text-xs sm:text-sm font-medium text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-100 transition-colors text-center truncate w-full relative z-10">
+        </div>
+        <span className="text-xs sm:text-sm font-medium text-surface-700 dark:text-surface-300 group-hover:text-surface-900 dark:group-hover:text-surface-100 transition-colors text-center truncate w-full">
           {label}
         </span>
       </Link>
@@ -646,6 +472,7 @@ export default function Dashboard() {
   const { stats, activities, fetchStats, fetchActivities, updateStreak } = useGamificationStore();
   const { recentlyViewed, fetchRecentlyViewed } = useLibraryStore();
   const { stats: forumStats, fetchStats: fetchForumStats } = useForumStore();
+  const { stats: groupStats } = useGroupsStore();
   const [greeting, setGreeting] = useState('');
 
   // Collapsible sidebar state with localStorage persistence
@@ -700,10 +527,10 @@ export default function Dashboard() {
 
   // Beautiful varied colors with glow effects
   const quickStats = [
-    { label: 'Documents Read', value: documentsRead, icon: BookOpen, color: '#10b981', glow: 'rgba(16,185,129,0.4)', link: '/library' },
-    { label: 'Forum Posts', value: forumPosts, icon: MessageSquare, color: '#3b82f6', glow: 'rgba(59,130,246,0.4)', link: '/forum' },
-    { label: 'Groups Joined', value: 3, icon: Users, color: '#8b5cf6', glow: 'rgba(139,92,246,0.4)', link: '/groups' },
-    { label: 'Badges Earned', value: badgesEarned, icon: Trophy, color: '#f59e0b', glow: 'rgba(245,158,11,0.4)', link: '/leaderboard' },
+    { label: 'Documents Read', value: documentsRead, icon: BookOpen, color: '#10b981', glow: 'rgba(16,185,129,0.4)', link: '/library', sparkData: [2, 4, 3, 7, 5, 8, 6] },
+    { label: 'Forum Posts', value: forumPosts, icon: MessageSquare, color: '#3b82f6', glow: 'rgba(59,130,246,0.4)', link: '/forum', sparkData: [1, 2, 1, 3, 2, 4, 3] },
+    { label: 'Groups Joined', value: groupStats?.myGroups || 0, icon: Users, color: '#8b5cf6', glow: 'rgba(139,92,246,0.4)', link: '/groups', sparkData: [3, 3, 4, 3, 5, 4, 6] },
+    { label: 'Badges Earned', value: badgesEarned, icon: Trophy, color: '#f59e0b', glow: 'rgba(245,158,11,0.4)', link: '/leaderboard', sparkData: [0, 1, 0, 1, 2, 1, 3] },
   ];
 
   // Use real recent documents or fallback
@@ -794,7 +621,7 @@ export default function Dashboard() {
                 whileHover={{ scale: 1.05 }}
               >
                 <img
-                  src={user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'}
+                  src={user?.avatar}
                   alt="Profile"
                   className="w-16 h-16 rounded-2xl object-cover shadow-lg"
                 />

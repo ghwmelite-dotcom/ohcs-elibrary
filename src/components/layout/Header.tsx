@@ -36,6 +36,7 @@ import { LanguageSelector } from '@/components/layout/LanguageSelector';
 import { formatRelativeTime } from '@/utils/formatters';
 
 export function Header() {
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
   const navigate = useNavigate();
   const { user, logout, hasRole } = useAuthStore();
   const { sidebar, toggleMobileMenu } = useUIStore();
@@ -91,19 +92,20 @@ export function Header() {
           {/* Search Button - Opens Global Search Modal */}
           <button
             data-tour="search"
-            onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}
+            aria-label="Search"
+            onClick={() => window.dispatchEvent(new CustomEvent('ohcs:open-search'))}
             className="hidden md:flex items-center gap-3 w-80 min-w-[160px] px-3 py-2 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-xl text-surface-500 dark:text-surface-300 transition-colors group flex-shrink"
           >
             <Search className="w-4 h-4" />
             <span className="text-sm">Search...</span>
             <kbd className="ml-auto px-1.5 py-0.5 text-[10px] font-medium bg-surface-200 dark:bg-surface-700 rounded group-hover:bg-surface-300 dark:group-hover:bg-surface-600">
-              ⌘K
+              {isMac ? '⌘' : 'Ctrl+'}K
             </kbd>
           </button>
 
           {/* Mobile search button */}
           <button
-            onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}
+            onClick={() => window.dispatchEvent(new CustomEvent('ohcs:open-search'))}
             aria-label="Search"
             className="md:hidden p-2 text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-surface-50 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
           >
@@ -118,6 +120,7 @@ export function Header() {
             <Link
               data-tour="xp-display"
               to="/leaderboard"
+              aria-label={`View leaderboard - ${stats.totalXP.toLocaleString()} XP, Level ${stats.level.level}`}
               className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-secondary-50 dark:bg-secondary-900/20 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-900/30 transition-colors"
             >
               <Sparkles className="w-4 h-4 text-secondary-600 dark:text-secondary-400" />
@@ -127,6 +130,13 @@ export function Header() {
               <Badge variant="secondary" size="sm">
                 Lvl {stats.level.level}
               </Badge>
+              {/* XP Progress toward next level */}
+              <div className="hidden xl:block w-16 h-1 bg-secondary-200 dark:bg-secondary-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-secondary-500 rounded-full transition-all"
+                  style={{ width: `${Math.min(100, stats.xpProgress || 0)}%` }}
+                />
+              </div>
             </Link>
           )}
 
@@ -405,6 +415,7 @@ export function Header() {
               trigger={
                 <button
                   data-tour="user-menu"
+                  aria-label={`User menu for ${user.displayName}`}
                   className="flex items-center gap-2 p-1.5 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
                 >
                   <Avatar

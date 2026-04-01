@@ -101,8 +101,8 @@ export function GlobalSearch() {
   // Open modal listener
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
-    window.addEventListener('open-search', handleOpen);
-    return () => window.removeEventListener('open-search', handleOpen);
+    window.addEventListener('ohcs:open-search', handleOpen);
+    return () => window.removeEventListener('ohcs:open-search', handleOpen);
   }, []);
 
   // Keyboard shortcut Ctrl+K or Cmd+K

@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { MessageCircle, Heart, TrendingUp, TrendingDown, Minus, Sparkles, ArrowRight } from 'lucide-react';
+import { MessageCircle, Heart, Sparkles, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/shared/Button';
 import { KayaAvatar } from './KayaAvatar';
@@ -18,6 +18,42 @@ const wellnessTips = [
   "Celebrate small wins - every achievement matters.",
   "Deep breathing: 4 seconds in, 4 seconds hold, 4 seconds out.",
 ];
+
+function MoodSparkline({ data }: { data: number[] }) {
+  if (data.length < 2) return null;
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const w = 80;
+  const h = 24;
+  const points = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * w;
+    const y = h - ((v - min) / range) * (h - 4) - 2;
+    return `${x},${y}`;
+  }).join(' ');
+
+  // Determine color based on trend
+  const trend = data[data.length - 1] - data[0];
+  const color = trend > 0 ? '#10b981' : trend < 0 ? '#ef4444' : '#6b7280';
+
+  const lastPoint = points.split(' ').pop();
+  const lastX = lastPoint?.split(',')[0];
+  const lastY = lastPoint?.split(',')[1];
+
+  return (
+    <svg width={w} height={h} className="inline-block" aria-label="7-day mood trend">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx={lastX} cy={lastY} r="2.5" fill={color} />
+    </svg>
+  );
+}
 
 const moodEmojis: Record<number, string> = {
   1: '😔',
@@ -72,8 +108,7 @@ export function WellnessDashboardCard() {
     return moodStats.trend;
   }, [moodStats]);
 
-  const TrendIcon = moodTrend === 'improving' ? TrendingUp : moodTrend === 'declining' ? TrendingDown : Minus;
-  const trendColor = moodTrend === 'improving' ? 'text-green-500' : moodTrend === 'declining' ? 'text-red-500' : 'text-surface-400 dark:text-surface-500';
+  const trendColor = moodTrend === 'improving' ? 'text-green-300' : moodTrend === 'declining' ? 'text-red-300' : 'text-white/60';
   const trendLabel = moodTrend === 'improving' ? 'Improving' : moodTrend === 'declining' ? 'Needs attention' : 'Stable';
 
   return (
@@ -120,9 +155,9 @@ export function WellnessDashboardCard() {
                 </div>
               </div>
               {moodTrend && moodStats && moodStats.count >= 3 && (
-                <div className={cn('flex items-center gap-1 px-2 py-1 rounded-full bg-white/20', trendColor)}>
-                  <TrendIcon className="w-3.5 h-3.5" />
-                  <span className="text-xs font-medium">{trendLabel}</span>
+                <div className="flex flex-col items-end gap-0.5">
+                  <MoodSparkline data={moodHistory.slice(-7).map(m => m.mood)} />
+                  <span className={cn('text-[10px] font-medium', trendColor)}>{trendLabel}</span>
                 </div>
               )}
             </div>

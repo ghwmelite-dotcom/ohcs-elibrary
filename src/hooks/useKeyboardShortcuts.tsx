@@ -36,7 +36,7 @@ export function useKeyboardShortcuts() {
         searchInput.focus();
       } else {
         // Trigger global search modal
-        window.dispatchEvent(new CustomEvent('open-search'));
+        window.dispatchEvent(new CustomEvent('ohcs:open-search'));
       }
     },
     toggle_theme: () => toggleTheme(),
