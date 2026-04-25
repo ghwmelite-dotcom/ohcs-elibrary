@@ -15,7 +15,7 @@ GOOGLE_DRIVE_REDIRECT_URI = "https://ohcselibrary.xyz/admin/integrations/google-
 [[d1_databases]]
 binding = "DB"
 database_name = "ohcs-elibrary"
-database_id = "2aa38a9e-e5e1-4e7a-a48e-f8edf7cc741d"
+database_id = "8bf3f71a-a1a6-4f27-9d5f-fb7413163e7d"
 
 # R2 Storage binding for documents
 [[r2_buckets]]
@@ -25,7 +25,7 @@ bucket_name = "ohcs-documents"
 # KV namespace for caching
 [[kv_namespaces]]
 binding = "CACHE"
-id = "747355109d8a4b63a45a116b9c3208b1"
+id = "5dcff72fccd94d0180dfa10424a75ca2"
 
 # AI binding for document analysis
 [ai]
