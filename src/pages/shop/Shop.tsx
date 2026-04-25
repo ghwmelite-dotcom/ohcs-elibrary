@@ -15,9 +15,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { formatCurrency } from '@/utils/formatters';
 
 // API base URL
-const API_BASE = import.meta.env.PROD
-  ? 'https://api.ohcselibrary.xyz/api/v1'
-  : '/api/v1';
+const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 
 // Featured categories for the civil service marketplace
 const categories = [

@@ -39,9 +39,7 @@ import { cn } from '@/utils/cn';
 import { formatRelativeTime, formatFileSize, formatDate } from '@/utils/formatters';
 import type { Document } from '@/types';
 
-const API_BASE = import.meta.env.PROD
-  ? 'https://api.ohcselibrary.xyz/api/v1'
-  : '/api/v1';
+const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 
 export default function DocumentView() {
   const { documentId } = useParams<{ documentId: string }>();
@@ -109,7 +107,7 @@ export default function DocumentView() {
     // Build full URL for R2 stored files
     const fileUrl = document.fileUrl.startsWith('http')
       ? document.fileUrl
-      : `https://api.ohcselibrary.xyz/api/v1/documents/${document.id}/download`;
+      : `${import.meta.env.VITE_API_URL ?? ''}/api/v1/documents/${document.id}/download`;
 
     const link = window.document.createElement('a');
     link.href = fileUrl;

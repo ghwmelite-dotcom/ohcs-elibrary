@@ -102,6 +102,7 @@ app.use('*', cors({
     const allowedOrigins = [
       'https://ohcs-elibrary.gov.gh',
       'https://ohcs-elibrary.pages.dev',
+      'https://ohcs-elibrary-b1o.pages.dev',
       'https://ohcselibrary.xyz',
       'https://www.ohcselibrary.xyz',
       'http://localhost:5173',
@@ -109,8 +110,8 @@ app.use('*', cors({
     ];
     // Allow exact matches
     if (allowedOrigins.includes(origin)) return origin;
-    // Allow any Cloudflare Pages deployment (main or preview)
-    if (/^https:\/\/[a-z0-9-]+\.ohcs-elibrary\.pages\.dev$/.test(origin)) return origin;
+    // Allow any Cloudflare Pages deployment (main or preview) for either account's project
+    if (/^https:\/\/[a-z0-9-]+\.ohcs-elibrary(-[a-z0-9]+)?\.pages\.dev$/.test(origin)) return origin;
     // Reject unknown origins — return production origin (will not match browser's Origin, blocking the request)
     return 'https://ohcselibrary.xyz';
   },
@@ -224,6 +225,37 @@ app.get('/cron/aggregate-news', async (c) => {
   } catch (error) {
     console.error('Aggregation error:', error);
     return c.json({ error: 'Aggregation failed', details: String(error) }, 500);
+  }
+});
+
+// Embedding queue processor (secret-protected, for backfill / testing).
+// Returns 'remaining' so callers can loop until the queue is drained.
+app.get('/cron/process-embeddings', async (c) => {
+  const secret = c.req.query('secret');
+  if (secret !== c.env.CRON_SECRET) {
+    return c.json({ error: 'Invalid secret' }, 401);
+  }
+
+  const limit = Math.min(parseInt(c.req.query('limit') || '20'), 50);
+
+  try {
+    const { processEmbeddingQueue } = await import('./services/aiOzzy');
+    const result = await processEmbeddingQueue(c.env, limit);
+
+    const remaining = await c.env.DB.prepare(
+      `SELECT COUNT(*) AS n FROM embedding_queue WHERE status = 'pending'`,
+    ).first<{ n: number }>();
+
+    return c.json({
+      message: 'Embedding batch processed',
+      processed: result.processed,
+      succeeded: result.succeeded,
+      failed: result.failed,
+      remaining: remaining?.n ?? null,
+    });
+  } catch (error) {
+    console.error('Embedding processing error:', error);
+    return c.json({ error: 'Processing failed', details: String(error) }, 500);
   }
 });
 

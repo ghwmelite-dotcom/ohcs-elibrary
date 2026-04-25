@@ -192,9 +192,7 @@ export default function Settings() {
               website: user?.website || '',
             }}
             onSave={async (data) => {
-              const API_BASE = import.meta.env.PROD
-                ? 'https://api.ohcselibrary.xyz/api/v1'
-                : '/api/v1';
+              const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 
               const token = localStorage.getItem('auth_token') ||
                 JSON.parse(localStorage.getItem('ohcs-auth-storage') || '{}')?.state?.token;

@@ -14,9 +14,7 @@ import type {
   OzzySessionsResponse,
 } from '@/types/ozzy';
 
-const API_BASE = import.meta.env.PROD
-  ? 'https://api.ohcselibrary.xyz/api/v1'
-  : '/api/v1';
+const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 
 const getAuthToken = (): string | null => {
   try {

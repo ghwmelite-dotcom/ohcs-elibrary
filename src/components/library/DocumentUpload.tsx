@@ -23,9 +23,7 @@ import { formatFileSize } from '@/utils/formatters';
 // DocumentCategory type not needed after removing local fallback
 
 // API base URL
-const API_BASE = import.meta.env.PROD
-  ? 'https://api.ohcselibrary.xyz/api/v1'
-  : '/api/v1';
+const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 
 const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
 const ACCEPTED_FILE_TYPES = [

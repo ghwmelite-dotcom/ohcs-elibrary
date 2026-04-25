@@ -2,9 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // API base URL
-const API_BASE = import.meta.env.PROD
-  ? 'https://api.ohcselibrary.xyz/api/v1'
-  : '/api/v1';
+const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 
 // Helper to get auth token
 const getAuthToken = (): string | null => {

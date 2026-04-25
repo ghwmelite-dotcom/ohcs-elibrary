@@ -4,9 +4,7 @@ import type { NewsSource, NewsArticle, NewsFilter, NewsCategory } from '@/types'
 import { useAuthStore } from './authStore';
 
 // API base URL - use Workers directly in production, proxy in development
-const API_BASE = import.meta.env.PROD
-  ? 'https://api.ohcselibrary.xyz/api/v1'
-  : '/api/v1';
+const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 
 interface NewsState {
   sources: NewsSource[];

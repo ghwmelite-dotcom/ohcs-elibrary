@@ -969,6 +969,7 @@ const ALLOWED_ORIGINS = [
   'https://ohcselibrary.xyz',
   'https://www.ohcselibrary.xyz',
   'https://ohcs-elibrary.pages.dev',
+  'https://ohcs-elibrary-b1o.pages.dev',
   'https://ohcs-elibrary.gov.gh',
   'http://localhost:5173',
   'http://localhost:3000',
@@ -977,8 +978,8 @@ const ALLOWED_ORIGINS = [
 // Check if origin is allowed (including Cloudflare Pages preview deployments)
 function isAllowedOrigin(origin: string): boolean {
   if (ALLOWED_ORIGINS.includes(origin)) return true;
-  // Allow Cloudflare Pages preview deployments
-  if (origin.match(/^https:\/\/[a-z0-9]+\.ohcs-elibrary\.pages\.dev$/)) return true;
+  // Allow Cloudflare Pages preview deployments for either account's project
+  if (origin.match(/^https:\/\/[a-z0-9-]+\.ohcs-elibrary(-[a-z0-9]+)?\.pages\.dev$/)) return true;
   return false;
 }
 

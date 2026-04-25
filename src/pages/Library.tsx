@@ -24,9 +24,7 @@ import { cn } from '@/utils/cn';
 import type { Document } from '@/types';
 
 // API base URL
-const API_BASE = import.meta.env.PROD
-  ? 'https://api.ohcselibrary.xyz/api/v1'
-  : '/api/v1';
+const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 
 type LibraryTab = 'all' | 'bookmarked' | 'recent' | 'trending';
 

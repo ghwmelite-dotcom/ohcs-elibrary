@@ -535,9 +535,7 @@ const TEMPLATE_CATEGORY_COLORS: Record<string, { bg: string; text: string; icon:
   general: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400', icon: 'text-amber-500' },
 };
 
-const API_BASE = import.meta.env.PROD
-  ? 'https://api.ohcselibrary.xyz/api/v1'
-  : '/api/v1';
+const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 
 function TemplateLibraryModal({ isOpen, onClose, onCourseCreated }: TemplateLibraryModalProps) {
   const [templates, setTemplates] = useState<CourseTemplate[]>([]);
