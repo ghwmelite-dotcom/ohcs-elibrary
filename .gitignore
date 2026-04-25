@@ -43,3 +43,11 @@ coverage/
 
 # Lighthouse reports
 lighthouse-report.*
+
+# Wrangler dev cache (Cloudflare Workers)
+.wrangler/
+**/.wrangler/
+
+# Migration scratch (DNS BIND export, D1 SQL dumps, etc. — may contain
+# secrets or sensitive data; never committed)
+migration/
