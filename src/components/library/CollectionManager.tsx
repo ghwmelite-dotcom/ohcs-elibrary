@@ -18,7 +18,7 @@ import { Button } from '@/components/shared/Button';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://api.ohcselibrary.xyz';
 
 interface Collection {
   id: string;

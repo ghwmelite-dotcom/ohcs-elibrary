@@ -97,7 +97,7 @@ app.use('*', prettyJSON());
 app.use('*', cors({
   origin: (origin) => {
     // No origin header (server-to-server or same-origin) — return default production origin
-    if (!origin) return 'https://ohcs-elibrary.pages.dev';
+    if (!origin) return 'https://ohcselibrary.xyz';
 
     const allowedOrigins = [
       'https://ohcs-elibrary.gov.gh',
@@ -112,7 +112,7 @@ app.use('*', cors({
     // Allow any Cloudflare Pages deployment (main or preview)
     if (/^https:\/\/[a-z0-9-]+\.ohcs-elibrary\.pages\.dev$/.test(origin)) return origin;
     // Reject unknown origins — return production origin (will not match browser's Origin, blocking the request)
-    return 'https://ohcs-elibrary.pages.dev';
+    return 'https://ohcselibrary.xyz';
   },
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

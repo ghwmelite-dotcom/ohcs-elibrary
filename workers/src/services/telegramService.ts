@@ -176,7 +176,7 @@ export function escapeMarkdownV2(text: string): string {
 // Message formatter
 // ---------------------------------------------------------------------------
 
-const PLATFORM_URL = 'https://www.ohcselibrary.xyz';
+const PLATFORM_URL = 'https://ohcselibrary.xyz';
 
 /**
  * Format a notification into a Telegram MarkdownV2 message.

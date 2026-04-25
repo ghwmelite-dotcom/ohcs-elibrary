@@ -17,7 +17,7 @@ const path = require('path');
 
 // Configuration
 const API_BASE = process.argv.includes('--remote')
-  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  ? 'https://api.ohcselibrary.xyz/api/v1'
   : 'http://127.0.0.1:8787/api/v1';
 
 const DOCUMENT_LIBRARY_PATH = path.join(__dirname, '..', 'Document Library');

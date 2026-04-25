@@ -583,7 +583,7 @@ function generateWelcomeEmailTemplate(displayName: string): string {
 
               <!-- CTA Button -->
               <div style="text-align: center; margin-bottom: 25px;">
-                <a href="https://ohcs-elibrary.pages.dev/dashboard" style="display: inline-block; background: linear-gradient(135deg, #006B3F 0%, #004d2d 100%); color: white; text-decoration: none; padding: 14px 40px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                <a href="https://ohcselibrary.xyz/dashboard" style="display: inline-block; background: linear-gradient(135deg, #006B3F 0%, #004d2d 100%); color: white; text-decoration: none; padding: 14px 40px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                   Get Started
                 </a>
               </div>
@@ -679,7 +679,7 @@ function generateLoginNotificationTemplate(
               <div style="background: #f8d7da; border-left: 4px solid #CE1126; padding: 15px; border-radius: 0 8px 8px 0;">
                 <p style="margin: 0; color: #721c24; font-size: 14px;">
                   <strong>Wasn't you?</strong><br>
-                  If you didn't log in, please <a href="https://ohcs-elibrary.pages.dev/settings/security" style="color: #006B3F; font-weight: 600;">change your password</a> immediately.
+                  If you didn't log in, please <a href="https://ohcselibrary.xyz/settings/security" style="color: #006B3F; font-weight: 600;">change your password</a> immediately.
                 </p>
               </div>
             </td>
@@ -775,7 +775,7 @@ function generateAdminNotificationTemplate(newUser: {
 
               <!-- CTA Button -->
               <div style="text-align: center;">
-                <a href="https://ohcs-elibrary.pages.dev/admin/users" style="display: inline-block; background: linear-gradient(135deg, #006B3F 0%, #004d2d 100%); color: white; text-decoration: none; padding: 14px 40px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                <a href="https://ohcselibrary.xyz/admin/users" style="display: inline-block; background: linear-gradient(135deg, #006B3F 0%, #004d2d 100%); color: white; text-decoration: none; padding: 14px 40px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                   View in Admin Panel
                 </a>
               </div>

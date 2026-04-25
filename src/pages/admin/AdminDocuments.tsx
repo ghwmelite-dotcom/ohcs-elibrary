@@ -1027,7 +1027,7 @@ function CategoryManagementModal({
     color: '#006B3F',
   });
 
-  const API_URL = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://api.ohcselibrary.xyz';
 
   const resetForm = () => {
     setFormData({ name: '', description: '', icon: 'folder', color: '#006B3F' });
@@ -1497,7 +1497,7 @@ export default function AdminDocuments() {
   const [showFilters, setShowFilters] = useState(false);
   const [documentCategories, setDocumentCategories] = useState<DocumentCategory[]>([]);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://api.ohcselibrary.xyz';
 
   // Fetch categories from API
   const fetchCategories = async () => {

@@ -35,7 +35,7 @@ import { cn } from '@/utils/cn';
 import type { AssignmentSubmission, RubricCriterion, Rubric } from '@/types/lms';
 
 const API_BASE = import.meta.env.PROD
-  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  ? 'https://api.ohcselibrary.xyz/api/v1'
   : '/api/v1';
 
 const getAuthToken = (): string | null => {

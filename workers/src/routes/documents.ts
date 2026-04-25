@@ -966,6 +966,8 @@ documentsRoutes.post('/:id/chat/:messageId/feedback', requireAuth, async (c: App
 
 // Allowed origins for CORS (document viewing)
 const ALLOWED_ORIGINS = [
+  'https://ohcselibrary.xyz',
+  'https://www.ohcselibrary.xyz',
   'https://ohcs-elibrary.pages.dev',
   'https://ohcs-elibrary.gov.gh',
   'http://localhost:5173',
@@ -1127,7 +1129,7 @@ documentsRoutes.get('/:id/view', async (c: AppContext) => {
       headers.set('Access-Control-Allow-Origin', origin);
       headers.set('Access-Control-Allow-Credentials', 'true');
     } else if (!origin && isFromOurApp) {
-      headers.set('Access-Control-Allow-Origin', 'https://ohcs-elibrary.pages.dev');
+      headers.set('Access-Control-Allow-Origin', 'https://ohcselibrary.xyz');
     }
 
     return new Response(responseBody, { headers });

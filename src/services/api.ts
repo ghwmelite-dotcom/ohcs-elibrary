@@ -5,7 +5,7 @@
 
 import { useAuthStore } from '@/stores/authStore';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://api.ohcselibrary.xyz';
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const token = useAuthStore.getState().token;

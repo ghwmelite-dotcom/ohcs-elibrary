@@ -3,7 +3,7 @@ import type { SearchResult, SearchFilter, SearchResultType, SearchHistory } from
 import { useAuthStore } from '@/stores/authStore';
 
 const API_BASE = import.meta.env.PROD
-  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  ? 'https://api.ohcselibrary.xyz/api/v1'
   : '/api/v1';
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {

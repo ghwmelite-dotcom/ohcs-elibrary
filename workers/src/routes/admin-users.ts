@@ -578,7 +578,7 @@ adminUsersRoutes.post('/invite', async (c: AppContext) => {
     ).run();
 
     // Send invitation email using Resend
-    const inviteUrl = `https://ohcs-elibrary.pages.dev/accept-invite?token=${token}`;
+    const inviteUrl = `https://ohcselibrary.xyz/accept-invite?token=${token}`;
 
     try {
       await fetch('https://api.resend.com/emails', {
@@ -588,7 +588,7 @@ adminUsersRoutes.post('/invite', async (c: AppContext) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'OHCS E-Library <noreply@ohcs-elibrary.pages.dev>',
+          from: 'OHCS E-Library <noreply@notify.ohcselibrary.xyz>',
           to: email,
           subject: 'You\'ve been invited to OHCS E-Library as an Admin',
           html: `

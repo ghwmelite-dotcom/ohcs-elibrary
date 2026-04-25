@@ -635,7 +635,7 @@ export default function AdminDashboard() {
         setIsLoading(true);
         setError(null);
 
-        const API_URL = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
+        const API_URL = import.meta.env.VITE_API_URL || 'https://api.ohcselibrary.xyz';
         const response = await fetch(`${API_URL}/api/v1/admin/stats`, {
           headers: {
             'Authorization': `Bearer ${token}`,

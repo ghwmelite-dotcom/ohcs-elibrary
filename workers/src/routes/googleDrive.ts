@@ -88,6 +88,8 @@ export const googleDriveRoutes = new Hono<{ Bindings: Env; Variables: Variables 
 
 // Allowed origins for CORS (must stay in sync with documents.ts)
 const ALLOWED_ORIGINS = [
+  'https://ohcselibrary.xyz',
+  'https://www.ohcselibrary.xyz',
   'https://ohcs-elibrary.pages.dev',
   'https://ohcs-elibrary.gov.gh',
   'http://localhost:5173',

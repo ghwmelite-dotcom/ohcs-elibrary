@@ -1031,7 +1031,7 @@ authRoutes.post('/forgot-password', zValidator('json', forgotPasswordSchema), as
     if (c.env.RESEND_API_KEY || c.env.GMAIL_CLIENT_ID) {
       try {
         const gmailCreds = getGmailCredentials(c.env);
-        const resetUrl = `https://ohcs-elibrary.pages.dev/reset-password?token=${resetToken}`;
+        const resetUrl = `https://ohcselibrary.xyz/reset-password?token=${resetToken}`;
         await sendPasswordResetEmail(
           c.env.RESEND_API_KEY,
           email.toLowerCase(),

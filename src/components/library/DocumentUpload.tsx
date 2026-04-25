@@ -24,7 +24,7 @@ import { formatFileSize } from '@/utils/formatters';
 
 // API base URL
 const API_BASE = import.meta.env.PROD
-  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  ? 'https://api.ohcselibrary.xyz/api/v1'
   : '/api/v1';
 
 const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB

@@ -528,7 +528,7 @@ function generateDigestEmailHtml(data: UserDigestData): string {
             <li style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px;">
               <div style="font-weight: 600; color: #333;">${escapeHtml(item.title)}</div>
               <div style="color: #666; font-size: 14px; margin-top: 4px;">${escapeHtml(item.message || '')}</div>
-              ${item.link ? `<a href="https://ohcs-elibrary.pages.dev${item.link}" style="color: #006B3F; font-size: 13px; margin-top: 6px; display: inline-block;">View details →</a>` : ''}
+              ${item.link ? `<a href="https://ohcselibrary.xyz${item.link}" style="color: #006B3F; font-size: 13px; margin-top: 6px; display: inline-block;">View details →</a>` : ''}
             </li>
           `).join('')}
           ${items.length > 5 ? `<li style="padding: 10px; color: #666; font-style: italic;">...and ${items.length - 5} more</li>` : ''}
@@ -575,7 +575,7 @@ function generateDigestEmailHtml(data: UserDigestData): string {
 
       <!-- CTA Button -->
       <div style="text-align: center; margin: 30px 0;">
-        <a href="https://ohcs-elibrary.pages.dev/notifications"
+        <a href="https://ohcselibrary.xyz/notifications"
            style="background: #006B3F; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
           View All Notifications
         </a>
@@ -587,7 +587,7 @@ function generateDigestEmailHtml(data: UserDigestData): string {
       <p style="color: #666; font-size: 12px; margin: 0;">
         You're receiving this because you enabled email digests.
         <br>
-        <a href="https://ohcs-elibrary.pages.dev/settings?section=notifications" style="color: #006B3F;">Manage your notification preferences</a>
+        <a href="https://ohcselibrary.xyz/settings?section=notifications" style="color: #006B3F;">Manage your notification preferences</a>
       </p>
       <p style="color: #999; font-size: 11px; margin-top: 15px;">
         Office of the Head of Civil Service, Ghana
@@ -650,7 +650,7 @@ function generateImmediateNotificationEmailHtml(notification: NotificationForDig
 
       ${notification.link ? `
       <div style="text-align: center; margin: 30px 0;">
-        <a href="https://ohcs-elibrary.pages.dev${notification.link}"
+        <a href="https://ohcselibrary.xyz${notification.link}"
            style="background: #006B3F; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
           View Details
         </a>
@@ -661,7 +661,7 @@ function generateImmediateNotificationEmailHtml(notification: NotificationForDig
     <!-- Footer -->
     <div style="background: #f8f9fa; padding: 20px; text-align: center; border-top: 3px solid #FCD116;">
       <p style="color: #666; font-size: 12px; margin: 0;">
-        <a href="https://ohcs-elibrary.pages.dev/settings?section=notifications" style="color: #006B3F;">Manage notification preferences</a>
+        <a href="https://ohcselibrary.xyz/settings?section=notifications" style="color: #006B3F;">Manage notification preferences</a>
       </p>
       <p style="color: #999; font-size: 11px; margin-top: 15px;">
         Office of the Head of Civil Service, Ghana

@@ -5,7 +5,7 @@ compatibility_date = "2024-01-01"
 [vars]
 ENVIRONMENT = "development"
 # Non-secret config values only — all secrets set via `npx wrangler secret put <NAME>`
-GOOGLE_DRIVE_REDIRECT_URI = "https://ohcs-elibrary.pages.dev/admin/integrations/google-drive/callback"
+GOOGLE_DRIVE_REDIRECT_URI = "https://ohcselibrary.xyz/admin/integrations/google-drive/callback"
 # The following are set as encrypted Cloudflare secrets (not in this file):
 # JWT_SECRET, RESEND_API_KEY, GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET,
 # GMAIL_REFRESH_TOKEN, PAYSTACK_SECRET_KEY, PAYSTACK_PUBLIC_KEY,

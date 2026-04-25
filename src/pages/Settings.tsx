@@ -193,7 +193,7 @@ export default function Settings() {
             }}
             onSave={async (data) => {
               const API_BASE = import.meta.env.PROD
-                ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+                ? 'https://api.ohcselibrary.xyz/api/v1'
                 : '/api/v1';
 
               const token = localStorage.getItem('auth_token') ||

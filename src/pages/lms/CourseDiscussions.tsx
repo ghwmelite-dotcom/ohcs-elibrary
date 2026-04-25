@@ -37,7 +37,7 @@ import type { Discussion, DiscussionReply } from '@/types/lms';
 
 // API configuration
 const API_BASE = import.meta.env.PROD
-  ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+  ? 'https://api.ohcselibrary.xyz/api/v1'
   : '/api/v1';
 
 const getAuthToken = (): string | null => {

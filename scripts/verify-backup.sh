@@ -12,7 +12,7 @@
 set -euo pipefail
 
 # ── Configuration ────────────────────────────────────────────────────────────
-API_BASE="https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1"
+API_BASE="${API_BASE:-https://api.ohcselibrary.xyz/api/v1}"
 TOKEN="${1:-}"
 WORK_FILE="/tmp/ohcs-backup-verify-$$.json"
 

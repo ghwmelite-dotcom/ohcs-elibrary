@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const API_BASE = 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1';
+const API_BASE = 'https://api.ohcselibrary.xyz/api/v1';
 const DOCUMENT_LIBRARY_PATH = path.join(__dirname, '..', 'Document Library');
 
 // Files that failed due to rate limiting

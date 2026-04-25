@@ -319,7 +319,7 @@ async function handleStart(
       '🇬🇭 *Welcome to the OHCS E\\-Library Bot\\!*\n\n' +
       'Your official digital companion for Ghana\\\'s Civil Service\\. Access policy documents, training materials, career resources, and stay updated with service\\-wide announcements — all at your fingertips\\.\n\n' +
       'To receive notifications here, link your account:\n' +
-      '1\\. Sign in at [ohcselibrary\\.xyz](https://www.ohcselibrary.xyz)\n' +
+      '1\\. Sign in at [ohcselibrary\\.xyz](https://ohcselibrary.xyz)\n' +
       '2\\. Go to *Settings → Notifications → Telegram*\n' +
       '3\\. Click *Connect Telegram*';
     await sendTelegramMessage(botToken, chatId, welcome, 'MarkdownV2');
@@ -643,7 +643,7 @@ async function handleSettings(botToken: string, chatId: string): Promise<void> {
     botToken,
     chatId,
     '⚙️ Manage your notification settings on the platform:\n' +
-    '[Open Notification Settings](https://www.ohcselibrary.xyz/settings/notifications)',
+    '[Open Notification Settings](https://ohcselibrary.xyz/settings/notifications)',
     'MarkdownV2',
   );
 }

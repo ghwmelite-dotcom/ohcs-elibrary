@@ -62,7 +62,7 @@ type CallStore = CallState & CallActions;
 
 const API_BASE =
   import.meta.env.VITE_API_URL ||
-  'https://ohcs-elibrary-api.ghwmelite.workers.dev';
+  'https://api.ohcselibrary.xyz';
 
 async function callApi(
   path: string,

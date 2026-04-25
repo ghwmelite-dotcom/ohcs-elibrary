@@ -966,7 +966,7 @@ app.post('/exports', async (c) => {
     // with a generated file URL (in production, this would be a real R2 file)
 
     // Generate a placeholder download URL (in production, this would be an R2 signed URL)
-    const fileUrl = `https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1/settings/exports/${id}/download`;
+    const fileUrl = `https://api.ohcselibrary.xyz/api/v1/settings/exports/${id}/download`;
 
     await c.env.DB.prepare(`
       INSERT INTO data_exports (id, userId, type, format, status, progress, expiresAt, completedAt, fileSize, fileUrl)

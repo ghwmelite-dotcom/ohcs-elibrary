@@ -38,7 +38,7 @@ import type {
 } from '@/types';
 
 // API base URL
-const API_BASE = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://api.ohcselibrary.xyz/api/v1';
 
 // --- Interfaces ---
 

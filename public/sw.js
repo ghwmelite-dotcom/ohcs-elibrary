@@ -1,11 +1,11 @@
 // OHCS E-Library Service Worker
-const CACHE_NAME = 'ohcs-elibrary-v7';
-const RUNTIME_CACHE = 'ohcs-runtime-v7';
+const CACHE_NAME = 'ohcs-elibrary-v8';
+const RUNTIME_CACHE = 'ohcs-runtime-v8';
 const ARTICLES_CACHE = 'ohcs-articles-v1';
 const API_CACHE = 'ohcs-api-v1';
 
 // API base URL
-const API_BASE = 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
+const API_BASE = 'https://api.ohcselibrary.xyz';
 
 // Assets to cache immediately on install
 const PRECACHE_ASSETS = [

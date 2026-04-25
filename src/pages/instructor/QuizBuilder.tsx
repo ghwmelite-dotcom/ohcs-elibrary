@@ -698,7 +698,7 @@ export default function QuizBuilder() {
   const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null);
   const [showSettings, setShowSettings] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'https://ohcs-elibrary-api.ghwmelite.workers.dev';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://api.ohcselibrary.xyz';
 
   const fetchQuiz = useCallback(async () => {
     if (!quizId || !token) return;

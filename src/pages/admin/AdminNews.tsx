@@ -820,7 +820,7 @@ export default function AdminNews() {
 
   const { token } = useAuthStore();
   const API_URL = import.meta.env.PROD
-    ? 'https://ohcs-elibrary-api.ghwmelite.workers.dev/api/v1'
+    ? 'https://api.ohcselibrary.xyz/api/v1'
     : '/api/v1';
 
   // Fetch news data
