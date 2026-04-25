@@ -3,6 +3,7 @@ import { AI_DEFAULTS } from '../../config/aiModels';
 import { analyzeLiteratureGaps, refineResearchQuestion, suggestMethodology, generateAutoTags, crossProjectInsights } from '../../services/researchAI';
 import { generateId, requireAuth, isProjectMember, logActivity, parseAIBriefResponse } from './helpers';
 import type { Env, Variables, AppContext } from './helpers';
+import { stripModelReasoning } from '../../services/aiResponseSanitizer';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -71,7 +72,7 @@ ${projectContext.objectives?.length ? `Objectives:\n${projectContext.objectives.
       temperature: 0.7,
     });
 
-    const reply = response.response?.trim() || 'I apologize, I encountered an issue. Please try rephrasing your question.';
+    const reply = stripModelReasoning(response.response || '').trim() || 'I apologize, I encountered an issue. Please try rephrasing your question.';
 
     return c.json({
       reply,
@@ -152,7 +153,7 @@ JSON Output:`;
     let insights = [];
     try {
       // Try to parse JSON from response
-      const responseText = response.response || '';
+      const responseText = stripModelReasoning(response.response || '') || '';
       const jsonMatch = responseText.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         insights = JSON.parse(jsonMatch[0]);
@@ -163,7 +164,7 @@ JSON Output:`;
       insights = [{
         type: 'recommendation',
         title: 'AI Analysis',
-        content: response.response || 'Unable to generate insights',
+        content: stripModelReasoning(response.response || '') || 'Unable to generate insights',
         priority: 'medium'
       }];
     }
@@ -335,7 +336,7 @@ Summary:`;
       temperature: 0.3,
     });
 
-    const summary = response.response?.trim() || 'Unable to generate summary';
+    const summary = stripModelReasoning(response.response || '').trim() || 'Unable to generate summary';
 
     // Update literature with summary in notes
     const updatedNotes = notes
@@ -421,7 +422,7 @@ Brief:`;
       temperature: 0.4,
     });
 
-    const content = response.response?.trim() || 'Unable to generate brief';
+    const content = stripModelReasoning(response.response || '').trim() || 'Unable to generate brief';
 
     // Generate a title
     const briefTitle = `${briefType.charAt(0).toUpperCase() + briefType.slice(1)} Brief: ${row.title.substring(0, 50)}`;
@@ -672,7 +673,7 @@ Insights:`;
     });
 
     return c.json({
-      analysis: response.response?.trim() || 'Unable to analyze text',
+      analysis: stripModelReasoning(response.response || '').trim() || 'Unable to analyze text',
       analysisType
     });
   } catch (error) {

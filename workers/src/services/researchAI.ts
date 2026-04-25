@@ -6,6 +6,7 @@
  */
 
 import { AI_DEFAULTS, AI_MODELS } from '../config/aiModels';
+import { stripModelReasoning } from './aiResponseSanitizer';
 
 interface Env {
   DB: D1Database;
@@ -78,7 +79,7 @@ Respond in JSON format:
     temperature: AI_DEFAULTS.researchAnalysis.temperature,
   });
 
-  const text = response.response?.trim() || '';
+  const text = stripModelReasoning(response.response || '').trim() || '';
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
@@ -122,7 +123,7 @@ Respond in JSON format:
     temperature: AI_DEFAULTS.researchAnalysis.temperature,
   });
 
-  const text = response.response?.trim() || '';
+  const text = stripModelReasoning(response.response || '').trim() || '';
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
@@ -164,7 +165,7 @@ Respond in JSON format:
     temperature: AI_DEFAULTS.researchAnalysis.temperature,
   });
 
-  const text = response.response?.trim() || '';
+  const text = stripModelReasoning(response.response || '').trim() || '';
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
@@ -209,7 +210,7 @@ Example response: ["public health", "qualitative research", "ghana", "maternal c
     temperature: 0.2,
   });
 
-  const text = response.response?.trim() || '';
+  const text = stripModelReasoning(response.response || '').trim() || '';
   try {
     const arrMatch = text.match(/\[[\s\S]*\]/);
     if (arrMatch) {
@@ -271,7 +272,7 @@ Respond in JSON format:
     temperature: AI_DEFAULTS.researchAnalysis.temperature,
   });
 
-  const text = response.response?.trim() || '';
+  const text = stripModelReasoning(response.response || '').trim() || '';
   try {
     const arrMatch = text.match(/\[[\s\S]*\]/);
     if (arrMatch) {

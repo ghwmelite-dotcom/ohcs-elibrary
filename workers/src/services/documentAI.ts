@@ -4,6 +4,7 @@
  */
 
 import { AI_DEFAULTS, AI_MODELS } from '../config/aiModels';
+import { stripModelReasoning } from './aiResponseSanitizer';
 
 // Using native APIs for decompression in Workers environment
 
@@ -608,7 +609,7 @@ Answer:`;
       temperature: AI_DEFAULTS.documentChat.temperature,
     });
 
-    return response?.response?.trim() ||
+    return stripModelReasoning(response?.response || '').trim() ||
       `I apologize, but I couldn't generate an answer to your question. Please try rephrasing or ask a different question about this document.`;
   } catch (error) {
     console.error('Q&A failed:', error);

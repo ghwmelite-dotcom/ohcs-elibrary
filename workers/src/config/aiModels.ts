@@ -8,9 +8,13 @@
  */
 
 export const AI_MODELS = {
-  /** High-capability reasoning model for complex tasks */
+  /** High-capability reasoning model for complex tasks (research analysis) */
   HEAVY: '@cf/qwen/qwq-32b' as const,
-  /** Efficient model for simple generation tasks */
+  /** Strong conversational model — Llama 3.3 70B FP8, no chain-of-thought.
+   *  Used for chat-style outputs (Kaya counselor, GUIDE Q&A, document chat)
+   *  where answers must read like normal messages, not reasoning logs. */
+  CHAT: '@cf/meta/llama-3.3-70b-instruct-fp8-fast' as const,
+  /** Efficient model for simple generation tasks (summaries, topics, news) */
   LIGHT: '@cf/meta/llama-4-scout-17b-16e-instruct' as const,
   /** Multilingual embedding model (1024-dim, 100+ languages) */
   EMBEDDING: '@cf/baai/bge-m3' as const,
@@ -31,21 +35,21 @@ export const AI_DEFAULTS = {
     keyPoints: { max_tokens: 500, temperature: 0.3 },
     topics: { max_tokens: 150, temperature: 0.2 },
   },
-  /** Document Q&A (needs reasoning) */
+  /** Document Q&A — Llama 3.3 70B for high-quality conversational answers */
   documentChat: {
-    model: AI_MODELS.HEAVY,
+    model: AI_MODELS.CHAT,
     max_tokens: 700,
     temperature: 0.4,
   },
-  /** GUIDE knowledge assistant (RAG) */
+  /** GUIDE knowledge assistant (RAG) — Llama 3.3 70B */
   ozzy: {
-    model: AI_MODELS.HEAVY,
+    model: AI_MODELS.CHAT,
     max_tokens: 900,
     temperature: 0.7,
   },
-  /** Kaya wellness counselor */
+  /** Kaya wellness counselor — Llama 3.3 70B for empathetic conversation */
   counselor: {
-    model: AI_MODELS.HEAVY,
+    model: AI_MODELS.CHAT,
     response: { max_tokens: 500, temperature: 0.85 },
     escalation: { max_tokens: 200, temperature: 0.2 },
     summary: { max_tokens: 200, temperature: 0.3 },

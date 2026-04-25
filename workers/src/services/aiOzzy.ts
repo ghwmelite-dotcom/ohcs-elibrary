@@ -5,6 +5,7 @@
 
 import { extractTextFromDocument } from './documentAI';
 import { AI_MODELS, AI_DEFAULTS, EMBEDDING_DIMENSION } from '../config/aiModels';
+import { stripModelReasoning } from './aiResponseSanitizer';
 
 interface Env {
   DB: D1Database;
@@ -513,6 +514,8 @@ User: ${userQuestion}
 
 Provide a helpful, accurate response based on the document sources above. If the information is not available in the sources, honestly say so and suggest they contact their HR department or OHCS directly.
 
+OUTPUT: Respond ONLY with the answer the user should see — no internal planning, no "Reply:" labels, no meta-analysis.
+
 GUIDE:`;
 
       aiResponse = await env.AI.run(AI_DEFAULTS.ozzy.model, {
@@ -532,7 +535,7 @@ GUIDE:`;
       };
     }
 
-    let responseText = aiResponse?.response?.trim();
+    let responseText = stripModelReasoning(aiResponse?.response || '').trim();
 
     if (!responseText) {
       responseText = "I apologize, but I couldn't generate a response. Please try rephrasing your question.";

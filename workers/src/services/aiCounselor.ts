@@ -4,6 +4,7 @@
  */
 
 import { AI_DEFAULTS } from '../config/aiModels';
+import { stripModelReasoning } from './aiResponseSanitizer';
 
 interface Env {
   DB: D1Database;
@@ -97,8 +98,9 @@ This is the start of a new conversation. In your response:
 1. Warmly greet them and introduce yourself as Kaya, the AI wellness companion
 2. Briefly mention you're an AI here to provide supportive conversation
 3. Ask for their name so you can address them personally
-4. Then gently ask what's on their mind
-Keep it natural and welcoming, not overly formal.` : ''}
+4. Mention briefly that they can ask to connect with a live human CSEAP counselor anytime they wish — phrase it as a gentle option, not a disclaimer (e.g. "If at any point you'd rather speak with a human counselor from our CSEAP team, just say the word and I'll connect you")
+5. Then gently ask what's on their mind
+Keep it natural and welcoming, not overly formal. Weave the live-counselor option in naturally — it should feel like a friendly offer, not a legal notice.` : ''}
 
 CONVERSATION STYLE:
 - Talk like you're having a real conversation with a friend
@@ -113,6 +115,7 @@ CONVERSATION STYLE:
 WHAT NOT TO DO:
 - Don't pretend to be a human or the actual Kaya
 - Don't sound scripted or robotic
+- Don't describe yourself in mechanical / system terms — never say things like "I'm 100% robot", "human-hearted interface", "empathy programmed in", "lots of empathy in my code", or similar phrasings that lean into the AI-machinery angle. Acknowledge being an AI plainly when asked, then move on.
 - Don't overuse phrases like "I understand" or "That must be difficult"
 - Don't give unsolicited advice - listen first, then offer if asked
 - Don't be fake-positive or dismiss real struggles
@@ -125,7 +128,9 @@ IMPORTANT:
 - Always be honest about being an AI when asked
 
 ${topicContext}
-${moodContext}`;
+${moodContext}
+
+OUTPUT: Respond ONLY with the chat message you want the user to see — nothing else. No headings, no "Reply:" labels, no internal planning, no "Why this works" notes.`;
 
     const fullPrompt = `${systemPrompt}
 
@@ -155,7 +160,7 @@ Reply naturally as Kaya:`;
     }
 
     // Clean up response
-    aiResponse = aiResponse
+    aiResponse = stripModelReasoning(aiResponse)
       .replace(/^(Kaya:|Dr\.?\s*Sena:|Ayo:|Assistant:|AI:)\s*/i, '')
       .trim();
 
@@ -280,7 +285,7 @@ REASON: [brief reason or "none"]`;
       temperature: AI_DEFAULTS.counselor.escalation.temperature,
     });
 
-    const text = response?.response || '';
+    const text = stripModelReasoning(response?.response || '');
     const escalateMatch = text.match(/ESCALATE:\s*(YES|NO)/i);
     const urgencyMatch = text.match(/URGENCY:\s*(low|normal|high|crisis)/i);
     const reasonMatch = text.match(/REASON:\s*(.+)/i);
@@ -328,7 +333,7 @@ SUMMARY:`;
       temperature: AI_DEFAULTS.counselor.summary.temperature,
     });
 
-    return response?.response?.trim() || generateFallbackSummary(messages);
+    return stripModelReasoning(response?.response || '').trim() || generateFallbackSummary(messages);
   } catch (error) {
     console.error('Session summary error:', error);
     return generateFallbackSummary(messages);
