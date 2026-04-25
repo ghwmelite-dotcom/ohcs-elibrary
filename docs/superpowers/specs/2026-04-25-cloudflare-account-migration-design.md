@@ -72,6 +72,8 @@ Migration uses Resend for email exclusively. Gmail OAuth secrets are skipped —
 | `PAYSTACK_PUBLIC_KEY` | Copied from Paystack dashboard (live key). |
 | `GOOGLE_DRIVE_CLIENT_ID` | Copied from Google Cloud Console (visible). |
 | `GOOGLE_DRIVE_CLIENT_SECRET` | Newly rotated secret (Reset Secret was performed in Google Cloud Console). Old secret kept active until D+3 to D+7 verification. |
+| `TELEGRAM_BOT_TOKEN` | Retrieved from BotFather (`/mybots` → bot → API Token). |
+| `TELEGRAM_WEBHOOK_SECRET` | Generated fresh: `openssl rand -hex 32`. Registered with Telegram via `setWebhook` at cutover. |
 
 ### Code changes
 
@@ -88,8 +90,10 @@ Repository-level changes merged before cutover:
 | `workers/src/services/telegramService.ts:179` | `PLATFORM_URL` → `https://ohcselibrary.xyz` (drop `www.`) |
 | `workers/src/routes/telegram.ts:322` | Apex domain in deep link |
 | `workers/src/routes/telegram.ts:646` | Apex domain in deep link |
+| `workers/src/index.ts:100` | CORS default origin → `https://ohcselibrary.xyz` |
+| `workers/src/index.ts:115` | CORS fallback origin → `https://ohcselibrary.xyz` |
 
-CORS allowlist (`workers/src/index.ts:105-106`) already includes both apex and www; no change needed.
+CORS allowlist (`workers/src/index.ts:102-109`) already includes both apex and www; no change to the allowlist itself.
 
 ---
 
