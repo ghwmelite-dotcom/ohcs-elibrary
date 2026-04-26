@@ -80,6 +80,24 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
     secret: 'bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400',
   };
 
+  // Branded color per file type — visually distinct so users can spot
+  // formats at a glance.
+  const fileTypeLabel = formatFileType(document.fileType);
+  const fileTypeBadgeClass = (() => {
+    const t = (fileTypeLabel || '').toUpperCase();
+    if (t === 'PDF') return 'bg-red-600 text-white';
+    if (t === 'DOC' || t === 'DOCX' || t.includes('GOOGLE DOC')) return 'bg-blue-600 text-white';
+    if (t === 'XLS' || t === 'XLSX' || t.includes('GOOGLE SHEET')) return 'bg-emerald-600 text-white';
+    if (t === 'PPT' || t === 'PPTX' || t.includes('GOOGLE SLIDES')) return 'bg-orange-600 text-white';
+    if (t === 'TXT' || t === 'MD' || t === 'RTF') return 'bg-slate-600 text-white';
+    if (t === 'CSV') return 'bg-teal-600 text-white';
+    if (['JPG', 'JPEG', 'PNG', 'GIF', 'WEBP', 'SVG', 'BMP'].includes(t)) return 'bg-purple-600 text-white';
+    if (['MP3', 'WAV', 'OGG', 'M4A'].includes(t)) return 'bg-pink-600 text-white';
+    if (['MP4', 'WEBM', 'MOV', 'AVI'].includes(t)) return 'bg-fuchsia-600 text-white';
+    if (['ZIP', 'RAR', '7Z', 'TAR', 'GZ'].includes(t)) return 'bg-amber-700 text-white';
+    return 'bg-surface-700 text-white';
+  })();
+
   const handleDelete = async () => {
     const confirmMessage = isLocalDocument
       ? 'Delete this local document? This cannot be undone.'
@@ -180,13 +198,22 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
       >
         <div className="flex items-center gap-4">
           <div
-            className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+            className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 relative"
             style={{ backgroundColor: `${category?.color || '#006B3F'}20` }}
           >
             <FileText
               className="w-6 h-6"
               style={{ color: category?.color || '#006B3F' }}
             />
+            {/* File type badge — corner pill on icon */}
+            <span
+              className={cn(
+                'absolute -bottom-1 -right-1 text-[9px] font-bold leading-none px-1.5 py-0.5 rounded shadow-sm',
+                fileTypeBadgeClass
+              )}
+            >
+              {fileTypeLabel}
+            </span>
           </div>
 
           <div className="flex-1 min-w-0">
@@ -327,6 +354,16 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
           </Dropdown>
         </div>
 
+        {/* File Type Badge — prominent, color-coded */}
+        <span
+          className={cn(
+            'absolute bottom-3 right-3 text-[11px] font-bold tracking-wide px-2 py-1 rounded-md shadow-sm',
+            fileTypeBadgeClass
+          )}
+        >
+          {fileTypeLabel}
+        </span>
+
         {/* Category Badge */}
         {category && (
           <div
@@ -357,16 +394,20 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
           {document.description}
         </p>
 
-        {/* Metadata */}
+        {/* Metadata — views, downloads, rating, time */}
         <div className="mt-4 flex items-center justify-between text-xs text-surface-500">
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1" title={`${document.views} views`}>
               <Eye className="w-3.5 h-3.5" />
-              {document.views}
+              {document.views ?? 0}
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1" title={`${document.downloads} downloads`}>
+              <Download className="w-3.5 h-3.5" />
+              {document.downloads ?? 0}
+            </span>
+            <span className="flex items-center gap-1" title={`Average rating ${document.averageRating?.toFixed(1) ?? '0.0'}`}>
               <Star className="w-3.5 h-3.5 text-secondary-500" />
-              {document.averageRating.toFixed(1)}
+              {(document.averageRating ?? 0).toFixed(1)}
             </span>
           </div>
           <span className="flex items-center gap-1">
@@ -375,9 +416,8 @@ export function DocumentCard({ document, category, viewMode = 'grid', onView }: 
           </span>
         </div>
 
-        {/* File Info */}
-        <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex items-center justify-between text-xs text-surface-400">
-          <span className="uppercase font-medium">{formatFileType(document.fileType)}</span>
+        {/* File size — type badge already on thumbnail above */}
+        <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex items-center justify-end text-xs text-surface-400">
           <span>{formatFileSize(document.fileSize)}</span>
         </div>
       </div>

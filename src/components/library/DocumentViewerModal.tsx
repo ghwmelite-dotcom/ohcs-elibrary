@@ -107,11 +107,14 @@ export function DocumentViewerModal({
       return '';
     }
 
-    // For external viewers (like Google Docs Viewer), we need a publicly accessible URL
-    // with the auth token as a query parameter (backend supports this)
+    // For external viewers (like Google Docs Viewer) we need an ABSOLUTE,
+    // publicly accessible URL with the auth token as a query parameter — those
+    // viewers fetch from their own servers and can't resolve relative paths
+    // or send Authorization headers.
     if (forExternalViewer) {
       const token = getAuthToken();
-      const baseUrl = `${API_BASE}/documents/${document.id}/view`;
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const baseUrl = `${origin}${API_BASE}/documents/${document.id}/view`;
       return token ? `${baseUrl}?token=${encodeURIComponent(token)}` : baseUrl;
     }
 
@@ -783,18 +786,23 @@ export function DocumentViewerModal({
                       );
                     }
 
-                    // For API documents, use Google Docs Viewer with the public API URL
-                    // (includes auth token as query parameter)
-                    const publicUrl = getDocumentUrl(true); // Get URL for external viewer
-                    const googleDocsUrl = `https://docs.google.com/gview?url=${encodeURIComponent(publicUrl)}&embedded=true`;
+                    // For API documents, use Microsoft Office Online Viewer for
+                    // Office formats (DOC/XLS/PPT) — it's purpose-built for
+                    // Office files and far more reliable than gview, which
+                    // routinely shows "Couldn't preview file" for valid XLSX.
+                    // gview is kept as a fallback if MS viewer fails.
+                    const publicUrl = getDocumentUrl(true); // absolute URL with ?token=
+                    const cacheBuster = `&_=${document.id}`;
+                    const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}${cacheBuster}`;
 
                     return (
                       <iframe
-                        src={googleDocsUrl}
+                        src={officeViewerUrl}
                         className="w-full h-full border-0"
                         title={document.title}
                         onLoad={handleIframeLoad}
                         onError={handleIframeError}
+                        allow="fullscreen"
                       />
                     );
                   }

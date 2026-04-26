@@ -1012,8 +1012,28 @@ documentsRoutes.get('/:id/view', async (c: AppContext) => {
   try {
     const { DB, DOCUMENTS } = c.env;
     const documentId = c.req.param('id');
-    const userId = c.get('userId') || 'guest';
-    const userRole = c.get('userRole') || 'guest';
+    let userId = c.get('userId') || 'guest';
+    let userRole = c.get('userRole') || 'guest';
+
+    // Iframes and external viewers (Google Docs Viewer) can't send Authorization
+    // headers — they pass the JWT as a `?token=...` query parameter instead.
+    // If we don't have a userId from the standard auth middleware, accept the
+    // query token as a fallback.
+    if (userId === 'guest') {
+      const queryToken = c.req.query('token');
+      if (queryToken) {
+        try {
+          const { verify } = await import('hono/jwt');
+          const payload = await verify(queryToken, c.env.JWT_SECRET) as { sub?: string; role?: string };
+          if (payload?.sub) {
+            userId = payload.sub;
+            userRole = payload.role || 'civil_servant';
+          }
+        } catch {
+          // Invalid/expired token — fall through as guest, will hit access check below
+        }
+      }
+    }
 
     const document = await DB.prepare(`
       SELECT * FROM documents WHERE id = ?
@@ -1145,9 +1165,27 @@ documentsRoutes.get('/:id/view', async (c: AppContext) => {
 documentsRoutes.get('/:id/download', async (c: AppContext) => {
   try {
     const { DB, DOCUMENTS } = c.env;
-    const userId = c.get('userId') || 'guest';
-    const userRole = c.get('userRole') || 'guest';
+    let userId = c.get('userId') || 'guest';
+    let userRole = c.get('userRole') || 'guest';
     const documentId = c.req.param('id');
+
+    // Same query-token fallback as /view — browser direct-downloads via
+    // <a download href="..."> can't send Authorization headers.
+    if (userId === 'guest') {
+      const queryToken = c.req.query('token');
+      if (queryToken) {
+        try {
+          const { verify } = await import('hono/jwt');
+          const payload = await verify(queryToken, c.env.JWT_SECRET) as { sub?: string; role?: string };
+          if (payload?.sub) {
+            userId = payload.sub;
+            userRole = payload.role || 'civil_servant';
+          }
+        } catch {
+          // Invalid/expired token — fall through as guest
+        }
+      }
+    }
 
     const document = await DB.prepare(`
       SELECT * FROM documents WHERE id = ?

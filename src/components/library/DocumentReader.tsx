@@ -191,13 +191,21 @@ export function DocumentReader({
       return `https://drive.google.com/file/d/${googleDriveFileId}/preview`;
     }
 
-    // For local files or as fallback, use our API endpoint
-    const baseUrl = `${API_BASE}/documents/${documentId}/view`;
+    // For local files: build the API URL (with token query param for iframe auth)
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const baseUrl = `${origin}${API_BASE}/documents/${documentId}/view`;
     const token = getAuthToken();
-    if (token) {
-      return `${baseUrl}?token=${encodeURIComponent(token)}`;
+    const apiUrl = token ? `${baseUrl}?token=${encodeURIComponent(token)}` : baseUrl;
+
+    // For Office formats (DOC/XLS/PPT and OOXML variants), wrap in Microsoft
+    // Office Online Viewer — it's purpose-built for Office files. Browsers
+    // can't render .docx/.xlsx/.pptx natively. MS viewer is more reliable
+    // than Google's gview for OOXML files.
+    if (isOfficeFormat(fileType)) {
+      return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(apiUrl)}`;
     }
-    return baseUrl;
+
+    return apiUrl;
   };
 
   // Get view URL for media files (audio/video) - always use API streaming
