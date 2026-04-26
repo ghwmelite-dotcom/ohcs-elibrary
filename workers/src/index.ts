@@ -1,3 +1,5 @@
+// OHCS E-Library Worker
+// Auto-deployed via GitHub Actions on push to master (workers/** path filter).
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
