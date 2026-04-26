@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/stores/authStore';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://api.ohcselibrary.xyz';
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
 export function useResearchApi() {
   const { token } = useAuthStore();

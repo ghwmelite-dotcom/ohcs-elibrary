@@ -15,7 +15,7 @@ GOOGLE_DRIVE_REDIRECT_URI = "https://ohcselibrary.xyz/admin/integrations/google-
 [[d1_databases]]
 binding = "DB"
 database_name = "ohcs-elibrary"
-database_id = "8bf3f71a-a1a6-4f27-9d5f-fb7413163e7d"
+database_id = "4c8dab61-2cf4-4654-9a9a-51e7aebc031f"
 
 # R2 Storage binding for documents
 [[r2_buckets]]

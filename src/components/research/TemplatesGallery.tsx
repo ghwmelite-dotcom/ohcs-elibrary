@@ -27,7 +27,7 @@ interface TemplatesGalleryProps {
   onClose?: () => void;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://api.ohcselibrary.xyz';
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
 const DIFFICULTY_COLORS = {
   beginner: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',

@@ -1,11 +1,8 @@
 // OHCS E-Library Service Worker
-const CACHE_NAME = 'ohcs-elibrary-v8';
-const RUNTIME_CACHE = 'ohcs-runtime-v8';
+const CACHE_NAME = 'ohcs-elibrary-v9';
+const RUNTIME_CACHE = 'ohcs-runtime-v9';
 const ARTICLES_CACHE = 'ohcs-articles-v1';
 const API_CACHE = 'ohcs-api-v1';
-
-// API base URL
-const API_BASE = 'https://api.ohcselibrary.xyz';
 
 // Assets to cache immediately on install
 const PRECACHE_ASSETS = [
@@ -78,6 +75,14 @@ self.addEventListener('fetch', (event) => {
 
   // Skip non-GET requests
   if (request.method !== 'GET') {
+    return;
+  }
+
+  // NEVER intercept API or worker-route requests — they must hit the network
+  // directly so authentication, freshness, and routing all work correctly.
+  if (url.pathname.startsWith('/api/') ||
+      url.pathname.startsWith('/cdn-cgi/') ||
+      url.pathname.startsWith('/health')) {
     return;
   }
 

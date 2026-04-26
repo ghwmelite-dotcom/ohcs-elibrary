@@ -31,7 +31,7 @@ import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
 import type { CounselorTopic, CounselorStatus } from '@/types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://api.ohcselibrary.xyz/api/v1';
+const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`;
 
 // --- Interfaces ---
 

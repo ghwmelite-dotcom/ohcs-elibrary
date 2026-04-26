@@ -60,9 +60,7 @@ type CallStore = CallState & CallActions;
 
 // ─── API Helper ──────────────────────────────────────────────────────────────
 
-const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  'https://api.ohcselibrary.xyz';
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
 async function callApi(
   path: string,

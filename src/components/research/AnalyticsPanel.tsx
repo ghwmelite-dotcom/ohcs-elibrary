@@ -26,7 +26,7 @@ interface AnalyticsPanelProps {
   projectId: string;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://api.ohcselibrary.xyz';
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
 export function AnalyticsPanel({ projectId }: AnalyticsPanelProps) {
   const { token } = useAuthStore();

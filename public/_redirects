@@ -1,6 +1,8 @@
-# Proxy API requests to Workers
-/api/*  https://api.ohcselibrary.xyz/api/:splat  200
+# Force everyone off the *.pages.dev URL onto the canonical custom domain.
+# Worker routes for /api/* are bound to ohcselibrary.xyz, not to pages.dev.
+# The `301!` suffix (with bang) overrides static-asset matching.
+https://ohcs-elibrary-b1o.pages.dev/*  https://ohcselibrary.xyz/:splat  301!
 
-# SPA fallback - all other routes go to index.html
-# Cloudflare Pages serves static files (assets/, sw.js, etc.) BEFORE this rule
+# SPA fallback - all other routes go to index.html.
+# Cloudflare Pages serves static files (assets/, sw.js, etc.) BEFORE this rule.
 /*  /index.html  200

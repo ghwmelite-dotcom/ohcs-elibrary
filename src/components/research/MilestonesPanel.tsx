@@ -27,7 +27,7 @@ interface MilestonesPanelProps {
   canEdit: boolean;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://api.ohcselibrary.xyz';
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
 const MILESTONE_STATUS_CONFIG: Record<MilestoneStatus, { label: string; icon: typeof CheckCircle2; color: string; bgColor: string }> = {
   pending: { label: 'Pending', icon: Clock, color: 'text-surface-500 dark:text-surface-400', bgColor: 'bg-surface-100 dark:bg-surface-700' },

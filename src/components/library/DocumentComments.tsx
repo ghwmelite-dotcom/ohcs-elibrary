@@ -7,7 +7,7 @@ import { cn } from '@/utils/cn';
 import { formatRelativeTime } from '@/utils/formatters';
 import { useAuthStore } from '@/stores/authStore';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://api.ohcselibrary.xyz';
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
 interface CommentData {
   id: string;
