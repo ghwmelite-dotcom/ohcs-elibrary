@@ -630,10 +630,18 @@ export async function processDocumentForEmbedding(
   documentId: string
 ): Promise<{ success: boolean; chunksCreated: number; error?: string }> {
   try {
-    // 1. Get document info
+    // 1. Get document info (include description + tags for metadata fallback)
     const document = await env.DB.prepare(`
-      SELECT id, title, fileUrl, fileType, category FROM documents WHERE id = ?
-    `).bind(documentId).first();
+      SELECT id, title, description, fileUrl, fileType, category, tags FROM documents WHERE id = ?
+    `).bind(documentId).first<{
+      id: string;
+      title: string;
+      description: string | null;
+      fileUrl: string;
+      fileType: string;
+      category: string | null;
+      tags: string | null;
+    }>();
 
     if (!document) {
       return { success: false, chunksCreated: 0, error: 'Document not found' };
@@ -644,16 +652,39 @@ export async function processDocumentForEmbedding(
     try {
       text = await extractTextFromDocument(
         env,
-        document.fileUrl as string,
-        document.fileType as string
+        document.fileUrl,
+        document.fileType,
       );
     } catch (extractError) {
       console.error('Text extraction error:', extractError);
-      return { success: false, chunksCreated: 0, error: 'Failed to extract text from document' };
+      text = '';
     }
 
+    // 2b. METADATA FALLBACK: when full-text extraction fails (scanned PDFs
+    //     without OCR, old DOC binaries, etc.), build a synthetic content
+    //     blob from title + description + category + tags. This gives GUIDE
+    //     something to search on so the document is at least findable by
+    //     topic, even though not by full-text.
     if (!text || text.length < 50) {
-      return { success: false, chunksCreated: 0, error: 'Document has insufficient text content' };
+      const tagList = (() => {
+        try {
+          const parsed = document.tags ? JSON.parse(document.tags) : [];
+          return Array.isArray(parsed) ? parsed.join(', ') : '';
+        } catch {
+          return document.tags || '';
+        }
+      })();
+      const synthetic = [
+        document.title,
+        document.description || '',
+        document.category ? `Category: ${document.category}` : '',
+        tagList ? `Tags: ${tagList}` : '',
+        '(Note: full-text not extractable from this file — likely a scanned PDF or legacy format. Search uses document metadata only.)',
+      ].filter(Boolean).join('\n');
+      if (synthetic.length < 50) {
+        return { success: false, chunksCreated: 0, error: 'Document has insufficient text content even after metadata fallback' };
+      }
+      text = synthetic;
     }
 
     // 3. Chunk the document
