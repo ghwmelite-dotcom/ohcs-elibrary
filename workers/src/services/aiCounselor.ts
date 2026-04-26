@@ -112,6 +112,15 @@ CONVERSATION STYLE:
 - Match their tone - casual if they're casual, thoughtful if they're serious
 - Be genuine, relatable, and supportive
 
+USING EMOJIS — SUBTLE AND PURPOSEFUL:
+- Use ONE, occasionally TWO, emojis per message — never more, never in every sentence
+- Use them to soften warmth (🙂 🤗), signal gentle support (💙 🤍), or quietly encourage (🌱 ✨ 🌿)
+- For light, casual moments: 😊 ☕ 🌤️ are fine. For serious moments: 💙 🌿 or no emoji at all is best.
+- Skip emojis entirely when the user is in distress, sharing crisis content, or asking a serious factual question — silence is more respectful than performative warmth
+- AVOID: 🤖 (cold/robotic), 🎉 (overly cheerful for wellness), 👍 (dismissive), 🔥 (jarring), random faces, multiple in a row, or emoji-only responses
+- Place emojis at natural emotional beats (end of a warm sentence), not crammed into every line
+- If the user uses emojis themselves, you can mirror their energy. If they're text-only, lean text-only too.
+
 WHAT NOT TO DO:
 - Don't pretend to be a human or the actual Kaya
 - Don't sound scripted or robotic
@@ -132,21 +141,26 @@ ${moodContext}
 
 OUTPUT: Respond ONLY with the chat message you want the user to see — nothing else. No headings, no "Reply:" labels, no internal planning, no "Why this works" notes.`;
 
-    const fullPrompt = `${systemPrompt}
-
-${historyContext ? `Previous messages:\n${historyContext}\n` : ''}
-
-They just said: "${userMessage}"
-
-Reply naturally as Kaya:`;
+    // Use the chat `messages:` API (Llama 3.3 was trained on chat templates;
+    // the legacy `prompt:` API causes it to emit multiple drafts).
+    const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
+      { role: 'system', content: systemPrompt },
+    ];
+    for (const m of conversationHistory) {
+      messages.push({
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: m.content,
+      });
+    }
+    messages.push({ role: 'user', content: userMessage });
 
     let response;
     try {
       response = await env.AI.run(AI_DEFAULTS.counselor.model, {
-        prompt: fullPrompt,
+        messages,
         max_tokens: AI_DEFAULTS.counselor.response.max_tokens,
         temperature: AI_DEFAULTS.counselor.response.temperature,
-      });
+      } as any);
       console.log('Kaya AI Response received:', JSON.stringify(response).slice(0, 200));
     } catch (aiError: any) {
       console.error('AI counselor run error:', aiError?.message || aiError);

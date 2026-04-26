@@ -22,7 +22,7 @@ dm.get('/conversations', authMiddleware, async (c) => {
           WHEN dc.user1Id = ? THEN dc.user2Id
           ELSE dc.user1Id
         END as otherUserId,
-        u.displayName, u.firstName, u.lastName, u.avatar, u.title,
+        u.displayName, u.firstName, u.lastName, u.avatar, u.jobTitle,
         up.status as presenceStatus, up.lastSeenAt,
         (
           SELECT COUNT(*)

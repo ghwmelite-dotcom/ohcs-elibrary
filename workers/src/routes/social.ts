@@ -18,7 +18,7 @@ social.get('/following', authMiddleware, async (c) => {
   try {
     let query = `
       SELECT
-        u.id, u.displayName, u.firstName, u.lastName, u.avatar, u.title, u.bio,
+        u.id, u.displayName, u.firstName, u.lastName, u.avatar, u.jobTitle, u.bio,
         u.xp, u.level, m.name as mdaName,
         uf.createdAt as followedAt
       FROM user_follows uf
@@ -65,7 +65,7 @@ social.get('/followers', authMiddleware, async (c) => {
   try {
     let query = `
       SELECT
-        u.id, u.displayName, u.firstName, u.lastName, u.avatar, u.title, u.bio,
+        u.id, u.displayName, u.firstName, u.lastName, u.avatar, u.jobTitle, u.bio,
         u.xp, u.level, m.name as mdaName,
         uf.createdAt as followedAt,
         CASE WHEN uf2.id IS NOT NULL THEN 1 ELSE 0 END as isFollowingBack
@@ -118,7 +118,7 @@ social.get('/users/:id/followers', optionalAuth, async (c) => {
   try {
     const query = `
       SELECT
-        u.id, u.displayName, u.firstName, u.lastName, u.avatar, u.title,
+        u.id, u.displayName, u.firstName, u.lastName, u.avatar, u.jobTitle,
         uf.createdAt as followedAt,
         CASE WHEN uf2.id IS NOT NULL THEN 1 ELSE 0 END as isFollowing
       FROM user_follows uf
@@ -161,7 +161,7 @@ social.get('/users/:id/following', optionalAuth, async (c) => {
   try {
     const query = `
       SELECT
-        u.id, u.displayName, u.firstName, u.lastName, u.avatar, u.title,
+        u.id, u.displayName, u.firstName, u.lastName, u.avatar, u.jobTitle,
         uf.createdAt as followedAt,
         CASE WHEN uf2.id IS NOT NULL THEN 1 ELSE 0 END as isFollowing
       FROM user_follows uf
@@ -309,7 +309,7 @@ social.get('/connections', authMiddleware, async (c) => {
       SELECT
         uc.*,
         u.id as connectedUserId, u.displayName, u.firstName, u.lastName,
-        u.avatar, u.title, u.bio, m.name as mdaName
+        u.avatar, u.jobTitle, u.bio, m.name as mdaName
       FROM user_connections uc
       JOIN users u ON (
         CASE
@@ -368,7 +368,7 @@ social.get('/connections/pending', authMiddleware, async (c) => {
       SELECT
         uc.*,
         u.id as requesterId, u.displayName, u.firstName, u.lastName,
-        u.avatar, u.title, m.name as mdaName
+        u.avatar, u.jobTitle, m.name as mdaName
       FROM user_connections uc
       JOIN users u ON uc.userId = u.id
       LEFT JOIN mdas m ON u.mdaId = m.id
@@ -393,7 +393,7 @@ social.get('/connections/sent', authMiddleware, async (c) => {
       SELECT
         uc.*,
         u.id as recipientId, u.displayName, u.firstName, u.lastName,
-        u.avatar, u.title, m.name as mdaName
+        u.avatar, u.jobTitle, m.name as mdaName
       FROM user_connections uc
       JOIN users u ON uc.connectedUserId = u.id
       LEFT JOIN mdas m ON u.mdaId = m.id
@@ -690,7 +690,7 @@ social.get('/suggestions', authMiddleware, async (c) => {
     // Excluding: already following, connected, or blocked
     const suggestions = await db.prepare(`
       SELECT DISTINCT
-        u.id, u.displayName, u.firstName, u.lastName, u.avatar, u.title, u.bio,
+        u.id, u.displayName, u.firstName, u.lastName, u.avatar, u.jobTitle, u.bio,
         m.name as mdaName,
         CASE WHEN u.mdaId = ? THEN 'same_mda' ELSE 'active_user' END as reason,
         (SELECT COUNT(*) FROM user_follows WHERE followerId = u.id) as followerCount
@@ -779,7 +779,7 @@ social.get('/mutual/:userId', authMiddleware, async (c) => {
     // Get users that both current user and target user follow
     const mutual = await db.prepare(`
       SELECT
-        u.id, u.displayName, u.firstName, u.lastName, u.avatar, u.title
+        u.id, u.displayName, u.firstName, u.lastName, u.avatar, u.jobTitle
       FROM user_follows uf1
       JOIN user_follows uf2 ON uf1.followingId = uf2.followingId
       JOIN users u ON u.id = uf1.followingId

@@ -1249,7 +1249,7 @@ counselorRoutes.get('/admin/counselors', requireAuth, requireSuperAdmin, async (
         u.displayName as counselorName,
         u.email as counselorEmail,
         u.avatar as counselorAvatar,
-        u.title as counselorTitle,
+        u.jobTitle as counselorTitle,
         ab.displayName as assignedByName
       FROM counselor_assignments ca
       INNER JOIN users u ON ca.counselorId = u.id
@@ -1498,7 +1498,7 @@ counselorRoutes.get('/reports/users', requireAuth, requireCounselor, async (c: A
         u.id,
         u.displayName,
         u.email,
-        u.title,
+        u.jobTitle,
         u.department,
         (SELECT COUNT(*) FROM counselor_sessions WHERE userId = u.id) as sessionCount,
         (SELECT AVG(mood) FROM mood_entries WHERE userId = u.id) as avgMood

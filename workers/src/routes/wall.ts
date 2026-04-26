@@ -24,7 +24,7 @@ wall.get('/feed', optionalAuth, async (c) => {
       query = `
         SELECT
           wp.*,
-          u.displayName as authorName, u.avatar as authorAvatar, u.title as authorTitle,
+          u.displayName as authorName, u.avatar as authorAvatar, u.jobTitle as authorTitle,
           m.name as authorMda,
           CASE WHEN wpl.postId IS NOT NULL THEN 1 ELSE 0 END as isLiked,
           CASE WHEN wb.postId IS NOT NULL THEN 1 ELSE 0 END as isBookmarked
@@ -47,7 +47,7 @@ wall.get('/feed', optionalAuth, async (c) => {
       query = `
         SELECT
           wp.*,
-          u.displayName as authorName, u.avatar as authorAvatar, u.title as authorTitle,
+          u.displayName as authorName, u.avatar as authorAvatar, u.jobTitle as authorTitle,
           m.name as authorMda,
           CASE WHEN wpl.postId IS NOT NULL THEN 1 ELSE 0 END as isLiked,
           CASE WHEN wb.postId IS NOT NULL THEN 1 ELSE 0 END as isBookmarked
@@ -69,7 +69,7 @@ wall.get('/feed', optionalAuth, async (c) => {
       query = `
         SELECT
           wp.*,
-          u.displayName as authorName, u.avatar as authorAvatar, u.title as authorTitle,
+          u.displayName as authorName, u.avatar as authorAvatar, u.jobTitle as authorTitle,
           m.name as authorMda,
           CASE WHEN wpl.postId IS NOT NULL THEN 1 ELSE 0 END as isLiked,
           CASE WHEN wb.postId IS NOT NULL THEN 1 ELSE 0 END as isBookmarked,
@@ -95,7 +95,7 @@ wall.get('/feed', optionalAuth, async (c) => {
       query = `
         SELECT
           wp.*,
-          u.displayName as authorName, u.avatar as authorAvatar, u.title as authorTitle,
+          u.displayName as authorName, u.avatar as authorAvatar, u.jobTitle as authorTitle,
           m.name as authorMda,
           CASE WHEN wpl.postId IS NOT NULL THEN 1 ELSE 0 END as isLiked,
           CASE WHEN wb.postId IS NOT NULL THEN 1 ELSE 0 END as isBookmarked,
@@ -187,7 +187,7 @@ wall.get('/users/:userId/posts', optionalAuth, async (c) => {
     const posts = await db.prepare(`
       SELECT
         wp.*,
-        u.displayName as authorName, u.avatar as authorAvatar, u.title as authorTitle,
+        u.displayName as authorName, u.avatar as authorAvatar, u.jobTitle as authorTitle,
         CASE WHEN wpl.postId IS NOT NULL THEN 1 ELSE 0 END as isLiked,
         CASE WHEN wb.postId IS NOT NULL THEN 1 ELSE 0 END as isBookmarked
       FROM wall_posts wp
@@ -230,7 +230,7 @@ wall.get('/posts/:id', optionalAuth, async (c) => {
     const post = await db.prepare(`
       SELECT
         wp.*,
-        u.displayName as authorName, u.avatar as authorAvatar, u.title as authorTitle,
+        u.displayName as authorName, u.avatar as authorAvatar, u.jobTitle as authorTitle,
         m.name as authorMda,
         CASE WHEN wpl.postId IS NOT NULL THEN 1 ELSE 0 END as isLiked,
         CASE WHEN wb.postId IS NOT NULL THEN 1 ELSE 0 END as isBookmarked

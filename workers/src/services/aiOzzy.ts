@@ -502,27 +502,30 @@ GUIDE:`;
 
     let aiResponse;
     try {
-      // Build the full prompt for the model
-      const fullPrompt = `${OZZY_SYSTEM_PROMPT}
+      // Llama 3.3 chat-template via messages API. System prompt holds GUIDE's
+      // persona + the document context; user message is the question.
+      const systemContent =
+        OZZY_SYSTEM_PROMPT +
+        (personalization ? `\n\nUSER CONTEXT: ${personalization}` : '') +
+        `\n\nDOCUMENT SOURCES:\n${documentContext}\n\n` +
+        `Provide a helpful, accurate response based on the document sources above. If the information is not available in the sources, honestly say so and suggest they contact their HR department or OHCS directly. Respond ONLY with the answer the user should see — no internal planning, no "Reply:" labels, no meta-analysis.`;
 
-${personalization ? `USER CONTEXT: ${personalization}\n` : ''}
-DOCUMENT SOURCES:
-${documentContext}
-
-${historyContext ? `RECENT CONVERSATION:\n${historyContext}\n` : ''}
-User: ${userQuestion}
-
-Provide a helpful, accurate response based on the document sources above. If the information is not available in the sources, honestly say so and suggest they contact their HR department or OHCS directly.
-
-OUTPUT: Respond ONLY with the answer the user should see — no internal planning, no "Reply:" labels, no meta-analysis.
-
-GUIDE:`;
+      const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
+        { role: 'system', content: systemContent },
+      ];
+      for (const m of conversationHistory) {
+        messages.push({
+          role: m.role === 'user' ? 'user' : 'assistant',
+          content: m.content,
+        });
+      }
+      messages.push({ role: 'user', content: userQuestion });
 
       aiResponse = await env.AI.run(AI_DEFAULTS.ozzy.model, {
-        prompt: fullPrompt,
+        messages,
         max_tokens: AI_DEFAULTS.ozzy.max_tokens,
         temperature: AI_DEFAULTS.ozzy.temperature,
-      });
+      } as any);
 
       console.log('AI Response received:', JSON.stringify(aiResponse).slice(0, 200));
     } catch (aiError: any) {
