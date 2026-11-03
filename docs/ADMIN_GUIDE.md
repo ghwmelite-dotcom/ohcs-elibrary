@@ -71,7 +71,7 @@ This guide is for administrators responsible for managing the OHCS E-Library pla
 
 ### URL
 ```
-https://ohcs-elibrary.pages.dev/admin
+https://e-library.ohcsghana.org/admin
 ```
 
 ### Requirements
