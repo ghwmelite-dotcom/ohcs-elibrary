@@ -35,7 +35,7 @@ The OHCS E-Library is your digital knowledge hub designed specifically for Ghana
 
 ### Creating Your Account
 
-1. Visit [ohcs-elibrary.pages.dev](https://ohcs-elibrary.pages.dev)
+1. Visit [e-library.ohcsghana.org](https://e-library.ohcsghana.org)
 2. Click **Register** or **Get Started**
 3. Fill in your details:
    - **Email**: Use your official .gov.gh email address
