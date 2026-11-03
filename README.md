@@ -6,14 +6,14 @@
 
 ### **AI-Powered Knowledge Management Platform for Ghana's Civil Service**
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Site-success?style=for-the-badge&logo=cloudflare)](https://ohcs-elibrary.pages.dev)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Site-success?style=for-the-badge&logo=cloudflare)](https://e-library.ohcsghana.org)
 [![Version](https://img.shields.io/badge/Version-2.0.0-blue?style=for-the-badge)](https://github.com/ghwmelite-dotcom/ohcs-elibrary/releases)
 [![Platform](https://img.shields.io/badge/Platform-Cloudflare-orange?style=for-the-badge&logo=cloudflare)](https://workers.cloudflare.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](#license)
 
-**[Live Demo](https://ohcs-elibrary.pages.dev)** | **[Try Demo Access](#demo-access)** | **[Features](#-features)** | **[Tech Stack](#-technology-stack)** | **[Getting Started](#-getting-started)**
+**[Live Demo](https://e-library.ohcsghana.org)** | **[Try Demo Access](#demo-access)** | **[Features](#-features)** | **[Tech Stack](#-technology-stack)** | **[Getting Started](#-getting-started)**
 
 </div>
 
@@ -37,7 +37,7 @@ The **OHCS E-Library** is a comprehensive digital knowledge management and colla
 
 Try the platform without registration using our **Demo Access** feature:
 
-1. Visit [ohcs-elibrary.pages.dev](https://ohcs-elibrary.pages.dev)
+1. Visit [e-library.ohcsghana.org](https://e-library.ohcsghana.org)
 2. Click **"Try Demo Access"** on the login screen
 3. Explore all features with a 24-hour demo session
 
@@ -449,7 +449,7 @@ Unauthorized copying, distribution, or use of this software is strictly prohibit
 **Email:** davies.hodges@ohcs.gov.gh
 **Organization:** Office of the Head of Civil Service, Ghana
 
-**Live Platform:** [ohcs-elibrary.pages.dev](https://ohcs-elibrary.pages.dev)
+**Live Platform:** [e-library.ohcsghana.org](https://e-library.ohcsghana.org)
 
 ---
 
